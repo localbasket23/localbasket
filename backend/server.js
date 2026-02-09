@@ -105,7 +105,9 @@ app.use("/api", (req, res) => {
    FRONTEND FALLBACK
 ===================================================== */
 app.get("*", (req, res) => {
-  const filePath = path.join(publicDir, req.path);
+  // Avoid path.join swallowing publicDir when req.path is absolute (starts with "/")
+  const safePath = req.path.replace(/^\/+/, "");
+  const filePath = path.join(publicDir, safePath);
 
   if (fs.existsSync(filePath)) {
     return res.sendFile(filePath);

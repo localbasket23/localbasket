@@ -8,6 +8,13 @@ const CONFIG = {
     DEFAULT_IMG: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80"
 };
 
+const WELCOME_BASE = (() => {
+    const path = String(window.location.pathname || "").replace(/\\/g, "/");
+    return path.includes("/frontend/") ? "/frontend" : "";
+})();
+
+const welcomePath = (suffix) => `${WELCOME_BASE}/welcome/${String(suffix || "").replace(/^\/+/, "")}`;
+
 /* ============ SAFE STORAGE PARSE ============ */
 const safeParse = (value, fallback = null) => {
     if (value == null || value === "undefined") return fallback;
@@ -422,7 +429,7 @@ function showPincodeRequired() {
 function renderStores(stores) {
     const grid = dom.storeGrid();
     grid.innerHTML = stores.map(store => `
-        <div class="store-card" onclick="window.location.href='/welcome/customer/store/store.html?id=${store.id}'">
+        <div class="store-card" onclick="window.location.href='${welcomePath("customer/store/store.html")}?id=${store.id}'">
             <div class="store-img-wrap">
                 <img class="store-img" src="${store.store_photo ? CONFIG.IMG_BASE+'/'+store.store_photo : CONFIG.DEFAULT_IMG}" 
                      alt="${store.store_name}" 
@@ -605,8 +612,8 @@ function updateQty(id, change) {
 Object.assign(window, {
     switchTab, submitAuth, openAuth, logoutUser, 
     searchByPincode, toggleCart, getLocation,
-    openCategoryPage: () => window.location.href = "/welcome/customer/category.html",
-    viewProfile: () => window.location.href = "/welcome/customer/profile/profile.html",
-    viewOrders: () => window.location.href = "order/customer-orders.html"
+    openCategoryPage: () => window.location.href = welcomePath("customer/category.html"),
+    viewProfile: () => window.location.href = welcomePath("customer/profile/profile.html"),
+    viewOrders: () => window.location.href = welcomePath("customer/order/customer-orders.html")
 });
 
