@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Categories — Local Basket Admin</title>
+
+    <link rel="icon" href="/welcome/logo2.png">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #ff8a1a;
+            --primary-dark: #e56a00;
+            --bg: #f8f9fd;
+            --white: #ffffff;
+            --text-dark: #2d3436;
+            --text-light: #636e72;
+            --danger: #e74c3c;
+            --success: #00b894;
+            --border: #e2e8f0;
+            --radius: 12px;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            --sidebar-width: 280px;
+            --surface: #ffffff;
+            --surface-2: #fafbff;
+            --table-head: #f4f6fb;
+            --row-hover: #fafaff;
+            --muted: #9aa2b1;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background: var(--bg); color: var(--text-dark); display: flex; }
+        body.dark {
+            --bg: #0f172a;
+            --white: #111827;
+            --text-dark: #f1f5f9;
+            --text-light: #94a3b8;
+            --border: #1f2937;
+            --shadow: 0 10px 30px rgba(0,0,0,0.4);
+            --surface: #111827;
+            --surface-2: #0b1220;
+            --table-head: #0b1220;
+            --row-hover: #111b2d;
+            --muted: #94a3b8;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: var(--sidebar-width); height: 100vh; position: fixed; left: 0; top: 0;
+            background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+            color: var(--white); padding: 30px 20px; z-index: 100;
+        }
+        .sidebar h2 { text-align: center; margin-bottom: 40px; font-weight: 600; letter-spacing: 1px; }
+        .menu button {
+            width: 100%; padding: 14px 20px; margin: 8px 0; border: none;
+            border-radius: var(--radius); background: rgba(255, 255, 255, 0.1);
+            color: var(--white); cursor: pointer; text-align: left; font-size: 15px;
+            transition: 0.3s ease; display: flex; align-items: center; gap: 10px;
+        }
+        .menu button:hover, .menu button.active { background: var(--white); color: var(--primary); font-weight: 600; transform: translateX(5px); }
+
+        /* ===== MAIN CONTENT ===== */
+        main { margin-left: var(--sidebar-width); width: calc(100% - var(--sidebar-width)); padding: 30px; transition: 0.3s; }
+
+        /* Topbar */
+        .topbar {
+            background: var(--white); padding: 20px 30px; border-radius: var(--radius);
+            box-shadow: var(--shadow); margin-bottom: 20px;
+            display: flex; justify-content: space-between; align-items: center; gap: 12px;
+        }
+        .topbar .left { display: flex; align-items: center; gap: 10px; }
+        .mobile-toggle {
+            display: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            background: rgba(255, 138, 26, 0.12);
+            color: var(--primary);
+        }
+        .topbar h3 { color: var(--text-dark); font-weight: 600; }
+        .user-info { color: var(--text-light); font-size: 13px; font-weight: 600; }
+
+        .hero {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+        .hero-card {
+            background: linear-gradient(140deg, var(--primary), #ffb347);
+            color: #fff;
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+        .hero-card h2 { font-size: 20px; margin-bottom: 6px; }
+        .hero-card p { font-size: 13px; opacity: .9; }
+        .hero-meta {
+            margin-top: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.16);
+            font-size: 12px;
+        }
+        .stat-panel {
+            background: var(--white);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            padding: 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            align-content: center;
+        }
+        .stat-tile {
+            border: 1px solid var(--border);
+            background: var(--surface-2);
+            border-radius: 12px;
+            padding: 10px;
+        }
+        .stat-tile small { color: var(--text-light); font-size: 11px; text-transform: uppercase; }
+        .stat-tile b { display: block; margin-top: 4px; color: var(--primary); font-size: 18px; }
+
+        .filters {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 14px;
+            margin-bottom: 16px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 220px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 14px;
+        }
+        .search-box input {
+            border: none;
+            outline: none;
+            width: 100%;
+            background: transparent;
+            color: var(--text-dark);
+            font-size: 14px;
+        }
+        .search-box input::placeholder { color: var(--muted); }
+        .filter-pill {
+            background: rgba(255, 138, 26, 0.12);
+            color: var(--primary);
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid var(--border);
+        }
+
+        /* Card container */
+        .card { background: var(--white); padding: 30px; border-radius: var(--radius); box-shadow: var(--shadow); }
+
+        /* Form Styling */
+        .form-grid {
+            display: grid; grid-template-columns: 1.5fr 1.5fr 1fr auto; gap: 15px;
+            background: var(--surface-2); padding: 20px; border: 1px solid var(--border);
+            border-radius: var(--radius); margin-bottom: 20px; align-items: end;
+        }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .input-group label { font-size: 12px; font-weight: 600; color: var(--text-light); text-transform: uppercase; }
+        
+        input {
+            padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border);
+            font-size: 14px; outline: none; transition: 0.2s; width: 100%;
+            background: var(--white); color: var(--text-dark);
+        }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(255, 138, 26, 0.14); }
+        
+        button.btn-primary {
+            background: var(--primary); color: var(--white); border: none;
+            border-radius: 8px; padding: 12px 25px; cursor: pointer; font-weight: 500;
+            transition: 0.2s; height: 46px; white-space: nowrap;
+        }
+        button.btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); }
+        button:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+        /* Table Styling */
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; }
+        th { 
+            background: var(--table-head); color: var(--text-light); font-weight: 600; 
+            padding: 16px; text-align: left; border-bottom: 2px solid var(--border);
+        }
+        td { padding: 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: var(--row-hover); }
+
+        /* Status Badges */
+        .badge { padding: 6px 12px; border-radius: 50px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }
+        .badge.active { background: #e6fffa; color: #00b894; border: 1px solid #b2f5ea; }
+        .badge.inactive { background: #fff5f5; color: #e74c3c; border: 1px solid #fed7d7; }
+
+        /* Action Buttons */
+        .actions { display: flex; gap: 8px; }
+        .btn-action {
+            width: 32px; height: 32px; border-radius: 6px; border: none;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s; color: white;
+        }
+        .btn-toggle { background: #3498db; }
+        .btn-delete { background: var(--danger); }
+        .btn-action:hover { opacity: 0.9; transform: scale(1.05); }
+
+        /* Icon Preview */
+        .icon-preview { width: 30px; text-align: center; color: var(--primary); margin-right: 8px; }
+
+        .mobile-list { display: none; }
+        .category-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .category-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .category-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 12px;
+            padding: 8px 10px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--surface-2);
+            margin-bottom: 8px;
+        }
+
+        /* Toast Notification */
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 1000; }
+        .toast {
+            background: white; padding: 15px 25px; border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); margin-bottom: 10px;
+            display: flex; align-items: center; gap: 10px; border-left: 5px solid;
+            animation: slideIn 0.3s ease;
+        }
+        .toast.success { border-color: var(--success); }
+        .toast.error { border-color: var(--danger); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .form-grid { grid-template-columns: 1fr 1fr; }
+            .hero { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            main { margin-left: 0; width: 100%; padding: 20px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .mobile-toggle { display: inline-flex; align-items: center; justify-content: center; }
+            .table-container { display: none; }
+            .mobile-list { display: block; }
+            .topbar { padding: 14px 16px; }
+            .card { padding: 18px; }
+            .hero-card { padding: 16px; }
+            .stat-panel { grid-template-columns: 1fr 1fr; }
+        }
+    </style>
+
+  <link rel='stylesheet' href='admin-shared.css'>
+</head>
+<body>
+    <div id="sidebarOverlay"></div>
+
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main>
+        <div class="topbar lb-header">
+            <div class="left lb-header-left">
+                <button class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                <h3 class="lb-header-title"><i class="fas fa-layer-group"></i> Manage Categories</h3>
+            </div>
+            <div class="user-info lb-header-right lb-header-sub">Admin <i class="fas fa-user-circle"></i></div>
+        </div>
+
+        <section class="hero">
+            <div class="hero-card">
+                <h2>Category Control Center</h2>
+                <p>Create, manage, and organize categories for a clean catalog.</p>
+                <div class="hero-meta"><i class="fas fa-tags"></i> Inventory Taxonomy</div>
+            </div>
+            <div class="stat-panel">
+                <div class="stat-tile"><small>Total</small><b id="statTotal">0</b></div>
+                <div class="stat-tile"><small>Active</small><b id="statActive">0</b></div>
+                <div class="stat-tile"><small>Inactive</small><b id="statInactive">0</b></div>
+                <div class="stat-tile"><small>Last Updated</small><b id="statUpdated">--</b></div>
+            </div>
+        </section>
+
+        <div class="filters">
+            <div class="search-box">
+                <i class="fas fa-search" style="color: var(--muted);"></i>
+                <input type="text" id="searchInput" placeholder="Search by name, slug, icon..." oninput="handleSearch()">
+            </div>
+            <div class="filter-pill"><i class="fas fa-filter"></i> All Categories</div>
+        </div>
+
+        <div class="card">
+            <form id="addCategoryForm" class="form-grid" onsubmit="addCategory(event)">
+                <div class="input-group">
+                    <label>Category Name</label>
+                    <input type="text" id="name" placeholder="e.g. Fresh Fruits" required oninput="generateSlug()">
+                </div>
+                <div class="input-group">
+                    <label>Slug (URL)</label>
+                    <input type="text" id="slug" placeholder="auto-generated" readonly style="background: var(--surface-2); cursor: default;">
+                </div>
+                <div class="input-group">
+                    <label>FontAwesome Icon</label>
+                    <input type="text" id="icon" placeholder="e.g. fa-apple-alt" required>
+                </div>
+                <button type="submit" class="btn-primary" id="submitBtn">
+                    <i class="fas fa-plus"></i> Add Category
+                </button>
+            </form>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="50">#</th>
+                            <th>Name</th>
+                            <th>Icon</th>
+                            <th>Slug</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="categoryTable">
+                        <tr><td colspan="6" style="text-align:center;">Loading data...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="categoryCards" class="mobile-list"></div>
+        </div>
+    </main>
+
+    <div id="toast-container"></div>
+
+<script>
+    // CONFIGURATION
+    const API_BASE = (localStorage.getItem("lbApiAdminBase") || "").trim() || "http://localhost:5000/api";
+    const state = { categories: [], filtered: [] };
+    // For demo purposes, we simulate an API delay. Remove setTimeout in production.
+
+    /* ===== UTILS: SLUG GENERATOR ===== */
+    function generateSlug() {
+        const name = document.getElementById("name").value;
+        const slug = name.toLowerCase()
+            .trim()
+            .replace(/[^\w\s-]/g, '') // remove non-word chars
+            .replace(/[\s_-]+/g, '-') // swap spaces for hyphens
+            .replace(/^-+|-+$/g, '');
+        
+        document.getElementById("slug").value = slug;
+    }
+
+    /* ===== UTILS: TOAST NOTIFICATIONS ===== */
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    /* ===== API WRAPPER ===== */
+    async function apiCall(endpoint, method = 'GET', body = null) {
+        try {
+            const options = {
+                method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+            if (body) options.body = JSON.stringify(body);
+
+            const res = await fetch(`${API_BASE}${endpoint}`, options);
+            if (!res.ok) throw new Error(`API Error: ${res.statusText}`);
+            return await res.json();
+        } catch (error) {
+            console.error(error);
+            showToast(error.message || "Something went wrong", 'error');
+            return null;
+        }
+    }
+
+    /* ===== LOAD CATEGORIES ===== */
+    function updateStats(list = []) {
+        const total = list.length;
+        const active = list.filter(c => !!c.is_active).length;
+        const inactive = total - active;
+        document.getElementById("statTotal").innerText = total.toLocaleString();
+        document.getElementById("statActive").innerText = active.toLocaleString();
+        document.getElementById("statInactive").innerText = inactive.toLocaleString();
+        document.getElementById("statUpdated").innerText = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function renderCategories(list) {
+        const tbody = document.getElementById("categoryTable");
+        const cards = document.getElementById("categoryCards");
+        tbody.innerHTML = "";
+        if (cards) cards.innerHTML = "";
+
+        if (!list || list.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No categories found. Add one above!</td></tr>`;
+            if (cards) cards.innerHTML = `<div class="category-card">No categories found.</div>`;
+            return;
+        }
+
+        list.forEach((c, index) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td><strong>${escapeHtml(c.name)}</strong></td>
+                <td><i class="fas ${c.icon} icon-preview"></i> <small>${c.icon}</small></td>
+                <td style="color:var(--muted); font-family:monospace;">/${c.slug}</td>
+                <td>
+                    <span class="badge ${c.is_active ? 'active' : 'inactive'}">
+                        ${c.is_active ? 'ACTIVE' : 'INACTIVE'}
+                    </span>
+                </td>
+                <td>
+                    <div class="actions">
+                        <button class="btn-action btn-toggle" title="Toggle Status" 
+                            onclick="toggleStatus(${c.id}, ${c.is_active})">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <button class="btn-action btn-delete" title="Delete Category" 
+                            onclick="deleteCategory(${c.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(row);
+
+            if (cards) {
+                cards.innerHTML += `
+                    <div class="category-card">
+                        <div class="category-head">
+                            <div style="font-weight:700; color:var(--primary);">${escapeHtml(c.name)}</div>
+                            <span class="badge ${c.is_active ? 'active' : 'inactive'}">
+                                ${c.is_active ? 'ACTIVE' : 'INACTIVE'}
+                            </span>
+                        </div>
+                        <div class="category-row"><span>Icon</span><span><i class="fas ${c.icon}"></i> ${c.icon}</span></div>
+                        <div class="category-row"><span>Slug</span><span>/${c.slug}</span></div>
+                        <div class="category-row"><span>ID</span><span>#${c.id}</span></div>
+                        <div class="actions" style="margin-top:10px;">
+                            <button class="btn-action btn-toggle" title="Toggle Status" 
+                                onclick="toggleStatus(${c.id}, ${c.is_active})">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                            <button class="btn-action btn-delete" title="Delete Category" 
+                                onclick="deleteCategory(${c.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        });
+    }
+
+    function handleSearch() {
+        const q = (document.getElementById("searchInput").value || "").toLowerCase().trim();
+        if (!q) {
+            state.filtered = [...state.categories];
+        } else {
+            state.filtered = state.categories.filter(c =>
+                String(c.name || "").toLowerCase().includes(q) ||
+                String(c.slug || "").toLowerCase().includes(q) ||
+                String(c.icon || "").toLowerCase().includes(q)
+            );
+        }
+        renderCategories(state.filtered);
+    }
+
+    async function loadCategories() {
+        const data = await apiCall('/admin/categories');
+        state.categories = (data && data.categories) ? data.categories : [];
+        updateStats(state.categories);
+        handleSearch();
+    }
+
+    /* ===== ADD CATEGORY ===== */
+    async function addCategory(e) {
+        e.preventDefault();
+        const btn = document.getElementById('submitBtn');
+        const name = document.getElementById("name").value;
+        const slug = document.getElementById("slug").value;
+        const icon = document.getElementById("icon").value;
+
+        // Simple validation
+        if(!name || !slug || !icon) return showToast("Please fill all fields", "error");
+
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        btn.disabled = true;
+
+        const result = await apiCall('/admin/categories', 'POST', { name, slug, icon });
+
+        if (result) {
+            showToast("Category added successfully!");
+            document.getElementById("addCategoryForm").reset();
+            loadCategories();
+        }
+        
+        btn.innerHTML = '<i class="fas fa-plus"></i> Add Category';
+        btn.disabled = false;
+    }
+
+    /* ===== TOGGLE STATUS ===== */
+    async function toggleStatus(id, currentStatus) {
+        // Optimistic UI update could go here, but for now we wait for server
+        const result = await apiCall(`/admin/categories/${id}/status`, 'PUT', { is_active: !currentStatus });
+        if(result) {
+            showToast("Status updated");
+            loadCategories();
+        }
+    }
+
+    /* ===== DELETE CATEGORY ===== */
+    async function deleteCategory(id) {
+        if(!confirm("Are you sure you want to delete this category? This cannot be undone.")) return;
+
+        const result = await apiCall(`/admin/categories/${id}`, 'DELETE');
+        if(result) {
+            showToast("Category deleted successfully");
+            loadCategories();
+        }
+    }
+
+    /* ===== HELPER: XSS Prevention ===== */
+    function escapeHtml(text) {
+        if (!text) return text;
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    // Initialize
+    window.onload = loadCategories;
+</script>
+
+
+<script src='admin-layout.js'></script>
+</body>
+</html>
+
+
+

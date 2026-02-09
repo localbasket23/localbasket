@@ -1,0 +1,21 @@
+{
+    "liveServer.settings.port": 5501,
+    "sqltools.connections": [
+        {
+            "mysqlOptions": {
+                "authProtocol": "default",
+                "enableSsl": "Disabled"
+            },
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 33060,
+            "driver": "MySQL",
+            "name": "local basket",
+            "username": "demo",
+            "password": "12345",
+            "connectionTimeout": 30,
+            "database": "localbasket"
+        }
+    ]
+}

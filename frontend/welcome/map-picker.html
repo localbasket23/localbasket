@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Select Location</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+  <style>
+    body,html{margin:0;height:100%;font-family:Poppins}
+    #map{height:100%}
+
+    .top-box{
+      position:fixed;
+      top:10px;
+      left:50%;
+      transform:translateX(-50%);
+      width:90%;
+      background:#fff;
+      padding:10px;
+      border-radius:12px;
+      box-shadow:0 6px 20px rgba(0,0,0,.15);
+      z-index:999;
+    }
+
+    .top-box input{
+      width:100%;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid #ccc;
+    }
+
+    .actions{
+      position:fixed;
+      bottom:15px;
+      left:50%;
+      transform:translateX(-50%);
+      display:flex;
+      gap:10px;
+      z-index:999;
+    }
+
+    .btn{
+      padding:12px 16px;
+      border-radius:12px;
+      border:none;
+      cursor:pointer;
+      font-weight:600;
+      background:#ff8a1a;
+      color:#fff;
+    }
+
+    .btn.light{
+      background:#f1edff;
+      color:#ff8a1a;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="top-box">
+  <input id="searchBox" placeholder="Search area (e.g. Mira Road East)">
+</div>
+
+<div id="map"></div>
+
+<div class="actions">
+  <button class="btn light" onclick="useCurrent()">📍 Current</button>
+  <button class="btn" onclick="confirmLoc()">Confirm</button>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+let map, marker;
+let selected = { area:"", pincode:"", lat:null, lng:null };
+
+// Init map (default Mumbai)
+initMap(19.0760, 72.8777);
+
+// ---------------- MAP INIT ----------------
+function initMap(lat,lng){
+  map = L.map('map').setView([lat,lng], 15);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'© OpenStreetMap'
+  }).addTo(map);
+
+  marker = L.marker([lat,lng],{draggable:true}).addTo(map);
+  fetchAddress(lat,lng);
+
+  marker.on("dragend",()=>{
+    const p = marker.getLatLng();
+    fetchAddress(p.lat,p.lng);
+  });
+}
+
+// ---------------- SEARCH ----------------
+document.getElementById("searchBox").addEventListener("change", async e=>{
+  const q = e.target.value;
+  if(!q) return;
+
+  const res = await fetch(
+    `https://nominatim.openstreetmap.org/search?format=json&q=${q}`
+  );
+  const data = await res.json();
+  if(!data.length) return;
+
+  const lat = data[0].lat;
+  const lng = data[0].lon;
+
+  map.setView([lat,lng], 16);
+  marker.setLatLng([lat,lng]);
+  fetchAddress(lat,lng);
+});
+
+// ---------------- CURRENT LOCATION ----------------
+function useCurrent(){
+  navigator.geolocation.getCurrentPosition(pos=>{
+    const {latitude, longitude} = pos.coords;
+    map.setView([latitude,longitude],16);
+    marker.setLatLng([latitude,longitude]);
+    fetchAddress(latitude,longitude);
+  },()=>{
+    alert("Location permission denied");
+  });
+}
+
+// ---------------- REVERSE GEOCODE ----------------
+async function fetchAddress(lat,lng){
+  selected.lat = lat;
+  selected.lng = lng;
+
+  const res = await fetch(
+    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+  );
+  const data = await res.json();
+
+  const addr = data.address || {};
+  selected.area =
+    addr.suburb ||
+    addr.neighbourhood ||
+    addr.city_district ||
+    addr.city ||
+    "";
+
+  selected.pincode = addr.postcode || "";
+}
+
+// ---------------- CONFIRM ----------------
+function confirmLoc(){
+  if(!selected.area || !selected.pincode){
+    alert("Area or pincode not found. Try nearby.");
+    return;
+  }
+
+  localStorage.setItem("lbArea", selected.area);
+  localStorage.setItem("lbPincode", selected.pincode);
+  window.close();
+}
+</script>
+
+</body>
+</html>
+
+

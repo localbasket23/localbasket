@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Management | Local Basket Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --primary: #ff8a1a;
+      --primary-dark: #e56a00;
+      --bg: #f4f7fe;
+      --white: #ffffff;
+      --text-main: #2d3436;
+      --text-light: #636e72;
+      --success: #00b894;
+      --danger: #d63031;
+      --warning: #fdcb6e;
+      --sidebar-width: 260px;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      --radius: 16px;
+      --border: #edf0f7;
+      --surface: #ffffff;
+      --surface-2: #fafbff;
+      --surface-3: #f8f9fb;
+      --table-head: #fcfcfc;
+      --row-hover: #fafaff;
+      --chip-bg: #e0e5ec;
+      --input-bg: #ffffff;
+      --muted: #9aa2b1;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Poppins", sans-serif; }
+    
+    body { background: var(--bg); color: var(--text-main); overflow-x: hidden; }
+    body.dark {
+      --bg: #0f172a;
+      --white: #111827;
+      --text-main: #f1f5f9;
+      --text-light: #94a3b8;
+      --border: #1f2937;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      --surface: #111827;
+      --surface-2: #0b1220;
+      --surface-3: #0e1726;
+      --table-head: #0b1220;
+      --row-hover: #111b2d;
+      --chip-bg: #1f2937;
+      --input-bg: #0b1220;
+      --muted: #94a3b8;
+    }
+
+    /* ================= SIDEBAR ================= */
+    .sidebar {
+      width: var(--sidebar-width); height: 100vh;
+      background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
+      color: white; display: flex; flex-direction: column;
+      position: fixed; left: 0; top: 0; z-index: 1000;
+      transition: transform 0.3s ease;
+    }
+
+    .brand {
+      padding: 30px 25px; display: flex; align-items: center; gap: 15px;
+    }
+    .brand img { width: 40px; height: 40px; border-radius: 10px; background: white; padding: 2px;}
+    .brand h2 { font-size: 1.1rem; font-weight: 700; }
+
+    .menu { flex: 1; padding: 0 15px; overflow-y: auto; }
+    .menu button {
+      width: 100%; padding: 14px 20px; margin-bottom: 8px;
+      border: none; border-radius: 12px; background: transparent;
+      color: rgba(255,255,255,0.7); text-align: left; cursor: pointer;
+      display: flex; align-items: center; gap: 15px; font-size: 0.95rem;
+      transition: 0.2s;
+    }
+    .menu button:hover, .menu button.active {
+      background: rgba(255,255,255,0.15); color: white;
+    }
+    .menu button i { width: 20px; text-align: center; }
+
+    .menu-footer { padding: 20px; }
+
+    /* ================= MAIN CONTENT ================= */
+    .main-content {
+      flex: 1; margin-left: var(--sidebar-width); height: 100vh;
+      display: flex; flex-direction: column; position: relative;
+      transition: margin-left 0.3s ease;
+      padding: 18px 24px 0;
+      box-sizing: border-box;
+    }
+
+    /* Header */
+    .top-header {
+      background: var(--white); padding: 15px 30px;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.03); z-index: 100;
+      flex-shrink: 0;
+    }
+
+    .mobile-toggle {
+      display: none; font-size: 24px; color: var(--text-main);
+      cursor: pointer; border: none; background: none; margin-right: 15px;
+    }
+
+    .user-profile { display: flex; align-items: center; gap: 10px; }
+    .user-profile img { width: 35px; height: 35px; border-radius: 50%; }
+
+    /* Scrollable Area */
+    .content-scroll {
+      padding: 0 0 24px; overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch;
+    }
+
+    .hero-row {
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .hero-card {
+      background: linear-gradient(140deg, var(--primary), #ffb347);
+      color: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .hero-card h2 { font-size: 22px; margin-bottom: 6px; }
+    .hero-card p { font-size: 13px; opacity: .9; }
+    .hero-meta {
+      margin-top: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.18);
+      font-size: 12px;
+    }
+
+    .hero-stats {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-content: center;
+    }
+    .stat-tile {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      background: var(--surface-2);
+    }
+    .stat-tile small { color: var(--text-light); font-size: 11px; text-transform: uppercase; }
+    .stat-tile b { display: block; margin-top: 4px; color: var(--primary); font-size: 18px; }
+
+    .section-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    /* Filters Section */
+    .filter-section {
+      display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 25px;
+      align-items: center; justify-content: space-between;
+    }
+
+    .search-box {
+      background: var(--white); padding: 0 20px; border-radius: 12px;
+      display: flex; align-items: center; box-shadow: var(--shadow);
+      width: 100%; max-width: 400px; height: 50px;
+    }
+    .search-box input {
+      border: none; outline: none; width: 100%; padding: 10px;
+      font-size: 14px; margin-left: 10px;
+      background: transparent; color: var(--text-main);
+    }
+    .search-box input::placeholder { color: var(--muted); }
+
+    .global-action {
+      background: var(--white); padding: 10px 20px; border-radius: 12px;
+      box-shadow: var(--shadow); display: flex; align-items: center; gap: 10px;
+    }
+    .global-action input {
+      width: 60px; padding: 8px; border: 1px solid var(--border); border-radius: 6px; text-align: center;
+      background: var(--input-bg); color: var(--text-main);
+    }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 15px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    
+    .tab-btn {
+      padding: 10px 25px; border-radius: 30px; border: none;
+      background: var(--chip-bg); color: var(--text-light); font-weight: 600;
+      cursor: pointer; transition: 0.3s; white-space: nowrap; flex-shrink: 0;
+    }
+    .tab-btn.active {
+      background: var(--primary); color: white;
+      box-shadow: 0 5px 15px rgba(255, 138, 26, 0.3);
+    }
+    .badge {
+      background: rgba(0,0,0,0.15); padding: 2px 8px;
+      border-radius: 10px; font-size: 11px; margin-left: 5px;
+    }
+
+    /* Table */
+    .table-wrapper {
+      background: var(--white); border-radius: var(--radius);
+      box-shadow: var(--shadow); overflow-x: auto; /* Horizontal Scroll for Mobile */
+      margin-bottom: 20px;
+    }
+    .mobile-seller-list { display: none; }
+    .seller-mobile-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .seller-mobile-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .seller-mobile-head h4 {
+      font-size: 15px;
+      line-height: 1.3;
+      color: var(--text-main);
+      margin: 0;
+    }
+    .seller-mobile-meta {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-light);
+      margin-bottom: 10px;
+    }
+    .seller-mobile-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface-2);
+      margin-bottom: 8px;
+    }
+    .seller-mobile-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .mobile-act-btn {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-main);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .mobile-act-btn.primary { border-color: #d9ccff; color: var(--primary); background: #f6f1ff; }
+    .mobile-act-btn.success { border-color: #b8efd6; color: #1f9b67; background: #ebfff6; }
+    .mobile-act-btn.danger { border-color: #ffd1d1; color: #c0392b; background: #fff2f2; }
+    .mobile-act-btn.warn { border-color: #ffe3a9; color: #a86800; background: #fff9ea; }
+    .comm-input-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .comm-submit-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      border: 1px solid #d9ccff;
+      background: #f6f1ff;
+      color: var(--primary);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    .comm-submit-btn:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+    table { width: 100%; border-collapse: collapse; min-width: 900px; /* Force scroll on small screens */ }
+    th {
+      text-align: left; padding: 18px 25px; font-size: 12px;
+      color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px;
+      background: var(--table-head); border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    td { padding: 20px 25px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:hover { background: var(--row-hover); }
+
+    /* Status & Actions */
+    .status { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; display: inline-block; }
+    .st-pending { background: #fff8e1; color: #f39c12; }
+    .st-approved { background: #e8f5e9; color: #27ae60; }
+    .st-rejected { background: #ffebee; color: #c0392b; }
+    .st-blocked { background: #34495e; color: #ecf0f1; }
+
+    .action-group { display: flex; gap: 8px; }
+    .btn-act {
+      width: 36px; height: 36px; border-radius: 10px; border: none;
+      cursor: pointer; color: white; display: flex; align-items: center; justify-content: center;
+      transition: transform 0.2s; font-size: 14px;
+    }
+    .btn-act:active { transform: scale(0.95); }
+    .btn-yes { background: var(--success); }
+    .btn-no { background: var(--danger); }
+    .btn-view { background: var(--primary); }
+    .btn-ban { background: var(--warning); color: #333; }
+
+    /* Toast Notification */
+    #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+    .toast {
+      background: #333; color: white; padding: 12px 24px; border-radius: 8px;
+      animation: slideIn 0.3s, fadeOut 0.3s 2.7s forwards;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 10px; pointer-events: auto;
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeOut { to { opacity: 0; transform: translateY(20px); } }
+
+    /* Modal */
+    .modal {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      z-index: 3000; justify-content: center; align-items: center; padding: 20px;
+      opacity: 0; transition: opacity 0.3s;
+    }
+    .modal.show { opacity: 1; }
+    .modal-content {
+      background: var(--surface); width: 100%; max-width: 700px; border-radius: 16px;
+      padding: 25px; position: relative; max-height: 85vh; overflow-y: auto;
+      transform: translateY(20px); transition: transform 0.3s;
+    }
+    .modal.show .modal-content { transform: translateY(0); }
+    .close { position: absolute; right: 20px; top: 15px; font-size: 28px; cursor: pointer; color: var(--text-light); }
+    .doc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px; }
+    .doc-grid img { width: 100%; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
+    .doc-grid img:hover { transform: scale(1.02); }
+    .chip-missing {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 6px;
+      width: fit-content;
+    }
+    .chip-verified {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+      font-size: 11px;
+      font-weight: 700;
+      margin-top: 6px;
+      width: fit-content;
+    }
+    .doc-tile {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      background: var(--surface-2);
+      text-align: center;
+    }
+    .doc-tile .doc-preview {
+      width: 100%;
+      height: 160px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      object-fit: contain;
+      background: #fff;
+    }
+    .doc-tile .doc-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 8px;
+    }
+    .doc-tile a {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .zoom-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 4000;
+      padding: 20px;
+    }
+    .zoom-modal.show { display: flex; }
+    .zoom-modal img {
+      max-width: 92vw;
+      max-height: 86vh;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .verified-tag {
+      background: #e8f5e9;
+      color: #27ae60;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 700;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+
+    .reject-list { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .reject-item { background: var(--surface-3); border: 1px solid var(--border); padding: 10px; border-radius: 10px; }
+    .reject-item.checked { border: 2px solid #ef4444 !important; background: #fff5f5; }
+    .reject-item label { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .reject-item input[type="text"] { width: 100%; margin-top: 8px; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text-main); }
+    .reject-actions { display:flex; gap:10px; margin-top: 14px; }
+    .btn-primary { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 10px; cursor: pointer; }
+    .btn-ghost { background: var(--surface-2); border: 1px solid var(--border); padding: 10px 16px; border-radius: 10px; cursor: pointer; color: var(--text-main); }
+
+    /* Sidebar Overlay for Mobile */
+    .sidebar-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 900;
+      transition: opacity 0.3s; opacity: 0;
+    }
+    .sidebar-overlay.active { display: block; opacity: 1; }
+
+    /* ================= RESPONSIVE QUERY ================= */
+    @media (max-width: 992px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.active { transform: translateX(0); box-shadow: 5px 0 15px rgba(0,0,0,0.1); }
+      .main-content { margin-left: 0; padding: 16px 18px 0; }
+      .mobile-toggle { display: block; }
+      .hero-row { grid-template-columns: 1fr; }
+      .table-wrapper { display: none; }
+      .mobile-seller-list { display: block; }
+    }
+
+    @media (max-width: 600px) {
+      .content-scroll { padding: 0 0 16px; }
+      .filter-section { flex-direction: column; align-items: stretch; gap: 15px; }
+      .search-box { max-width: 100%; }
+      .global-action { justify-content: space-between; }
+      .top-header { padding: 15px 20px; }
+      .brand h2 { display: block; /* Ensure logo text shows on menu */ }
+      .hero-card h2 { font-size: 19px; }
+      .hero-stats { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+
+  <link rel='stylesheet' href='admin-shared.css'>
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <img src="https://mylocalbasket.com/Images/mylocalbasketlogo.png" onerror="this.src='https://via.placeholder.com/40?text=LB'" alt="Logo">
+      <h2>Local Basket</h2>
+    </div>
+    <nav class="menu">
+      <button onclick="window.location.href='admin.html'"><i class="fas fa-chart-pie"></i> Dashboard</button>
+      <button class="active"><i class="fas fa-store"></i> Seller Request</button>
+      <button onclick="window.location.href='admin-products.html'"><i class="fas fa-box"></i> Products</button>
+      <button onclick="window.location.href='admin-orders.html'"><i class="fas fa-truck"></i> Orders</button>
+    </nav>
+    <div class="menu-footer">
+      <button style="color: #ff7675;" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar lb-header">
+      <div class="lb-header-left">
+        <button class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+        <div>
+          <h2 class="lb-header-title">Seller Management</h2>
+          <p class="lb-header-sub">Review, approve, and monitor marketplace sellers.</p>
+        </div>
+      </div>
+      <div class="lb-header-right"></div>
+    </div>
+
+    <div class="content-scroll">
+      <div class="hero-row">
+        <div class="hero-card">
+          <h2>Seller Control Hub</h2>
+          <p>Verify sellers, manage commission, and keep marketplace quality high.</p>
+          <div class="hero-meta"><i class="fas fa-shield-check"></i> Admin Review Queue</div>
+        </div>
+        <div class="hero-stats">
+          <div class="stat-tile"><small>Pending</small><b id="heroPending">0</b></div>
+          <div class="stat-tile"><small>Approved</small><b id="heroApproved">0</b></div>
+          <div class="stat-tile"><small>Rejected</small><b id="heroRejected">0</b></div>
+          <div class="stat-tile"><small>Blocked</small><b id="heroBlocked">0</b></div>
+        </div>
+      </div>
+      
+      <div class="section-card">
+        <div class="filter-section" style="margin-bottom:0;">
+          <div class="search-box">
+            <i class="fas fa-search" style="color: #999;"></i>
+            <input type="text" id="searchInput" placeholder="Search store, owner, phone..." onkeyup="handleSearch()">
+          </div>
+
+          <div class="global-action">
+            <span style="font-size: 13px; font-weight: 600;">Global Comm (%):</span>
+            <input type="number" id="globalCommInput" value="10" min="0" max="100">
+            <button class="btn-view" style="padding: 8px 15px; border-radius: 6px; font-size:12px;" onclick="applyBulkComm()">Update</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabs section-card" style="display:flex; margin-bottom:16px;">
+        <button class="tab-btn active" onclick="setTab('PENDING')">Requests <span class="badge" id="badge-pending">0</span></button>
+        <button class="tab-btn" onclick="setTab('APPROVED')">Active Sellers <span class="badge" id="badge-approved">0</span></button>
+        <button class="tab-btn" onclick="setTab('REJECTED')">Rejected <span class="badge" id="badge-rejected">0</span></button>
+        <button class="tab-btn" onclick="setTab('BLOCKED')">Blocked <span class="badge" id="badge-blocked">0</span></button>
+      </div>
+
+      <div class="table-wrapper">
+        <table id="sellerTable">
+          <thead>
+            </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="6" style="text-align:center; padding: 30px;">Loading data...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="mobileSellerList" class="mobile-seller-list"></div>
+
+    </div>
+  </main>
+
+  <div class="modal" id="docModal" onclick="closeModal(event)">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal('force')">&times;</span>
+      <h3>Verification Documents</h3>
+      <p id="modal-details" style="color:#777; margin-bottom:15px;"></p>
+      <div class="doc-grid" id="modal-images"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="rejectModal">
+    <div class="modal-content">
+      <span class="close" onclick="closeRejectModal()">&times;</span>
+      <h3>Reject Seller - Select Issues</h3>
+      <p style="color:#777; margin-bottom:10px;">Choose the fields that need correction. Seller will be allowed to edit only these fields.</p>
+      <div class="reject-list" id="rejectList"></div>
+      <div class="reject-actions">
+        <button class="btn-ghost" onclick="closeRejectModal()">Cancel</button>
+        <button class="btn-primary" onclick="submitRejection()">Reject Seller</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="zoom-modal" id="zoomModal" onclick="closeZoom(event)">
+    <img id="zoomImg" alt="Document preview">
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script>
+    // ================= CONFIG & STATE =================
+    const isLikelyStaticPreview =
+      window.location.port === "5500" ||
+      window.location.hostname === "127.0.0.2";
+
+    const API_BASE_CANDIDATES = Array.from(new Set([
+      (localStorage.getItem("lbApiAdminBase") || "").trim(),
+      "http://localhost:5000/api/admin",
+      "http://127.0.0.1:5000/api/admin",
+      ...(!isLikelyStaticPreview ? [`${window.location.origin}/api/admin`] : [])
+    ].filter(Boolean)));
+
+    const IMAGE_BASE_CANDIDATES = Array.from(new Set([
+      (localStorage.getItem("lbImageBase") || "").trim(),
+      `${window.location.origin}/uploads/`,
+      "http://localhost:5000/uploads/"
+    ].filter(Boolean)));
+
+    const IMAGE_BASE = IMAGE_BASE_CANDIDATES[0];
+    const SELLER_COMMISSION_MAP_KEY = "lbSellerCommissionMap";
+
+    let state = {
+      sellers: [],
+      currentTab: 'PENDING',
+      searchQuery: ''
+    };
+
+    function getSellerCommissionMap() {
+      try {
+        const raw = localStorage.getItem(SELLER_COMMISSION_MAP_KEY);
+        if (!raw) return {};
+        const parsed = JSON.parse(raw);
+        return parsed && typeof parsed === "object" ? parsed : {};
+      } catch {
+        return {};
+      }
+    }
+
+    function setSellerCommissionInMap(sellerId, commission) {
+      const key = String(Number(sellerId));
+      if (!key || key === "NaN") return;
+      const map = getSellerCommissionMap();
+      map[key] = Number(commission);
+      localStorage.setItem(SELLER_COMMISSION_MAP_KEY, JSON.stringify(map));
+    }
+
+    function resolveAdminUrls(paths) {
+      const pathList = Array.isArray(paths) ? paths : [paths];
+      const urls = [];
+      API_BASE_CANDIDATES.forEach(base => {
+        pathList.forEach(path => urls.push(`${base}${path}`));
+      });
+      return Array.from(new Set(urls));
+    }
+
+    function resolveDocUrls(src) {
+      const raw = String(src || "").trim();
+      if (!raw) return [];
+
+      if (/^https?:\/\//i.test(raw) || raw.startsWith("data:")) {
+        return [raw];
+      }
+
+      const normalized = raw.replace(/\\/g, "/");
+      const trimmed = normalized.replace(/^\/+/, "");
+      const withoutUploadsPrefix = trimmed.replace(/^uploads\/+/i, "");
+      const withUploadsPrefix = trimmed.startsWith("uploads/") ? trimmed : `uploads/${withoutUploadsPrefix}`;
+
+      const out = [];
+      IMAGE_BASE_CANDIDATES.forEach(baseRaw => {
+        const base = String(baseRaw || "").trim().replace(/\/+$/, "");
+        if (!base) return;
+
+        if (/\/uploads$/i.test(base)) {
+          out.push(`${base}/${withoutUploadsPrefix}`);
+          out.push(`${base}/${withUploadsPrefix.replace(/^uploads\//, "")}`);
+        } else {
+          out.push(`${base}/${withUploadsPrefix}`);
+          out.push(`${base}/uploads/${withoutUploadsPrefix}`);
+        }
+      });
+
+      // Safe local fallback
+      out.push(`http://localhost:5000/uploads/${withoutUploadsPrefix}`);
+
+      return Array.from(new Set(out.filter(Boolean)));
+    }
+
+    function handleDocImgError(imgEl) {
+      try {
+        const encoded = imgEl.getAttribute("data-urls") || "";
+        const urls = JSON.parse(decodeURIComponent(encoded));
+        const idx = Number(imgEl.getAttribute("data-url-idx") || "0");
+        const nextIdx = idx + 1;
+        if (Array.isArray(urls) && nextIdx < urls.length) {
+          imgEl.setAttribute("data-url-idx", String(nextIdx));
+          imgEl.src = urls[nextIdx];
+          return;
+        }
+      } catch {}
+      imgEl.onerror = null;
+      imgEl.src = "https://via.placeholder.com/300?text=Image+Error";
+    }
+
+    async function fetchJsonWithFallback(paths, options = {}) {
+      let lastError = "Request failed";
+      const urls = resolveAdminUrls(paths);
+
+      for (const url of urls) {
+        try {
+          const res = await fetch(url, options);
+          const data = await res.json().catch(() => ({}));
+          if (res.ok) return { ok: true, data, url };
+          lastError = data.message || data.error || `HTTP ${res.status}`;
+        } catch (err) {
+          lastError = err?.message || "Network error";
+        }
+      }
+
+      return { ok: false, message: lastError };
+    }
+
+    // ================= INIT =================
+    document.addEventListener("DOMContentLoaded", () => {
+      loadSellers();
+    });
+
+    // ================= DATA FETCHING =================
+    async function loadSellers() {
+      try {
+        const response = await fetchJsonWithFallback("/sellers");
+        if (!response.ok) throw new Error(response.message || "Failed to fetch sellers");
+        const data = response.data;
+        
+        if (data.success) {
+          const commissionMap = getSellerCommissionMap();
+          state.sellers = (Array.isArray(data.sellers) ? data.sellers : []).map(s => {
+            const mapped = commissionMap[String(Number(s.id))];
+            if (Number.isFinite(Number(mapped))) {
+              return { ...s, commission: Number(mapped) };
+            }
+            return s;
+          });
+          updateUI();
+        } else {
+          showToast(data.message || "Failed to load sellers", "error");
+        }
+      } catch (err) {
+        console.error("Fetch Error:", err);
+        showToast("Cannot connect to server. Check API.", "error");
+        document.getElementById('tableBody').innerHTML = `
+          <tr><td colspan="6" style="text-align:center; color: var(--danger); padding:30px;">
+            <i class="fas fa-exclamation-triangle"></i> Backend Connection Failed
+          </td></tr>`;
+      }
+    }
+
+    function updateUI() {
+      renderBadges();
+      renderTable();
+    }
+
+    // ================= RENDERING =================
+    function setTab(tab) {
+      state.currentTab = tab;
+      
+      // Update Tab Styling
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const btnText = btn.innerText.split(' ')[0].toUpperCase();
+        let isActive = false;
+        if (tab === 'PENDING' && btnText.includes('REQUEST')) isActive = true;
+        if (tab === 'APPROVED' && btnText.includes('ACTIVE')) isActive = true;
+        if (tab === 'REJECTED' && btnText.includes('REJECTED')) isActive = true;
+        if (tab === 'BLOCKED' && btnText.includes('BLOCKED')) isActive = true;
+        
+        btn.classList.toggle('active', isActive);
+      });
+      
+      renderTable();
+    }
+
+    function handleSearch() {
+      state.searchQuery = document.getElementById('searchInput').value.toLowerCase();
+      renderTable();
+    }
+
+    function renderBadges() {
+      const counts = { PENDING: 0, APPROVED: 0, REJECTED: 0, BLOCKED: 0 };
+      
+      state.sellers.forEach(s => {
+        const status = s.account_status === 'BLOCKED' ? 'BLOCKED' : s.status;
+        if (counts[status] !== undefined) counts[status]++;
+      });
+
+      document.getElementById('badge-pending').innerText = counts.PENDING;
+      document.getElementById('badge-approved').innerText = counts.APPROVED;
+      document.getElementById('badge-rejected').innerText = counts.REJECTED;
+      document.getElementById('badge-blocked').innerText = counts.BLOCKED;
+      const hPending = document.getElementById('heroPending');
+      const hApproved = document.getElementById('heroApproved');
+      const hRejected = document.getElementById('heroRejected');
+      const hBlocked = document.getElementById('heroBlocked');
+      if (hPending) hPending.innerText = counts.PENDING;
+      if (hApproved) hApproved.innerText = counts.APPROVED;
+      if (hRejected) hRejected.innerText = counts.REJECTED;
+      if (hBlocked) hBlocked.innerText = counts.BLOCKED;
+    }
+
+    function renderTable() {
+      const thead = document.querySelector('#sellerTable thead');
+      const tbody = document.getElementById('tableBody');
+      const mobileList = document.getElementById('mobileSellerList');
+      
+      // Define Columns based on Tab
+      let headers = `<tr><th>Store Info</th><th>Owner</th><th>Bank</th>`;
+      if (state.currentTab === 'APPROVED') headers += `<th>Commission %</th>`;
+      if (state.currentTab === 'REJECTED') headers += `<th>Reason</th>`;
+      headers += `<th>Status</th><th>Actions</th></tr>`;
+      thead.innerHTML = headers;
+
+      // Filter Data
+      const filtered = state.sellers.filter(s => {
+        const sellerStatus = s.account_status === 'BLOCKED' ? 'BLOCKED' : s.status;
+        
+        const matchesTab = sellerStatus === state.currentTab;
+        const matchesSearch = (
+          (s.store_name || "").toLowerCase().includes(state.searchQuery) ||
+          (s.owner_name || "").toLowerCase().includes(state.searchQuery) ||
+          (s.phone || "").includes(state.searchQuery)
+        );
+
+        return matchesTab && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 40px; color: #999;">No sellers found</td></tr>`;
+        if (mobileList) {
+          mobileList.innerHTML = `<div class="seller-mobile-card" style="text-align:center; color:#999;">No sellers found</div>`;
+        }
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(s => `
+        <tr>
+          <td>
+            <div style="font-weight:600; color:var(--text-main)">${s.store_name || "Unknown Store"}</div>
+            <div style="font-size:12px; color:var(--text-light)">ID: #${s.id}</div>
+            <div style="font-size:12px; color:#6b7280;">Category: ${s.category || "N/A"}</div>
+          </td>
+          <td>
+            <div>${s.owner_name || "N/A"}</div>
+            <div style="font-size:12px; color:var(--primary); font-weight:500;">
+               <i class="fas fa-phone-alt" style="font-size:10px"></i> ${s.phone || ""}
+            </div>
+          </td>
+          <td>
+            <div style="font-size:12px; font-weight:600;">${s.bank_holder || "N/A"}</div>
+            <div style="font-size:12px; color:var(--text-light);">${maskAccount(s.bank_account)}</div>
+            <div style="font-size:11px; color:var(--text-light);">${s.bank_ifsc || ""}</div>
+            ${hasMissingBank(s) ? `<div class="chip-missing"><i class="fas fa-triangle-exclamation"></i> Bank Missing</div>` : `<div class="chip-verified"><i class="fas fa-shield-check"></i> Bank Verified</div>`}
+          </td>
+          
+          ${state.currentTab === 'APPROVED' ? `
+            <td>
+              <div style="display:flex; align-items:center; gap:5px;">
+                <input type="number" value="${s.commission || 10}" 
+                  style="width:60px; padding:8px; border:1px solid #ddd; border-radius:8px; text-align:center;" 
+                  onchange="updateComm(${s.id}, this.value)"> 
+                  <span style="font-size:14px; font-weight:600;">%</span>
+              </div>
+            </td>` : ''}
+
+          ${state.currentTab === 'REJECTED' ? `<td style="color:var(--danger); font-size:13px;">${formatRejectReason(s.reject_reason)}</td>` : ''}
+
+          <td>
+            <span class="status st-${s.status.toLowerCase()}">
+                ${s.account_status === 'BLOCKED' ? 'BLOCKED' : s.status}
+            </span>
+            ${s.status === 'APPROVED' ? `<span class="verified-tag">VERIFIED</span>` : ''}
+          </td>
+
+          <td>
+            <div class="action-group">
+              <button class="btn-act btn-view" title="View Docs" onclick='openModal(${JSON.stringify(s).replace(/'/g, "&#39;")})'>
+                <i class="fas fa-eye"></i>
+              </button>
+              
+              ${state.currentTab === 'PENDING' ? `
+                <button class="btn-act btn-yes" title="Approve" onclick="changeStatus(${s.id}, 'APPROVED')"><i class="fas fa-check"></i></button>
+                <button class="btn-act btn-no" title="Reject" onclick='openRejectModal(${JSON.stringify(s).replace(/'/g, "&#39;")})'><i class="fas fa-times"></i></button>
+              ` : ''}
+
+              ${state.currentTab === 'APPROVED' ? `
+                <button class="btn-act btn-ban" title="Block Account" onclick="toggleBlock(${s.id}, 'BLOCKED')"><i class="fas fa-ban"></i></button>
+              ` : ''}
+
+              ${state.currentTab === 'BLOCKED' ? `
+                <button class="btn-act btn-yes" title="Unblock Account" onclick="toggleBlock(${s.id}, 'ACTIVE')"><i class="fas fa-unlock"></i></button>
+              ` : ''}
+            </div>
+          </td>
+        </tr>
+      `).join('');
+
+      if (mobileList) {
+        mobileList.innerHTML = filtered.map(s => {
+          const sellerStatus = s.account_status === 'BLOCKED' ? 'BLOCKED' : s.status;
+          const commissionInput = state.currentTab === 'APPROVED'
+            ? `<div class="seller-mobile-row">
+                <span>Commission</span>
+                <span class="comm-input-wrap">
+                  <input type="number" id="mcomm-${s.id}" value="${s.commission || 10}" min="0" max="100"
+                    style="width:58px; padding:5px 6px; border:1px solid #ddd; border-radius:8px; text-align:center;">
+                  <b>%</b>
+                  <button class="comm-submit-btn" title="Update commission"
+                    onclick="updateComm(${s.id}, document.getElementById('mcomm-${s.id}')?.value)">
+                    <i class="fas fa-check"></i>
+                  </button>
+                </span>
+              </div>`
+            : '';
+
+          const rejectedReason = state.currentTab === 'REJECTED'
+            ? `<div class="seller-mobile-row"><span>Reason</span><span style="text-align:right; color:var(--danger);">${formatRejectReason(s.reject_reason)}</span></div>`
+            : '';
+
+          const pendingActions = state.currentTab === 'PENDING'
+            ? `<button class="mobile-act-btn success" onclick="changeStatus(${s.id}, 'APPROVED')"><i class="fas fa-check"></i> Approve</button>
+               <button class="mobile-act-btn danger" onclick='openRejectModal(${JSON.stringify(s).replace(/'/g, "&#39;")})'><i class="fas fa-times"></i> Reject</button>`
+            : '';
+
+          const approvedActions = state.currentTab === 'APPROVED'
+            ? `<button class="mobile-act-btn warn" onclick="toggleBlock(${s.id}, 'BLOCKED')"><i class="fas fa-ban"></i> Block</button>`
+            : '';
+
+          const blockedActions = state.currentTab === 'BLOCKED'
+            ? `<button class="mobile-act-btn success" onclick="toggleBlock(${s.id}, 'ACTIVE')"><i class="fas fa-unlock"></i> Unblock</button>`
+            : '';
+
+          return `
+            <div class="seller-mobile-card">
+              <div class="seller-mobile-head">
+                <h4>${s.store_name || "Unknown Store"}</h4>
+                <span class="status st-${String(s.status || "PENDING").toLowerCase()}">${sellerStatus}</span>
+              </div>
+              <div class="seller-mobile-meta">
+                <div><b>ID:</b> #${s.id}</div>
+                <div><b>Owner:</b> ${s.owner_name || "N/A"}</div>
+                <div><b>Phone:</b> ${s.phone || "N/A"}</div>
+                <div><b>Category:</b> ${s.category || "N/A"}</div>
+                <div><b>Bank:</b> ${s.bank_holder || "N/A"} ? ${maskAccount(s.bank_account)} ? ${s.bank_ifsc || "N/A"}</div>
+                ${hasMissingBank(s) ? `<div class="chip-missing"><i class="fas fa-triangle-exclamation"></i> Bank Missing</div>` : `<div class="chip-verified"><i class="fas fa-shield-check"></i> Bank Verified</div>`}
+              </div>
+              ${commissionInput}
+              ${rejectedReason}
+              <div class="seller-mobile-actions">
+                <button class="mobile-act-btn primary" onclick='openModal(${JSON.stringify(s).replace(/'/g, "&#39;")})'><i class="fas fa-eye"></i> Docs</button>
+                ${pendingActions}
+                ${approvedActions}
+                ${blockedActions}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // ================= ACTIONS =================
+    async function changeStatus(id, newStatus, reason = null) {
+      try {
+        const payload = { seller_id: id, status: newStatus, reason };
+        const response = await fetchJsonWithFallback(
+          ["/sellers/status"],
+          {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+          }
+        );
+        const data = response.ok ? response.data : { success: false, message: response.message };
+        
+        if(data.success) {
+          showToast(`Seller ${newStatus === 'APPROVED' ? 'Approved' : 'Updated'}`, "success");
+          loadSellers(); // Refresh data
+        } else {
+          showToast(data.message || "Action failed", "error");
+        }
+      } catch(e) { 
+        console.error(e);
+        showToast("Network error occurred", "error"); 
+      }
+    }
+
+    async function toggleBlock(id, targetAccountStatus) {
+      if(!confirm(`Are you sure you want to ${targetAccountStatus === 'BLOCKED' ? 'BLOCK' : 'UNBLOCK'} this seller?`)) return;
+
+      try {
+        const response = await fetchJsonWithFallback(
+          ["/sellers/block", "/block-seller"],
+          {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ seller_id: id, account_status: targetAccountStatus })
+          }
+        );
+        const data = response.ok ? response.data : { success: false, message: response.message };
+        
+        if(data.success) {
+          showToast(`Seller ${targetAccountStatus}`, "success");
+          loadSellers();
+        } else {
+          showToast(data.message || "Failed to update block status", "error");
+        }
+      } catch(e) {
+        showToast("Connection failed", "error");
+      }
+    }
+
+    const REJECT_FIELDS = [
+      { key: "store_name", label: "Store Name" },
+      { key: "owner_name", label: "Owner Name" },
+      { key: "phone", label: "Phone" },
+      { key: "alt_phone", label: "Alternate Phone" },
+      { key: "address", label: "Address" },
+      { key: "pincode", label: "Pincode" },
+      { key: "category_id", label: "Category" },
+      { key: "owner_id_doc", label: "Owner ID" },
+      { key: "license_doc", label: "License" },
+      { key: "store_photo", label: "Store Photo" },
+      { key: "bank_holder", label: "Bank Holder" },
+      { key: "bank_account", label: "Bank Account" },
+      { key: "bank_ifsc", label: "Bank IFSC" },
+      { key: "bank_name", label: "Bank Name" },
+      { key: "bank_branch", label: "Bank Branch" },
+      { key: "bank_passbook", label: "Bank Passbook" }
+    ];
+
+    let rejectTarget = null;
+
+    function openRejectModal(seller) {
+      rejectTarget = seller;
+      const list = document.getElementById("rejectList");
+      if (!list) return;
+      list.innerHTML = REJECT_FIELDS.map(f => `
+        <div class="reject-item">
+          <label>
+            <input type="checkbox" data-key="${f.key}">
+            ${f.label}
+          </label>
+          <input type="text" placeholder="Reason (optional)" data-reason="${f.key}">
+        </div>
+      `).join("");
+
+      list.addEventListener("change", (e) => {
+        const target = e.target;
+        if (!target || target.type !== "checkbox") return;
+        const box = target.closest(".reject-item");
+        if (!box) return;
+        box.classList.toggle("checked", target.checked);
+        if (target.checked) {
+          box.style.borderColor = "#ef4444";
+          box.style.borderWidth = "2px";
+          box.style.borderStyle = "solid";
+          box.style.background = "#fff5f5";
+        } else {
+          box.style.borderColor = "#e5e7eb";
+          box.style.borderWidth = "1px";
+          box.style.borderStyle = "solid";
+          box.style.background = "#f8f9fb";
+        }
+      });
+
+      const modal = document.getElementById("rejectModal");
+      modal.style.display = "flex";
+      setTimeout(() => modal.classList.add("show"), 10);
+    }
+
+    function closeRejectModal() {
+      const modal = document.getElementById("rejectModal");
+      modal.classList.remove("show");
+      setTimeout(() => { modal.style.display = "none"; }, 300);
+      rejectTarget = null;
+    }
+
+    function submitRejection() {
+      if (!rejectTarget) return;
+      const checks = Array.from(document.querySelectorAll("#rejectList input[type='checkbox']"));
+      const selected = checks.filter(c => c.checked).map(c => c.getAttribute("data-key"));
+      if (!selected.length) {
+        showToast("Select at least one field", "error");
+        return;
+      }
+
+      const reasons = {};
+      selected.forEach(key => {
+        const r = document.querySelector(`#rejectList input[data-reason="${key}"]`);
+        reasons[key] = r && r.value.trim() ? r.value.trim() : "Needs correction";
+      });
+
+      changeStatus(rejectTarget.id, "REJECTED", JSON.stringify(reasons));
+      closeRejectModal();
+    }
+
+    function formatRejectReason(raw) {
+      if (!raw) return "N/A";
+      try {
+        const obj = JSON.parse(raw);
+        if (obj && typeof obj === "object") {
+          const label = (key) => {
+            const found = REJECT_FIELDS.find(f => f.key === key);
+            return found ? found.label : key;
+          };
+          return Object.keys(obj).map(k => `${label(k)}: ${obj[k]}`).join(", ");
+        }
+      } catch {}
+      return raw;
+    }
+
+    async function requestCommissionEndpoint({ endpointPaths, payloads, methods = ["POST"] }) {
+      let lastError = "Request failed";
+      let lastUrl = "";
+      let lastMethod = "";
+      let lastStatus = 0;
+      const endpoints = resolveAdminUrls(endpointPaths);
+
+      for (const url of endpoints) {
+        for (const method of methods) {
+          for (const payload of payloads) {
+            try {
+              const res = await fetch(url, {
+                method,
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload)
+              });
+
+              const data = await res.json().catch(() => ({}));
+              if (res.ok && data.success) return { ok: true, data };
+
+              lastUrl = url;
+              lastMethod = method;
+              lastStatus = res.status;
+              lastError = data.message || data.error || `HTTP ${res.status}`;
+            } catch (e) {
+              lastUrl = url;
+              lastMethod = method;
+              lastError = e?.message || "Network error";
+            }
+          }
+        }
+      }
+
+      return { ok: false, message: lastError, lastUrl, lastMethod, lastStatus };
+    }
+
+    async function updateComm(id, val) {
+      const commission = Number(val);
+      if (!Number.isFinite(commission) || commission < 0 || commission > 100) {
+        showToast("Enter commission between 0 and 100", "error");
+        return;
+      }
+
+      const endpointPaths = [
+        "/update-commission",
+        "/sellers/update-commission",
+        "/sellers/commission",
+        "/commission/update",
+        "/commission",
+        `/sellers/${Number(id)}/commission`,
+        `/seller/${Number(id)}/commission`
+      ];
+
+      const payloads = [
+        { seller_id: Number(id), commission },
+        { sellerId: Number(id), commission },
+        { id: Number(id), commission },
+        { commission },
+        { value: commission }
+      ];
+
+      const result = await requestCommissionEndpoint({
+        endpointPaths,
+        payloads,
+        methods: ["POST", "PUT"]
+      });
+
+      if (result.ok) {
+        setSellerCommissionInMap(id, commission);
+        const target = state.sellers.find(s => Number(s.id) === Number(id));
+        if (target) target.commission = commission;
+        showToast(`Commission updated to ${commission}%`, "success");
+        loadSellers();
+        return;
+      }
+
+      // Local fallback: keep UI + seller panel in sync even if API route is unavailable.
+      setSellerCommissionInMap(id, commission);
+      const target = state.sellers.find(s => Number(s.id) === Number(id));
+      if (target) target.commission = commission;
+      renderTable();
+
+      const detail = [result.lastMethod, result.lastUrl, result.lastStatus].filter(Boolean).join(" ");
+      showToast(`Saved locally (${commission}%). API failed: ${result.message}${detail ? ` (${detail})` : ""}`, "error");
+    }
+
+    async function applyBulkComm() {
+      const val = document.getElementById('globalCommInput').value;
+      const commission = Number(val);
+      if (!Number.isFinite(commission) || commission < 0 || commission > 100) {
+        return showToast("Enter a valid percentage (0-100)", "error");
+      }
+
+      if(!confirm(`Apply ${commission}% commission to ALL sellers in the current list?`)) return;
+
+      try {
+        const endpointPaths = [
+          "/bulk-commission",
+          "/sellers/bulk-commission",
+          "/sellers/commission/bulk",
+          "/commission/bulk"
+        ];
+        const payloads = [
+          { commission },
+          { commission, seller_ids: state.sellers.map(s => s.id) },
+          { commission, sellerIds: state.sellers.map(s => s.id) }
+        ];
+
+        const result = await requestCommissionEndpoint({
+          endpointPaths,
+          payloads,
+          methods: ["POST", "PUT"]
+        });
+
+        if (result.ok) {
+          state.sellers.forEach(s => setSellerCommissionInMap(s.id, commission));
+          state.sellers.forEach(s => { s.commission = commission; });
+          showToast("Global commission updated", "success");
+          loadSellers();
+          return;
+        }
+
+        // Fallback: if no bulk route works, update approved sellers one by one.
+        const approved = state.sellers.filter(s => (s.account_status === 'BLOCKED' ? 'BLOCKED' : s.status) === 'APPROVED');
+        let successCount = 0;
+        for (const s of approved) {
+          const itemResult = await requestCommissionEndpoint({
+            endpointPaths: [
+              "/update-commission",
+              "/sellers/update-commission",
+              "/sellers/commission",
+              "/commission/update",
+              "/commission",
+              `/sellers/${Number(s.id)}/commission`,
+              `/seller/${Number(s.id)}/commission`
+            ],
+            payloads: [
+              { seller_id: Number(s.id), commission },
+              { sellerId: Number(s.id), commission },
+              { id: Number(s.id), commission },
+              { commission },
+              { value: commission }
+            ],
+            methods: ["POST", "PUT"]
+          });
+          if (itemResult.ok) {
+            successCount++;
+            setSellerCommissionInMap(s.id, commission);
+            s.commission = commission;
+          }
+        }
+
+        if (successCount > 0) {
+          showToast(`Global commission updated for ${successCount} sellers`, "success");
+          loadSellers();
+          return;
+        }
+
+        state.sellers.forEach(s => setSellerCommissionInMap(s.id, commission));
+        state.sellers.forEach(s => { s.commission = commission; });
+        renderTable();
+        showToast(`Global commission saved locally (${commission}%). Bulk API failed: ${result.message}`, "error");
+      } catch (e) {
+        showToast(`Error updating global commission: ${e?.message || "Unknown error"}`, "error");
+      }
+    }
+
+    // ================= UI HELPERS =================
+    function maskAccount(acc) {
+      const raw = String(acc || "").replace(/\s+/g, "");
+      if (!raw) return "N/A";
+      const last = raw.slice(-4);
+      return `**** **** ${last}`;
+    }
+
+    function hasMissingBank(seller) {
+      return !(seller.bank_holder && seller.bank_account && seller.bank_ifsc && seller.bank_passbook);
+    }
+    function hasVerifiedBank(seller) {
+      return !hasMissingBank(seller);
+    }
+
+    function isPdf(src) {
+      return /\.pdf(\?|$)/i.test(String(src || ""));
+    }
+
+    function openModal(seller) {
+      const modal = document.getElementById('docModal');
+      document.getElementById('modal-details').innerHTML = `
+        <i class="fas fa-store"></i> <b>${seller.store_name}</b> <br>
+        <i class="fas fa-user"></i> ${seller.owner_name}<br>
+        <i class="fas fa-map-marker-alt"></i> ${seller.address || "N/A"} ${seller.pincode ? `, ${seller.pincode}` : ""}<br>
+        <i class="fas fa-phone-alt"></i> ${seller.phone || "N/A"} ${seller.alt_phone ? ` / ${seller.alt_phone}` : ""}
+        <div style="margin-top:10px; padding:10px; background:var(--surface-2); border:1px solid var(--border); border-radius:10px;">
+          <div style="font-weight:700; margin-bottom:6px;">Bank Details</div>
+          <div style="font-size:12px; color:var(--text-light); line-height:1.6;">
+            <div><b>Holder:</b> ${seller.bank_holder || "N/A"}</div>
+            <div><b>Account:</b> ${maskAccount(seller.bank_account)}</div>
+            <div><b>IFSC:</b> ${seller.bank_ifsc || "N/A"}</div>
+            <div><b>Bank:</b> ${seller.bank_name || "N/A"}</div>
+            <div><b>Branch:</b> ${seller.bank_branch || "N/A"}</div>
+          </div>
+          ${hasMissingBank(seller) ? `<div class="chip-missing" style="margin-top:8px;"><i class="fas fa-triangle-exclamation"></i> Bank Missing</div>` : `<div class="chip-verified" style="margin-top:8px;"><i class="fas fa-shield-check"></i> Bank Verified</div>`}
+        </div>
+      `;
+      
+      const grid = document.getElementById('modal-images');
+      
+      // Construct image paths securely
+      const docs = [];
+      if(seller.owner_id_doc) docs.push({ src: seller.owner_id_doc, title: "ID Proof" });
+      if(seller.license_doc) docs.push({ src: seller.license_doc, title: "License" });
+      if(seller.store_photo) docs.push({ src: seller.store_photo, title: "Store Photo" });
+      if(seller.bank_passbook) docs.push({ src: seller.bank_passbook, title: "Bank Passbook" });
+
+      if(docs.length === 0) {
+        grid.innerHTML = `<p style="grid-column: 1/-1; text-align:center; color:#999;">No documents uploaded.</p>`;
+      } else {
+        grid.innerHTML = docs.map(doc => {
+          const urls = resolveDocUrls(doc.src);
+          const primary = urls[0] || "";
+          const href = primary || "#";
+          const encoded = encodeURIComponent(JSON.stringify(urls));
+          if (isPdf(primary)) {
+            return `
+              <div class="doc-tile">
+                <a href="${href}" target="_blank" style="text-decoration:none; color:inherit;">
+                  <div style="font-size:28px; color:var(--primary);"><i class="fas fa-file-pdf"></i></div>
+                  <div style="font-size:12px; font-weight:600; margin-top:6px;">${doc.title}</div>
+                  <div style="font-size:11px; color:var(--muted);">Open PDF</div>
+                </a>
+                <div class="doc-actions">
+                  <a href="${href}" target="_blank">Open</a>
+                  <a href="${href}" download>Download</a>
+                </div>
+              </div>
+            `;
+          }
+          return `
+            <div class="doc-tile">
+              <img class="doc-preview" src="${primary}" data-urls="${encoded}" data-url-idx="0" onerror="handleDocImgError(this)" alt="${doc.title}" onclick="openZoom(this)">
+              <div style="font-size:12px; font-weight:600; margin-top:6px;">${doc.title}</div>
+              <div class="doc-actions">
+                <a href="${href}" target="_blank">Open</a>
+                <a href="${href}" download>Download</a>
+                <a href="javascript:void(0)" onclick="openZoom(this.previousElementSibling?.previousElementSibling)">Zoom</a>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+      
+      modal.style.display = 'flex';
+      setTimeout(() => modal.classList.add('show'), 10);
+    }
+
+    function closeModal(e) {
+      if (e === 'force' || e.target.id === 'docModal') {
+        const modal = document.getElementById('docModal');
+        modal.classList.remove('show');
+        setTimeout(() => modal.style.display = 'none', 300);
+      }
+    }
+
+    function openZoom(imgEl) {
+      if (!imgEl) return;
+      const src = imgEl.getAttribute("src");
+      if (!src || isPdf(src)) return;
+      const zoom = document.getElementById("zoomModal");
+      const zoomImg = document.getElementById("zoomImg");
+      if (!zoom || !zoomImg) return;
+      zoomImg.src = src;
+      zoom.classList.add("show");
+    }
+
+    function closeZoom(e) {
+      if (!e || e.target.id === "zoomModal") {
+        const zoom = document.getElementById("zoomModal");
+        const zoomImg = document.getElementById("zoomImg");
+        if (zoom) zoom.classList.remove("show");
+        if (zoomImg) zoomImg.src = "";
+      }
+    }
+
+    function showToast(msg, type = "info") {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      
+      const icon = type === 'success' ? '<i class="fas fa-check-circle" style="color:#2ecc71"></i>' : 
+                   type === 'error' ? '<i class="fas fa-exclamation-circle" style="color:#e74c3c"></i>' : 
+                   '<i class="fas fa-info-circle" style="color:#3498db"></i>';
+      
+      toast.innerHTML = `${icon} <span>${msg}</span>`;
+      container.appendChild(toast);
+      
+      // Auto remove from DOM after animation
+      setTimeout(() => {
+        if(toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 3000);
+    }
+
+    function logout() {
+        if(confirm("Are you sure you want to logout?")) {
+            // Clear tokens if any
+            localStorage.removeItem('admin_token'); 
+            window.location.href = "login.html";
+        }
+    }
+  </script>
+
+<script src='admin-layout.js'></script>
+</body>
+</html>
+
+
+
+

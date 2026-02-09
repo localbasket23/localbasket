@@ -1,0 +1,265 @@
+/* ================= GLOBAL ================= */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Poppins, sans-serif;
+}
+
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at top, #ece6ff, #f7f4ff 60%);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+/* ================= CONTAINER ================= */
+.auth-container{
+  width:100%;
+  max-width:420px;
+  padding:20px;
+  animation:fadeUp .6s ease;
+}
+
+/* ================= LOGO ================= */
+.logo-box{
+  text-align:center;
+  margin-bottom:22px;
+}
+
+.logo-box img{
+  width:80px;
+  margin-bottom:6px;
+}
+
+.logo-box h2{
+  font-size:20px;
+  font-weight:600;
+  color:#3a2a6a;
+}
+
+/* ================= CARD ================= */
+.card{
+  background:rgba(255,255,255,0.95);
+  backdrop-filter:blur(8px);
+  padding:30px;
+  border-radius:18px;
+  box-shadow:
+    0 20px 45px rgba(106,60,255,.25),
+    inset 0 0 0 1px rgba(255,255,255,.4);
+}
+
+.card h3{
+  text-align:center;
+  margin-bottom:22px;
+  color:#2c2340;
+  font-weight:600;
+}
+
+/* ================= INPUT GROUP ================= */
+.input-group{
+  position:relative;
+  margin-bottom:14px;
+}
+
+.input-group svg{
+  position:absolute;
+  top:50%;
+  left:14px;
+  transform:translateY(-50%);
+  width:18px;
+  height:18px;
+  stroke:#ff8a1a;
+  opacity:.9;
+  transition:.25s;
+}
+
+/* ================= INPUTS ================= */
+.card input,
+.card textarea{
+  width:100%;
+  padding:13px 14px 13px 44px;
+  border-radius:10px;
+  border:1px solid #ddd;
+  font-size:14px;
+  background:#fff;
+  transition:.25s ease;
+}
+
+.card input::placeholder,
+.card textarea::placeholder{
+  color:#aaa;
+}
+
+.card input:focus,
+.card textarea:focus{
+  outline:none;
+  border-color:#ff8a1a;
+  box-shadow:
+    0 0 0 3px rgba(106,60,255,.18);
+}
+
+.input-group:focus-within svg{
+  stroke:#4d2db7;
+  transform:translateY(-50%) scale(1.1);
+}
+
+/* ================= TEXTAREA ================= */
+textarea{
+  resize:none;
+  height:72px;
+  padding-top:11px;
+}
+
+/* ================= FILE INPUT ================= */
+.card input[type="file"]{
+  padding:10px 12px;
+  background:#faf9ff;
+  cursor:pointer;
+  border-style:dashed;
+}
+
+.card input[type="file"]:hover{
+  background:#f1ecff;
+}
+
+/* ================= BUTTON ================= */
+.btn{
+  width:100%;
+  padding:13px;
+  background:linear-gradient(135deg,#ff8a1a,#ffb347);
+  color:#fff;
+  border:none;
+  border-radius:12px;
+  font-weight:600;
+  cursor:pointer;
+  transition:.3s;
+  box-shadow:0 10px 25px rgba(106,60,255,.35);
+}
+
+.btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 14px 30px rgba(106,60,255,.45);
+}
+
+.btn:active{
+  transform:translateY(0);
+}
+
+/* ================= REGISTER TOGGLE ================= */
+.register-only{
+  display:none;
+}
+
+.switch{
+  text-align:center;
+  margin-top:16px;
+  color:#ff8a1a;
+  cursor:pointer;
+  font-weight:600;
+  user-select:none;
+  transition:.2s;
+}
+
+.switch:hover{
+  color:#4d2db7;
+  text-decoration:underline;
+}
+
+/* ================= MESSAGE ================= */
+#msg{
+  text-align:center;
+  margin-top:12px;
+  font-size:14px;
+  min-height:18px;
+  font-weight:500;
+}
+
+/* ================= APPROVED SLIDER ================= */
+.approved-slider{
+  position:fixed;
+  bottom:-180px;
+  left:0;
+  width:100%;
+  background:linear-gradient(135deg,#ff8a1a,#ffb347);
+  color:#fff;
+  text-align:center;
+  padding:22px;
+  transition:.45s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 -10px 30px rgba(0,0,0,0.3);
+  z-index:9999;
+}
+
+.approved-slider.show{
+  bottom:0;
+}
+
+.approved-slider p{
+  margin-bottom:12px;
+  font-weight:600;
+  font-size:16px;
+}
+
+.approved-slider button{
+  padding:11px 24px;
+  border:none;
+  border-radius:10px;
+  font-weight:600;
+  cursor:pointer;
+  background:#fff;
+  color:#ff8a1a;
+  transition:.3s;
+}
+
+.approved-slider button:hover{
+  background:#f1ecff;
+  transform:scale(1.05);
+}
+
+/* ================= ANIMATION ================= */
+@keyframes fadeUp{
+  from{
+    opacity:0;
+    transform:translateY(20px);
+  }
+  to{
+    opacity:1;
+    transform:none;
+  }
+}
+
+/* ================= MOBILE ================= */
+@media(max-width:480px){
+  .card{
+    padding:22px;
+    border-radius:16px;
+  }
+
+  .logo-box h2{
+    font-size:18px;
+  }
+}
+
+@media (hover: none) {
+  button,
+  .btn,
+  .switch,
+  .card,
+  .approved-slider button,
+  .card input[type="file"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:active,
+  .btn:active,
+  .switch:active,
+  .card:active,
+  .approved-slider button:active,
+  .card input[type="file"]:active {
+    transform: scale(0.98);
+    filter: brightness(0.96);
+  }
+}
+
+

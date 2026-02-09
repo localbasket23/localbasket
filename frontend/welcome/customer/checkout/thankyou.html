@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Order Confirmed | LocalBasket</title>
+
+  <link rel="stylesheet" href="/welcome/includes/header-footer.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99" />
+
+  <style>
+    :root {
+      --ty-primary: #ff8a1a;
+      --ty-primary-dark: #e56a00;
+      --ty-bg: #f4faf9;
+      --ty-card: #ffffff;
+      --ty-text: #0f172a;
+      --ty-muted: #64748b;
+      --ty-border: #dcebe8;
+      --ty-shadow: 0 26px 44px -26px rgba(15, 118, 110, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Plus Jakarta Sans", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 15% 10%, rgba(15, 118, 110, 0.08) 0%, var(--ty-bg) 45%);
+      color: var(--ty-text);
+    }
+
+    .ty-shell {
+      min-height: calc(100vh - 170px);
+      display: grid;
+      place-items: center;
+      padding: 24px 16px 40px;
+      animation: tyFadeIn 0.45s ease;
+    }
+
+    .ty-card {
+      width: min(560px, 100%);
+      background: var(--ty-card);
+      border: 1px solid var(--ty-border);
+      border-radius: 24px;
+      box-shadow: var(--ty-shadow);
+      padding: 26px 24px;
+      text-align: center;
+      animation: tyCardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .ty-icon {
+      width: 78px;
+      height: 78px;
+      border-radius: 999px;
+      margin: 0 auto 14px;
+      display: grid;
+      place-items: center;
+      font-size: 36px;
+      background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+      border: 1px solid #86efac;
+      animation: tyIconPop 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .ty-title {
+      margin: 0;
+      font-size: clamp(26px, 3vw, 34px);
+      font-weight: 800;
+      letter-spacing: -0.6px;
+      line-height: 1.15;
+    }
+
+    .ty-sub {
+      margin: 10px auto 0;
+      max-width: 460px;
+      color: var(--ty-muted);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .ty-pill-row {
+      margin: 16px 0 2px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .ty-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--ty-primary);
+      background: #e7f7f4;
+      border: 1px solid #c7ebe4;
+      opacity: 0;
+      transform: translateY(6px);
+      animation: tyPillIn 0.4s ease forwards;
+    }
+    .ty-pill:nth-child(1) { animation-delay: 0.18s; }
+    .ty-pill:nth-child(2) { animation-delay: 0.28s; }
+
+    .ty-actions {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: tyFadeIn 0.35s ease forwards;
+      animation-delay: 0.33s;
+    }
+
+    .ty-btn {
+      border: none;
+      border-radius: 14px;
+      padding: 12px 18px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .ty-btn.primary {
+      background: var(--ty-primary);
+      color: #fff;
+      box-shadow: 0 10px 18px -12px rgba(15, 118, 110, 0.5);
+    }
+
+    .ty-btn.primary:hover {
+      background: var(--ty-primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .ty-btn.ghost {
+      background: #ffffff;
+      color: var(--ty-text);
+      border: 1px solid #dbe7e5;
+    }
+
+    .ty-btn.ghost:hover {
+      transform: translateY(-1px);
+      background: #f8fafc;
+    }
+
+    @keyframes tyFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes tyCardIn {
+      from { opacity: 0; transform: translateY(14px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes tyIconPop {
+      0% { transform: scale(0.85); opacity: 0; }
+      70% { transform: scale(1.06); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes tyPillIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 640px) {
+      .ty-shell {
+        min-height: calc(100vh - 150px);
+        padding: 16px 12px 28px;
+      }
+
+      .ty-card {
+        border-radius: 18px;
+        padding: 20px 14px;
+      }
+
+      .ty-sub {
+        font-size: 14px;
+      }
+
+      .ty-actions {
+        flex-direction: column;
+      }
+
+      .ty-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="siteHeader"></div>
+
+  <main class="ty-shell">
+    <section class="ty-card">
+      <div class="ty-icon" aria-hidden="true">✓</div>
+      <h1 class="ty-title">Order Placed Successfully</h1>
+      <p class="ty-sub">Thank you for shopping with LocalBasket. Your order has been confirmed and will be delivered soon.</p>
+
+      <div class="ty-pill-row">
+        <span class="ty-pill">Order Confirmed</span>
+        <span class="ty-pill">Estimated Delivery Soon</span>
+      </div>
+
+      <div class="ty-actions">
+        <a class="ty-btn primary" href="/welcome/customer/index.html">Continue Shopping</a>
+        <a class="ty-btn ghost" href="/welcome/customer/order/customer-orders.html">View My Orders</a>
+      </div>
+    </section>
+  </main>
+
+  <div id="siteFooter"></div>
+
+  <script src="/welcome/includes/include.js"></script>
+</body>
+</html>

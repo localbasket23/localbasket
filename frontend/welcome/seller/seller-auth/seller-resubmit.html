@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Resubmit Details | Local Basket</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --primary: #ff8a1a;
+      --primary-dark: #e56a00;
+      --accent: #10b981;
+      --text-main: #1f2937;
+      --text-muted: #6b7280;
+      --bg-glass: rgba(255, 255, 255, 0.85);
+      --border-glass: rgba(255, 255, 255, 0.6);
+      --input-bg: rgba(243, 244, 246, 0.6);
+      --shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1), 0 10px 20px -5px rgba(0, 0, 0, 0.04);
+      --radius: 20px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: linear-gradient(120deg, #ffe1bf 0%, #ff9f45 100%);
+      overflow-x: hidden;
+    }
+
+    .container { width: 100%; max-width: 520px; }
+
+    .brand-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .brand-header img {
+      width: 70px;
+      height: 70px;
+      object-fit: contain;
+      background: white;
+      border-radius: 16px;
+      padding: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      margin-bottom: 12px;
+    }
+    .brand-header h1 { color: #e56a00; font-size: 1.6rem; font-weight: 700; }
+    .brand-header p { color: #4b5563; font-size: 0.95rem; }
+
+    .glass-card {
+      background: var(--bg-glass);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 32px;
+    }
+
+    .form-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 10px;
+    }
+    .note {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+    }
+
+    .form-grid { display: grid; gap: 16px; }
+    .row-split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .input-wrapper { position: relative; }
+    .input-wrapper i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      transition: var(--transition);
+      z-index: 2;
+    }
+    .form-control {
+      width: 100%;
+      padding: 16px 16px 16px 45px;
+      background: var(--input-bg);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      font-size: 15px;
+      color: var(--text-main);
+      outline: none;
+      transition: var(--transition);
+    }
+    .form-control:focus {
+      background: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    }
+
+    textarea.form-control { min-height: 80px; resize: vertical; padding-top: 16px; }
+
+    .file-upload-box {
+      border: 2px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      background: rgba(255,255,255,0.5);
+    }
+    .file-upload-box:hover { border-color: var(--primary); background: rgba(79, 70, 229, 0.05); }
+    .file-upload-box input { display: none; }
+    .file-upload-box span { font-size: 0.85rem; color: var(--text-muted); display: block; }
+    .file-upload-box i { font-size: 1.2rem; color: var(--primary); margin-bottom: 5px; }
+
+    .field-rejected .form-control {
+      border-color: #ef4444 !important;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+      background: #fff5f5;
+    }
+    .file-upload-box.field-rejected {
+      border: 2px solid #ef4444;
+      background: #fff5f5;
+    }
+
+    .field-locked .form-control {
+      opacity: 0.6;
+      background: #f3f4f6;
+      border-color: #e5e7eb;
+    }
+    .file-upload-box.field-locked {
+      opacity: 0.6;
+      border-color: #e5e7eb;
+      background: #f3f4f6;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-top: 10px;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(79, 70, 229, 0.4); }
+
+    .disabled-note { font-size: 12px; color: #ef4444; }
+
+    @media (max-width: 480px) {
+      .glass-card { padding: 24px; }
+      .row-split { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="brand-header">
+      <img src="/welcome/logo2.png" alt="Local Basket Logo">
+      <h1>Local Basket</h1>
+      <p>Seller Resubmission</p>
+    </div>
+
+    <div class="glass-card">
+      <h2 class="form-title">Update & Resubmit</h2>
+      <p class="note">Only the fields marked by admin are editable.</p>
+
+      <form id="resubmitForm">
+        <div class="form-grid">
+          <div class="input-wrapper">
+            <i class="fas fa-store"></i>
+            <input type="text" class="form-control" placeholder="Store Name" id="storeName">
+          </div>
+
+          <div class="row-split">
+            <div class="input-wrapper">
+              <i class="fas fa-user"></i>
+              <input type="text" class="form-control" placeholder="Owner Name" id="ownerName">
+            </div>
+            <div class="input-wrapper">
+              <i class="fas fa-tag"></i>
+              <select class="form-control" id="category"></select>
+              <i class="fas fa-chevron-down" style="left: auto; right: 15px; font-size: 10px;"></i>
+            </div>
+          </div>
+
+          <div class="row-split">
+            <div class="input-wrapper">
+              <i class="fas fa-map-pin"></i>
+              <input type="text" class="form-control" placeholder="Pincode" id="pincode">
+            </div>
+            <div class="input-wrapper">
+              <i class="fas fa-phone-alt"></i>
+              <input type="tel" class="form-control" placeholder="Phone (read-only)" id="phone" disabled>
+            </div>
+          </div>
+
+          <div class="input-wrapper">
+            <i class="fas fa-map-marker-alt" style="top: 20px; transform: none;"></i>
+            <textarea class="form-control" placeholder="Shop Address" rows="2" id="shopAddress"></textarea>
+          </div>
+
+          <div class="row-split">
+            <label class="file-upload-box">
+              <input type="file" id="ownerId" accept="image/*">
+              <i class="fas fa-id-card"></i>
+              <span>Owner ID</span>
+            </label>
+            
+            <label class="file-upload-box">
+              <input type="file" id="license" accept="image/*">
+              <i class="fas fa-file-contract"></i>
+              <span>License</span>
+            </label>
+          </div>
+
+          <label class="file-upload-box">
+            <input type="file" id="storePhoto" accept="image/*">
+            <i class="fas fa-store"></i>
+            <span>Store Image</span>
+          </label>
+        </div>
+
+        <p class="disabled-note" id="lockNote"></p>
+        <button type="submit" class="btn-primary" id="submitBtn">Resubmit for Approval</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="seller-resubmit.js"></script>
+</body>
+</html>

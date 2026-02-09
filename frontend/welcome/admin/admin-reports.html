@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Full Report | Local Basket</title>
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99">
+  <link rel="icon" type="image/png" sizes="32x32" href="/welcome/logo2.png?v=200">
+<link rel="icon" type="image/png" sizes="48x48" href="/welcome/logo2.png?v=200">
+<link rel="icon" type="image/png" sizes="96x96" href="/welcome/logo2.png?v=200">
+<link rel="apple-touch-icon" sizes="180x180" href="/welcome/logo2.png?v=200">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+     :root {
+      --lav: #ff8a1a;
+      --lav-light: #ffb347;
+      --lav-soft: rgba(255, 138, 26, 0.14);
+      --bg: #f8f9fd;
+      --white: #fff;
+      --text: #2d3436;
+      --text-light: #636e72;
+      --radius: 16px;
+      --shadow: 0 10px 30px rgba(0,0,0,0.05);
+      --border: #edf0f7;
+      --surface: #ffffff;
+      --surface-2: #fafbff;
+      --table-head: #f4f6fb;
+      --row-hover: #fafaff;
+      --muted: #9aa2b1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Poppins", sans-serif; }
+    body { background: var(--bg); color: var(--text); overflow-x: hidden; }
+    body.dark {
+      --bg: #0f172a;
+      --white: #111827;
+      --text: #f1f5f9;
+      --text-light: #94a3b8;
+      --border: #1f2937;
+      --shadow: 0 10px 30px rgba(0,0,0,0.4);
+      --surface: #111827;
+      --surface-2: #0b1220;
+      --table-head: #0b1220;
+      --row-hover: #111b2d;
+      --muted: #94a3b8;
+    }
+
+    /* ================= SIDEBAR (EXACT SAME AS DASHBOARD) ================= */
+    #sidebarOverlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
+      backdrop-filter: blur(4px); z-index: 1001; display: none; opacity: 0; transition: 0.3s;
+    }
+    #sidebarOverlay.show { display: block; opacity: 1; }
+
+    .sidebar {
+      width: 280px; height: 100vh; position: fixed; left: 0; top: 0;
+      background: linear-gradient(160deg, var(--lav), var(--lav-light));
+      color: white; padding: 30px 20px; z-index: 1002;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+    }
+
+    .close-sidebar {
+      display: none; position: absolute; right: 20px; top: 20px;
+      font-size: 22px; color: white; cursor: pointer;
+      width: 35px; height: 35px; background: rgba(255,255,255,0.1);
+      border-radius: 50%; align-items: center; justify-content: center;
+    }
+
+    .brand { text-align: center; margin-bottom: 40px; }
+    .brand img { width: 65px; margin-bottom: 10px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2)); }
+    .brand h2 { font-size: 20px; font-weight: 700; color: white; }
+
+    .menu button {
+      width: 100%; padding: 14px 18px; margin: 5px 0; border: none;
+      border-radius: 12px; background: rgba(255,255,255,0.1);
+      color: white; font-size: 14px; font-weight: 500; text-align: left;
+      cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 12px;
+    }
+    .menu button:hover, .menu button.active { background: white; color: var(--lav); transform: translateX(5px); }
+
+    /* ================= MAIN AREA ================= */
+    main { margin-left: 280px; padding: 30px; transition: 0.3s; }
+
+    .topbar {
+      background: var(--white); padding: 18px 25px; border-radius: var(--radius);
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: var(--shadow); margin-bottom: 30px;
+      gap: 12px;
+    }
+    .topbar h1 { font-size: 18px; font-weight: 700; color: var(--lav); }
+    .menu-toggle {
+      display: none;
+      font-size: 20px;
+      background: var(--lav-soft);
+      color: var(--lav);
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    /* ================= REPORT BOXES ================= */
+    .report-grid {
+      display: grid; grid-template-columns: 1fr 1.5fr; gap: 25px; margin-bottom: 30px;
+    }
+
+    .report-box {
+      background: var(--white); padding: 25px; border-radius: var(--radius);
+      box-shadow: var(--shadow); border: 1px solid var(--border);
+    }
+    .report-box h2 { font-size: 16px; margin-bottom: 20px; color: var(--text); display: flex; align-items: center; gap: 10px; }
+
+    .stat-line {
+      display: flex; justify-content: space-between; padding: 12px 0;
+      border-bottom: 1px solid var(--border); font-size: 14px;
+    }
+    .stat-line:last-child { border-bottom: none; }
+    .stat-line span:last-child { font-weight: 700; color: var(--lav); }
+
+    .chart-wrap {
+      width: 100%;
+      height: 220px;
+    }
+    .chart-wrap canvas { width: 100% !important; height: 100% !important; }
+
+    /* ================= TABLE ================= */
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th { background: var(--table-head); padding: 12px; text-align: left; font-size: 12px; color: var(--text-light); text-transform: uppercase; }
+    td { padding: 14px 12px; border-bottom: 1px solid var(--border); font-size: 14px; }
+    tr:hover { background: var(--row-hover); }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .hero-card {
+      background: linear-gradient(140deg, var(--lav), var(--lav-light));
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .hero-card h2 { font-size: 22px; margin-bottom: 6px; }
+    .hero-card p { font-size: 13px; opacity: .9; }
+    .hero-meta {
+      margin-top: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.16);
+      font-size: 12px;
+    }
+    .stat-panel {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-content: center;
+    }
+    .stat-tile {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      border-radius: 12px;
+      padding: 10px;
+    }
+    .stat-tile small { color: var(--text-light); font-size: 11px; text-transform: uppercase; }
+    .stat-tile b { display: block; margin-top: 4px; color: var(--lav); font-size: 18px; }
+
+    .mobile-sellers { display: none; }
+    .seller-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .seller-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .seller-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface-2);
+      margin-bottom: 8px;
+    }
+
+    .btn-download {
+      background: var(--lav); color: white; border: none; padding: 12px 20px;
+      border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.3s;
+      margin-top: 20px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn-download:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(106,60,255,0.3); }
+
+    @media(max-width: 1100px) {
+      .report-grid { grid-template-columns: 1fr; }
+    }
+    @media(max-width: 992px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      main { margin-left: 0; padding: 20px; }
+      #sidebarOverlay.show { display: block; }
+      .menu-toggle { display: inline-flex; align-items: center; justify-content: center; }
+      .hero { grid-template-columns: 1fr; }
+      .mobile-sellers { display: block; }
+      .report-table { display: none; }
+    }
+    @media(max-width: 600px) {
+      .topbar { padding: 14px 16px; }
+      .topbar { flex-direction: column; align-items: flex-start; }
+      .topbar h1 { font-size: 16px; }
+      .report-grid { gap: 16px; }
+      .report-box { padding: 16px; }
+      .stat-line { font-size: 13px; }
+      .hero-card { padding: 16px; }
+      .hero-card h2 { font-size: 19px; }
+      .hero-meta { flex-wrap: wrap; }
+      .hero-card h2 { font-size: 19px; }
+      .stat-panel { grid-template-columns: 1fr 1fr; }
+      .chart-wrap { height: 180px; }
+    }
+  </style>
+
+  <link rel='stylesheet' href='admin-shared.css'>
+</head>
+
+<body>
+
+<div id="sidebarOverlay" onclick="toggleMenu()"></div>
+
+<aside class="sidebar">
+  <div class="brand">
+    <img src="https://mylocalbasket.com/Images/mylocalbasketlogo.png" alt="Logo">
+    <h2>Admin Panel</h2>
+  </div>
+
+  <div class="menu">
+    <button onclick="location.href='admin.html'"><i class="fas fa-chart-pie"></i> Dashboard</button>
+    <button onclick="location.href='admin-sellers.html'"><i class="fas fa-user-check"></i> Seller Verification</button>
+    <button onclick="location.href='admin-products.html'"><i class="fas fa-box-open"></i> Product Approvals</button>
+    <button onclick="location.href='admin-orders.html'"><i class="fas fa-shopping-cart"></i> Orders</button>
+    <button onclick="location.href='admin-payments.html'"><i class="fas fa-wallet"></i> Payments</button>
+    <button class="active" onclick="location.href='admin-reports.html'"><i class="fas fa-chart-line"></i> Reports</button>
+    <button onclick="location.href='admin-settings.html'"><i class="fas fa-cog"></i> Settings</button>
+    <button onclick="logout()" style="margin-top: 20px; background: rgba(255,71,87,0.2);"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+</aside>
+
+<main>
+  <div class="topbar lb-header">
+    <div class="lb-header-left" style="display:flex; align-items:center; gap:12px;">
+        <button class="menu-toggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+        <h1 class="lb-header-title">Full Sales Report</h1>
+    </div>
+    <div class="lb-header-right lb-header-sub" style="font-size: 13px; color: var(--text-light); font-weight: 500;">
+      <i class="far fa-calendar-alt"></i> Data till: <span id="currentDate"></span>
+    </div>
+  </div>
+  <div id="reportError" style="display:none; margin-bottom:16px; padding:12px 14px; border-radius:12px; border:1px solid var(--border); background: var(--surface-2); color: var(--text);">
+    Unable to load report data.
+  </div>
+
+  <section class="hero">
+    <div class="hero-card">
+      <h2>Business Intelligence Snapshot</h2>
+      <p>Live metrics across sellers, orders, payouts and revenue.</p>
+      <div class="hero-meta"><i class="fas fa-bolt"></i> Real-time Reporting</div>
+    </div>
+    <div class="stat-panel">
+      <div class="stat-tile"><small>Stores</small><b id="statStores">0</b></div>
+      <div class="stat-tile"><small>Customers</small><b id="statCustomers">0</b></div>
+      <div class="stat-tile"><small>Orders</small><b id="statOrders">0</b></div>
+      <div class="stat-tile"><small>Revenue</small><b id="statRevenue">Rs. 0</b></div>
+    </div>
+  </section>
+
+  <div class="report-grid">
+    <div class="report-box">
+      <h2><i class="fas fa-info-circle" style="color:var(--lav);"></i> Overview Summary</h2>
+      <div id="summaryContent">
+        <div class="stat-line"><span>Total Stores</span><span id="repStores">0</span></div>
+        <div class="stat-line"><span>Total Customers</span><span id="repCust">0</span></div>
+        <div class="stat-line"><span>Total Orders</span><span id="repOrders">0</span></div>
+        <div class="stat-line"><span>Gross Revenue</span><span id="repSales" style="font-size:18px;">Rs. 0</span></div>
+        <div class="stat-line"><span>Pending Payouts</span><span id="repPending" style="color:#ffa000;">Rs. 0</span></div>
+      </div>
+      <button class="btn-download" onclick="downloadReport()">
+        <i class="fas fa-file-pdf"></i> Download PDF Report
+      </button>
+    </div>
+
+    <div class="report-box">
+      <h2><i class="fas fa-chart-line" style="color:var(--lav);"></i> Sales Trend (Weekly)</h2>
+      <div class="chart-wrap">
+        <canvas id="salesChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="report-box report-table">
+    <h2><i class="fas fa-trophy" style="color:#ffd700;"></i> Top Performing Stores</h2>
+    <div style="overflow-x: auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Store Name</th>
+            <th>Owner</th>
+            <th>Orders</th>
+            <th>Total Sales</th>
+            <th>Performance</th>
+          </tr>
+        </thead>
+        <tbody id="topSellersBody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="topSellersCards" class="mobile-sellers"></div>
+</main>
+
+<script>
+  function toggleMenu() {
+    document.querySelector(".sidebar").classList.toggle("open");
+    document.getElementById("sidebarOverlay").classList.toggle("show");
+  }
+
+  const API_BASE = (localStorage.getItem("lbApiAdminBase") || "").trim() || "http://localhost:5000/api/admin";
+  document.getElementById('currentDate').innerText = new Date().toLocaleDateString('en-IN', {day:'numeric', month:'long', year:'numeric'});
+
+  /* ================= FETCH REAL REPORT DATA ================= */
+  async function fetchReportData() {
+    try {
+      const response = await fetch(`${API_BASE}/full-report`);
+      const text = await response.text();
+      let data = {};
+      try { data = JSON.parse(text); } catch {}
+
+      if (!response.ok) {
+        setErrorState(`API error ${response.status}`);
+        return;
+      }
+
+      const summary = data.summary || data.data?.summary || data || {};
+      const topSellers = data.topSellers || data.data?.topSellers || data.top_sellers || [];
+      const chartData = data.chartData || data.data?.chartData || data.chart || data.salesChart || {};
+
+      const hasSummary =
+        typeof summary.totalStores !== "undefined" ||
+        typeof summary.totalCustomers !== "undefined" ||
+        typeof summary.totalOrders !== "undefined" ||
+        typeof summary.totalSales !== "undefined";
+
+      if (!data.success && !hasSummary) {
+        setErrorState("No report data found.");
+        return;
+      }
+      if (summary.asOfDate || data.asOfDate) {
+        const dt = summary.asOfDate || data.asOfDate;
+        try {
+          document.getElementById('currentDate').innerText = new Date(dt).toLocaleDateString('en-IN', {day:'numeric', month:'long', year:'numeric'});
+        } catch {}
+      }
+
+      // Update Summary + Hero Stats
+      document.getElementById('repStores').innerText = Number(summary.totalStores || 0).toLocaleString();
+      document.getElementById('repCust').innerText = Number(summary.totalCustomers || 0).toLocaleString();
+      document.getElementById('repOrders').innerText = Number(summary.totalOrders || 0).toLocaleString();
+      document.getElementById('repSales').innerText = 'Rs. ' + Number(summary.totalSales || 0).toLocaleString('en-IN');
+      document.getElementById('repPending').innerText = 'Rs. ' + Number(summary.pendingPayouts || 0).toLocaleString('en-IN');
+
+      document.getElementById('statStores').innerText = Number(summary.totalStores || 0).toLocaleString();
+      document.getElementById('statCustomers').innerText = Number(summary.totalCustomers || 0).toLocaleString();
+      document.getElementById('statOrders').innerText = Number(summary.totalOrders || 0).toLocaleString();
+      document.getElementById('statRevenue').innerText = 'Rs. ' + Number(summary.totalSales || 0).toLocaleString('en-IN');
+
+      // Update Table + Mobile Cards
+      renderTopSellers(topSellers || []);
+
+      // Update Chart
+      initChart(chartData || {});
+      document.getElementById("reportError").style.display = "none";
+    } catch (err) {
+      console.error("Report Load Error:", err);
+      setErrorState("Network error while loading report.");
+    }
+  }
+
+  function setErrorState(message) {
+    const errBox = document.getElementById("reportError");
+    if (errBox) {
+      errBox.style.display = "block";
+      errBox.textContent = message;
+    }
+    document.getElementById('repStores').innerText = "--";
+    document.getElementById('repCust').innerText = "--";
+    document.getElementById('repOrders').innerText = "--";
+    document.getElementById('repSales').innerText = "Rs. --";
+    document.getElementById('repPending').innerText = "Rs. --";
+    document.getElementById('statStores').innerText = "--";
+    document.getElementById('statCustomers').innerText = "--";
+    document.getElementById('statOrders').innerText = "--";
+    document.getElementById('statRevenue').innerText = "Rs. --";
+    const tbody = document.getElementById('topSellersBody');
+    tbody.innerHTML = `<tr><td colspan="5" style="padding:30px;color:var(--muted)">${message}</td></tr>`;
+    const cards = document.getElementById('topSellersCards');
+    if (cards) cards.innerHTML = `<div class="seller-card">${message}</div>`;
+  }
+
+  function renderTopSellers(list) {
+    const tbody = document.getElementById('topSellersBody');
+    const cards = document.getElementById('topSellersCards');
+    tbody.innerHTML = '';
+    if (cards) cards.innerHTML = '';
+
+    if (!list || list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="padding:30px;color:var(--muted)">No seller data available.</td></tr>`;
+      if (cards) cards.innerHTML = `<div class="seller-card">No seller data available.</div>`;
+      return;
+    }
+
+    list.forEach(s => {
+      tbody.innerHTML += `
+        <tr>
+          <td style="font-weight:600; color:var(--lav);">${s.name || "N/A"}</td>
+          <td>${s.owner || "N/A"}</td>
+          <td>${Number(s.orders || 0).toLocaleString()}</td>
+          <td style="font-weight:700;">Rs. ${Number(s.sales || 0).toLocaleString('en-IN')}</td>
+          <td><span style="color:#2ecc71;"><i class="fas fa-arrow-up"></i> High</span></td>
+        </tr>
+      `;
+    });
+
+    if (cards) {
+      cards.innerHTML = list.map(s => `
+        <div class="seller-card">
+          <div class="seller-head">
+            <div style="font-weight:700; color:var(--lav);">${s.name || "N/A"}</div>
+            <span style="color:#2ecc71;"><i class="fas fa-arrow-up"></i> High</span>
+          </div>
+          <div class="seller-row"><span>Owner</span><span>${s.owner || "N/A"}</span></div>
+          <div class="seller-row"><span>Orders</span><span>${Number(s.orders || 0).toLocaleString()}</span></div>
+          <div class="seller-row"><span>Sales</span><span>Rs. ${Number(s.sales || 0).toLocaleString('en-IN')}</span></div>
+        </div>
+      `).join('');
+    }
+  }
+
+  function initChart(chartData) {
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    let labels = [];
+    let values = [];
+
+    if (Array.isArray(chartData)) {
+      values = chartData;
+      labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].slice(0, values.length);
+    } else {
+      labels = Array.isArray(chartData.labels) ? chartData.labels : [];
+      values = Array.isArray(chartData.values) ? chartData.values : [];
+    }
+
+    if (!labels.length || !values.length) {
+      return new Chart(ctx, {
+        type: 'line',
+        data: { labels: [], datasets: [{ data: [] }] },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+    }
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Sales (Rs. )',
+          data: values,
+          borderColor: '#ff8a1a',
+          backgroundColor: 'rgba(255, 138, 26, 0.14)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+      }
+    });
+  }
+
+  function downloadReport() {
+    alert("Generating encrypted PDF report... Please wait.");
+    // Implementation for jsPDF or server-side PDF generation
+  }
+
+  function logout() {
+    if(confirm("Logout?")) window.location.href='index.html';
+  }
+
+  // Load on Start
+  fetchReportData();
+</script>
+
+
+<script src='admin-layout.js'></script>
+</body>
+</html>
+
+
+

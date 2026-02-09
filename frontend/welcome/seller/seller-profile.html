@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Profile — Local Basket</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="seller-dashboard.css">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99">
+  <link rel="icon" type="image/png" sizes="32x32" href="/welcome/logo2.png?v=200">
+<link rel="icon" type="image/png" sizes="48x48" href="/welcome/logo2.png?v=200">
+<link rel="icon" type="image/png" sizes="96x96" href="/welcome/logo2.png?v=200">
+<link rel="apple-touch-icon" sizes="180x180" href="/welcome/logo2.png?v=200">
+
+   <style>
+    /* Profile Specific Styling */
+    .profile-container {
+      max-width: 800px;
+      margin: 20px auto;
+    }
+    .profile-header-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 30px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+      margin-bottom: 25px;
+      position: relative;
+      overflow: hidden;
+    }
+    .profile-header-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 100px;
+      background: linear-gradient(90deg, var(--lav), var(--lav-2));
+      z-index: 0;
+    }
+    .profile-img-wrapper {
+      position: relative;
+      z-index: 1;
+      margin-top: 20px;
+    }
+    .profile-img {
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      border: 5px solid var(--card);
+      object-fit: cover;
+      box-shadow: var(--shadow-sm);
+      background: #eee;
+    }
+    .upload-btn-wrapper {
+      margin-top: 15px;
+    }
+    .form-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 30px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-light);
+    }
+    input, textarea {
+      width: 100%;
+      padding: 12px 15px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      transition: 0.3s;
+    }
+    input:focus, textarea:focus {
+      border-color: var(--lav);
+      outline: none;
+      box-shadow: 0 0 0 3px var(--lav-soft);
+    }
+    .full-width { grid-column: span 2; }
+
+    @media (max-width: 768px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .full-width { grid-column: span 1; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="mobile-header">
+  <button id="menuBtn"><i class="fas fa-bars"></i></button>
+  <span class="logo-text-mobile">My Profile</span>
+</header>
+
+<div id="sidebarOverlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <img src="/welcome/logo2.png" alt="LocalBasket" class="lb-logo">
+
+    <h3>Local Basket</h3>
+    <p>Admin Dashboard</p>
+  </div>
+  <nav class="nav-menu">
+    <ul>
+      <li><a href="seller-dashboard.html" class="nav-link"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+      <li><a href="seller-pocket.html" class="nav-link"><i class="fas fa-wallet"></i> My Pocket</a></li>
+      <li><a href="seller-add-product.html" class="nav-link"><i class="fas fa-plus-circle"></i> Add Product</a></li>
+      <li><a href="seller-products.html" class="nav-link"><i class="fas fa-boxes-stacked"></i> My Products</a></li>
+      <li><a href="seller-orders.html" class="nav-link"><i class="fas fa-receipt"></i> All Orders</a></li>
+      <li><a href="seller-profile.html" class="nav-link active"><i class="fas fa-store"></i> Shop Profile</a></li>
+      <li class="logout-item"><button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</button></li>
+    </ul>
+  </nav>
+</aside>
+
+<main class="main">
+  <button class="sidebar-open-btn" onclick="sidebar.classList.add('open'); sidebarOverlay.style.display='block';">
+    <i class="fas fa-bars"></i> Menu
+  </button>
+  <div class="top-bar">
+    <div class="shop-info">
+      <div class="text-info">
+        <h3 style="color: var(--lav); font-weight: 700;">👤 Store Profile</h3>
+        <span class="badge">Account Settings</span>
+      </div>
+    </div>
+    <div class="toggles">
+      <div class="toggle-pill theme-toggle">
+        <i class="fas fa-moon"></i>
+        <label class="switch">
+          <input type="checkbox" id="themeToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="profile-container">
+    <div class="profile-header-card">
+      <div class="profile-img-wrapper">
+        <img id="previewPic" class="profile-img" src="https://cdn-icons-png.flaticon.com/512/9131/9131529.png">
+      </div>
+      <h2 id="displayStoreName" style="margin-top:15px; margin-bottom:5px;">Store Name</h2>
+      <p id="displayOwner" style="color: var(--text-light); font-size: 14px;">Owner Name</p>
+      
+      <div class="upload-btn-wrapper">
+        <input type="file" id="storeImageInput" accept="image/*" style="display:none">
+        <button class="btn-accept" onclick="document.getElementById('storeImageInput').click()" style="padding: 8px 15px; font-size: 12px; background: var(--lav);">
+          <i class="fas fa-camera"></i> Change Photo
+        </button>
+        <button class="btn-reject" id="removeImageBtn" style="padding: 8px 15px; font-size: 12px;">
+          <i class="fas fa-trash"></i> Remove
+        </button>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <form id="profileForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label><i class="fas fa-user"></i> Owner Full Name</label>
+            <input id="ownerName" type="text" placeholder="Owner Name">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-store"></i> Shop / Store Name</label>
+            <input id="storeName" type="text" placeholder="Store Name">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-phone"></i> Contact Number</label>
+            <input id="phone" type="text" placeholder="Mobile Number">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-envelope"></i> Email Address (Read Only)</label>
+            <input id="email" type="email" readonly style="opacity: 0.7; cursor: not-allowed;">
+          </div>
+          <div class="form-group full-width">
+            <label><i class="fas fa-map-marker-alt"></i> Store Address</label>
+            <textarea id="address" rows="3" placeholder="Complete address..."></textarea>
+          </div>
+        </div>
+        
+        <button type="submit" class="btn-accept" style="width: 100%; padding: 14px; margin-top: 10px;">
+          <i class="fas fa-save"></i> Save Profile Changes
+        </button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  /* AUTH CHECK */
+  const seller = JSON.parse(localStorage.getItem("lbSeller"));
+  if(!seller) { location.href="./seller-auth/seller-auth.html"; return; }
+
+  /* ELEMENTS */
+  const previewPic = document.getElementById("previewPic");
+  const storeImageInput = document.getElementById("storeImageInput");
+  const removeImageBtn = document.getElementById("removeImageBtn");
+  const ownerName = document.getElementById("ownerName");
+  const storeName = document.getElementById("storeName");
+  const phone = document.getElementById("phone");
+  const address = document.getElementById("address");
+  const email = document.getElementById("email");
+  const profileForm = document.getElementById("profileForm");
+
+  /* FILL DATA */
+  ownerName.value = seller.owner_name || "";
+  storeName.value = seller.store_name || "";
+  phone.value = seller.phone || "";
+  address.value = seller.address || "";
+  email.value = seller.email || "N/A";
+  
+  document.getElementById("displayStoreName").innerText = seller.store_name || "My Store";
+  document.getElementById("displayOwner").innerText = seller.owner_name || "Owner";
+
+  previewPic.src = seller.store_photo 
+    ? "http://localhost:5000/uploads/" + seller.store_photo 
+    : "https://cdn-icons-png.flaticon.com/512/9131/9131529.png";
+
+  /* IMAGE PREVIEW */
+  storeImageInput.onchange = e => {
+    if(e.target.files[0]) previewPic.src = URL.createObjectURL(e.target.files[0]);
+  };
+
+  /* SAVE PROFILE */
+  profileForm.onsubmit = async e => {
+    e.preventDefault();
+    const fd = new FormData();
+    fd.append("seller_id", seller.id);
+    fd.append("owner_name", ownerName.value);
+    fd.append("store_name", storeName.value);
+    fd.append("phone", phone.value);
+    fd.append("address", address.value);
+    if(storeImageInput.files[0]) fd.append("store_photo", storeImageInput.files[0]);
+
+    try {
+      const res = await fetch("http://localhost:5000/api/seller/update-profile", { method:"POST", body:fd });
+      const data = await res.json();
+      if(data.success) {
+        Object.assign(seller, {
+          owner_name: ownerName.value,
+          store_name: storeName.value,
+          phone: phone.value,
+          address: address.value,
+          store_photo: data.store_photo || seller.store_photo
+        });
+        localStorage.setItem("lbSeller", JSON.stringify(seller));
+        alert("Profile updated successfully!");
+        location.reload();
+      }
+    } catch(err) { alert("Update failed!"); }
+  };
+
+  /* REMOVE IMAGE */
+  removeImageBtn.onclick = async () => {
+    if(!confirm("Remove store image?")) return;
+    try {
+      const res = await fetch("http://localhost:5000/api/seller/remove-store-image", {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({ seller_id:seller.id })
+      });
+      const data = await res.json();
+      if(data.success) {
+        previewPic.src = "https://cdn-icons-png.flaticon.com/512/9131/9131529.png";
+        seller.store_photo = null;
+        localStorage.setItem("lbSeller", JSON.stringify(seller));
+      }
+    } catch(err) { alert("Error removing image"); }
+  };
+});
+
+/* THEME & NAV */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.getElementById("sidebar");
+const overlay = document.getElementById("sidebarOverlay");
+menuBtn.onclick = () => { sidebar.classList.add("open"); overlay.style.display="block"; }
+overlay.onclick = () => { sidebar.classList.remove("open"); overlay.style.display="none"; }
+
+const themeToggle = document.getElementById("themeToggle");
+themeToggle.onchange = () => {
+  document.body.classList.toggle('dark', themeToggle.checked);
+  localStorage.setItem('theme', themeToggle.checked ? 'dark' : 'light');
+};
+if(localStorage.getItem('theme') === 'dark') { themeToggle.checked = true; document.body.classList.add('dark'); }
+
+function go(p){ location.href=p }
+function logout(){ localStorage.removeItem("lbSeller"); location.href="./seller-auth/seller-auth.html"; }
+</script>
+</body>
+</html>

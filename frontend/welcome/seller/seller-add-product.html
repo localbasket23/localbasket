@@ -1,0 +1,332 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Product â€” Local Basket</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="seller-dashboard.css"> <style>
+    /* Form Specific Styles */
+    .form-card {
+      max-width: 600px;
+      margin: 20px auto;
+      background: var(--card);
+      padding: 30px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border-color);
+    }
+    .form-header {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    .form-header i {
+      font-size: 40px;
+      color: var(--lav);
+      margin-bottom: 10px;
+    }
+    .form-group {
+      margin-bottom: 18px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text);
+    }
+    input, select {
+      width: 100%;
+      padding: 12px 15px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: var(--bg);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      transition: 0.3s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--lav);
+      box-shadow: 0 0 0 3px var(--lav-soft);
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+    .file-input-wrapper {
+      position: relative;
+      border: 2px dashed var(--border-color);
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .file-input-wrapper:hover {
+      border-color: var(--lav);
+      background: var(--lav-soft);
+    }
+    .preview-img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-top: 15px;
+      display: none;
+      border: 1px solid var(--border-color);
+    }
+  </style>
+</head>
+<body>
+
+<header class="mobile-header">
+  <button id="menuBtn"><i class="fas fa-bars"></i></button>
+  <span class="logo-text-mobile">Add Product</span>
+</header>
+
+<div id="sidebarOverlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <img src="/welcome/logo2.png">
+    <h3>Local Basket</h3>
+    <p>Admin Dashboard</p>
+  </div>
+  <nav class="nav-menu">
+    <ul>
+      <li><a href="seller-dashboard.html" class="nav-link"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+      <li><a href="seller-pocket.html" class="nav-link"><i class="fas fa-wallet"></i> My Pocket</a></li>
+      <li><a href="seller-add-product.html" class="nav-link active"><i class="fas fa-plus-circle"></i> Add Product</a></li>
+      <li><a href="seller-products.html" class="nav-link"><i class="fas fa-boxes-stacked"></i> My Products</a></li>
+      <li><a href="seller-orders.html" class="nav-link"><i class="fas fa-receipt"></i> All Orders</a></li>
+      <li><a href="seller-profile.html" class="nav-link"><i class="fas fa-store"></i> Shop Profile</a></li>
+      <li class="logout-item"><button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</button></li>
+    </ul>
+  </nav>
+</aside>
+
+<main class="main">
+  <button class="sidebar-open-btn" onclick="sidebar.classList.add('open'); sidebarOverlay.style.display='block';">
+    <i class="fas fa-bars"></i> Menu
+  </button>
+  <div class="top-bar">
+    <div class="shop-info">
+      <div class="text-info">
+        <h3 style="color: var(--lav); font-weight: 700;">+ Add New Product</h3>
+        <span class="badge">Inventory Management</span>
+      </div>
+    </div>
+    <div class="toggles">
+      <div class="toggle-pill theme-toggle">
+        <i class="fas fa-moon"></i>
+        <label class="switch">
+          <input type="checkbox" id="themeToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <div class="form-header">
+      <i class="fas fa-cloud-upload-alt"></i>
+      <p style="color: var(--text-light); font-size: 14px;">Fill the details below to list a new product</p>
+    </div>
+
+    <div class="form-group">
+      <label>Product Name *</label>
+      <input id="pname" type="text" placeholder="e.g. Fresh Red Apples" required>
+    </div>
+
+    <div class="form-group">
+      <label>Category *</label>
+      <select id="category">
+        <option value="">Select Category</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Sub-category (max 3 words)</label>
+      <input id="subcategory" type="text" placeholder="e.g. Organic Apples" maxlength="30">
+      <small style="color: var(--text-light); font-size: 12px;">Seller can add up to 3 words.</small>
+    </div>
+
+    <div class="row">
+      <div class="form-group">
+        <label>Selling Price (Rs.) *</label>
+        <input id="price" type="number" placeholder="0.00" min="0" step="0.01" required>
+      </div>
+      <div class="form-group">
+        <label>MRP (Optional)</label>
+        <input id="mrp" type="number" placeholder="0.00">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="form-group">
+        <label>Unit *</label>
+        <select id="unit">
+          <option value="">Select Unit</option>
+          <option value="250g">250 gram packet</option>
+          <option value="500g">500 gram packet</option>
+          <option value="1kg">1 kg</option>
+          <option value="500ml">500 ml bottle</option>
+          <option value="1ltr">1 litre bottle</option>
+          <option value="dozen">Dozen</option>
+          <option value="box">Box</option>
+          <option value="bottle">Bottle</option>
+          <option value="packet">Packet</option>
+          <option value="pcs">Pieces</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Stock Quantity *</label>
+        <input id="stock" type="number" placeholder="Enter quantity" min="0" step="1" required>
+      </div>
+    </div>
+
+
+    <div class="form-group">
+      <label>Product Image *</label>
+      <div class="file-input-wrapper" onclick="document.getElementById('image').click()">
+        <i class="fas fa-image" style="display:block; font-size: 24px; color: var(--lav); margin-bottom: 5px;"></i>
+        <span id="imageLabel" style="font-size: 12px; color: var(--text-light);">Click to upload product image</span>
+        <input id="image" type="file" accept="image/*" style="display:none" required>
+      </div>
+      <img id="preview" class="preview-img">
+    </div>
+
+    <button class="btn-accept" onclick="addProduct()" style="width: 100%; padding: 14px; margin-top: 10px; font-size: 16px;">
+      <i class="fas fa-plus"></i> List Product
+    </button>
+  </div>
+</main>
+
+<script>
+/* ================= AUTH & NAV ================= */
+const seller = JSON.parse(localStorage.getItem("lbSeller"));
+if(!seller) location.href="./seller-auth/seller-auth.html";
+
+function go(p){ location.href=p }
+function logout(){ localStorage.removeItem("lbSeller"); location.href="./seller-auth/seller-auth.html"; }
+
+/* ================= UI LOGIC ================= */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.getElementById("sidebar");
+const overlay = document.getElementById("sidebarOverlay");
+const themeToggle = document.getElementById("themeToggle");
+
+menuBtn.onclick = () => { sidebar.classList.add("open"); overlay.style.display="block"; }
+overlay.onclick = () => { sidebar.classList.remove("open"); overlay.style.display="none"; }
+
+// Theme Toggle
+themeToggle.onchange = () => {
+  document.body.classList.toggle('dark', themeToggle.checked);
+  localStorage.setItem('theme', themeToggle.checked ? 'dark' : 'light');
+};
+if(localStorage.getItem('theme') === 'dark') { themeToggle.checked = true; document.body.classList.add('dark'); }
+
+/* ================= IMAGE PREVIEW ================= */
+const imageInput = document.getElementById("image");
+const preview = document.getElementById("preview");
+const imageLabel = document.getElementById("imageLabel");
+const subcategoryInput = document.getElementById("subcategory");
+
+imageInput.onchange = () => {
+  const file = imageInput.files[0];
+  if(!file) return;
+  if (imageLabel) imageLabel.textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = () => {
+    preview.src = reader.result;
+    preview.style.display = "block";
+  };
+  reader.readAsDataURL(file);
+};
+
+if (subcategoryInput) {
+  subcategoryInput.addEventListener("input", () => {
+    const words = subcategoryInput.value.trim().split(/\s+/).filter(Boolean);
+    if (words.length > 3) {
+      subcategoryInput.value = words.slice(0, 3).join(" ");
+    }
+  });
+}
+
+
+/* ================= LOAD CATEGORY OPTIONS ================= */
+async function loadCategories() {
+  try {
+    const res = await fetch("http://localhost:5000/api/admin/categories");
+    const data = await res.json();
+    const list = Array.isArray(data.categories) ? data.categories : [];
+    const options = list
+      .filter(c => c.is_active === undefined || c.is_active === 1 || c.is_active === true)
+      .map(c => `<option value="${c.name}">${c.name}</option>`)
+      .join("");
+    document.getElementById("category").innerHTML = `<option value="">Select Category</option>${options}`;
+
+    // If seller has a fixed store category, preselect and lock
+    if (seller && seller.category) {
+      const cat = seller.category;
+      const select = document.getElementById("category");
+      const match = Array.from(select.options).find(o => (o.value || "").toLowerCase() === String(cat).toLowerCase());
+      if (match) {
+        select.value = match.value;
+        select.disabled = true;
+      }
+    }
+  } catch {
+    // keep fallback empty if API fails
+  }
+}
+
+/* ================= API CALL ================= */
+async function addProduct(){
+  const pname = document.getElementById("pname").value.trim();
+  const category = document.getElementById("category").value;
+  const subcategory = document.getElementById("subcategory").value.trim();
+  const unit = document.getElementById("unit").value;
+  const price = document.getElementById("price").value;
+  const mrp = document.getElementById("mrp").value;
+  const stock = document.getElementById("stock").value;
+  const imageFile = imageInput.files[0];
+
+  if(!pname || !category || !unit || !price || !stock || !imageFile){
+    alert("Please fill all fields");
+    return;
+  }
+
+  const fd = new FormData();
+  fd.append("seller_id", seller.id);
+  fd.append("name", pname);
+  fd.append("category", category);
+  if (subcategory) fd.append("sub_category", subcategory);
+  fd.append("unit", unit);
+  fd.append("price", price);
+  if (mrp) fd.append("mrp", mrp);
+  fd.append("stock", stock);
+  if(imageFile) fd.append("image", imageFile);
+
+  try{
+    const res = await fetch("http://localhost:5000/api/seller/products", { method:"POST", body:fd });
+    const data = await res.json();
+    if(data.success){
+      alert("Product added successfully!");
+      location.href="./seller-products.html";
+    } else {
+      alert(data.message || "Error adding product");
+    }
+  } catch { alert("Server error. Please check if backend is running."); }
+}
+
+loadCategories();
+</script>
+
+</body>
+</html>
+

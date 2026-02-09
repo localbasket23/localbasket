@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Checkout | LocalBasket</title>
+
+  <link rel="stylesheet" href="/welcome/includes/header-footer.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99" />
+
+  <style>
+    :root {
+      --co-primary: #ff8a1a;
+      --co-primary-dark: #e56a00;
+      --co-bg: #f6faf9;
+      --co-card: #ffffff;
+      --co-text: #0f172a;
+      --co-muted: #64748b;
+      --co-border: #dbe9e6;
+      --co-shadow: 0 18px 35px -20px rgba(15, 118, 110, 0.35);
+      --co-radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: "Plus Jakarta Sans", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: var(--co-bg);
+      color: var(--co-text);
+    }
+
+    .checkout-shell {
+      max-width: 1200px;
+      margin: 22px auto 40px;
+      padding: 0 18px;
+    }
+
+    .checkout-title {
+      margin: 6px 0 16px;
+      font-size: clamp(24px, 3vw, 34px);
+      font-weight: 800;
+      letter-spacing: -0.8px;
+    }
+
+    .checkout-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .co-card {
+      background: var(--co-card);
+      border: 1px solid var(--co-border);
+      border-radius: var(--co-radius);
+      box-shadow: var(--co-shadow);
+      padding: 18px;
+    }
+
+    .co-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #e5f7f4;
+      color: var(--co-primary);
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 12px;
+    }
+
+    .field-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--co-muted);
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    .co-input,
+    .co-textarea,
+    .co-select {
+      width: 100%;
+      border: 1px solid #d2e4e0;
+      border-radius: 12px;
+      background: #ffffff;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      font-size: 14px;
+      color: var(--co-text);
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .co-textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .co-input:focus,
+    .co-textarea:focus,
+    .co-select:focus {
+      border-color: var(--co-primary);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+    }
+
+    #orderItems {
+      margin-bottom: 8px;
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 14px;
+      padding: 8px 0;
+      border-bottom: 1px dashed #e2eeeb;
+    }
+
+    .cart-item:last-child {
+      border-bottom: 0;
+    }
+
+    .empty {
+      color: var(--co-muted);
+      font-size: 14px;
+      text-align: center;
+      padding: 10px 0;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      margin-top: 8px;
+      color: #334155;
+    }
+
+    .total-grand {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #d7e6e2;
+      font-size: 18px;
+      font-weight: 800;
+      color: #0b3f3a;
+    }
+
+    .checkout-btn {
+      width: 100%;
+      border: 0;
+      border-radius: 14px;
+      background: var(--co-primary);
+      color: #ffffff;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      margin-top: 14px;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .checkout-btn:hover {
+      background: var(--co-primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .co-confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(3px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 5500;
+      padding: 16px;
+    }
+
+    .co-confirm-box {
+      width: min(94vw, 430px);
+      background: #fff;
+      border: 1px solid #d7e7e4;
+      border-radius: 18px;
+      box-shadow: 0 24px 44px -20px rgba(15, 23, 42, 0.45);
+      padding: 18px;
+      animation: coPopIn 0.2s ease;
+    }
+
+    .co-confirm-title {
+      margin: 0 0 8px;
+      font-size: 21px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+
+    .co-confirm-text {
+      margin: 0;
+      color: #475569;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .co-confirm-actions {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .co-confirm-btn {
+      border: none;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .co-confirm-btn.cancel {
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    .co-confirm-btn.ok {
+      background: var(--co-primary);
+      color: #fff;
+    }
+
+    .co-confirm-btn.ok:hover {
+      background: var(--co-primary-dark);
+    }
+
+    @keyframes coPopIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @media (max-width: 980px) {
+      .checkout-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .checkout-shell {
+        margin-top: 10px;
+        padding: 0 12px;
+      }
+
+      .co-card {
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="siteHeader"></div>
+
+  <main class="checkout-shell">
+    <h1 class="checkout-title">Checkout</h1>
+
+    <section class="checkout-grid">
+      <article class="co-card">
+        <span class="co-badge">Delivery Details</span>
+
+        <label class="field-label" for="name">Full Name *</label>
+        <input id="name" class="co-input" type="text" placeholder="Enter full name" />
+
+        <label class="field-label" for="phone">Mobile Number *</label>
+        <input id="phone" class="co-input" type="text" placeholder="10-digit mobile number" maxlength="10" />
+
+        <label class="field-label" for="address">Full Address *</label>
+        <textarea id="address" class="co-textarea" placeholder="House no, building, street"></textarea>
+
+        <label class="field-label" for="area">Area / Locality</label>
+        <input id="area" class="co-input" type="text" placeholder="Area" />
+
+        <label class="field-label" for="pincode">Pincode *</label>
+        <input id="pincode" class="co-input" type="text" placeholder="6-digit pincode" maxlength="6" />
+
+        <span class="co-badge">Payment Method</span>
+        <select id="payment" class="co-select">
+          <option value="COD">Cash on Delivery</option>
+          <option value="ONLINE">UPI / Card</option>
+        </select>
+      </article>
+
+      <aside class="co-card">
+        <span class="co-badge">Order Summary</span>
+
+        <div id="orderItems">
+          <p class="empty">Loading cart...</p>
+        </div>
+
+        <div class="total-row">
+          <span>Items Total</span>
+          <span id="itemsTotal">Rs. 0</span>
+        </div>
+        <div class="total-row">
+          <span>Delivery Fee</span>
+          <span id="deliveryFee">Rs. 0</span>
+        </div>
+        <div class="total-row">
+          <span>GST (5%)</span>
+          <span id="gstFee">Rs. 0</span>
+        </div>
+        <div class="total-row total-grand">
+          <span>Total Payable</span>
+          <span id="grandTotal">Rs. 0</span>
+        </div>
+
+        <button class="checkout-btn" onclick="placeOrder()">Place Order</button>
+      </aside>
+    </section>
+  </main>
+
+  <div id="siteFooter"></div>
+
+  <div class="co-confirm-overlay" id="confirmOverlay">
+    <div class="co-confirm-box" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" aria-describedby="confirmText">
+      <h3 class="co-confirm-title" id="confirmTitle">Confirm Order</h3>
+      <p class="co-confirm-text" id="confirmText">Do you want to place this order?</p>
+      <div class="co-confirm-actions">
+        <button class="co-confirm-btn cancel" type="button" id="confirmCancel">Cancel</button>
+        <button class="co-confirm-btn ok" type="button" id="confirmOk">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="checkout.js"></script>
+  <script src="/welcome/includes/include.js"></script>
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Seller Audit Logs</title>
+
+  <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99">
+  <link rel="icon" type="image/png" sizes="32x32" href="/welcome/logo2.png?v=200">
+  <link rel="apple-touch-icon" sizes="180x180" href="/welcome/logo2.png?v=200">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --lav: #ff8a1a;
+      --lav-light: #ffb347;
+      --bg: #f8f9fd;
+      --white: #fff;
+      --text: #2d3436;
+      --text-light: #636e72;
+      --radius: 16px;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .05);
+      --border: #edf0f7;
+      --surface: #ffffff;
+      --surface-2: #fafbff;
+      --table-head: #f4f6fb;
+      --row-hover: #fafaff;
+      --muted: #9aa2b1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Poppins, sans-serif; }
+    body { background: var(--bg); color: var(--text); }
+    body.dark {
+      --bg: #0f172a;
+      --white: #111827;
+      --text: #f1f5f9;
+      --text-light: #94a3b8;
+      --border: #1f2937;
+      --shadow: 0 10px 30px rgba(0,0,0,0.4);
+      --surface: #111827;
+      --surface-2: #0b1220;
+      --table-head: #0b1220;
+      --row-hover: #111b2d;
+      --muted: #94a3b8;
+    }
+
+    .sidebar { width: 280px; height: 100vh; position: fixed; left: 0; top: 0; background: linear-gradient(160deg, var(--lav), var(--lav-light)); color: white; padding: 30px 20px; z-index: 1002; }
+    main { margin-left: 280px; padding: 40px; }
+    .topbar { background: var(--white); padding: 18px 25px; border-radius: var(--radius); display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); margin-bottom: 25px; }
+    .hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; margin-bottom: 18px; }
+    .hero-card { background: linear-gradient(140deg, var(--lav), var(--lav-light)); color: #fff; border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+    .hero-card h2 { font-size: 22px; margin-bottom: 6px; }
+    .hero-card p { font-size: 13px; opacity: .9; }
+
+    .filters {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 220px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+    }
+    .search-box input {
+      border: none;
+      outline: none;
+      width: 100%;
+      background: transparent;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .filter-pill {
+      background: rgba(255, 138, 26, 0.14);
+      color: var(--lav);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }
+
+    .table-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; }
+    th { background: var(--table-head); padding: 14px; font-size: 12px; text-align: left; color: var(--text-light); }
+    td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 13px; }
+    tr:hover { background: var(--row-hover); }
+
+    .badge {
+      padding: 4px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge.approve { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .badge.reject { background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; }
+    .badge.update { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+
+    @media(max-width:992px) {
+      main { margin-left: 0; padding: 18px; }
+      .hero { grid-template-columns: 1fr; }
+    }
+  </style>
+
+  <link rel="stylesheet" href="admin-shared.css">
+</head>
+<body>
+  <aside class="sidebar"></aside>
+
+  <main>
+    <div class="topbar lb-header">
+      <div class="lb-header-left">
+        <button class="menu-toggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+        <h2 class="lb-header-title"><i class="fas fa-clipboard-list"></i> Seller Audit Logs</h2>
+      </div>
+      <div class="lb-header-right lb-header-sub" id="logCount">0 logs</div>
+    </div>
+
+    <section class="hero">
+      <div class="hero-card">
+        <h2>Verification Activity</h2>
+        <p>Track approve/reject actions and reasons for seller verification.</p>
+      </div>
+      <div class="filters">
+        <div class="search-box">
+          <i class="fas fa-search" style="color: var(--muted);"></i>
+          <input type="text" id="searchInput" placeholder="Search seller, reason, or action..." oninput="applyFilter()">
+        </div>
+        <div class="filter-pill" id="filterBadge">Latest 200</div>
+      </div>
+    </section>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Seller</th>
+            <th>Action</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody id="auditBody">
+          <tr><td colspan="4" style="text-align:center;padding:40px">Loading logs...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    const API = "http://localhost:5000/api/admin";
+    const state = { logs: [], filtered: [] };
+
+    function formatAction(a) {
+      const v = String(a || "").toUpperCase();
+      if (v === "APPROVE" || v === "APPROVED") return `<span class="badge approve"><i class="fas fa-check"></i> APPROVE</span>`;
+      if (v === "REJECT" || v === "REJECTED") return `<span class="badge reject"><i class="fas fa-times"></i> REJECT</span>`;
+      return `<span class="badge update"><i class="fas fa-pen"></i> ${v || "UPDATE"}</span>`;
+    }
+
+    function render(list) {
+      const tbody = document.getElementById("auditBody");
+      tbody.innerHTML = "";
+      if (!list.length) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted)">No logs found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = list.map(l => `
+        <tr>
+          <td>${new Date(l.created_at || Date.now()).toLocaleString("en-IN")}</td>
+          <td>
+            <div style="font-weight:600;">${l.store_name || "Seller"}</div>
+            <div style="font-size:12px; color:var(--text-light)">#${l.seller_id}</div>
+          </td>
+          <td>${formatAction(l.action)}</td>
+          <td>${l.reason || "-"}</td>
+        </tr>
+      `).join("");
+      document.getElementById("logCount").innerText = `${list.length} logs`;
+    }
+
+    function applyFilter() {
+      const q = (document.getElementById("searchInput").value || "").toLowerCase().trim();
+      if (!q) {
+        state.filtered = [...state.logs];
+      } else {
+        state.filtered = state.logs.filter(l =>
+          String(l.store_name || "").toLowerCase().includes(q) ||
+          String(l.seller_id || "").toLowerCase().includes(q) ||
+          String(l.reason || "").toLowerCase().includes(q) ||
+          String(l.action || "").toLowerCase().includes(q)
+        );
+      }
+      render(state.filtered);
+    }
+
+    async function loadLogs() {
+      const res = await fetch(API + "/seller-audit");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        document.getElementById("auditBody").innerHTML = `<tr><td colspan="4" style="text-align:center;padding:40px;color:var(--muted)">Failed to load logs.</td></tr>`;
+        return;
+      }
+      state.logs = data.logs || [];
+      state.filtered = [...state.logs];
+      render(state.filtered);
+    }
+
+    loadLogs();
+  </script>
+
+  <script src="admin-layout.js"></script>
+</body>
+</html>

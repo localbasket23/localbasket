@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Seller Registration | Local Basket</title>
+<link rel="stylesheet" href="seller.css">
+</head>
+
+<body>
+
+<div class="auth-container">
+  <div style="text-align:center; margin-bottom: 12px;">
+    <img src="/welcome/logo2.png" alt="Local Basket Logo" style="width:64px; height:64px; object-fit:contain;">
+  </div>
+  <h2>Register as Seller</h2>
+  <p>Your store will be verified by admin</p>
+
+  <input id="storeName" placeholder="Store Name">
+  <input id="ownerName" placeholder="Owner Name">
+  <input id="email" placeholder="Email">
+  <input id="phone" placeholder="Phone">
+  <input id="pincode" placeholder="Store Pincode">
+  <input id="password" type="password" placeholder="Password">
+
+  <label>Store Category</label>
+  <select id="category">
+    <option value="" disabled selected>Select Category</option>
+    <option value="grocery">Grocery / Kirana Store</option>
+    <option value="fruits_vegetables">Fruits & Vegetables</option>
+    <option value="dairy">Dairy / Milk Booth</option>
+    <option value="bakery">Bakery</option>
+    <option value="sweet_shop">Sweet / Mithai Shop</option>
+    <option value="snacks">Snacks & Namkeen</option>
+    <option value="tiffin">Tiffin / Home Food</option>
+    <option value="fast_food">Fast Food / Street Food</option>
+    <option value="pharmacy">Pharmacy / Medical Store</option>
+    <option value="ayurvedic">Ayurvedic / Herbal Store</option>
+    <option value="optical">Optical Shop</option>
+    <option value="clothing">Clothing / Garments</option>
+    <option value="footwear">Footwear Store</option>
+    <option value="tailor">Tailor / Boutique</option>
+    <option value="cosmetics">Cosmetics & Beauty</option>
+    <option value="hardware">Hardware Store</option>
+    <option value="electrical">Electrical Store</option>
+    <option value="plumbing">Plumbing Supplies</option>
+    <option value="paint">Paint Store</option>
+    <option value="mobile">Mobile Shop</option>
+    <option value="mobile_repair">Mobile Repair</option>
+    <option value="electronics">Electronics Store</option>
+    <option value="computer_repair">Computer / Laptop Repair</option>
+    <option value="furniture">Furniture Store</option>
+    <option value="utensils">Utensils / Kitchenware</option>
+    <option value="home_decor">Home Decor</option>
+    <option value="cycle">Cycle Store</option>
+    <option value="auto_parts">Automobile Parts</option>
+    <option value="garage">Garage / Mechanic</option>
+    <option value="car_wash">Car / Bike Wash</option>
+    <option value="stationery">Stationery & Book Store</option>
+    <option value="gift">Gift & Toy Store</option>
+    <option value="pooja">Pooja Samagri</option>
+    <option value="florist">Flower Shop</option>
+    <option value="laundry">Laundry / Dry Clean</option>
+  </select>
+
+  <label>Owner ID (Aadhaar / PAN)</label>
+  <input type="file" id="ownerId">
+
+  <label>Business License / GST</label>
+  <input type="file" id="license">
+
+  <label>Store Photo</label>
+  <input type="file" id="storePhoto">
+
+  <button onclick="registerSeller()">Submit for Verification</button>
+
+  <p class="link">
+    Already registered?
+    <a href="seller-login.html">Login</a>
+  </p>
+</div>
+
+<script src="seller.js"></script>
+</body>
+</html>
+ 

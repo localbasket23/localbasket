@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Browse Categories | LocalBasket</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/welcome/includes/header-footer.css">
+
+  <style>
+    :root {
+      --cat-primary: #ff8a1a;
+      --cat-primary-soft: #ffe8d2;
+      --cat-primary-dark: #e56a00;
+      --cat-bg: #f1f9f8;
+      --cat-card: #ffffff;
+      --cat-text: #0f172a;
+      --cat-muted: #64748b;
+      --cat-border: #dfeae7;
+      --cat-shadow: 0 4px 12px -2px rgba(15, 118, 110, 0.15);
+      --cat-shadow-hover: 0 10px 24px -12px rgba(15, 118, 110, 0.35);
+      --cat-glow: 0 18px 40px -18px rgba(15, 118, 110, 0.55);
+      --cat-accent: #f59e0b;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: var(--cat-bg);
+      color: var(--cat-text);
+      overflow-x: hidden;
+      font-family: "Plus Jakarta Sans", sans-serif;
+    }
+
+    .page-shell {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 18px 20px 40px;
+      width: 100%;
+    }
+
+    .intro {
+      margin-bottom: 20px;
+    }
+
+    .intro h1 {
+      font-size: clamp(24px, 5vw, 36px);
+      font-weight: 800;
+      margin-bottom: 6px;
+      line-height: 1.1;
+      letter-spacing: -0.5px;
+    }
+
+    .intro p {
+      color: var(--cat-muted);
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+    .intro-badges {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .intro-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid #d7ece6;
+      background: #ffffff;
+      font-size: 12px;
+      font-weight: 800;
+      color: #ff8a1a;
+      box-shadow: var(--cat-shadow);
+    }
+
+    /* PIN PANEL */
+    .pin-panel {
+      display: flex;
+      gap: 10px;
+      background: var(--cat-card);
+      border: 1px solid var(--cat-border);
+      border-radius: 16px;
+      padding: 10px;
+      box-shadow: var(--cat-shadow);
+      margin-bottom: 24px;
+    }
+
+    .pin-panel input {
+      flex: 1;
+      height: 46px;
+      border: 1px solid #dbe7e4;
+      border-radius: 10px;
+      padding: 0 16px;
+      font-size: 16px; /* Prevents Zoom on iOS */
+      outline: none;
+      min-width: 0; /* Important for flex shrinking */
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .pin-panel input:focus {
+      border-color: var(--cat-primary);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.14);
+    }
+
+    .pin-panel button {
+      height: 46px;
+      padding: 0 20px;
+      border: 0;
+      border-radius: 10px;
+      background: var(--cat-primary);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .pin-panel button:hover {
+      background: var(--cat-primary-dark);
+      transform: translateY(-1px);
+    }
+
+    /* CHIP ROW */
+    .chip-row {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 4px 4px 12px; /* Padding helps shadow visibility */
+      margin-bottom: 20px;
+      scrollbar-width: none;
+      scroll-behavior: smooth;
+    }
+
+    .chip-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip {
+      border: 1px solid #d9e8e4;
+      background: #fff;
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease, background 0.22s ease, color 0.22s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chip::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(15, 118, 110, 0.12), rgba(45, 212, 191, 0.18));
+      opacity: 0;
+      transition: opacity 0.22s ease;
+      pointer-events: none;
+    }
+
+    .chip:hover {
+      transform: translateY(-2px) scale(1.02);
+      border-color: #9ed5ca;
+      box-shadow: 0 10px 22px -16px rgba(15, 118, 110, 0.6);
+    }
+
+    .chip:hover::before {
+      opacity: 1;
+    }
+
+    .chip.active {
+      background: linear-gradient(135deg, #ff8a1a, #ffb347);
+      color: #fff;
+      border-color: var(--cat-primary);
+      box-shadow: 0 10px 22px -12px rgba(15, 118, 110, 0.65);
+      transform: translateY(-1px);
+    }
+
+    .chip.just-selected {
+      animation: chipColorFlash 0.55s ease;
+    }
+
+    .chip.active::before {
+      opacity: 0;
+    }
+
+    .chip.shift-pop {
+      animation: chipShiftPop 0.35s ease;
+    }
+
+    @keyframes chipShiftPop {
+      0% { transform: translateY(0) scale(0.96); }
+      60% { transform: translateY(-2px) scale(1.04); }
+      100% { transform: translateY(-1px) scale(1); }
+    }
+
+    @keyframes chipColorFlash {
+      0% {
+        background: #99f6e4;
+        color: #0b3f3a;
+        border-color: #ffb347;
+      }
+      100% {
+        background: linear-gradient(135deg, #ff8a1a, #ffb347);
+        color: #ffffff;
+        border-color: var(--cat-primary);
+      }
+    }
+
+    .chip.disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .chip.disabled:hover {
+      transform: none;
+      border-color: #d9e8e4;
+      box-shadow: none;
+    }
+
+    .chip.disabled::before {
+      opacity: 0;
+    }
+
+    .chip:focus-visible {
+      outline: 3px solid rgba(20, 184, 166, 0.35);
+      outline-offset: 2px;
+    }
+
+    #categorySections.category-focused .section h2 {
+      color: var(--cat-primary);
+      transition: color 0.2s ease;
+    }
+
+    /* STORE GRID */
+    .section {
+      margin-bottom: 32px;
+    }
+
+    .section h2 {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
+
+    /* --- THE MAIN FIX --- */
+    .store-grid {
+      display: grid;
+      gap: 16px;
+      /* Root Fix: minmax(0, 1fr) prevents content from blowing out the column width */
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      width: 100%;
+    }
+
+    .store-card {
+      background: var(--cat-card);
+      border: 1px solid var(--cat-border);
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow: var(--cat-shadow);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .store-card:hover {
+      transform: translateY(-4px);
+      border-color: #b7dbd3;
+      box-shadow: var(--cat-glow);
+    }
+
+    .store-img {
+      width: 100%;
+      aspect-ratio: 16/9; /* Keeps image size consistent */
+      background: #dcecea;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .store-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.4s ease;
+    }
+    .store-card:hover .store-img img {
+      transform: scale(1.06);
+    }
+
+    .img-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0) 20%, rgba(15, 23, 42, 0.45) 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+    .store-card:hover .img-overlay {
+      opacity: 1;
+    }
+
+    .store-cta {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #ffffff;
+      border: 1px solid #e6f1ee;
+      font-size: 11px;
+      font-weight: 800;
+      color: #ff8a1a;
+      box-shadow: 0 8px 18px -10px rgba(15, 118, 110, 0.55);
+      transform: translateY(6px);
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .store-card:hover .store-cta {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .status-pill {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 10px;
+      font-weight: 800;
+      color: #fff;
+      border-radius: 999px;
+      padding: 4px 8px;
+      line-height: 1;
+      z-index: 2;
+      letter-spacing: 0.2px;
+    }
+
+    .status-pill.open {
+      background: #ff8a1a;
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45);
+      animation: pulseOpen 2.2s infinite;
+    }
+
+    .status-pill.closed {
+      background: #ef4444;
+    }
+
+    .store-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+      /* Root Fix: min-width: 0 prevents flex child from forcing parent wider */
+      min-width: 0; 
+    }
+
+    .store-body h3 {
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 5px;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: 36px;
+    }
+
+    .store-cat {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      margin-bottom: 10px;
+      width: fit-content;
+      max-width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .store-meta-row {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      margin-top: auto;
+    }
+
+    .meta-pill {
+      font-size: 10px;
+      font-weight: 700;
+      background: #edf8f5;
+      color: var(--cat-primary);
+      border-radius: 999px;
+      padding: 3px 6px;
+      white-space: nowrap;
+      border: 1px solid #d7ece6;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+    .store-card:hover .meta-pill {
+      transform: translateY(-1px);
+      border-color: #bfe6dc;
+      box-shadow: 0 8px 16px -14px rgba(15, 118, 110, 0.6);
+      background: #e6fbf7;
+    }
+
+    .rating-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #fff7ed;
+      color: #9a3412;
+      border: 1px solid #fed7aa;
+      font-size: 10px;
+      font-weight: 800;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+    .rating-chip::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(245, 158, 11, 0), rgba(245, 158, 11, 0.18), rgba(245, 158, 11, 0));
+      transform: translateX(-120%);
+      transition: transform 0.6s ease;
+      pointer-events: none;
+    }
+    .rating-stars {
+      color: var(--cat-accent);
+      letter-spacing: 0.5px;
+      font-size: 11px;
+      line-height: 1;
+    }
+    .rating-count {
+      color: var(--cat-muted);
+      font-weight: 700;
+    }
+    .store-card:hover .rating-chip {
+      transform: translateY(-1px);
+      border-color: #fdba74;
+      background: #fffbeb;
+      box-shadow: 0 10px 20px -16px rgba(245, 158, 11, 0.7);
+    }
+    .store-card:hover .rating-chip::after {
+      transform: translateX(120%);
+    }
+
+    @keyframes pulseOpen {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.45); }
+      70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    @media (hover: none) {
+      .store-card:hover {
+        transform: none;
+        box-shadow: var(--cat-shadow);
+        border-color: var(--cat-border);
+      }
+      .store-card:hover .store-img img {
+        transform: none;
+      }
+      .store-card:hover .img-overlay {
+        opacity: 0;
+      }
+      .store-card:hover .store-cta {
+        transform: translateY(6px);
+        opacity: 0;
+      }
+      .store-card:hover .rating-chip,
+      .store-card:hover .meta-pill {
+        transform: none;
+        box-shadow: none;
+      }
+      .store-card:hover .rating-chip::after {
+        transform: translateX(-120%);
+      }
+      .status-pill.open {
+        animation: none;
+        box-shadow: none;
+      }
+    }
+
+    /* RESPONSIVE FIXES */
+    
+    @media (max-width: 1024px) {
+      .store-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .store-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      
+      .pin-panel {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      
+      .pin-panel button {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .page-shell {
+        padding: 12px 12px 60px; /* Reduced side padding for more space */
+      }
+
+      .store-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)); /* Force 2 Columns */
+        gap: 10px; /* Tighter gap */
+      }
+
+      .store-body {
+        padding: 8px;
+      }
+
+      .store-body h3 {
+        font-size: 13px;
+        min-height: 32px;
+      }
+      
+      .store-body p {
+        font-size: 11px;
+        margin-bottom: 6px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="siteHeader"></div>
+
+  <main class="page-shell">
+    <section class="intro">
+      <h1>Explore Categories</h1>
+      <p>Find the best local stores and products near you.</p>
+      <div class="intro-badges">
+        <span class="intro-badge">Curated Stores</span>
+        <span class="intro-badge">Live Availability</span>
+        <span class="intro-badge">Fast Delivery</span>
+      </div>
+    </section>
+
+    <section class="pin-panel">
+      <input id="pinInput" type="text" maxlength="6" placeholder="Enter 6-digit pincode" inputmode="numeric">
+      <button onclick="setPinAndLoad()">Find Store</button>
+    </section>
+
+    <section class="chip-row" id="chipBar"></section>
+
+    <div id="categorySections"></div>
+  </main>
+
+  <div id="siteFooter"></div>
+
+  <script src="category.js"></script>
+  <script src="/welcome/includes/include.js"></script>
+</body>
+</html>

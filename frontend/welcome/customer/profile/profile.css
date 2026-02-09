@@ -1,0 +1,286 @@
+:root{
+  --p:#ff8a1a;
+  --p2:#ffb347;
+  --bg:#f7f5fb;
+  --card:#ffffff;
+  --text:#2c2340;
+  --muted:#777;
+  --shadow:0 10px 30px rgba(106,60,255,.18);
+  --radius:18px;
+}
+
+/* RESET */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Poppins,sans-serif;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  padding-bottom:60px;
+}
+
+/* ================= HEADER ================= */
+.profile-header{
+  background:var(--card);
+  padding:18px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:var(--shadow);
+  position:sticky;
+  top:0;
+  z-index:5;
+}
+
+.profile-header h2{
+  font-size:20px;
+}
+
+.profile-header .sub{
+  font-size:12px;
+  color:var(--muted);
+}
+
+.logout-btn{
+  border:none;
+  background:#fdeaea;
+  color:#e53935;
+  padding:8px 16px;
+  border-radius:20px;
+  font-weight:600;
+  cursor:pointer;
+  transition:.25s;
+}
+
+.logout-btn:hover{
+  background:#fbdcdc;
+}
+
+/* ================= PROFILE ================= */
+.profile-card{
+  background:var(--card);
+  margin:22px;
+  padding:20px;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  display:flex;
+  gap:16px;
+  align-items:center;
+}
+
+.avatar-wrap{
+  flex-shrink:0;
+}
+
+.avatar{
+  width:62px;
+  height:62px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--p),var(--p2));
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  box-shadow:0 8px 18px rgba(106,60,255,.35);
+}
+
+.profile-info h3{
+  font-size:18px;
+}
+
+.profile-info p{
+  font-size:13px;
+  color:var(--muted);
+  margin-top:2px;
+}
+
+.badge{
+  display:inline-block;
+  margin-top:6px;
+  font-size:11px;
+  padding:4px 12px;
+  border-radius:20px;
+  background:#efeaff;
+  color:var(--p);
+  font-weight:600;
+}
+
+/* ================= STATS ================= */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  margin:0 22px;
+}
+
+.stat-box{
+  background:var(--card);
+  padding:16px 10px;
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  text-align:center;
+}
+
+.stat-box h4{
+  font-size:22px;
+  color:var(--p);
+}
+
+.stat-box span{
+  font-size:12px;
+  color:var(--muted);
+}
+
+.stat-box.highlight h4{
+  color:#ff9800;
+}
+
+.stat-box.success h4{
+  color:#43a047;
+}
+
+/* ================= TABS ================= */
+.tabs{
+  display:flex;
+  gap:12px;
+  margin:22px;
+}
+
+.tab{
+  flex:1;
+  padding:12px;
+  border:none;
+  border-radius:22px;
+  cursor:pointer;
+  background:#efeaff;
+  color:var(--p);
+  font-weight:600;
+  transition:.25s;
+}
+
+.tab:hover{
+  background:#e3dbff;
+}
+
+.tab.active{
+  background:linear-gradient(135deg,var(--p),var(--p2));
+  color:#fff;
+  box-shadow:0 8px 20px rgba(106,60,255,.35);
+}
+
+/* ================= CONTENT ================= */
+.tab-content{
+  margin:0 22px;
+}
+
+.hidden{display:none}
+
+/* ================= ORDERS ================= */
+.order-card{
+  background:var(--card);
+  padding:16px;
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  margin-bottom:16px;
+}
+
+.order-head{
+  display:flex;
+  justify-content:space-between;
+  font-size:13px;
+  margin-bottom:6px;
+}
+
+.order-head b{
+  font-weight:600;
+}
+
+.status{
+  font-weight:600;
+  font-size:12px;
+}
+
+.status.processing{color:#ff9800}
+.status.shipped{color:#1e88e5}
+.status.delivered{color:#43a047}
+.status.cancelled{color:#e53935}
+
+.order-card p{
+  font-size:13px;
+  color:var(--muted);
+}
+
+.order-foot{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:12px;
+}
+
+.order-foot b{
+  font-size:16px;
+}
+
+.order-foot button{
+  border:none;
+  padding:7px 14px;
+  border-radius:18px;
+  background:linear-gradient(135deg,var(--p),var(--p2));
+  color:#fff;
+  font-size:12px;
+  cursor:pointer;
+  transition:.25s;
+}
+
+.order-foot button:hover{
+  transform:translateY(-1px);
+}
+
+/* ================= ACTIVITY ================= */
+.activity-list{
+  list-style:none;
+  margin-top:12px;
+}
+
+.activity-list li{
+  background:var(--card);
+  padding:14px;
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  margin-bottom:12px;
+  font-size:14px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.activity-list .dot{
+  width:8px;
+  height:8px;
+  background:var(--p);
+  border-radius:50%;
+  flex-shrink:0;
+}
+
+/* ================= MOBILE ================= */
+@media(max-width:600px){
+  .stats{
+    grid-template-columns:1fr;
+  }
+
+  .profile-card{
+    margin:16px;
+  }
+
+  .tab-content{
+    margin:0 16px;
+  }
+}
+
+
+

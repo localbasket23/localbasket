@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>System Settings — Local Basket Admin</title>
+
+ <!-- Favicon -->
+ <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99">
+ <link rel="icon" type="image/png" sizes="32x32" href="/welcome/logo2.png?v=200">
+ <link rel="apple-touch-icon" sizes="180x180" href="/welcome/logo2.png?v=200">
+
+ <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+:root {
+  --lav: #ff8a1a;
+  --lav-light: #ffb347;
+  --lav-soft: rgba(255, 138, 26, 0.14);
+  --bg: #f8f9fd;
+  --white: #fff;
+  --text: #2d3436;
+  --text-light: #636e72;
+  --radius: 16px;
+  --shadow: 0 10px 30px rgba(0,0,0,0.05);
+  --border: #edf0f7;
+  --surface: #ffffff;
+  --surface-2: #fafbff;
+  --muted: #9aa2b1;
+}
+*{box-sizing:border-box;margin:0;padding:0;font-family:Poppins}
+body{background:var(--bg);color:var(--text)}
+body.dark{
+  --bg:#0f172a;
+  --white:#111827;
+  --text:#f1f5f9;
+  --text-light:#94a3b8;
+  --border:#1f2937;
+  --shadow:0 10px 30px rgba(0,0,0,0.4);
+  --surface:#111827;
+  --surface-2:#0b1220;
+  --muted:#94a3b8;
+}
+
+/* ===== SIDEBAR (EXACT SAME) ===== */
+#sidebarOverlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.5);
+  backdrop-filter:blur(4px);z-index:1001;
+  display:none;opacity:0;transition:.3s
+}
+#sidebarOverlay.show{display:block;opacity:1}
+
+.sidebar{
+  width:280px;height:100vh;position:fixed;left:0;top:0;
+  background:linear-gradient(160deg,var(--lav),var(--lav-light));
+  color:white;padding:30px 20px;z-index:1002;
+  transition:.4s cubic-bezier(.4,0,.2,1);
+  box-shadow:4px 0 20px rgba(0,0,0,.1)
+}
+.brand{text-align:center;margin-bottom:40px}
+.brand img{width:65px;margin-bottom:10px}
+.brand h2{font-size:20px;font-weight:700}
+
+.menu button{
+  width:100%;padding:14px 18px;margin:5px 0;border:none;
+  border-radius:12px;background:rgba(255,255,255,.1);
+  color:white;font-size:14px;font-weight:500;text-align:left;
+  cursor:pointer;transition:.3s;
+  display:flex;align-items:center;gap:12px
+}
+.menu button:hover,.menu button.active{
+  background:white;color:var(--lav);
+  transform:translateX(5px)
+}
+
+/* ===== MAIN ===== */
+main{margin-left:280px;padding:40px}
+.header-box{margin-bottom:30px}
+.header-box h1{color:var(--lav)}
+.header-box p{color:var(--text-light)}
+
+.hero{
+  display:grid;
+  grid-template-columns:1.2fr 1fr;
+  gap:16px;
+  margin-bottom:18px;
+}
+.hero-card{
+  background:linear-gradient(140deg,var(--lav),var(--lav-light));
+  color:#fff;
+  border-radius:var(--radius);
+  padding:20px;
+  box-shadow:var(--shadow);
+}
+.hero-card h2{font-size:20px;margin-bottom:6px}
+.hero-card p{font-size:13px;opacity:.9}
+.hero-meta{
+  margin-top:12px;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:7px 12px;
+  border-radius:999px;
+  background:rgba(255,255,255,.16);
+  font-size:12px;
+}
+.stat-panel{
+  background:var(--white);
+  border-radius:var(--radius);
+  border:1px solid var(--border);
+  box-shadow:var(--shadow);
+  padding:16px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  align-content:center;
+}
+.stat-tile{
+  border:1px solid var(--border);
+  background:var(--surface-2);
+  border-radius:12px;
+  padding:10px;
+}
+.stat-tile small{color:var(--text-light);font-size:11px;text-transform:uppercase}
+.stat-tile b{display:block;margin-top:4px;color:var(--lav);font-size:18px}
+
+.settings-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(380px,1fr));
+  gap:25px
+}
+.settings-card{
+  background:var(--white);padding:25px;border-radius:16px;
+  box-shadow:var(--shadow);border:1px solid var(--border)
+}
+.settings-card h2{
+  font-size:18px;margin-bottom:15px;
+  display:flex;gap:10px;align-items:center
+}
+
+label{font-size:13px;color:var(--text-light);font-weight:600}
+input,select{
+  width:100%;padding:12px;margin-top:6px;
+  border-radius:10px;border:1px solid var(--border);
+  outline:none;background:var(--surface);color:var(--text)
+}
+input:focus{border-color:var(--lav)}
+
+.save-btn{
+  margin-top:15px;width:100%;
+  background:var(--lav);color:white;
+  border:none;padding:12px;border-radius:10px;
+  font-weight:600;cursor:pointer
+}
+.save-btn:hover{background:var(--lav-light)}
+
+.toggle{display:flex;align-items:center;gap:10px;margin-top:10px}
+.preview{
+  background:var(--surface-2);padding:12px;
+  border-radius:10px;margin-top:10px;
+  font-size:14px;color:var(--text)
+}
+ul{list-style:none;padding-left:0;margin-top:10px}
+li{padding:6px 0;font-size:14px}
+.remove-btn{
+  color:red;border:none;background:none;
+  cursor:pointer;font-size:13px;margin-left:10px
+}
+
+/* Mobile */
+@media(max-width:992px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  main{margin-left:0}
+  .hero{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  main{padding:18px}
+  .header-box{margin-bottom:16px}
+  .settings-card{padding:16px}
+  .hero-card{padding:16px}
+  .stat-panel{grid-template-columns:1fr 1fr}
+}
+</style>
+
+  <link rel='stylesheet' href='admin-shared.css'>
+</head>
+
+<body>
+
+<div id="sidebarOverlay" onclick="toggleMenu()"></div>
+
+<!-- SIDEBAR (EXACT SAME AS PREVIOUS) -->
+<aside class="sidebar">
+  <div class="brand">
+    <img src="https://mylocalbasket.com/Images/mylocalbasketlogo.png">
+    <h2>Admin Panel</h2>
+  </div>
+  <div class="menu">
+    <button onclick="location.href='admin.html'"><i class="fas fa-chart-pie"></i> Dashboard</button>
+    <button onclick="location.href='admin-sellers.html'"><i class="fas fa-user-check"></i> Seller Verification</button>
+    <button onclick="location.href='admin-products.html'"><i class="fas fa-box-open"></i> Products</button>
+    <button onclick="location.href='admin-orders.html'"><i class="fas fa-shopping-cart"></i> Orders</button>
+    <button onclick="location.href='admin-payments.html'"><i class="fas fa-wallet"></i> Payments</button>
+    <button class="active"><i class="fas fa-cog"></i> Settings</button>
+    <button onclick="logout()" style="margin-top:20px;background:rgba(255,71,87,.2)">
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main>
+  <div class="topbar lb-header">
+    <div class="lb-header-left">
+      <button class="menu-toggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+      <div>
+        <div class="lb-header-title"><i class="fas fa-tools"></i> System Settings</div>
+        <div class="lb-header-sub">Business rules & platform configuration</div>
+      </div>
+    </div>
+  </div>
+
+  <section class="hero">
+    <div class="hero-card">
+      <h2>Admin Control Center</h2>
+      <p>Manage commission, payouts, and platform mode from one place.</p>
+      <div class="hero-meta"><i class="fas fa-sliders-h"></i> System Tuning</div>
+    </div>
+    <div class="stat-panel">
+      <div class="stat-tile"><small>Commission</small><b id="statCommission">--</b></div>
+      <div class="stat-tile"><small>Payout Cycle</small><b id="statPayout">--</b></div>
+      <div class="stat-tile"><small>Min Payout</small><b id="statMinPayout">--</b></div>
+      <div class="stat-tile"><small>Mode</small><b id="statMode">--</b></div>
+    </div>
+  </section>
+
+  <div class="settings-grid">
+
+    <div class="settings-card">
+      <h2><i class="fas fa-percentage"></i> Platform Commission</h2>
+
+      <div class="toggle">
+        <input type="checkbox" id="commissionToggle" checked>
+        <label>Enable Global Commission</label>
+      </div>
+
+      <label>Global Commission (0–100%)</label>
+      <input type="range" min="0" max="100" value="5" id="commissionSlider">
+      <div><b id="commissionValue">5%</b></div>
+
+      <div class="preview" id="previewBox"></div>
+
+      <button class="save-btn" onclick="saveGlobalCommission()">Save Global Commission</button>
+    </div>
+
+    <div class="settings-card">
+      <h2><i class="fas fa-money-check-alt"></i> Payout Settings</h2>
+      <label>Payout Cycle</label>
+      <select id="payoutCycle">
+        <option>Weekly</option>
+        <option>15 Days</option>
+        <option>Monthly</option>
+      </select>
+      <label>Minimum Payout</label>
+      <input type="number" id="minPayout" value="500">
+      <button class="save-btn" onclick="savePayoutSettings()">Save Payout</button>
+    </div>
+
+    <div class="settings-card">
+      <h2><i class="fas fa-server"></i> System Control</h2>
+      <label>Platform Mode</label>
+      <select id="sysStatus">
+        <option value="active">Live</option>
+        <option value="maintenance">Maintenance</option>
+      </select>
+      <button class="save-btn" onclick="saveSystemSettings()">Update System</button>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const sidebar=document.querySelector(".sidebar");
+const overlay=document.getElementById("sidebarOverlay");
+
+function toggleMenu(){
+  sidebar.classList.toggle("open");
+  overlay.classList.toggle("show");
+}
+function logout(){
+  if(confirm("Logout?")){
+    localStorage.clear();
+    window.location.href="login.html";
+  }
+}
+
+/* Commission preview + persistence */
+const COMMISSION_STORAGE_KEY = "lbGlobalCommission";
+const API_BASE = (localStorage.getItem("lbApiAdminBase") || "").trim() || "http://localhost:5000/api/admin";
+const slider=document.getElementById("commissionSlider");
+const valueText=document.getElementById("commissionValue");
+const preview=document.getElementById("previewBox");
+const commissionToggle=document.getElementById("commissionToggle");
+const payoutCycle=document.getElementById("payoutCycle");
+const minPayout=document.getElementById("minPayout");
+const sysStatus=document.getElementById("sysStatus");
+
+const clampPercent=(v)=>Math.min(100,Math.max(0,Number(v)||0));
+
+function getSavedCommissionConfig(){
+  try{
+    const raw=localStorage.getItem(COMMISSION_STORAGE_KEY);
+    if(!raw) return null;
+    const parsed=JSON.parse(raw);
+    return {
+      enabled: parsed.enabled !== false,
+      percent: clampPercent(parsed.percent)
+    };
+  }catch{
+    return null;
+  }
+}
+
+function getCurrentCommissionConfig(){
+  return {
+    enabled: !!commissionToggle.checked,
+    percent: clampPercent(slider.value)
+  };
+}
+
+function updatePreview(){
+  const enabled=!!commissionToggle.checked;
+  const percent=clampPercent(slider.value);
+  slider.disabled=!enabled;
+  valueText.innerText=enabled ? percent+"%" : "Disabled";
+  const fee=enabled ? (1000*percent/100) : 0;
+  const sellerAmount=1000-fee;
+  preview.innerHTML=`Example Rs. 1000 -> Platform Rs. ${fee.toFixed(2)} -> Seller Rs. ${sellerAmount.toFixed(2)}`;
+}
+
+function applyCommissionConfig(config){
+  const safe=config || { enabled:true, percent:clampPercent(slider.value) };
+  commissionToggle.checked=safe.enabled !== false;
+  slider.value=clampPercent(safe.percent);
+  updatePreview();
+}
+
+slider.addEventListener("input", updatePreview);
+commissionToggle.addEventListener("change", updatePreview);
+applyCommissionConfig(getSavedCommissionConfig());
+
+function saveGlobalCommission(){
+  const config=getCurrentCommissionConfig();
+  localStorage.setItem(COMMISSION_STORAGE_KEY, JSON.stringify(config));
+  saveGlobalCommissionApi(config);
+  updateHeroStats();
+  alert("Global commission saved: " + (config.enabled ? config.percent + "%" : "Disabled"));
+}
+function savePayoutSettings(){
+  const cycle = payoutCycle ? payoutCycle.value : "Weekly";
+  const min = Number(minPayout && minPayout.value ? minPayout.value : 0);
+  fetch(`${API_BASE}/settings/payout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ payout_cycle: cycle, min_payout: min })
+  }).then(() => {
+    updateHeroStats();
+    alert("Payout settings saved");
+  }).catch(() => {
+    alert("Failed to save payout settings");
+  });
+}
+function saveSystemSettings(){
+  const mode = sysStatus ? sysStatus.value : "active";
+  fetch(`${API_BASE}/settings/system`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ system_mode: mode })
+  }).then(() => {
+    updateHeroStats();
+    alert("System updated");
+  }).catch(() => {
+    alert("Failed to update system");
+  });
+}
+
+payoutCycle.addEventListener("change", updateHeroStats);
+sysStatus.addEventListener("change", updateHeroStats);
+minPayout?.addEventListener("input", updateHeroStats);
+commissionToggle.addEventListener("change", updateHeroStats);
+slider.addEventListener("input", updateHeroStats);
+
+loadSettings();
+
+function updateHeroStats() {
+  const commission = getCurrentCommissionConfig();
+  const mode = sysStatus;
+
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.innerText = val;
+  };
+
+  set("statCommission", commission.enabled ? `${commission.percent}%` : "Disabled");
+  set("statPayout", payoutCycle ? payoutCycle.value : "--");
+  set("statMinPayout", minPayout ? `Rs. ${Number(minPayout.value || 0).toLocaleString("en-IN")}` : "--");
+  set("statMode", mode ? (mode.value === "maintenance" ? "Maintenance" : "Live") : "--");
+}
+
+async function loadSettings() {
+  try {
+    const res = await fetch(`${API_BASE}/settings`);
+    const data = await res.json();
+    if (data && data.success && data.global) {
+      const enabled = Number(data.global.global_commission_enabled) === 1;
+      const percent = clampPercent(data.global.global_commission_percent);
+      applyCommissionConfig({ enabled, percent });
+      updatePreview();
+      if (payoutCycle && data.global.payout_cycle) payoutCycle.value = data.global.payout_cycle;
+      if (minPayout && data.global.min_payout != null) minPayout.value = data.global.min_payout;
+      if (sysStatus && data.global.system_mode) sysStatus.value = data.global.system_mode;
+    }
+  } catch (e) {
+    // fallback to local storage
+  } finally {
+    updateHeroStats();
+  }
+}
+
+async function saveGlobalCommissionApi(config) {
+  try {
+    await fetch(`${API_BASE}/settings/commission`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ enabled: !!config.enabled, percent: clampPercent(config.percent) })
+    });
+  } catch {}
+}
+</script>
+
+
+<script src='admin-layout.js'></script>
+</body>
+</html>
+
+
+
+

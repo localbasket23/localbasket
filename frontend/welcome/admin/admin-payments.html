@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Payments | Local Basket</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99">
+  <link rel="icon" type="image/png" sizes="32x32" href="/welcome/logo2.png?v=200">
+  <link rel="apple-touch-icon" sizes="180x180" href="/welcome/logo2.png?v=200">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --lav: #ff8a1a;
+      --lav-light: #ffb347;
+      --lav-soft: rgba(255, 138, 26, 0.14);
+      --bg: #f8f9fd;
+      --white: #fff;
+      --text: #2d3436;
+      --text-light: #636e72;
+      --radius: 16px;
+      --shadow: 0 10px 30px rgba(0, 0, 0, .05);
+      --border: #edf0f7;
+      --surface: #ffffff;
+      --surface-2: #fafbff;
+      --table-head: #f4f6fb;
+      --row-hover: #fafaff;
+      --muted: #9aa2b1;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Poppins
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text)
+    }
+    body.dark {
+      --bg: #0f172a;
+      --white: #111827;
+      --text: #f1f5f9;
+      --text-light: #94a3b8;
+      --border: #1f2937;
+      --shadow: 0 10px 30px rgba(0,0,0,0.4);
+      --surface: #111827;
+      --surface-2: #0b1220;
+      --table-head: #0b1220;
+      --row-hover: #111b2d;
+      --muted: #94a3b8;
+    }
+
+    /* ===== SIDEBAR EXACT (MASTER) ===== */
+    #sidebarOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .5);
+      backdrop-filter: blur(4px);
+      z-index: 1001;
+      display: none;
+      opacity: 0;
+      transition: .3s
+    }
+
+    #sidebarOverlay.show {
+      display: block;
+      opacity: 1
+    }
+
+    .sidebar {
+      width: 280px;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      background: linear-gradient(160deg, var(--lav), var(--lav-light));
+      color: white;
+      padding: 30px 20px;
+      z-index: 1002;
+      transition: .4s cubic-bezier(.4, 0, .2, 1);
+      box-shadow: 4px 0 20px rgba(0, 0, 0, .1)
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 40px
+    }
+
+    .brand img {
+      width: 65px;
+      margin-bottom: 10px
+    }
+
+    .brand h2 {
+      font-size: 20px;
+      font-weight: 700
+    }
+
+    .menu button {
+      width: 100%;
+      padding: 14px 18px;
+      margin: 5px 0;
+      border: none;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .1);
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: .3s
+    }
+
+    .menu button:hover,
+    .menu button.active {
+      background: white;
+      color: var(--lav);
+      transform: translateX(5px)
+    }
+
+    /* ===== MAIN ===== */
+    main {
+      margin-left: 280px;
+      padding: 40px
+    }
+
+    .topbar {
+      background: var(--white);
+      padding: 18px 25px;
+      border-radius: var(--radius);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+      margin-bottom: 25px
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .hero-card {
+      background: linear-gradient(140deg, var(--lav), var(--lav-light));
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .hero-card h2 { font-size: 22px; margin-bottom: 6px; }
+    .hero-card p { font-size: 13px; opacity: .9; }
+    .hero-meta {
+      margin-top: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.16);
+      font-size: 12px;
+    }
+
+    .stat-panel {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-content: center;
+    }
+    .stat-tile {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      border-radius: 12px;
+      padding: 10px;
+    }
+    .stat-tile small { color: var(--text-light); font-size: 11px; text-transform: uppercase; }
+    .stat-tile b { display: block; margin-top: 4px; color: var(--lav); font-size: 18px; }
+
+    .filters {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 220px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+    }
+    .search-box input {
+      border: none;
+      outline: none;
+      width: 100%;
+      background: transparent;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .search-box input::placeholder { color: var(--muted); }
+    .filter-pill {
+      background: var(--lav-soft);
+      color: var(--lav);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }
+
+    .table-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse
+    }
+
+    th {
+      background: var(--table-head);
+      padding: 14px;
+      font-size: 12px;
+      text-align: left;
+      color: var(--text-light)
+    }
+
+    td {
+      padding: 15px;
+      border-bottom: 1px solid var(--border);
+      font-size: 14px
+    }
+    tr:hover { background: var(--row-hover); }
+
+    .status {
+      padding: 6px 12px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 12px
+    }
+
+    .pending {
+      background: #fff8e1;
+      color: #ffa000
+    }
+
+    .paid {
+      background: #e8f5e9;
+      color: #2ecc71
+    }
+
+    .pay-btn {
+      background: var(--lav);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer
+    }
+
+    .pay-btn:disabled {
+      background: var(--surface-2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      cursor: not-allowed
+    }
+
+    .mobile-list { display: none; }
+    .pay-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .pay-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .pay-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-light);
+    }
+    .pay-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface-2);
+      margin-top: 10px;
+    }
+
+    /* Mobile */
+    @media(max-width:992px) {
+      .sidebar {
+        transform: translateX(-100%)
+      }
+
+      .sidebar.open {
+        transform: translateX(0)
+      }
+
+      main {
+        margin-left: 0
+      }
+      .hero { grid-template-columns: 1fr; }
+      .table-card { display: none; }
+      .mobile-list { display: block; }
+    }
+    @media(max-width:600px){
+      main { padding: 18px; }
+      .topbar { padding: 14px 16px; }
+      .hero-card h2 { font-size: 19px; }
+      .stat-panel { grid-template-columns: 1fr 1fr; }
+      .filters { padding: 12px; }
+    }
+  </style>
+
+  <link rel='stylesheet' href='admin-shared.css'>
+</head>
+
+<body>
+
+  <div id="sidebarOverlay" onclick="toggleMenu()"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="https://mylocalbasket.com/Images/mylocalbasketlogo.png">
+      <h2>Admin Panel</h2>
+    </div>
+
+    <div class="menu">
+      <button onclick="location.href='admin.html'">
+        <i class="fas fa-chart-pie"></i> Dashboard
+      </button>
+      <button onclick="location.href='admin-sellers.html'">
+        <i class="fas fa-user-check"></i> Seller Verification
+      </button>
+      <button onclick="location.href='admin-products.html'">
+        <i class="fas fa-box-open"></i> Products
+      </button>
+      <button onclick="location.href='admin-orders.html'">
+        <i class="fas fa-shopping-cart"></i> Orders
+      </button>
+      <button class="active">
+        <i class="fas fa-wallet"></i> Payments
+      </button>
+      <button onclick="location.href='admin-settings.html'">
+        <i class="fas fa-cog"></i> Settings
+      </button>
+      <button onclick="logout()" style="margin-top:20px;background:rgba(255,71,87,.2)">
+        <i class="fas fa-sign-out-alt"></i> Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+    <div class="topbar lb-header">
+      <div class="lb-header-left">
+        <button class="menu-toggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+        <h2 class="lb-header-title"><i class="fas fa-wallet"></i> Seller Payouts</h2>
+      </div>
+      <div class="lb-header-right lb-header-sub">
+        Total Pending:
+        <b id="totalPending" style="color:#ffa000">Rs. 0</b>
+      </div>
+    </div>
+
+    <section class="hero">
+      <div class="hero-card">
+        <h2>Payout Control Center</h2>
+        <p>Track seller payouts, fees, and pending releases in one clean view.</p>
+        <div class="hero-meta"><i class="fas fa-coins"></i> Finance Review Mode</div>
+      </div>
+    <div class="stat-panel">
+        <div class="stat-tile"><small>Total Sellers</small><b id="statSellers">0</b></div>
+        <div class="stat-tile"><small>Pending</small><b id="statPending">0</b></div>
+        <div class="stat-tile"><small>Paid</small><b id="statPaid">0</b></div>
+        <div class="stat-tile"><small>Total Payable</small><b id="statPayable">Rs. 0</b></div>
+      </div>
+    </section>
+
+    <div class="filters">
+      <div class="search-box">
+        <i class="fas fa-search" style="color: var(--muted);"></i>
+        <input type="text" id="searchInput" placeholder="Search seller or ID..." oninput="handleSearch()">
+      </div>
+      <div class="filter-pill"><i class="fas fa-filter"></i> Pending Only</div>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Seller</th>
+            <th>Bank</th>
+            <th>Total Sales</th>
+            <th>Platform Fee</th>
+            <th>Payable</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="paymentData">
+          <tr>
+            <td colspan="7" style="text-align:center;padding:40px">
+              Loading payments...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="mobilePaymentList" class="mobile-list"></div>
+  </main>
+
+  <script>
+    const sidebar = document.querySelector(".sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+
+    function toggleMenu() {
+      sidebar.classList.toggle("open");
+      overlay.classList.toggle("show");
+    }
+    function logout() {
+      if (confirm("Logout?")) {
+        localStorage.clear();
+        window.location.href = "login.html";
+      }
+    }
+
+    const API = "http://localhost:5000/api/admin";
+    const state = { payments: [], filtered: [], showPendingOnly: true };
+
+    function resolvePassbookUrl(src) {
+      const raw = String(src || "").trim();
+      if (!raw) return "#";
+      if (/^https?:\/\//i.test(raw) || raw.startsWith("data:")) return raw;
+      const normalized = raw.replace(/\\/g, "/").replace(/^\/+/, "");
+      const withoutUploads = normalized.replace(/^uploads\/+/i, "");
+      return `http://localhost:5000/uploads/${withoutUploads}`;
+    }
+
+    function hasValidBank(p) {
+      return Boolean(p.bank_holder && p.bank_account && p.bank_ifsc && p.bank_passbook);
+    }
+
+    function setStats(list = []) {
+      const sellers = list.length;
+      const pending = list.filter(p => String(p.payout_status || "").toUpperCase() === "PENDING").length;
+      const paid = list.filter(p => String(p.payout_status || "").toUpperCase() === "PAID").length;
+      const totalPayable = list.reduce((sum, p) => sum + Number(p.seller_payout || 0), 0);
+      document.getElementById("statSellers").innerText = sellers;
+      document.getElementById("statPending").innerText = pending;
+      document.getElementById("statPaid").innerText = paid;
+      document.getElementById("statPayable").innerText = "Rs. " + totalPayable.toLocaleString("en-IN");
+    }
+
+    function maskAccount(acc) {
+      const raw = String(acc || "").replace(/\s+/g, "");
+      if (!raw) return "N/A";
+      return "**** **** " + raw.slice(-4);
+    }
+
+    function renderPayments(list) {
+      const tbody = document.getElementById("paymentData");
+      const mobile = document.getElementById("mobilePaymentList");
+      tbody.innerHTML = "";
+      if (mobile) mobile.innerHTML = "";
+
+      if (!list || list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">No payments found.</td></tr>`;
+        if (mobile) mobile.innerHTML = `<div class="pay-card">No payments found.</div>`;
+        return;
+      }
+
+      let pendingTotal = 0;
+      list.forEach(p => {
+        if (String(p.payout_status || "").toUpperCase() === "PENDING") {
+          pendingTotal += Number(p.seller_payout || 0);
+        }
+
+        tbody.innerHTML += `
+          <tr>
+            <td>
+              <b>${p.store_name}</b><br>
+              <small>Seller #${p.seller_id}</small>
+            </td>
+            <td>
+              <div style="font-size:12px;"><b>${p.bank_holder || "N/A"}</b></div>
+              <div style="font-size:12px; color:var(--text-light);">${maskAccount(p.bank_account)}</div>
+              <div style="font-size:11px; color:var(--text-light);">${p.bank_ifsc || ""}</div>
+              ${p.bank_passbook ? `
+                <div style="margin-top:6px;">
+                  <a href="${resolvePassbookUrl(p.bank_passbook)}" target="_blank" download style="font-size:11px; color:var(--lav); font-weight:600; text-decoration:none;">
+                    <i class="fas fa-receipt"></i> Passbook
+                  </a>
+                </div>` : ""}
+            </td>
+            <td>Rs. ${p.total_amount}</td>
+            <td>Rs. ${p.platform_fee}</td>
+            <td><b>Rs. ${p.seller_payout}</b></td>
+            <td>
+              <span class="status ${String(p.payout_status || "").toLowerCase()}">
+                ${p.payout_status}
+              </span>
+            </td>
+            <td>
+              <button class="pay-btn"
+                ${String(p.payout_status || "").toUpperCase() === "PAID" || !hasValidBank(p) ? "disabled" : ""}
+                onclick="releasePayout(${p.seller_id})">
+                ${String(p.payout_status || "").toUpperCase() === "PAID" ? "Paid" : (!hasValidBank(p) ? "Bank Missing" : "Release")}
+              </button>
+            </td>
+          </tr>
+        `;
+
+        if (mobile) {
+          mobile.innerHTML += `
+            <div class="pay-card">
+              <div class="pay-head">
+                <div>
+                  <div style="font-weight:700;">${p.store_name}</div>
+                  <div style="font-size:12px; color:var(--text-light)">Seller #${p.seller_id}</div>
+                </div>
+                <span class="status ${String(p.payout_status || "").toLowerCase()}">${p.payout_status}</span>
+              </div>
+              <div class="pay-meta">
+                <span>Total: Rs. ${p.total_amount}</span>
+                <span>Fee: Rs. ${p.platform_fee}</span>
+              </div>
+              <div class="pay-row">
+                <span>Bank</span>
+                <span>${p.bank_holder || "N/A"} · ${maskAccount(p.bank_account)}</span>
+              </div>
+              <div class="pay-row">
+                <span>IFSC</span>
+                <span>${p.bank_ifsc || "N/A"}</span>
+              </div>
+              ${p.bank_passbook ? `
+                <div class="pay-row">
+                  <span>Passbook</span>
+                  <a href="${resolvePassbookUrl(p.bank_passbook)}" target="_blank" download style="color:var(--lav); font-weight:700; text-decoration:none;">Download</a>
+                </div>` : ""}
+              <div class="pay-row">
+                <span>Payable</span>
+                <b>Rs. ${p.seller_payout}</b>
+              </div>
+              <div style="margin-top:10px;">
+                <button class="pay-btn" style="width:100%;"
+                  ${String(p.payout_status || "").toUpperCase() === "PAID" || !hasValidBank(p) ? "disabled" : ""}
+                  onclick="releasePayout(${p.seller_id})">
+                  ${String(p.payout_status || "").toUpperCase() === "PAID" ? "Paid" : (!hasValidBank(p) ? "Bank Missing" : "Release")}
+                </button>
+              </div>
+            </div>
+          `;
+        }
+      });
+
+      document.getElementById("totalPending").innerText = "Rs. " + pendingTotal.toLocaleString("en-IN");
+    }
+
+    function handleSearch() {
+      const q = (document.getElementById("searchInput").value || "").toLowerCase().trim();
+      const baseList = state.showPendingOnly
+        ? state.payments.filter(p => String(p.payout_status || "").toUpperCase() === "PENDING")
+        : state.payments;
+
+      if (!q) {
+        state.filtered = [...baseList];
+      } else {
+        state.filtered = baseList.filter(p =>
+          String(p.store_name || "").toLowerCase().includes(q) ||
+          String(p.seller_id || "").toLowerCase().includes(q)
+        );
+      }
+      setStats(state.filtered);
+      renderPayments(state.filtered);
+    }
+
+    async function loadPayments() {
+      const tbody = document.getElementById("paymentData");
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px">Loading payments...</td></tr>`;
+      const res = await fetch(API + "/payments");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted)">Failed to load payments.</td></tr>`;
+        return;
+      }
+      state.payments = data.payments || [];
+      state.filtered = state.showPendingOnly
+        ? state.payments.filter(p => String(p.payout_status || "").toUpperCase() === "PENDING")
+        : [...state.payments];
+      setStats(state.filtered);
+      renderPayments(state.filtered);
+    }
+
+    async function releasePayout(id) {
+      const target = state.payments.find(p => Number(p.seller_id) === Number(id));
+      if (target && !hasValidBank(target)) {
+        alert("Bank details/passbook missing. Cannot release payout.");
+        return;
+      }
+      if (!confirm("Release payout to seller #" + id + "?")) return;
+      const res = await fetch(API + "/payments/release", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sellerId: id })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        alert(data.message || "Failed to release payout");
+        return;
+      }
+      alert("Payout released");
+      loadPayments();
+    }
+
+    loadPayments();
+  </script>
+
+
+<script src='admin-layout.js'></script>
+</body>
+
+</html>
+
+

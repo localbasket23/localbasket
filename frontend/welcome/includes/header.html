@@ -1,0 +1,49 @@
+﻿<div class="nav-container">
+  <nav class="navbar">
+    <div class="nav-left">
+      <a href="#" class="logo-box" data-lb-href="customer/index.html">
+        <img class="logo-img" src="" data-lb-src="logo2.png" alt="LocalBasket Logo">
+        <span class="logo-text">LocalBasket</span>
+      </a>
+      <div class="location-box" id="locBtn">
+        <div class="loc-icon">📍</div>
+        <div class="loc-text">
+          <span class="loc-label">Delivering to</span>
+          <span id="locText" class="loc-value">Select Location</span>
+        </div>
+        <div class="loc-caret">▾</div>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <a href="#" class="sell-btn" data-lb-href="seller/seller-auth/seller-auth.html">Sell on LB</a>
+      <div class="cart-pill" id="cartPill">
+        <span id="cartCount">0 Items</span>
+      </div>
+
+      <button id="loginBtn" class="login-nav-btn" type="button">Log In</button>
+
+      <div class="user-account" id="userAccount" style="display:none;">
+        <button class="user-avatar" id="accountBtn" type="button">
+          <span id="userInitials"></span>
+        </button>
+        <div class="user-menu" id="userMenu">
+          <p id="userFullName">Welcome!</p>
+          <button type="button" data-action="profile">My Profile</button>
+          <button type="button" data-action="orders">My Orders</button>
+          <button type="button" data-action="logout" style="color: var(--danger);">Logout</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+</div>
+
+<div class="mobile-loc-row">
+  <button class="lb-header-back mobile" id="lbHeaderBackBtnMobile" type="button" aria-label="Go back">
+    <span>&larr;</span>
+  </button>
+  <button class="mobile-loc-btn" id="mobileLocBtn" type="button">
+    <span class="pill">Location</span>
+    <span id="locTextMobile">Select Location</span>
+  </button>
+</div>

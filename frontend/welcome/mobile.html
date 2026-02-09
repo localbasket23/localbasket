@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>LocalBasket Mobile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="mobile.css">
+</head>
+<body>
+
+  <!-- MOBILE UI HERE -->
+  <div class="mobile-app">
+
+    <header class="m-header">
+      <div class="m-location">
+        📍 <span id="locText">Select Location</span>
+      </div>
+      <div class="m-user" id="accountBtn">
+        <div class="m-avatar">
+          <span id="userInitials">U</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="m-search">
+      <input type="number" id="pinInput" placeholder="Enter pincode">
+      <button class="m-btn" onclick="searchByPincode()">Find</button>
+    </div>
+
+    <div class="m-store-grid" id="storeGrid"></div>
+
+    <nav class="m-bottom-nav">
+      <button>🏠<span>Home</span></button>
+      <button>🔍<span>Search</span></button>
+      <button>🛒<span id="cartCount">0</span></button>
+      <button>👤<span>Account</span></button>
+    </nav>
+
+  </div>
+
+  <script src="welcome.js"></script>
+</body>
+</html>

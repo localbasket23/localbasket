@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Product Approval — Local Basket Admin</title>
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99">
+  <link rel="icon" type="image/png" sizes="32x32" href="/welcome/logo2.png?v=200">
+<link rel="icon" type="image/png" sizes="48x48" href="/welcome/logo2.png?v=200">
+<link rel="icon" type="image/png" sizes="96x96" href="/welcome/logo2.png?v=200">
+<link rel="apple-touch-icon" sizes="180x180" href="/welcome/logo2.png?v=200">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --lav: #ff8a1a;
+      --lav-light: #ffb347;
+      --lav-soft: rgba(255, 138, 26, 0.14);
+      --bg: #f8f9fd;
+      --white: #fff;
+      --text: #2d3436;
+      --text-light: #636e72;
+      --radius: 16px;
+      --shadow: 0 10px 30px rgba(0,0,0,0.05);
+      --border: #edf0f7;
+      --surface: #ffffff;
+      --surface-2: #fafbff;
+      --table-head: #f4f6fb;
+      --row-hover: #fafaff;
+      --muted: #9aa2b1;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Poppins", sans-serif; }
+    body { background: var(--bg); color: var(--text); overflow-x: hidden; }
+    body.dark {
+      --bg: #0f172a;
+      --white: #111827;
+      --text: #f1f5f9;
+      --text-light: #94a3b8;
+      --border: #1f2937;
+      --shadow: 0 10px 30px rgba(0,0,0,0.4);
+      --surface: #111827;
+      --surface-2: #0b1220;
+      --table-head: #0b1220;
+      --row-hover: #111b2d;
+      --muted: #94a3b8;
+    }
+
+    /* ================= SIDEBAR (EXACT SAME AS DASHBOARD) ================= */
+    #sidebarOverlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
+      backdrop-filter: blur(4px); z-index: 1001; display: none; opacity: 0; transition: 0.3s;
+    }
+    #sidebarOverlay.show { display: block; opacity: 1; }
+
+    .sidebar {
+      width: 280px; height: 100vh; position: fixed; left: 0; top: 0;
+      background: linear-gradient(160deg, var(--lav), var(--lav-light));
+      color: white; padding: 30px 20px; z-index: 1002;
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+    }
+
+    .close-sidebar {
+      display: none; position: absolute; right: 20px; top: 20px;
+      font-size: 22px; color: white; cursor: pointer;
+      width: 35px; height: 35px; background: rgba(255,255,255,0.1);
+      border-radius: 50%; align-items: center; justify-content: center;
+    }
+
+    .brand { text-align: center; margin-bottom: 40px; }
+    .brand img { width: 65px; margin-bottom: 10px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2)); }
+    .brand h2 { font-size: 20px; font-weight: 700; color: white; }
+
+    .menu button {
+      width: 100%; padding: 14px 18px; margin: 5px 0; border: none;
+      border-radius: 12px; background: rgba(255,255,255,0.1);
+      color: white; font-size: 14px; font-weight: 500; text-align: left;
+      cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 12px;
+    }
+    .menu button:hover, .menu button.active { background: white; color: var(--lav); transform: translateX(5px); }
+
+    /* ================= MAIN AREA ================= */
+    main { margin-left: 280px; padding: 30px; transition: 0.3s; }
+
+    .topbar {
+      background: var(--white); padding: 18px 25px; border-radius: var(--radius);
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: var(--shadow); margin-bottom: 30px;
+    }
+    .topbar .title { font-size: 18px; font-weight: 700; color: var(--lav); display: flex; align-items: center; gap: 10px; }
+    .menu-toggle {
+      display: none;
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      border: none;
+      background: var(--lav-soft);
+      color: var(--lav);
+      cursor: pointer;
+      font-size: 20px;
+      box-shadow: 0 10px 22px rgba(255, 138, 26, 0.25);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .hero-card {
+      background: linear-gradient(140deg, var(--lav), var(--lav-light));
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .hero-card h2 { font-size: 22px; margin-bottom: 6px; }
+    .hero-card p { font-size: 13px; opacity: .9; }
+    .hero-meta {
+      margin-top: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.16);
+      font-size: 12px;
+    }
+
+    .stat-panel {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      align-content: center;
+    }
+    .stat-tile {
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      border-radius: 12px;
+      padding: 10px;
+    }
+    .stat-tile small { color: var(--text-light); font-size: 11px; text-transform: uppercase; }
+    .stat-tile b { display: block; margin-top: 4px; color: var(--lav); font-size: 18px; }
+
+    .filters {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 220px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 14px;
+    }
+    .search-box input {
+      border: none;
+      outline: none;
+      width: 100%;
+      background: transparent;
+      color: var(--text);
+      font-size: 14px;
+    }
+    .search-box input::placeholder { color: var(--muted); }
+    .filter-pill {
+      background: var(--lav-soft);
+      color: var(--lav);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* ================= PRODUCT TABLE ================= */
+    .table-card {
+      background: var(--white); border-radius: var(--radius);
+      box-shadow: var(--shadow); overflow: hidden; border: 1px solid var(--border);
+    }
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+    th { background: var(--table-head); padding: 15px; text-align: center; font-size: 12px; text-transform: uppercase; color: var(--text-light); letter-spacing: .5px; }
+    td { padding: 16px 15px; border-bottom: 1px solid var(--border); font-size: 14px; text-align: center; vertical-align: middle; }
+    tr:hover { background: var(--row-hover); }
+
+    .product-img {
+      width: 55px; height: 55px; object-fit: cover; border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    textarea {
+      width: 160px; height: 50px; border: 1px solid var(--border); border-radius: 8px;
+      padding: 8px; font-size: 12px; resize: none; font-family: inherit;
+      background: var(--surface-2); color: var(--text);
+    }
+    textarea::placeholder { color: var(--muted); }
+
+    .btn-approve { background: #e8f5e9; color: #2ecc71; padding: 8px 14px; border-radius: 10px; border:none; font-weight:700; cursor:pointer; }
+    .btn-reject { background: #ffebee; color: #e74c3c; padding: 8px 14px; border-radius: 10px; border:none; font-weight:700; cursor:pointer; margin-top:5px; }
+    .btn-approve:hover, .btn-reject:hover { transform: translateY(-2px); filter: brightness(0.95); }
+
+    .status-chip {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-light);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    /* ================= MOBILE LIST ================= */
+    .mobile-list { display: none; }
+    .product-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .product-head {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .product-head img { width: 54px; height: 54px; border-radius: 10px; object-fit: cover; }
+    .product-title { font-size: 14px; font-weight: 700; }
+    .product-meta { font-size: 12px; color: var(--text-light); }
+    .product-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 12px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface-2);
+      margin-bottom: 8px;
+    }
+    .mobile-actions { display: grid; gap: 6px; }
+
+    /* ================= MOBILE RESPONSIVE ================= */
+    @media(max-width: 992px){
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      #sidebarOverlay.show { display: block; opacity: 1; }
+      main { margin-left: 0; padding: 20px; }
+      .menu-toggle { display: block; }
+      .close-sidebar { display: flex; }
+      .hero { grid-template-columns: 1fr; }
+      .table-card { display: none; }
+      .mobile-list { display: block; }
+    }
+    @media(max-width: 600px){
+      .topbar { padding: 14px 16px; }
+      .topbar .title { font-size: 16px; }
+      .hero-card h2 { font-size: 19px; }
+      .stat-panel { grid-template-columns: 1fr 1fr; }
+      .filters { padding: 12px; }
+    }
+  </style>
+
+  <link rel='stylesheet' href='admin-shared.css'>
+</head>
+
+<body>
+
+<div id="sidebarOverlay" onclick="toggleMenu()"></div>
+
+<aside class="sidebar">
+  <div class="close-sidebar" onclick="toggleMenu()"><i class="fas fa-times"></i></div>
+  <div class="brand">
+    <img src="https://mylocalbasket.com/Images/mylocalbasketlogo.png" alt="Logo">
+    <h2>Admin Panel</h2>
+  </div>
+
+  <div class="menu">
+    <button onclick="location.href='admin.html'"><i class="fas fa-chart-pie"></i> Dashboard</button>
+    <button onclick="location.href='admin-sellers.html'"><i class="fas fa-user-check"></i> Seller Verification</button>
+    <button class="active"><i class="fas fa-box-open"></i> Product Approvals</button>
+    <button onclick="location.href='admin-orders.html'"><i class="fas fa-shopping-cart"></i> Orders</button>
+    <button onclick="location.href='admin-payments.html'"><i class="fas fa-wallet"></i> Payments</button>
+    <button onclick="location.href='admin-settings.html'"><i class="fas fa-cog"></i> Settings</button>
+    <button onclick="logout()" style="margin-top: 20px; background: rgba(255,71,87,0.2);"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+</aside>
+
+<main>
+  <div class="topbar lb-header">
+    <div class="title lb-header-left">
+      <button class="menu-toggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+      <span class="lb-header-title"><i class="fas fa-check-circle"></i> Pending Product Approvals</span>
+    </div>
+    <div class="admin-badge lb-header-right" style="font-size: 13px; font-weight: 600; color: var(--text-light);">
+      Action Required: <span id="pendingCount" style="color: var(--lav);">0</span>
+    </div>
+  </div>
+
+  <section class="hero">
+    <div class="hero-card">
+      <h2>Product Review Queue</h2>
+      <p>Approve new listings fast and keep catalog quality high.</p>
+      <div class="hero-meta"><i class="fas fa-shield-check"></i> Admin Review Mode</div>
+    </div>
+    <div class="stat-panel">
+      <div class="stat-tile"><small>Pending</small><b id="statPending">0</b></div>
+      <div class="stat-tile"><small>Approved Today</small><b id="statApproved">0</b></div>
+      <div class="stat-tile"><small>Rejected Today</small><b id="statRejected">0</b></div>
+      <div class="stat-tile"><small>Total Stock</small><b id="statStock">0</b></div>
+    </div>
+  </section>
+
+  <div class="filters">
+    <div class="search-box">
+      <i class="fas fa-search" style="color: var(--muted);"></i>
+      <input type="text" id="searchInput" placeholder="Search product, seller, category..." oninput="handleSearch()">
+    </div>
+    <div class="filter-pill"><i class="fas fa-filter"></i> Pending Only</div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Product Name</th>
+            <th>Seller</th>
+            <th>Category</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th>Rejection Reason</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="productTable">
+          </tbody>
+      </table>
+    </div>
+  </div>
+  <div id="mobileProductList" class="mobile-list"></div>
+</main>
+
+<script>
+const sidebar = document.querySelector(".sidebar");
+const overlay = document.getElementById("sidebarOverlay");
+
+function toggleMenu(){
+  sidebar.classList.toggle("open");
+  overlay.classList.toggle("show");
+  document.body.style.overflow = sidebar.classList.contains("open") ? "hidden" : "auto";
+}
+
+const state = {
+  products: [],
+  filtered: []
+};
+
+function setStats(list = []) {
+  const pending = list.length;
+  const stock = list.reduce((sum, p) => sum + Number(p.stock || 0), 0);
+  document.getElementById("pendingCount").innerText = pending;
+  document.getElementById("statPending").innerText = pending;
+  document.getElementById("statStock").innerText = stock.toLocaleString();
+  document.getElementById("statApproved").innerText = "0";
+  document.getElementById("statRejected").innerText = "0";
+}
+
+function renderProducts(list) {
+  const table = document.getElementById("productTable");
+  const mobile = document.getElementById("mobileProductList");
+
+  if (!list || list.length === 0) {
+    table.innerHTML = `<tr><td colspan="8" style="padding:40px; color:var(--muted);">No products waiting for approval.</td></tr>`;
+    if (mobile) mobile.innerHTML = `<div class="product-card">No products waiting for approval.</div>`;
+    return;
+  }
+
+  table.innerHTML = list.map(p => `
+    <tr>
+      <td>
+        <img class="product-img" src="http://localhost:5000/uploads/${p.image}" onerror="this.src='https://via.placeholder.com/60'">
+      </td>
+      <td style="font-weight:700;">${p.name}</td>
+      <td style="color:var(--lav); font-weight:500;">${p.seller_name}</td>
+      <td><span class="status-chip">${p.category}</span></td>
+      <td style="font-weight:600;">Rs. ${p.price}</td>
+      <td>${p.stock}</td>
+      <td>
+        <textarea id="reason-${p.id}" placeholder="Required for rejection..."></textarea>
+      </td>
+      <td>
+        <div style="display:flex; flex-direction:column; gap:5px;">
+          <button class="btn-approve" onclick="updateStatus(${p.id}, 'APPROVED')"><i class="fas fa-check"></i> Approve</button>
+          <button class="btn-reject" onclick="updateStatus(${p.id}, 'REJECTED')"><i class="fas fa-times"></i> Reject</button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+
+  if (mobile) {
+    mobile.innerHTML = list.map(p => `
+      <div class="product-card">
+        <div class="product-head">
+          <img src="http://localhost:5000/uploads/${p.image}" onerror="this.src='https://via.placeholder.com/60'">
+          <div>
+            <div class="product-title">${p.name}</div>
+            <div class="product-meta">${p.seller_name}</div>
+          </div>
+        </div>
+        <div class="product-row"><span>Category</span><span>${p.category}</span></div>
+        <div class="product-row"><span>Price</span><span>Rs. ${p.price}</span></div>
+        <div class="product-row"><span>Stock</span><span>${p.stock}</span></div>
+        <div class="product-row" style="align-items:flex-start;">
+          <span>Reason</span>
+          <textarea id="reason-m-${p.id}" placeholder="Required for rejection..."></textarea>
+        </div>
+        <div class="mobile-actions">
+          <button class="btn-approve" onclick="updateStatus(${p.id}, 'APPROVED')"><i class="fas fa-check"></i> Approve</button>
+          <button class="btn-reject" onclick="updateStatus(${p.id}, 'REJECTED', true)"><i class="fas fa-times"></i> Reject</button>
+        </div>
+      </div>
+    `).join("");
+  }
+}
+
+function handleSearch() {
+  const q = (document.getElementById("searchInput").value || "").toLowerCase().trim();
+  if (!q) {
+    state.filtered = [...state.products];
+  } else {
+    state.filtered = state.products.filter(p =>
+      String(p.name || "").toLowerCase().includes(q) ||
+      String(p.seller_name || "").toLowerCase().includes(q) ||
+      String(p.category || "").toLowerCase().includes(q)
+    );
+  }
+  renderProducts(state.filtered);
+}
+
+/* ================= FETCH REAL PRODUCTS ================= */
+async function loadProducts() {
+  const table = document.getElementById("productTable");
+  table.innerHTML = `<tr><td colspan="8" style="padding:40px;">Fetching pending products...</td></tr>`;
+
+  try {
+    const res = await fetch("http://localhost:5000/api/admin/products/pending");
+    const data = await res.json();
+
+    if (!data.success || data.products.length === 0) {
+      state.products = [];
+      state.filtered = [];
+      setStats([]);
+      renderProducts([]);
+      return;
+    }
+
+    state.products = data.products || [];
+    state.filtered = [...state.products];
+    setStats(state.products);
+    renderProducts(state.filtered);
+  } catch (err) {
+    table.innerHTML = `<tr><td colspan="8" style="padding:40px; color:red;">Failed to connect to API.</td></tr>`;
+  }
+}
+
+/* ================= UPDATE STATUS ================= */
+async function updateStatus(id, status, isMobile = false) {
+  const reasonEl = document.getElementById((isMobile ? "reason-m-" : "reason-") + id);
+  const reason = (reasonEl && reasonEl.value ? reasonEl.value : "").trim();
+
+  if (status === "REJECTED" && !reason) {
+    alert("Please provide a reason for rejection.");
+    return;
+  }
+
+  if (!confirm(`Are you sure you want to ${status.toLowerCase()} this product?`)) return;
+
+  try {
+    const res = await fetch("http://localhost:5000/api/admin/product/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ productId: id, status, reason })
+    });
+    const d = await res.json();
+    alert(d.message || "Status Updated Successfully");
+    loadProducts(); // Refresh
+  } catch (err) {
+    alert("Error updating status.");
+  }
+}
+
+function logout() {
+  if (confirm("Logout from Admin Panel?")) {
+    window.location.href = "index.html";
+  }
+}
+
+// Start
+loadProducts();
+</script>
+
+
+<script src='admin-layout.js'></script>
+</body>
+</html>
+
+
+

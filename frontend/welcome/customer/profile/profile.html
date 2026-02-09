@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings | LocalBasket</title>
+
+<link rel="stylesheet" href="/welcome/includes/header-footer.css">
+<!-- Favicon -->
+  <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99">
+  <link rel="icon" type="image/png" sizes="32x32" href="/welcome/logo2.png?v=200">
+<link rel="icon" type="image/png" sizes="48x48" href="/welcome/logo2.png?v=200">
+<link rel="icon" type="image/png" sizes="96x96" href="/welcome/logo2.png?v=200">
+<link rel="apple-touch-icon" sizes="180x180" href="/welcome/logo2.png?v=200">
+  <style>
+    :root {
+      --primary:#ff8a1a;
+      --primary-light:#ffe8d2;
+      --bg:#f4f7fe;
+      --card:#ffffff;
+      --text-main:#0f172a;
+      --text-muted:#64748b;
+      --danger:#ff4d4d;
+      --shadow:0 10px 30px -5px rgba(0,0,0,.05);
+    }
+
+    * {
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family:'Plus Jakarta Sans',sans-serif;
+    }
+
+    body {
+      background:var(--bg);
+      background-image:
+        radial-gradient(circle at top right,#e2e8f0 0%,transparent 20%),
+        radial-gradient(circle at bottom left,#e2e8f0 0%,transparent 20%);
+      min-height:100vh;
+      color:var(--text-main);
+      padding-bottom:110px;
+    }
+
+    .dashboard {
+      max-width:1200px;
+      margin:40px auto;
+      padding:0 20px;
+      display:grid;
+      grid-template-columns:300px 1fr;
+      gap:30px;
+    }
+
+    .sidebar {
+      background:var(--card);
+      border-radius:24px;
+      padding:40px 24px;
+      box-shadow:var(--shadow);
+      height:fit-content;
+      position:sticky;
+      top:40px;
+    }
+
+    .profile-header {
+      text-align:center;
+      margin-bottom:40px;
+    }
+
+    .avatar-circle {
+      width:100px;
+      height:100px;
+      margin:0 auto 14px;
+      background:linear-gradient(135deg,var(--primary),#ffb347);
+      color:#fff;
+      border-radius:32px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:40px;
+      font-weight:800;
+      box-shadow:0 10px 20px rgba(106,60,255,.3);
+    }
+
+    .nav-menu { list-style:none; }
+    .nav-item { margin-bottom:8px; }
+
+    .nav-link {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:14px 18px;
+      text-decoration:none;
+      color:var(--text-muted);
+      font-weight:600;
+      border-radius:16px;
+      transition:.25s;
+    }
+
+    .nav-link:hover {
+      background:var(--primary-light);
+      color:var(--primary);
+    }
+
+    .nav-link.active {
+      background:var(--primary);
+      color:#fff;
+      box-shadow:0 10px 20px -5px rgba(106,60,255,.4);
+    }
+
+    .main-card {
+      background:var(--card);
+      border-radius:24px;
+      padding:40px;
+      box-shadow:var(--shadow);
+    }
+
+    .section-title {
+      font-size:24px;
+      font-weight:800;
+      margin-bottom:30px;
+    }
+
+    .grid-row {
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:24px;
+      margin-bottom:24px;
+    }
+
+    .input-group { margin-bottom:24px; }
+
+    .input-group label {
+      display:block;
+      font-size:14px;
+      font-weight:700;
+      margin-bottom:10px;
+      color:var(--text-muted);
+    }
+
+    .input-wrapper input {
+      width:100%;
+      padding:16px 20px;
+      border-radius:16px;
+      border:2px solid #f1f5f9;
+      background:#f8fafc;
+      font-size:15px;
+      font-weight:600;
+      outline:none;
+      transition:.25s;
+    }
+
+    .input-wrapper input:focus {
+      border-color:var(--primary);
+      background:#fff;
+      box-shadow:0 0 0 4px rgba(106,60,255,.1);
+    }
+
+    .input-wrapper input[readonly] {
+      background:#f1f5f9;
+      color:var(--text-muted);
+      cursor:not-allowed;
+    }
+
+    .hint {
+      font-size:12px;
+      color:var(--text-muted);
+      margin-top:8px;
+    }
+
+    .btn-save {
+      background:var(--primary);
+      color:#fff;
+      border:none;
+      padding:16px 32px;
+      border-radius:16px;
+      font-weight:700;
+      font-size:16px;
+      cursor:pointer;
+      transition:.25s;
+    }
+
+    .btn-save:hover {
+      transform:translateY(-2px);
+      box-shadow:0 10px 20px rgba(106,60,255,.3);
+    }
+
+    @media (max-width:900px) {
+      .dashboard { grid-template-columns:1fr; margin:20px auto; }
+      .sidebar { position:relative; top:0; }
+      .grid-row { grid-template-columns:1fr; }
+    }
+    @media (max-width:768px){
+    }
+  </style>
+</head>
+
+<body>
+  <div id="siteHeader"></div>
+
+  <div class="dashboard">
+    <aside class="sidebar">
+      <div class="profile-header">
+        <div class="avatar-circle" id="userInitial">U</div>
+        <h2 id="sidebarName">User</h2>
+        <p id="sidebarEmail" style="color:var(--text-muted);font-size:13px;"></p>
+      </div>
+
+      <ul class="nav-menu">
+        <li class="nav-item">
+          <a href="/welcome/customer/profile/customer-profile.html" class="nav-link active">Account</a>
+        </li>
+        <li class="nav-item">
+          <a href="/welcome/customer/order/customer-orders.html" class="nav-link">My Orders</a>
+        </li>
+        <li class="nav-item" style="margin-top:20px;">
+          <a href="javascript:void(0)" onclick="handleLogout()" class="nav-link" style="color:var(--danger);">
+            Sign Out
+          </a>
+        </li>
+      </ul>
+    </aside>
+
+    <main class="main-card">
+      <div class="section-title">Personal Settings</div>
+
+      <form id="profileForm">
+        <div class="grid-row">
+          <div class="input-group">
+            <label>Display Name</label>
+            <div class="input-wrapper">
+              <input type="text" id="profName" required />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label>Phone Identity</label>
+            <div class="input-wrapper">
+              <input type="tel" id="profPhone" readonly />
+            </div>
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label>Email Address</label>
+          <div class="input-wrapper">
+            <input type="email" id="profEmail" required />
+          </div>
+        </div>
+
+        <hr style="margin:40px 0;border:none;height:1px;background:#f1f5f9;">
+
+        <div class="section-title" style="font-size:20px;">Security Upgrade</div>
+
+        <div class="input-group">
+          <label>Update Password</label>
+          <div class="input-wrapper">
+            <input type="password" id="profPass" maxlength="10" placeholder="Leave empty to keep current" />
+          </div>
+        </div>
+
+        <p class="hint">Password must not be more than 10 characters.</p>
+
+        <button type="submit" class="btn-save">Update Profile</button>
+      </form>
+    </main>
+  </div>
+
+  <div id="siteFooter"></div>
+
+  <script src="profile.js"></script>
+  <script src="/welcome/includes/include.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,217 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Dashboard  Local Basket</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="seller-dashboard.css">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99">
+  <link rel="icon" type="image/png" sizes="32x32" href="/welcome/logo2.png?v=200">
+  <link rel="icon" type="image/png" sizes="48x48" href="/welcome/logo2.png?v=200">
+  <link rel="icon" type="image/png" sizes="96x96" href="/welcome/logo2.png?v=200">
+  <link rel="apple-touch-icon" sizes="180x180" href="/welcome/logo2.png?v=200">
+</head>
+<body>
+
+<header class="mobile-header">
+  <button id="menuBtn" aria-label="Open Menu"><i class="fas fa-bars"></i></button>
+  <span class="logo-text-mobile">Seller Panel</span>
+</header>
+
+<div id="sidebarOverlay"></div>
+<div id="toast-container" class="toast-container"></div>
+
+<div id="confirmModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal">
+    <h3 id="confirmTitle">Confirm</h3>
+    <p id="confirmMessage">Are you sure?</p>
+    <div class="modal-actions">
+      <button type="button" id="confirmCancel" class="btn-outline">Cancel</button>
+      <button type="button" id="confirmOk" class="btn-solid">Yes</button>
+    </div>
+  </div>
+</div>
+
+<div id="rejectReasonModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal reject-modal">
+    <h3>Reject Order</h3>
+    <p>Please enter reason for rejection.</p>
+    <textarea id="rejectReasonInput" class="reject-reason-input" placeholder="Type rejection reason..." rows="4"></textarea>
+    <p id="rejectReasonError" class="reject-reason-error">Reason is required.</p>
+    <div class="modal-actions">
+      <button type="button" id="rejectReasonCancel" class="btn-outline">Cancel</button>
+      <button type="button" id="rejectReasonSubmit" class="btn-solid">Submit</button>
+    </div>
+  </div>
+</div>
+
+<aside class="sidebar" id="sidebar" style="position: fixed; top: 0; left: 0; height: 100vh;">
+  <div class="brand">
+    <img src="/welcome/logo2.png" alt="Local Basket Logo">
+    <h3>Local Basket</h3>
+    <p>Admin Dashboard</p>
+    <button class="collapse-btn" id="collapseBtn" aria-label="Collapse Sidebar">
+      <i class="fas fa-angle-left"></i>
+    </button>
+  </div>
+  
+  <nav class="nav-menu">
+    <ul>
+      <li><a href="seller-dashboard.html" class="nav-link active"><i class="fas fa-chart-line"></i> <span class="nav-text">Dashboard</span></a></li>
+      <li><a href="seller-pocket.html" class="nav-link"><i class="fas fa-wallet"></i> <span class="nav-text">My Pocket</span></a></li>
+      <li><a href="seller-add-product.html" class="nav-link"><i class="fas fa-plus-circle"></i> <span class="nav-text">Add Product</span></a></li>
+      <li><a href="seller-products.html" class="nav-link"><i class="fas fa-boxes-stacked"></i> <span class="nav-text">My Products</span></a></li>
+      <li><a href="seller-orders.html" class="nav-link"><i class="fas fa-receipt"></i> <span class="nav-text">All Orders</span></a></li>
+      <li><a href="seller-profile.html" class="nav-link"><i class="fas fa-store"></i> <span class="nav-text">Shop Profile</span></a></li>
+      <li class="logout-item">
+        <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+      </li>
+    </ul>
+  </nav>
+</aside>
+
+<main class="main">
+  <button class="sidebar-open-btn" onclick="sidebar.classList.add('open'); sidebarOverlay.style.display='block';">
+    <i class="fas fa-bars"></i> Menu
+  </button>
+  
+  <div class="top-bar">
+    <div class="shop-info">
+      <div class="img-wrapper">
+        <img id="storeImage" src="https://via.placeholder.com/60" alt="Store Profile">
+      </div>
+      <div class="text-info">
+        <h3 id="storeName">Fetching Store...</h3>
+        <div class="meta-row">
+          <span class="badge" id="sellerIdText">ID: #---</span>
+          <span class="badge" id="sellerCategoryText" title="Store Category">
+            Category: ---
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="toggles">
+      <div class="toggle-pill">
+        <span id="onlineText" class="status-indicator offline"></span>
+        <span id="statusLabel">Offline</span>
+        <label class="switch">
+          <input type="checkbox" id="onlineToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+      
+      <div class="toggle-pill theme-toggle">
+        <i class="fas fa-moon"></i>
+        <label class="switch">
+          <input type="checkbox" id="themeToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <section class="quick-actions reveal">
+    <button class="qa-btn" onclick="goPage('seller-add-product.html')">
+      <i class="fas fa-plus-circle"></i>
+      <span>Add Product</span>
+    </button>
+    <button class="qa-btn" onclick="goPage('seller-orders.html')">
+      <i class="fas fa-receipt"></i>
+      <span>View Orders</span>
+    </button>
+    <button class="qa-btn" onclick="goPage('seller-pocket.html')">
+      <i class="fas fa-wallet"></i>
+      <span>My Pocket</span>
+    </button>
+    <button class="qa-btn" onclick="goPage('seller-profile.html')">
+      <i class="fas fa-store"></i>
+      <span>Store Profile</span>
+    </button>
+  </section>
+
+  <section class="dashboard-boxes">
+    <div class="box card-orders reveal" onclick="goPage('seller-orders.html')" style="cursor: pointer;">
+      <div class="box-icon"><i class="fas fa-shopping-bag"></i></div>
+      <div class="box-data">
+        <h4>Total Orders</h4>
+        <b id="totalOrders">0</b>
+      </div>
+      <svg class="sparkline" data-spark="orders" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"></svg>
+    </div>
+    
+    <div class="box card-products reveal" onclick="goPage('seller-products.html')" style="cursor: pointer; position: relative;">
+      <div class="box-icon"><i class="fas fa-box"></i></div>
+      <div class="box-data">
+        <h4>Live Products</h4>
+        <b id="totalProducts">0</b>
+      </div>
+      <button onclick="event.stopPropagation(); goPage('seller-add-product.html')" 
+              class="mini-add-btn" 
+              title="Add New Product">
+        <i class="fas fa-plus"></i>
+      </button>
+      <svg class="sparkline" data-spark="products" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"></svg>
+    </div>
+    
+    <div class="box card-earnings reveal" onclick="goPage('seller-pocket.html')" style="cursor: pointer;">
+      <div class="box-icon"><i class="fas fa-indian-rupee-sign"></i></div>
+      <div class="box-data">
+        <h4>Net Earnings</h4>
+        <b id="totalPayments"><span id="totalPaymentsValue">Rs. 0</span></b>
+        <div class="stat-sub" id="commissionLabel"></div>
+      </div>
+      <svg class="sparkline" data-spark="earnings" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"></svg>
+    </div>
+  </section>
+
+  <section class="orders-panel reveal">
+    <div class="panel-header">
+      <h3><i class="fas fa-bell"></i> New Incoming Orders</h3>
+      <button class="btn-refresh" onclick="location.reload()" title="Refresh Orders">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+    </div>
+    
+    <div id="recentOrders" class="orders-container">
+      <div class="skeleton-loader">
+        <div class="sk-card"></div>
+        <div class="sk-card"></div>
+        <div class="sk-card sk-card-short"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="orders-panel reveal" id="feedbackSection">
+    <div class="panel-header">
+      <h3><i class="fas fa-star"></i> Ratings & Feedback</h3>
+    </div>
+    <div class="feedback-grid">
+      <div class="feedback-summary">
+        <div class="rating-score">
+          <div class="rating-value" id="avgRating">0.0</div>
+          <div class="rating-stars" id="avgStars">☆☆☆☆☆</div>
+          <div class="rating-count"><span id="ratingCount">0</span> reviews</div>
+        </div>
+        <div class="rating-bars">
+          <div class="bar-row"><span>5</span><div class="bar"><div id="bar5"></div></div></div>
+          <div class="bar-row"><span>4</span><div class="bar"><div id="bar4"></div></div></div>
+          <div class="bar-row"><span>3</span><div class="bar"><div id="bar3"></div></div></div>
+          <div class="bar-row"><span>2</span><div class="bar"><div id="bar2"></div></div></div>
+          <div class="bar-row"><span>1</span><div class="bar"><div id="bar1"></div></div></div>
+        </div>
+      </div>
+      <div class="feedback-list" id="feedbackList">
+        <div class="empty-feedback">No feedback yet</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="seller-dashboard.js"></script>
+</body>
+</html>
+

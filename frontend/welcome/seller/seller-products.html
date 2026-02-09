@@ -1,0 +1,551 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Products â€” Local Basket</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="seller-dashboard.css">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99">
+  <link rel="icon" type="image/png" sizes="32x32" href="/welcome/logo2.png?v=200">
+<link rel="icon" type="image/png" sizes="48x48" href="/welcome/logo2.png?v=200">
+<link rel="icon" type="image/png" sizes="96x96" href="/welcome/logo2.png?v=200">
+<link rel="apple-touch-icon" sizes="180x180" href="/welcome/logo2.png?v=200">
+
+   <style>
+    /* Page-specific layout */
+    .page-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+    }
+    .toolbar-left, .toolbar-right {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .search-input {
+      background: var(--card);
+      border: 1px solid var(--border-color);
+      padding: 10px 12px;
+      border-radius: 12px;
+      min-width: 220px;
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+    }
+    .filter-select {
+      background: var(--card);
+      border: 1px solid var(--border-color);
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: var(--text);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    /* Table specific modern styling */
+    .table-wrap {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      margin-top: 20px;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      background: var(--lav-soft);
+      color: var(--lav);
+      text-align: left;
+      padding: 15px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    td { padding: 15px; border-bottom: 1px solid var(--border-color); font-size: 14px; color: var(--text); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover { background: rgba(0,0,0,0.01); }
+    
+    .prod-img { width: 54px; height: 54px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border-color); background: #f1f5f9; }
+
+    .price-stack { display: flex; flex-direction: column; gap: 4px; }
+    .price-now { font-weight: 700; color: var(--text); }
+    .price-mrp { font-size: 12px; color: var(--text-light); text-decoration: line-through; }
+    .offer-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 999px;
+    }
+    
+    /* Stock Badge */
+    .stock-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .in-stock { background: rgba(0, 184, 148, 0.1); color: var(--green); }
+    .out-stock { background: rgba(255, 118, 117, 0.1); color: var(--red); }
+
+    /* Modal Styling */
+    .modal {
+      display: none; position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,0.55); align-items: center; justify-content: center;
+      backdrop-filter: blur(6px);
+      padding: 18px;
+    }
+    .modal-content {
+      background: var(--card);
+      padding: 26px;
+      border-radius: 18px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-color);
+    }
+    .modal-content h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+    }
+    .form-group input {
+      width: 100%; padding: 12px; border: 1px solid var(--border-color);
+      border-radius: 10px; background: var(--bg); color: var(--text);
+      margin-top: 5px; font-family: inherit;
+    }
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--lav);
+      box-shadow: 0 0 0 3px var(--lav-soft);
+    }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 22px;
+    }
+    .modal-actions .btn-reject,
+    .modal-actions .btn-accept {
+      flex: 1;
+      padding: 11px 12px;
+    }
+
+    @media(max-width:900px){
+      table, thead, tbody, th, td, tr { display: block; }
+      thead { display: none; }
+      tr { margin-bottom: 15px; border: 1px solid var(--border-color); border-radius: var(--radius); padding: 10px; }
+      td { display: flex; justify-content: space-between; align-items: center; border: none; padding: 8px 10px; }
+      td::before { content: attr(data-label); font-weight: 700; color: var(--text-light); font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="mobile-header">
+  <button id="menuBtn"><i class="fas fa-bars"></i></button>
+  <span class="logo-text-mobile">My Products</span>
+</header>
+
+<div id="sidebarOverlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <img src="/welcome/logo2.png">
+    <h3>Local Basket</h3>
+    <p>Admin Dashboard</p>
+  </div>
+  <nav class="nav-menu">
+    <ul>
+      <li><a href="seller-dashboard.html" class="nav-link"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+      <li><a href="seller-pocket.html" class="nav-link"><i class="fas fa-wallet"></i> My Pocket</a></li>
+      <li><a href="seller-add-product.html" class="nav-link"><i class="fas fa-plus-circle"></i> Add Product</a></li>
+      <li><a href="seller-products.html" class="nav-link active"><i class="fas fa-boxes-stacked"></i> My Products</a></li>
+      <li><a href="seller-orders.html" class="nav-link"><i class="fas fa-receipt"></i> All Orders</a></li>
+      <li><a href="seller-profile.html" class="nav-link"><i class="fas fa-store"></i> Shop Profile</a></li>
+      <li class="logout-item"><button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</button></li>
+    </ul>
+  </nav>
+</aside>
+
+<main class="main">
+  <button class="sidebar-open-btn" onclick="sidebar.classList.add('open'); sidebarOverlay.style.display='block';">
+    <i class="fas fa-bars"></i> Menu
+  </button>
+  <div class="top-bar">
+    <div class="shop-info">
+      <div class="text-info">
+        <h3 style="color: var(--lav); font-weight: 700;">My Products</h3>
+        <span class="badge" id="productCount">Loading...</span>
+      </div>
+    </div>
+    <div class="toggles">
+      <button class="btn-accept" onclick="go('seller-add-product.html')" style="padding: 8px 15px; font-size: 13px;">
+        <i class="fas fa-plus"></i> Add New
+      </button>
+      <div class="toggle-pill theme-toggle">
+        <i class="fas fa-moon"></i>
+        <label class="switch">
+          <input type="checkbox" id="themeToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-toolbar">
+    <div class="toolbar-left">
+      <input id="searchInput" class="search-input" type="text" placeholder="Search product name...">
+      <select id="stockFilter" class="filter-select">
+        <option value="all">All Stock</option>
+        <option value="in">In Stock</option>
+        <option value="out">Out of Stock</option>
+      </select>
+      <select id="sortSelect" class="filter-select">
+        <option value="new">Newest</option>
+        <option value="price_low">Price: Low to High</option>
+        <option value="price_high">Price: High to Low</option>
+        <option value="stock_high">Stock: High to Low</option>
+      </select>
+    </div>
+    <div class="toolbar-right">
+      <span class="badge" id="offerCount">Offers: 0</span>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Details</th>
+          <th>Pricing</th>
+          <th>Stock</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="productTable">
+        <tr><td colspan="5" style="text-align:center; padding:50px;">
+          <i class="fas fa-spinner fa-spin" style="font-size:30px; color:var(--lav);"></i>
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<div class="modal" id="editModal">
+  <div class="modal-content">
+    <h3 style="margin-bottom:20px; color:var(--lav);"><i class="fas fa-edit"></i> Edit Product</h3>
+    <form id="editForm">
+      <input type="hidden" id="editId">
+      <div class="form-group">
+        <label style="font-size:13px; font-weight:600;">Product Name</label>
+        <input type="text" id="editName" required>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-top:15px;">
+        <div class="form-group">
+          <label style="font-size:13px; font-weight:600;">Selling Price (Rs.)</label>
+          <input type="number" id="editPrice" required>
+        </div>
+        <div class="form-group">
+          <label style="font-size:13px; font-weight:600;">MRP (optional)</label>
+          <input type="number" id="editMrp">
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:15px;">
+        <label style="font-size:13px; font-weight:600;">Stock</label>
+        <input type="number" id="editStock" required>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-reject" onclick="closeModal('editModal')">Cancel</button>
+        <button type="submit" class="btn-accept">Update</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal" id="deleteModal">
+  <div class="modal-content" style="text-align:center;">
+    <div style="width:60px; height:60px; background:rgba(255, 118, 117, 0.1); color:var(--red); border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 15px; font-size:24px;">
+      <i class="fas fa-trash-alt"></i>
+    </div>
+    <h3>Are you sure?</h3>
+    <p style="color:var(--text-light); font-size:14px; margin:10px 0 20px;">This product will be permanently removed.</p>
+    <div style="display:flex; gap:10px;">
+      <button class="btn-accept" onclick="closeModal('deleteModal')" style="flex:1; background:#ccc;">No, Back</button>
+      <button class="btn-reject" id="confirmDelBtn" style="flex:1; background:var(--red); color:white;">Yes, Delete</button>
+    </div>
+  </div>
+</div>
+<script>
+/* ================= AUTH ================= */
+const seller = JSON.parse(localStorage.getItem("lbSeller"));
+if (!seller) location.href = "./seller-auth/seller-auth.html";
+
+/* ================= STATE ================= */
+const tableBody = document.getElementById("productTable");
+const productCount = document.getElementById("productCount");
+let myProducts = [];
+let deleteId = null;
+
+/* ================= LOAD PRODUCTS ================= */
+const API_BASE = "http://localhost:5000/api";
+const PRODUCTS_ENDPOINT = `${API_BASE}/seller/products`;
+const IMAGE_BASE = "http://localhost:5000/uploads/";
+
+async function loadMyProducts() {
+  try {
+    const res = await fetch(`${PRODUCTS_ENDPOINT}?seller_id=${seller.id}`);
+    const data = await res.json();
+
+    tableBody.innerHTML = "";
+
+    if (!data.success || !data.products || data.products.length === 0) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align:center; padding:40px;">
+            No products found
+          </td>
+        </tr>`;
+      productCount.innerText = "0 Products";
+      return;
+    }
+
+    myProducts = data.products.map(p => ({
+      ...p,
+      _mrp: p.mrp ?? ""
+    }));
+
+    renderProducts();
+
+  } catch (err) {
+    console.error(err);
+    tableBody.innerHTML = `
+      <tr><td colspan="5">Server error</td></tr>`;
+  }
+}
+
+function computeOffer(mrp, price) {
+  const mrpNum = Number(mrp);
+  const priceNum = Number(price);
+  if (!mrpNum || !priceNum || mrpNum <= priceNum) return null;
+  const pct = Math.round(((mrpNum - priceNum) / mrpNum) * 100);
+  return pct > 0 ? pct : null;
+}
+
+function applyFilters(list) {
+  const search = document.getElementById("searchInput").value.trim().toLowerCase();
+  const stockFilter = document.getElementById("stockFilter").value;
+  const sort = document.getElementById("sortSelect").value;
+
+  let filtered = list.filter(p => (p.name || "").toLowerCase().includes(search));
+
+  if (stockFilter === "in") filtered = filtered.filter(p => Number(p.stock) > 0);
+  if (stockFilter === "out") filtered = filtered.filter(p => Number(p.stock) <= 0);
+
+  if (sort === "price_low") filtered.sort((a,b) => Number(a.price) - Number(b.price));
+  if (sort === "price_high") filtered.sort((a,b) => Number(b.price) - Number(a.price));
+  if (sort === "stock_high") filtered.sort((a,b) => Number(b.stock) - Number(a.stock));
+  if (sort === "new") filtered.sort((a,b) => (b.id || 0) - (a.id || 0));
+
+  return filtered;
+}
+
+function renderProducts() {
+  const list = applyFilters(myProducts);
+  const offerCountEl = document.getElementById("offerCount");
+
+  if (list.length === 0) {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align:center; padding:40px;">
+          No products found
+        </td>
+      </tr>`;
+    productCount.innerText = "0 Products";
+    if (offerCountEl) offerCountEl.textContent = "Offers: 0";
+    return;
+  }
+
+  productCount.innerText = `${list.length} Products`;
+
+  let offerCount = 0;
+  tableBody.innerHTML = list.map(p => {
+    const stockClass = Number(p.stock) > 0 ? "in-stock" : "out-stock";
+    const stockText = Number(p.stock) > 0 ? `In Stock (${p.stock})` : "Out of Stock";
+    const mrp = p._mrp ? Number(p._mrp) : 0;
+    const offer = computeOffer(mrp, p.price);
+    if (offer) offerCount++;
+
+    return `
+    <tr>
+      <td data-label="Product">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <img class="prod-img" src="${p.image ? IMAGE_BASE + p.image : 'https://via.placeholder.com/60'}" alt="${p.name || 'Product'}">
+          <b>${p.name}</b>
+        </div>
+      </td>
+      <td data-label="Details">${p.category || "-"}</td>
+      <td data-label="Pricing">
+        <div class="price-stack">
+          <span class="price-now">Rs. ${p.price}</span>
+          ${mrp && mrp > p.price ? `<span class="price-mrp">Rs. ${mrp}</span>` : `<span class="price-mrp">MRP: --</span>`}
+          ${offer ? `<span class="offer-tag">${offer}% OFF</span>` : ""}
+        </div>
+      </td>
+      <td data-label="Stock">
+        <span class="stock-badge ${stockClass}">${stockText}</span>
+      </td>
+      <td data-label="Actions">
+        <div style="display:flex; gap:8px;">
+          <button class="btn-accept" onclick="openEditModal(${p.id})">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="btn-reject" onclick="openDeleteModal(${p.id})">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+
+  if (offerCountEl) offerCountEl.textContent = `Offers: ${offerCount}`;
+}
+
+/* ================= EDIT PRODUCT ================= */
+function openEditModal(id) {
+  const p = myProducts.find(x => x.id === id);
+  if (!p) return;
+
+  document.getElementById("editId").value = p.id;
+  document.getElementById("editName").value = p.name;
+  document.getElementById("editPrice").value = p.price;
+  document.getElementById("editMrp").value = p._mrp || "";
+  document.getElementById("editStock").value = p.stock;
+
+  document.getElementById("editModal").style.display = "flex";
+}
+
+document.getElementById("editForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const payload = {
+    id: document.getElementById("editId").value,
+    name: document.getElementById("editName").value.trim(),
+    price: Number(document.getElementById("editPrice").value),
+    stock: document.getElementById("editStock").value,
+    mrp: document.getElementById("editMrp").value
+  };
+  if (payload.mrp === "") payload.mrp = null;
+  if (payload.mrp !== null) payload.mrp = Number(payload.mrp);
+
+  try {
+    const res = await fetch(`${PRODUCTS_ENDPOINT}/${payload.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      alert(data.message || "Update failed");
+      return;
+    }
+
+    closeModal("editModal");
+    loadMyProducts();
+
+  } catch (err) {
+    alert("Server error while updating product");
+  }
+});
+
+/* ================= DELETE PRODUCT ================= */
+function openDeleteModal(id) {
+  deleteId = id;
+  document.getElementById("deleteModal").style.display = "flex";
+}
+
+document.getElementById("confirmDelBtn").onclick = async () => {
+  if (!deleteId) return;
+
+  try {
+    const res = await fetch(`${PRODUCTS_ENDPOINT}/${deleteId}`, {
+      method: "DELETE"
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      alert(data.message || "Delete failed");
+      return;
+    }
+
+    const idToDelete = deleteId;
+    closeModal("deleteModal");
+    deleteId = null;
+    loadMyProducts();
+
+  } catch (err) {
+    alert("Server error while deleting product");
+  }
+};
+
+/* ================= HELPERS ================= */
+function closeModal(id) {
+  document.getElementById(id).style.display = "none";
+}
+
+/* ================= SIDEBAR & THEME ================= */
+const menuBtn = document.getElementById("menuBtn");
+const sidebar = document.getElementById("sidebar");
+const overlay = document.getElementById("sidebarOverlay");
+const themeToggle = document.getElementById("themeToggle");
+
+menuBtn.onclick = () => {
+  sidebar.classList.add("open");
+  overlay.style.display = "block";
+};
+
+overlay.onclick = () => {
+  sidebar.classList.remove("open");
+  overlay.style.display = "none";
+};
+
+themeToggle.onchange = () => {
+  document.body.classList.toggle("dark", themeToggle.checked);
+  localStorage.setItem("theme", themeToggle.checked ? "dark" : "light");
+};
+
+if (localStorage.getItem("theme") === "dark") {
+  themeToggle.checked = true;
+  document.body.classList.add("dark");
+}
+
+function go(p) { location.href = p; }
+function logout() {
+  localStorage.removeItem("lbSeller");
+  location.href = "./seller-auth/seller-auth.html";
+}
+
+/* ================= INIT ================= */
+document.getElementById("searchInput").addEventListener("input", renderProducts);
+document.getElementById("stockFilter").addEventListener("change", renderProducts);
+document.getElementById("sortSelect").addEventListener("change", renderProducts);
+loadMyProducts();
+</script>
+
+</body>
+</html>
+

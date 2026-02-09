@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seller Pocket — Local Basket</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="seller-dashboard.css">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99">
+  <link rel="icon" type="image/png" sizes="32x32" href="/welcome/logo2.png?v=200">
+<link rel="icon" type="image/png" sizes="48x48" href="/welcome/logo2.png?v=200">
+<link rel="icon" type="image/png" sizes="96x96" href="/welcome/logo2.png?v=200">
+<link rel="apple-touch-icon" sizes="180x180" href="/welcome/logo2.png?v=200">
+
+  <style>
+    /* Custom Styling for Pocket Page */
+    /* moved to shared CSS */
+
+    .btn-withdraw-main {
+        background: linear-gradient(135deg, var(--lav), #ffb347);
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(255, 138, 26, 0.3);
+        transition: 0.3s;
+    }
+    .btn-withdraw-main:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 138, 26, 0.4); }
+
+    /* Sidebar Close Button for Mobile */
+    .sidebar-close {
+        display: none;
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: none;
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    @media (max-width: 900px) {
+        .sidebar-close { display: flex; }
+        .dashboard-boxes { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="mobile-header">
+  <button id="menuBtn" aria-label="Open Menu"><i class="fas fa-bars"></i></button>
+  <span class="logo-text-mobile">My Pocket</span>
+</header>
+
+<div id="sidebarOverlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <button class="sidebar-close" id="closeSidebar"><i class="fas fa-times"></i></button>
+  <div class="brand">
+    <img src="/welcome/logo2.png" alt="Logo">
+    <h3>Local Basket</h3>
+    <p>Seller Panel</p>
+  </div>
+  
+  <nav class="nav-menu">
+    <ul>
+      <li><a href="seller-dashboard.html" class="nav-link"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+      <li><a href="seller-pocket.html" class="nav-link active"><i class="fas fa-wallet"></i> My Pocket</a></li>
+      <li><a href="seller-add-product.html" class="nav-link"><i class="fas fa-plus-circle"></i> Add Product</a></li>
+      <li><a href="seller-products.html" class="nav-link"><i class="fas fa-boxes-stacked"></i> My Products</a></li>
+      <li><a href="seller-orders.html" class="nav-link"><i class="fas fa-receipt"></i> All Orders</a></li>
+      <li><a href="seller-profile.html" class="nav-link"><i class="fas fa-store"></i> Shop Profile</a></li>
+      <li class="logout-item"><button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</button></li>
+    </ul>
+  </nav>
+</aside>
+
+<main class="main">
+  <button class="sidebar-open-btn" onclick="sidebar.classList.add('open'); sidebarOverlay.style.display='block';">
+    <i class="fas fa-bars"></i> Menu
+  </button>
+
+  <div class="top-bar">
+    <div class="shop-info">
+      <div class="text-info">
+        <h3 style="color: var(--lav); font-weight: 700; margin:0;">💰 Pocket & Earnings</h3>
+        <span class="badge" id="syncStatus">Live Data Syncing...</span>
+      </div>
+    </div>
+
+    <div class="toggles">
+      <div class="toggle-pill theme-toggle">
+        <i class="fas fa-moon"></i>
+        <label class="switch">
+          <input type="checkbox" id="themeToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <section class="dashboard-boxes">
+    <div class="box">
+      <div class="box-icon" style="background: rgba(0, 184, 148, 0.1); color: var(--green);">
+        <i class="fas fa-calendar-day"></i>
+      </div>
+      <div class="box-data">
+        <h4>Today Earnings</h4>
+        <b id="todayEarn">Rs. 0</b>
+      </div>
+    </div>
+    
+    <div class="box">
+      <div class="box-icon" style="background: rgba(30, 136, 229, 0.1); color: #1e88e5;">
+        <i class="fas fa-calendar-week"></i>
+      </div>
+      <div class="box-data">
+        <h4>Weekly Earnings</h4>
+        <b id="weekEarn">Rs. 0</b>
+      </div>
+    </div>
+    
+    <div class="box">
+      <div class="box-icon" style="background: rgba(255, 138, 26, 0.14); color: var(--lav);">
+        <i class="fas fa-calendar-check"></i>
+      </div>
+      <div class="box-data">
+        <h4>Monthly Earnings</h4>
+        <b id="monthEarn">Rs. 0</b>
+      </div>
+    </div>
+  </section>
+
+  <section class="orders-panel" style="margin-top: 18px;">
+    <div style="background: var(--card); padding: 22px; border-radius: var(--radius); border: 1px solid var(--border-color); display: grid; grid-template-columns: 1.2fr 1fr; gap: 16px; align-items: center;">
+      <div>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
+          <div style="width: 54px; height: 54px; background: var(--lav-soft); color: var(--lav); border-radius: 14px; display:flex; align-items:center; justify-content:center; font-size: 22px;">
+            <i class="fas fa-wallet"></i>
+          </div>
+          <div>
+            <h3 style="margin:0;">Pocket Balance</h3>
+            <p style="margin:4px 0 0; color: var(--text-light); font-size: 13px;">Available for withdrawal</p>
+          </div>
+        </div>
+        <div style="font-size: 32px; font-weight: 800; color: var(--lav);" id="pocketBalance">Rs. 0</div>
+        <div style="margin-top:6px; color: var(--text-light); font-size: 12px;">Payout statement every Monday</div>
+      </div>
+
+      <div style="background: var(--bg); border: 1px dashed var(--border-color); border-radius: 14px; padding: 14px; text-align: center;">
+        <div style="font-size: 12px; color: var(--text-light);">Next Payout Statement</div>
+        <div style="font-size: 16px; font-weight: 700; margin: 8px 0;" id="nextPayoutDate">--</div>
+        <button class="btn-withdraw-main" onclick="requestPayout()">
+          <i class="fas fa-paper-plane"></i> Withdraw Now
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="orders-panel" style="margin-top: 25px;">
+    <div style="background: var(--card); padding: 40px 20px; border-radius: var(--radius); text-align: center; border: 1px solid var(--border-color);">
+      <div style="width: 80px; height: 80px; background: var(--lav-soft); color: var(--lav); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 32px;">
+        <i class="fas fa-hand-holding-dollar"></i>
+      </div>
+      <h3>Request Payout</h3>
+      <p style="color: var(--text-light); max-width: 500px; margin: 10px auto 25px;">Transfer your earned balance to your registered bank account. Payouts are usually processed within 24 hours.</p>
+      
+      <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+        <button class="btn-withdraw-main" onclick="requestPayout()">
+          <i class="fas fa-paper-plane"></i> Withdraw Now
+        </button>
+        <button class="btn-accept" onclick="go('seller-payout-history.html')" style="background: var(--bg); color: var(--text-main); border: 1px solid var(--border-color);">
+          <i class="fas fa-history"></i> Payout History
+        </button>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+/* ================= AUTH CHECK ================= */
+const seller = JSON.parse(localStorage.getItem("lbSeller"));
+if (!seller || !seller.id) {
+  location.href = "./seller-auth/seller-auth.html";
+}
+
+/* ================= CONFIG ================= */
+const API_URL = `http://localhost:5000/api/orders/seller/${seller.id}`;
+const GLOBAL_COMMISSION_STORAGE_KEY = "lbGlobalCommission";
+const SELLER_COMMISSION_MAP_KEY = "lbSellerCommissionMap";
+const ADMIN_API_BASE_CANDIDATES = [
+  "http://localhost:5000/api/admin",
+  "http://127.0.0.1:5000/api/admin"
+];
+let runtimeCommissionPercent = null;
+
+const clampPercent = v => Math.min(100, Math.max(0, Number(v) || 0));
+const normalizePercent = v => {
+  const n = Number(v);
+  if (!Number.isFinite(n) || n < 0 || n > 100) return null;
+  return clampPercent(n);
+};
+
+function readGlobalCommissionPercent() {
+  try {
+    const raw = localStorage.getItem(GLOBAL_COMMISSION_STORAGE_KEY);
+    if (!raw) return null;
+    const cfg = JSON.parse(raw);
+    if (cfg?.enabled === false) return 0;
+    return normalizePercent(cfg?.percent);
+  } catch {
+    return null;
+  }
+}
+
+function readMappedSellerCommissionPercent() {
+  try {
+    const raw = localStorage.getItem(SELLER_COMMISSION_MAP_KEY);
+    if (!raw) return null;
+    const map = JSON.parse(raw);
+    return normalizePercent(map?.[String(Number(seller.id))]);
+  } catch {
+    return null;
+  }
+}
+
+function getEffectiveCommissionPercent() {
+  return (
+    runtimeCommissionPercent ??
+    readMappedSellerCommissionPercent() ??
+    readGlobalCommissionPercent() ??
+    normalizePercent(seller?.commission) ??
+    10
+  );
+}
+
+async function fetchSellerCommissionFromAdminApi() {
+  const id = Number(seller.id);
+  if (!Number.isFinite(id)) return null;
+
+  for (const base of ADMIN_API_BASE_CANDIDATES) {
+    try {
+      const res = await fetch(`${base}/sellers`);
+      const data = await res.json().catch(() => ({}));
+      const list = Array.isArray(data?.sellers) ? data.sellers : [];
+      const found = list.find(s => Number(s?.id) === id);
+      const pct = normalizePercent(found?.commission);
+      if (pct !== null) return pct;
+    } catch {}
+  }
+  return null;
+}
+
+/* ================= DEMO EARNING CALC ================= */
+/* (No real settlement, no wallet logic — demo only) */
+function calculateSellerEarning(order) {
+  const total = Number(order?.total_amount || 0);
+  if (!total || isNaN(total)) return 0;
+
+  const COMMISSION_RATE = getEffectiveCommissionPercent() / 100;
+
+  const commission = total * COMMISSION_RATE;
+  const finalAmount = total - commission;
+  return Math.max(finalAmount, 0);
+}
+
+/* ================= MAIN SYNC ================= */
+async function syncPocketData() {
+  try {
+    runtimeCommissionPercent = await fetchSellerCommissionFromAdminApi();
+    const res = await fetch(API_URL);
+    const data = await res.json();
+
+    if (!data || !data.success || !Array.isArray(data.orders)) {
+      document.getElementById("syncStatus").innerText = "No data";
+      return;
+    }
+
+    console.log("ALL ORDERS:", data.orders);
+
+    const deliveredOrders = data.orders.filter(o =>
+      String(o?.status || "").toUpperCase() === "DELIVERED"
+    );
+
+    const now = new Date();
+
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+
+    const day = (now.getDay() + 6) % 7; // Monday = 0 ... Sunday = 6
+    const startOfWeek = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() - day
+    );
+
+    const startOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      1
+    );
+
+    const calcTotal = (fromDate) =>
+      deliveredOrders
+        .filter(o => {
+          if (!o.created_at) return false;
+          const d = new Date(o.created_at);
+          return !isNaN(d) && d >= fromDate;
+        })
+        .reduce((sum, o) => sum + calculateSellerEarning(o), 0);
+
+    updateValue("todayEarn", calcTotal(startOfToday));
+    updateValue("weekEarn", calcTotal(startOfWeek));
+    updateValue("monthEarn", calcTotal(startOfMonth));
+    updateValue("pocketBalance", calcTotal(new Date(0)));
+    const nextEl = document.getElementById("nextPayoutDate");
+    if (nextEl) nextEl.innerText = getNextMondayLabel();
+
+    document.getElementById("syncStatus").innerText =
+      "Updated: " + new Date().toLocaleTimeString();
+
+  } catch (err) {
+    console.error("Pocket Sync Error:", err);
+    document.getElementById("syncStatus").innerText = "Sync failed";
+  }
+}
+
+/* ================= UI HELPERS ================= */
+function updateValue(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  el.innerText = `Rs. ${Number(val || 0).toLocaleString("en-IN")}`;
+}
+
+function getNextMondayLabel() {
+  const now = new Date();
+  const day = now.getDay(); // 0 Sun - 6 Sat
+  const daysToMonday = (8 - day) % 7 || 7;
+  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + daysToMonday);
+  return next.toLocaleDateString("en-IN", { weekday: "short", day: "2-digit", month: "short" });
+}
+
+/* ================= SIDEBAR ================= */
+const sidebar = document.getElementById("sidebar");
+const overlay = document.getElementById("sidebarOverlay");
+const closeBtn = document.getElementById("closeSidebar");
+
+document.getElementById("menuBtn").onclick = () => {
+  sidebar.classList.add("open");
+  overlay.style.display = "block";
+};
+
+closeBtn.onclick = () => {
+  sidebar.classList.remove("open");
+  overlay.style.display = "none";
+};
+
+overlay.onclick = () => {
+  sidebar.classList.remove("open");
+  overlay.style.display = "none";
+};
+
+/* ================= ACTIONS ================= */
+function go(p) {
+  location.href = p;
+}
+
+function logout() {
+  if (confirm("Logout confirm?")) {
+    localStorage.removeItem("lbSeller");
+    location.href = "./seller-auth/seller-auth.html";
+  }
+}
+
+function requestPayout() {
+  alert("Demo mode: payout request recorded.");
+}
+
+/* ================= THEME ================= */
+const themeToggle = document.getElementById("themeToggle");
+
+if (themeToggle) {
+  themeToggle.addEventListener("change", () => {
+    document.body.classList.toggle("dark", themeToggle.checked);
+    localStorage.setItem("theme", themeToggle.checked ? "dark" : "light");
+  });
+
+  if (localStorage.getItem("theme") === "dark") {
+    themeToggle.checked = true;
+    document.body.classList.add("dark");
+  }
+}
+
+/* ================= INIT ================= */
+syncPocketData();
+setInterval(syncPocketData, 30000);
+</script>
+
+
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+

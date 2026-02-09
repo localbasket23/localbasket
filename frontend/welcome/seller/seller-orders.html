@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Orders â€” Local Basket</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="seller-dashboard.css">
+  <link rel="stylesheet" href="seller-orders.css"> 
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99">
+  <link rel="icon" type="image/png" sizes="32x32" href="/welcome/logo2.png?v=200">
+<link rel="icon" type="image/png" sizes="48x48" href="/welcome/logo2.png?v=200">
+<link rel="icon" type="image/png" sizes="96x96" href="/welcome/logo2.png?v=200">
+<link rel="apple-touch-icon" sizes="180x180" href="/welcome/logo2.png?v=200">
+
+</head>
+<body>
+
+<header class="mobile-header">
+  <button id="menuBtn"><i class="fas fa-bars"></i></button>
+  <span class="logo-text-mobile">Orders</span>
+</header>
+<div id="sidebarOverlay"></div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="brand">
+    <img src="/welcome/logo2.png" alt="Local Basket">
+    <h3>Local Basket</h3>
+    <p>Seller Panel</p>
+  </div>
+  <nav class="nav-menu">
+    <ul>
+      <li><a href="seller-dashboard.html" class="nav-link"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+      <li><a href="seller-pocket.html" class="nav-link"><i class="fas fa-wallet"></i> My Pocket</a></li>
+      <li><a href="seller-add-product.html" class="nav-link"><i class="fas fa-plus-circle"></i> Add Product</a></li>
+      <li><a href="seller-products.html" class="nav-link"><i class="fas fa-boxes-stacked"></i> My Products</a></li>
+      <li><a href="seller-orders.html" class="nav-link active"><i class="fas fa-receipt"></i> All Orders</a></li>
+      <li><a href="seller-profile.html" class="nav-link"><i class="fas fa-store"></i> Shop Profile</a></li>
+      <li class="logout-item">
+        <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+      </li>
+    </ul>
+  </nav>
+</aside>
+
+<main class="main">
+  <button class="sidebar-open-btn" onclick="sidebar.classList.add('open'); sidebarOverlay.style.display='block';">
+    <i class="fas fa-bars"></i> Menu
+  </button>
+  
+  <div class="top-bar">
+    <div class="page-title">
+      <h3><i class="fas fa-boxes" style="color: var(--lav);"></i> Order Management</h3>
+      <span class="subtitle">Track and update customer orders</span>
+    </div>
+    
+    <div class="toggles">
+      <div class="toggle-pill theme-toggle">
+        <i class="fas fa-moon"></i>
+        <label class="switch">
+          <input type="checkbox" id="themeToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <button class="btn-refresh" onclick="fetchOrders()" title="Sync Data">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="tabs-container">
+  <button class="tab-btn active" onclick="switchTab('active')">
+    In Progress <span class="badge-count" id="countActive">0</span>
+  </button>
+  <button class="tab-btn" onclick="switchTab('history')">
+    History <span class="badge-count" id="countHistory">0</span>
+  </button>
+</div>
+
+<div id="newOrderNotice" class="new-order-notice" role="status" aria-live="polite"></div>
+
+<section id="tab-active" class="orders-view fade-in">
+  <div class="table-responsive">
+    <table>
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Customer</th>
+          <th>Items</th>
+          <th>Amount</th>
+          <th>Payment</th>
+          <th>Current Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="activeOrdersList">
+      </tbody>
+    </table>
+  </div>
+  <div id="activeEmpty" class="empty-state" style="display:none;">
+    <i class="fas fa-clipboard-check"></i>
+    <p>No active orders. Check Dashboard for new requests!</p>
+  </div>
+</section>
+
+<section id="tab-history" class="orders-view fade-in" style="display:none;">
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Payment</th>
+            <th>Final Status</th>
+          </tr>
+        </thead>
+        <tbody id="historyOrdersList">
+          </tbody>
+      </table>
+    </div>
+    <div id="historyEmpty" class="empty-state" style="display:none;">
+      <i class="fas fa-history"></i>
+      <p>No order history found.</p>
+    </div>
+  </section>
+
+</main>
+
+<div id="detailModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal">&times;</span>
+        <h3>Order Items</h3>
+        <div id="modalItemsList"></div>
+    </div>
+</div>
+
+<div id="actionModal" class="modal action-modal" aria-hidden="true">
+    <div class="modal-content">
+        <h3 id="actionModalTitle">Confirm Action</h3>
+        <p id="actionModalMessage" style="margin:8px 0 0; color:var(--text-light);"></p>
+        <textarea id="actionModalReason" placeholder="Enter reason..." style="display:none;"></textarea>
+        <small id="actionModalError" class="action-error">Reason is required</small>
+        <div class="action-actions">
+            <button id="actionModalCancel" type="button" class="action-btn action-btn-cancel">Cancel</button>
+            <button id="actionModalOk" type="button" class="action-btn action-btn-ok">Confirm</button>
+        </div>
+    </div>
+</div>
+<script src="seller-orders.js"></script>
+</body>
+</html>
+
+
+
