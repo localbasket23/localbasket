@@ -70,15 +70,123 @@
       border-color: var(--lav);
       background: var(--lav-soft);
     }
-    .preview-img {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      border-radius: 10px;
-      margin-top: 15px;
-      display: none;
-      border: 1px solid var(--border-color);
+    .preview-grid {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
+      gap: 8px;
     }
+    .preview-thumb {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #fff;
+    }
+    .preview-item {
+      position: relative;
+    }
+    .preview-remove {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 20px;
+      height: 20px;
+      border: none;
+      border-radius: 999px;
+      background: rgba(17, 24, 39, 0.78);
+      color: #fff;
+      font-size: 12px;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .field-hint {
+      color: var(--text-light);
+      font-size: 12px;
+      display: block;
+      margin-top: 4px;
+    }
+    .price-insight {
+      margin-top: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background: var(--bg);
+      color: var(--text-light);
+      font-size: 12px;
+      display: none;
+    }
+    .price-insight strong {
+      color: var(--lav);
+      font-weight: 700;
+    }
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .btn-secondary {
+      border: 1px solid var(--border-color);
+      background: var(--bg);
+      color: var(--text);
+      border-radius: 10px;
+      font-weight: 600;
+      padding: 12px 14px;
+      cursor: pointer;
+    }
+    .lb-popup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 3000;
+      padding: 16px;
+    }
+    .lb-popup-overlay.open { display: flex; }
+    .lb-popup {
+      width: min(420px, 100%);
+      background: #fff;
+      border-radius: 16px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 20px 40px rgba(2, 6, 23, 0.2);
+      overflow: hidden;
+    }
+    .lb-popup-head {
+      padding: 14px 16px;
+      font-weight: 700;
+      font-size: 15px;
+      border-bottom: 1px solid #f1f5f9;
+      background: #f8fafc;
+      color: #111827;
+    }
+    .lb-popup-body {
+      padding: 16px;
+      font-size: 14px;
+      color: #374151;
+      line-height: 1.45;
+    }
+    .lb-popup-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 0 16px 16px;
+    }
+    .lb-popup-btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ff8a1a 0%, #e56a00 100%);
+    }
+    .lb-popup.success .lb-popup-head { color: #065f46; background: #ecfdf5; }
+    .lb-popup.error .lb-popup-head { color: #991b1b; background: #fef2f2; }
   </style>
 </head>
 <body>
@@ -152,7 +260,11 @@
     <div class="form-group">
       <label>Sub-category (max 3 words)</label>
       <input id="subcategory" type="text" placeholder="e.g. Organic Apples" maxlength="30">
-      <small style="color: var(--text-light); font-size: 12px;">Seller can add up to 3 words.</small>
+      <small class="field-hint">Seller can add up to 3 words.</small>
+      <small class="field-hint">
+        This will be shown in the product popup/details view for customers.
+      </small>
+      <small class="field-hint" id="subcategoryCount">0/3 words</small>
     </div>
 
     <div class="row">
@@ -165,6 +277,7 @@
         <input id="mrp" type="number" placeholder="0.00">
       </div>
     </div>
+    <div id="priceInsight" class="price-insight"></div>
 
     <div class="row">
       <div class="form-group">
@@ -191,20 +304,33 @@
 
 
     <div class="form-group">
-      <label>Product Image *</label>
+      <label>Product Images *</label>
       <div class="file-input-wrapper" onclick="document.getElementById('image').click()">
         <i class="fas fa-image" style="display:block; font-size: 24px; color: var(--lav); margin-bottom: 5px;"></i>
-        <span id="imageLabel" style="font-size: 12px; color: var(--text-light);">Click to upload product image</span>
-        <input id="image" type="file" accept="image/*" style="display:none" required>
+        <span id="imageLabel" style="font-size: 12px; color: var(--text-light);">Click to upload product images</span>
+        <input id="image" type="file" accept="image/*" style="display:none" multiple required>
       </div>
-      <img id="preview" class="preview-img">
+      <small class="field-hint">You can upload up to 8 images.</small>
+      <div id="previewGrid" class="preview-grid"></div>
     </div>
 
-    <button class="btn-accept" onclick="addProduct()" style="width: 100%; padding: 14px; margin-top: 10px; font-size: 16px;">
-      <i class="fas fa-plus"></i> List Product
-    </button>
+    <div class="action-row">
+      <button id="submitBtn" class="btn-accept" onclick="addProduct()" style="width: 100%; padding: 14px; font-size: 16px;">
+        <i class="fas fa-plus"></i> List Product
+      </button>
+      <button id="clearDraftBtn" type="button" class="btn-secondary">Clear Draft</button>
+    </div>
   </div>
 </main>
+<div class="lb-popup-overlay" id="lbPopupOverlay">
+  <div class="lb-popup" id="lbPopupBox" role="dialog" aria-modal="true">
+    <div class="lb-popup-head" id="lbPopupTitle">Notice</div>
+    <div class="lb-popup-body" id="lbPopupMsg"></div>
+    <div class="lb-popup-actions">
+      <button type="button" class="lb-popup-btn" id="lbPopupOk">OK</button>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ================= AUTH & NAV ================= */
@@ -232,20 +358,90 @@ if(localStorage.getItem('theme') === 'dark') { themeToggle.checked = true; docum
 
 /* ================= IMAGE PREVIEW ================= */
 const imageInput = document.getElementById("image");
-const preview = document.getElementById("preview");
+const previewGrid = document.getElementById("previewGrid");
 const imageLabel = document.getElementById("imageLabel");
 const subcategoryInput = document.getElementById("subcategory");
+const subcategoryCount = document.getElementById("subcategoryCount");
+const priceInput = document.getElementById("price");
+const mrpInput = document.getElementById("mrp");
+const stockInput = document.getElementById("stock");
+const priceInsight = document.getElementById("priceInsight");
+const submitBtn = document.getElementById("submitBtn");
+const clearDraftBtn = document.getElementById("clearDraftBtn");
+const DRAFT_KEY = `lbAddProductDraft:${seller?.id || "guest"}`;
+const lbPopupOverlay = document.getElementById("lbPopupOverlay");
+const lbPopupBox = document.getElementById("lbPopupBox");
+const lbPopupTitle = document.getElementById("lbPopupTitle");
+const lbPopupMsg = document.getElementById("lbPopupMsg");
+const lbPopupOk = document.getElementById("lbPopupOk");
+let selectedImageFiles = [];
+
+function showPopup(message, options = {}) {
+  const title = options.title || "Notice";
+  const type = options.type === "error" ? "error" : "success";
+  lbPopupBox.classList.remove("success", "error");
+  lbPopupBox.classList.add(type);
+  lbPopupTitle.textContent = title;
+  lbPopupMsg.textContent = String(message || "");
+  lbPopupOverlay.classList.add("open");
+  return new Promise((resolve) => {
+    const close = () => {
+      lbPopupOverlay.classList.remove("open");
+      lbPopupOk.removeEventListener("click", onOk);
+      resolve();
+    };
+    const onOk = () => close();
+    lbPopupOk.addEventListener("click", onOk);
+  });
+}
+
+function renderImageSelection() {
+  if (imageLabel) {
+    imageLabel.textContent = selectedImageFiles.length
+      ? `${selectedImageFiles.length} image${selectedImageFiles.length > 1 ? "s" : ""} selected`
+      : "Click to upload product images";
+  }
+  if (!previewGrid) return;
+  previewGrid.innerHTML = "";
+  selectedImageFiles.forEach((file, idx) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const wrap = document.createElement("div");
+      wrap.className = "preview-item";
+      wrap.innerHTML = `
+        <img class="preview-thumb" alt="${file.name || "Product image"}">
+        <button type="button" class="preview-remove" title="Remove image">&times;</button>
+      `;
+      const img = wrap.querySelector("img");
+      const removeBtn = wrap.querySelector("button");
+      if (img) img.src = reader.result;
+      if (removeBtn) {
+        removeBtn.addEventListener("click", () => {
+          selectedImageFiles.splice(idx, 1);
+          renderImageSelection();
+        });
+      }
+      previewGrid.appendChild(wrap);
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 imageInput.onchange = () => {
-  const file = imageInput.files[0];
-  if(!file) return;
-  if (imageLabel) imageLabel.textContent = file.name;
-  const reader = new FileReader();
-  reader.onload = () => {
-    preview.src = reader.result;
-    preview.style.display = "block";
-  };
-  reader.readAsDataURL(file);
+  const incoming = Array.from(imageInput.files || []);
+  if (!incoming.length) return;
+
+  incoming.forEach((file) => {
+    const key = `${file.name}|${file.size}|${file.lastModified}`;
+    const exists = selectedImageFiles.some(
+      (f) => `${f.name}|${f.size}|${f.lastModified}` === key
+    );
+    if (!exists && selectedImageFiles.length < 8) {
+      selectedImageFiles.push(file);
+    }
+  });
+  renderImageSelection();
+  imageInput.value = "";
 };
 
 if (subcategoryInput) {
@@ -254,7 +450,64 @@ if (subcategoryInput) {
     if (words.length > 3) {
       subcategoryInput.value = words.slice(0, 3).join(" ");
     }
+    updateSubcategoryCount();
+    saveDraft();
   });
+}
+
+function updateSubcategoryCount() {
+  if (!subcategoryInput || !subcategoryCount) return;
+  const words = subcategoryInput.value.trim().split(/\s+/).filter(Boolean);
+  subcategoryCount.textContent = `${Math.min(words.length, 3)}/3 words`;
+}
+
+function updatePriceInsight() {
+  if (!priceInsight) return;
+  const price = Number(priceInput?.value || 0);
+  const mrp = Number(mrpInput?.value || 0);
+  if (!price || !mrp || mrp <= price) {
+    priceInsight.style.display = "none";
+    priceInsight.textContent = "";
+    return;
+  }
+  const discount = Math.round(((mrp - price) / mrp) * 100);
+  const saveRs = (mrp - price).toFixed(2);
+  priceInsight.style.display = "block";
+  priceInsight.innerHTML = `Customer saves <strong>Rs. ${saveRs}</strong> (<strong>${discount}% OFF</strong>)`;
+}
+
+function getDraft() {
+  return {
+    pname: document.getElementById("pname").value.trim(),
+    category: document.getElementById("category").value,
+    subcategory: document.getElementById("subcategory").value.trim(),
+    unit: document.getElementById("unit").value,
+    price: document.getElementById("price").value,
+    mrp: document.getElementById("mrp").value,
+    stock: document.getElementById("stock").value
+  };
+}
+
+function saveDraft() {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(getDraft()));
+  } catch {}
+}
+
+function restoreDraft() {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (!d || typeof d !== "object") return;
+    if (d.pname) document.getElementById("pname").value = d.pname;
+    if (!document.getElementById("category").disabled && d.category) document.getElementById("category").value = d.category;
+    if (d.subcategory) document.getElementById("subcategory").value = d.subcategory;
+    if (d.unit) document.getElementById("unit").value = d.unit;
+    if (d.price) document.getElementById("price").value = d.price;
+    if (d.mrp) document.getElementById("mrp").value = d.mrp;
+    if (d.stock) document.getElementById("stock").value = d.stock;
+  } catch {}
 }
 
 
@@ -280,8 +533,14 @@ async function loadCategories() {
         select.disabled = true;
       }
     }
+    restoreDraft();
+    updateSubcategoryCount();
+    updatePriceInsight();
   } catch {
     // keep fallback empty if API fails
+    restoreDraft();
+    updateSubcategoryCount();
+    updatePriceInsight();
   }
 }
 
@@ -294,10 +553,18 @@ async function addProduct(){
   const price = document.getElementById("price").value;
   const mrp = document.getElementById("mrp").value;
   const stock = document.getElementById("stock").value;
-  const imageFile = imageInput.files[0];
+  const imageFiles = selectedImageFiles.slice(0, 8);
 
-  if(!pname || !category || !unit || !price || !stock || !imageFile){
-    alert("Please fill all fields");
+  if(!pname || !category || !unit || !price || !stock || !imageFiles.length){
+    await showPopup("Please fill all fields", { title: "Validation Error", type: "error" });
+    return;
+  }
+  if (Number(stock) < 0 || !Number.isInteger(Number(stock))) {
+    await showPopup("Stock should be a whole number (0 or greater)", { title: "Validation Error", type: "error" });
+    return;
+  }
+  if (mrp && Number(mrp) > 0 && Number(mrp) < Number(price)) {
+    await showPopup("MRP should be greater than or equal to selling price", { title: "Validation Error", type: "error" });
     return;
   }
 
@@ -310,20 +577,47 @@ async function addProduct(){
   fd.append("price", price);
   if (mrp) fd.append("mrp", mrp);
   fd.append("stock", stock);
-  if(imageFile) fd.append("image", imageFile);
+  if (imageFiles.length) {
+    imageFiles.forEach((f) => fd.append("image", f));
+  }
 
   try{
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Listing...`;
+    }
     const res = await fetch("http://localhost:5000/api/seller/products", { method:"POST", body:fd });
     const data = await res.json();
     if(data.success){
-      alert("Product added successfully!");
+      localStorage.removeItem(DRAFT_KEY);
+      await showPopup("Product added successfully!", { title: "Success", type: "success" });
       location.href="./seller-products.html";
     } else {
-      alert(data.message || "Error adding product");
+      await showPopup(data.message || "Error adding product", { title: "Add Product Failed", type: "error" });
     }
-  } catch { alert("Server error. Please check if backend is running."); }
+  } catch {
+    await showPopup("Server error. Please check if backend is running.", { title: "Server Error", type: "error" });
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<i class="fas fa-plus"></i> List Product`;
+    }
+  }
 }
 
+document.getElementById("pname").addEventListener("input", saveDraft);
+document.getElementById("category").addEventListener("change", saveDraft);
+document.getElementById("unit").addEventListener("change", saveDraft);
+priceInput.addEventListener("input", () => { updatePriceInsight(); saveDraft(); });
+mrpInput.addEventListener("input", () => { updatePriceInsight(); saveDraft(); });
+stockInput.addEventListener("input", saveDraft);
+clearDraftBtn.addEventListener("click", () => {
+  localStorage.removeItem(DRAFT_KEY);
+  location.reload();
+});
+
+updateSubcategoryCount();
+updatePriceInsight();
 loadCategories();
 </script>
 

@@ -1,5 +1,11 @@
 const db = require("../db/connection");
 const util = require("util");
+let PDFDocument = null;
+try {
+  PDFDocument = require("pdfkit");
+} catch {
+  PDFDocument = null;
+}
 
 // promisify db.query
 const query = util.promisify(db.query).bind(db);
@@ -241,7 +247,7 @@ exports.getAllSellers = async (req, res) => {
         c.name AS category,
         IFNULL(sc.commission_percent, 10) AS commission
       FROM sellers s
-      JOIN categories c ON c.id = s.category_id
+      LEFT JOIN categories c ON c.id = s.category_id
       LEFT JOIN seller_commission sc ON sc.seller_id = s.id
       ORDER BY s.created_at DESC
     `);
@@ -270,7 +276,7 @@ exports.getPendingSellers = async (req, res) => {
         s.*,
         c.name AS category
       FROM sellers s
-      JOIN categories c ON c.id = s.category_id
+      LEFT JOIN categories c ON c.id = s.category_id
       WHERE s.status='PENDING'
       ORDER BY s.created_at DESC
     `);
@@ -498,13 +504,17 @@ exports.getAllOrders = async (req, res) => {
     const orders = await query(`
       SELECT 
         o.id,
-        o.customer_name,
+        COALESCE(o.customer_name, c.name) AS customer_name,
+        COALESCE(o.phone, c.phone) AS customer_phone,
+        o.address AS customer_address,
         o.total_amount,
         o.status,
+        COALESCE(NULLIF(TRIM(o.payment_method), ''), 'COD') AS payment_method,
         o.created_at,
         s.store_name
       FROM orders o
       LEFT JOIN sellers s ON s.id = o.seller_id
+      LEFT JOIN customers c ON c.id = o.customer_id
       ORDER BY o.id DESC
     `);
 
@@ -529,12 +539,17 @@ exports.getOrderDetails = async (req, res) => {
     const rows = await query(`
       SELECT 
         o.*,
+        COALESCE(o.customer_name, c.name) AS customer_name,
+        COALESCE(o.phone, c.phone) AS customer_phone,
+        o.address AS customer_address,
+        COALESCE(NULLIF(TRIM(o.payment_method), ''), 'COD') AS payment_method,
         s.store_name,
         s.owner_name,
         s.phone AS seller_phone,
         s.address AS seller_address
       FROM orders o
       LEFT JOIN sellers s ON s.id = o.seller_id
+      LEFT JOIN customers c ON c.id = o.customer_id
       WHERE o.id = ?
     `, [id]);
 
@@ -700,71 +715,154 @@ exports.deleteCategory = async (req, res) => {
    FULL REPORT (ADMIN)
    GET /api/admin/full-report
 ===================================================== */
+const getFullReportSnapshot = async () => {
+  const [storeCount] = await query("SELECT COUNT(*) AS total FROM sellers");
+  const [customerCount] = await query("SELECT COUNT(*) AS total FROM customers");
+  const [orderCount] = await query("SELECT COUNT(*) AS total FROM orders");
+  const [sales] = await query(
+    "SELECT IFNULL(SUM(total_amount),0) AS total FROM orders WHERE status='DELIVERED'"
+  );
+  const [pending] = await query(
+    "SELECT IFNULL(SUM(total_amount),0) AS total FROM orders WHERE status='DELIVERED' AND (payment_status IS NULL OR payment_status!='PAID')"
+  );
+
+  const topSellers = await query(`
+    SELECT
+      s.store_name AS name,
+      s.owner_name AS owner,
+      COUNT(o.id) AS orders,
+      IFNULL(SUM(o.total_amount),0) AS sales
+    FROM sellers s
+    LEFT JOIN orders o
+      ON o.seller_id = s.id AND o.status='DELIVERED'
+    GROUP BY s.id
+    ORDER BY sales DESC
+    LIMIT 8
+  `);
+
+  const weekly = await query(`
+    SELECT DATE(o.created_at) AS day, IFNULL(SUM(o.total_amount),0) AS total
+    FROM orders o
+    WHERE o.status='DELIVERED'
+      AND o.created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+    GROUP BY DATE(o.created_at)
+    ORDER BY day ASC
+  `);
+
+  const dayMap = new Map(
+    (weekly || []).map(r => [String(r.day).slice(0, 10), Number(r.total || 0)])
+  );
+  const labels = [];
+  const values = [];
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    labels.push(d.toLocaleDateString("en-IN", { weekday: "short" }));
+    values.push(dayMap.get(key) || 0);
+  }
+
+  return {
+    summary: {
+      totalStores: storeCount?.total || 0,
+      totalCustomers: customerCount?.total || 0,
+      totalOrders: orderCount?.total || 0,
+      totalSales: sales?.total || 0,
+      pendingPayouts: pending?.total || 0,
+      asOfDate: new Date().toISOString()
+    },
+    topSellers: topSellers || [],
+    chartData: { labels, values }
+  };
+};
+
 exports.getFullReport = async (req, res) => {
   try {
-    const [storeCount] = await query("SELECT COUNT(*) AS total FROM sellers");
-    const [customerCount] = await query("SELECT COUNT(*) AS total FROM customers");
-    const [orderCount] = await query("SELECT COUNT(*) AS total FROM orders");
-    const [sales] = await query(
-      "SELECT IFNULL(SUM(total_amount),0) AS total FROM orders WHERE status='DELIVERED'"
-    );
-    const [pending] = await query(
-      "SELECT IFNULL(SUM(total_amount),0) AS total FROM orders WHERE status='DELIVERED' AND (payment_status IS NULL OR payment_status!='PAID')"
-    );
-
-    const topSellers = await query(`
-      SELECT
-        s.store_name AS name,
-        s.owner_name AS owner,
-        COUNT(o.id) AS orders,
-        IFNULL(SUM(o.total_amount),0) AS sales
-      FROM sellers s
-      LEFT JOIN orders o
-        ON o.seller_id = s.id AND o.status='DELIVERED'
-      GROUP BY s.id
-      ORDER BY sales DESC
-      LIMIT 8
-    `);
-
-    const weekly = await query(`
-      SELECT DATE(o.created_at) AS day, IFNULL(SUM(o.total_amount),0) AS total
-      FROM orders o
-      WHERE o.status='DELIVERED'
-        AND o.created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
-      GROUP BY DATE(o.created_at)
-      ORDER BY day ASC
-    `);
-
-    const dayMap = new Map(
-      (weekly || []).map(r => [String(r.day).slice(0, 10), Number(r.total || 0)])
-    );
-    const labels = [];
-    const values = [];
-    const today = new Date();
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(today.getDate() - i);
-      const key = d.toISOString().slice(0, 10);
-      labels.push(d.toLocaleDateString('en-IN', { weekday: 'short' }));
-      values.push(dayMap.get(key) || 0);
-    }
+    const report = await getFullReportSnapshot();
 
     res.json({
       success: true,
-      summary: {
-        totalStores: storeCount?.total || 0,
-        totalCustomers: customerCount?.total || 0,
-        totalOrders: orderCount?.total || 0,
-        totalSales: sales?.total || 0,
-        pendingPayouts: pending?.total || 0,
-        asOfDate: new Date().toISOString()
-      },
-      topSellers: topSellers || [],
-      chartData: { labels, values }
+      summary: report.summary,
+      topSellers: report.topSellers,
+      chartData: report.chartData
     });
   } catch (err) {
     console.error("FULL REPORT ERROR:", err);
     res.status(500).json({ success: false, message: "Report failed" });
+  }
+};
+
+/* =====================================================
+   FULL REPORT PDF (ADMIN)
+   GET /api/admin/full-report/pdf
+===================================================== */
+exports.downloadFullReportPdf = async (req, res) => {
+  try {
+    if (!PDFDocument) {
+      return res.status(500).json({ success: false, message: "PDF generator not available" });
+    }
+
+    const report = await getFullReportSnapshot();
+    const summary = report.summary || {};
+    const topSellers = Array.isArray(report.topSellers) ? report.topSellers : [];
+
+    const now = new Date();
+    const datePart = now.toISOString().slice(0, 10);
+    const fileName = `admin-report-${datePart}.pdf`;
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename=\"${fileName}\"`);
+
+    const doc = new PDFDocument({ size: "A4", margin: 42 });
+    doc.pipe(res);
+
+    doc.fontSize(20).fillColor("#111827").text("Local Basket - Admin Report");
+    doc.moveDown(0.3);
+    doc.fontSize(10).fillColor("#6b7280").text(`Generated: ${now.toLocaleString("en-IN")}`);
+    doc.moveDown(0.8);
+
+    const money = (n) => Number(n || 0).toLocaleString("en-IN", { maximumFractionDigits: 2 });
+    const lines = [
+      ["Total Stores", summary.totalStores],
+      ["Total Customers", summary.totalCustomers],
+      ["Total Orders", summary.totalOrders],
+      ["Gross Revenue", `Rs. ${money(summary.totalSales)}`],
+      ["Pending Payouts", `Rs. ${money(summary.pendingPayouts)}`]
+    ];
+
+    doc.fontSize(13).fillColor("#111827").text("Overview Summary");
+    doc.moveDown(0.4);
+    lines.forEach(([label, value]) => {
+      doc.fontSize(11).fillColor("#374151").text(`${label}: `, { continued: true });
+      doc.fontSize(11).fillColor("#111827").text(String(value ?? 0));
+      doc.moveDown(0.15);
+    });
+
+    doc.moveDown(0.7);
+    doc.fontSize(13).fillColor("#111827").text("Top Performing Stores");
+    doc.moveDown(0.4);
+    if (topSellers.length === 0) {
+      doc.fontSize(10).fillColor("#6b7280").text("No seller data available.");
+    } else {
+      topSellers.forEach((s, idx) => {
+        const name = s?.name || "N/A";
+        const owner = s?.owner || "N/A";
+        const orders = Number(s?.orders || 0).toLocaleString("en-IN");
+        const sales = money(s?.sales || 0);
+        doc
+          .fontSize(10)
+          .fillColor("#111827")
+          .text(`${idx + 1}. ${name} | Owner: ${owner} | Orders: ${orders} | Sales: Rs. ${sales}`);
+      });
+    }
+
+    doc.end();
+  } catch (err) {
+    console.error("FULL REPORT PDF ERROR:", err);
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: "Failed to generate report PDF" });
+    }
   }
 };
 

@@ -446,13 +446,14 @@ function render(orders) {
   orders.forEach(o => {
     const oid = o.id || o.order_id;
     const status = String(o.status || "PLACED").toUpperCase();
+    const method = resolvePaymentMethod(o);
     tbody.innerHTML += `
       <tr>
         <td style="font-weight:700; color:var(--lav)">#${oid}</td>
         <td>${o.customer_name || "N/A"}</td>
         <td>${o.store_name || "N/A"}</td>
         <td style="font-weight:700">Rs. ${o.total_amount || 0}</td>
-        <td><small>${o.payment_method || "N/A"}</small></td>
+        <td><small>${method}</small></td>
         <td><span class="status st-${status}">${status}</span></td>
         <td><button class="btn-view" onclick="openDetail(${oid})">View</button></td>
       </tr>
@@ -467,7 +468,7 @@ function render(orders) {
         <div style="font-size:15px; font-weight:600;">${o.customer_name || "N/A"}</div>
         <div class="order-meta">
           <span>Store: ${o.store_name || "N/A"}</span>
-          <span>Pay: ${o.payment_method || "N/A"}</span>
+          <span>Pay: ${method}</span>
         </div>
         <div class="order-row">
           <span>Total</span>
@@ -490,20 +491,37 @@ searchInput.addEventListener("input", (e) => {
   render(filtered);
 });
 
+function resolvePaymentMethod(order) {
+  const raw = String(order?.payment_method || order?.paymentMode || order?.method || "").trim();
+  if (raw) return raw.toUpperCase();
+
+  const paymentStatus = String(order?.payment_status || "").toUpperCase();
+  const hasPaymentId = Boolean(String(order?.payment_id || "").trim());
+  if (hasPaymentId || paymentStatus === "PAID" || paymentStatus === "SUCCESS") return "ONLINE";
+  if (!paymentStatus || paymentStatus === "PENDING") return "COD";
+  return "COD";
+}
+
 async function openDetail(id) {
   const res = await fetch(`${BASE}/orders/${id}`);
   const data = await res.json();
   const o = data.order || {};
+  const method = resolvePaymentMethod(o);
+  const customerPhone = o.customer_phone || o.phone || "N/A";
+  const customerAddress = o.customer_address || o.address || "N/A";
+  const sellerPhone = o.seller_phone || o.store_phone || "N/A";
+  const orderId = o.id || o.order_id || id;
 
   const html = `
-    <div class="detail-row"><span>Order ID</span><span>#${o.order_id || id}</span></div>
+    <div class="detail-row"><span>Order ID</span><span>#${orderId}</span></div>
     <div class="detail-row"><span>Customer</span><span>${o.customer_name || "N/A"}</span></div>
-    <div class="detail-row"><span>Phone</span><span>${o.customer_phone || "N/A"}</span></div>
-    <div class="detail-row"><span>Address</span><span>${o.customer_address || "N/A"}</span></div>
+    <div class="detail-row"><span>Payment</span><span>${method}</span></div>
+    <div class="detail-row"><span>Phone</span><span>${customerPhone}</span></div>
+    <div class="detail-row"><span>Address</span><span>${customerAddress}</span></div>
     <div style="margin:15px 0; border-top: 1px solid var(--border);"></div>
     <div class="detail-row"><span>Store</span><span>${o.store_name || "N/A"}</span></div>
     <div class="detail-row"><span>Owner</span><span>${o.owner_name || "N/A"}</span></div>
-    <div class="detail-row"><span>Seller Phone</span><span>${o.seller_phone || "N/A"}</span></div>
+    <div class="detail-row"><span>Seller Phone</span><span>${sellerPhone}</span></div>
   `;
 
   if (window.innerWidth > 992) {

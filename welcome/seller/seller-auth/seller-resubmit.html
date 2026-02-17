@@ -177,7 +177,7 @@
 
     <div class="glass-card">
       <h2 class="form-title">Update & Resubmit</h2>
-      <p class="note">Only the fields marked by admin are editable.</p>
+      <p class="note">Only the fields marked by admin are editable. Bank details are required for approval.</p>
 
       <form id="resubmitForm">
         <div class="form-grid">
@@ -232,6 +232,39 @@
             <input type="file" id="storePhoto" accept="image/*">
             <i class="fas fa-store"></i>
             <span>Store Image</span>
+          </label>
+
+          <div class="row-split">
+            <div class="input-wrapper">
+              <i class="fas fa-user-check"></i>
+              <input type="text" class="form-control" placeholder="Account Holder Name" id="bankHolder">
+            </div>
+            <div class="input-wrapper">
+              <i class="fas fa-credit-card"></i>
+              <input type="text" class="form-control" placeholder="Account Number" id="bankAccount">
+            </div>
+          </div>
+
+          <div class="row-split">
+            <div class="input-wrapper">
+              <i class="fas fa-hashtag"></i>
+              <input type="text" class="form-control" placeholder="IFSC Code" id="bankIfsc">
+            </div>
+            <div class="input-wrapper">
+              <i class="fas fa-building-columns"></i>
+              <input type="text" class="form-control" placeholder="Bank Name" id="bankName">
+            </div>
+          </div>
+
+          <div class="input-wrapper">
+            <i class="fas fa-location-dot"></i>
+            <input type="text" class="form-control" placeholder="Branch (optional)" id="bankBranch">
+          </div>
+
+          <label class="file-upload-box">
+            <input type="file" id="bankPassbook" accept="image/*,application/pdf">
+            <i class="fas fa-book"></i>
+            <span>Bank Passbook / Cheque</span>
           </label>
         </div>
 

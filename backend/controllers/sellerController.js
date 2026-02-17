@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const dbp = db.promise();
 const query = dbp.query.bind(dbp);
 let sellerColumnsCache = null;
+let productColumnsCache = null;
 
 const getSellerColumns = async () => {
   if (sellerColumnsCache) return sellerColumnsCache;
@@ -23,6 +24,86 @@ const pickColumns = (columns, data) => {
   Object.keys(data).forEach((key) => {
     if (columns.has(key) && data[key] !== undefined) out[key] = data[key];
   });
+  return out;
+};
+
+const getUploadedFile = (req, fieldName) => {
+  if (!req) return null;
+  if (Array.isArray(req.files)) {
+    return req.files.find((f) => String(f.fieldname || "").trim() === String(fieldName || "").trim()) || null;
+  }
+  if (req.files && Array.isArray(req.files[fieldName])) {
+    return req.files[fieldName][0] || null;
+  }
+  if (req.file) {
+    if (!fieldName) return req.file;
+    if (String(req.file.fieldname || "").trim() === String(fieldName).trim()) return req.file;
+  }
+  return null;
+};
+
+const getUploadedFilesByNames = (req, fieldNames = []) => {
+  const names = new Set(fieldNames.map((n) => String(n || "").trim()));
+  if (Array.isArray(req?.files)) {
+    return req.files.filter((f) => names.has(String(f.fieldname || "").trim()));
+  }
+  const out = [];
+  if (req?.files && typeof req.files === "object") {
+    names.forEach((name) => {
+      const arr = req.files[name];
+      if (Array.isArray(arr)) out.push(...arr);
+    });
+  }
+  return out;
+};
+
+const getProductColumns = async () => {
+  if (productColumnsCache) return productColumnsCache;
+  const [rows] = await query(
+    `
+    SELECT COLUMN_NAME
+    FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+      AND table_name = 'products'
+    `
+  );
+  productColumnsCache = new Set(rows.map(r => r.COLUMN_NAME));
+  return productColumnsCache;
+};
+
+const ensureProductsImagesColumn = async () => {
+  const columns = await getProductColumns();
+  if (columns.has("images_json")) return columns;
+  try {
+    await query("ALTER TABLE products ADD COLUMN images_json TEXT NULL AFTER image");
+    productColumnsCache = null;
+    return getProductColumns();
+  } catch (err) {
+    if (err.code === "ER_DUP_FIELDNAME") {
+      productColumnsCache = null;
+      return getProductColumns();
+    }
+    // If schema migration is not allowed, continue without images_json support.
+    return columns;
+  }
+};
+
+const parseProductImages = (row) => {
+  const out = [];
+  const pushSafe = (value) => {
+    const name = String(value || "").trim();
+    if (!name) return;
+    if (!out.includes(name)) out.push(name);
+  };
+
+  if (row?.images_json) {
+    try {
+      const parsed = JSON.parse(row.images_json);
+      if (Array.isArray(parsed)) parsed.forEach(pushSafe);
+    } catch {}
+  }
+
+  pushSafe(row?.image);
   return out;
 };
 
@@ -59,8 +140,10 @@ exports.register = async (req, res) => {
       bank_name,
       bank_branch
     } = req.body;
+    const normalizedPhone = String(phone || "").trim();
+    const normalizedEmail = String(email || "").trim().toLowerCase() || null;
 
-    if (!store_name || !owner_name || !phone || !pincode || !password || !category_id) {
+    if (!store_name || !owner_name || !normalizedPhone || !pincode || !password || !category_id) {
       return res.status(400).json({
         success: false,
         message: "Required fields missing"
@@ -78,6 +161,12 @@ exports.register = async (req, res) => {
         message: "Bank details required"
       });
     }
+    if (!getUploadedFile(req, "bank_passbook")?.filename) {
+      return res.status(400).json({
+        success: false,
+        message: "Bank passbook/cheque required"
+      });
+    }
     if (!isValidAccount(bank_account)) {
       return res.status(400).json({
         success: false,
@@ -88,6 +177,25 @@ exports.register = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Invalid IFSC code"
+      });
+    }
+
+    // Early duplicate check: return user-friendly message instead of raw SQL duplicate error.
+    const duplicateSql = normalizedEmail
+      ? "SELECT id, phone, email, status FROM sellers WHERE phone = ? OR email = ? LIMIT 1"
+      : "SELECT id, phone, email, status FROM sellers WHERE phone = ? LIMIT 1";
+    const duplicateParams = normalizedEmail ? [normalizedPhone, normalizedEmail] : [normalizedPhone];
+    const [existingRows] = await query(duplicateSql, duplicateParams);
+    const existing = existingRows?.[0];
+    if (existing) {
+      const isRejected = String(existing.status || "").toUpperCase() === "REJECTED";
+      return res.status(409).json({
+        success: false,
+        code: "SELLER_ALREADY_EXISTS",
+        status: String(existing.status || "PENDING").toUpperCase(),
+        message: isRejected
+          ? "This phone/email is already registered and was rejected. Please login and proceed to update."
+          : "Phone or email already registered. Please login to continue."
       });
     }
 
@@ -104,9 +212,10 @@ exports.register = async (req, res) => {
       });
     }
 
-    const owner_id_doc = req.files?.owner_id_doc?.[0]?.filename || null;
-    const license_doc  = req.files?.license_doc?.[0]?.filename || null;
-    const store_photo  = req.files?.store_photo?.[0]?.filename || null;
+    const owner_id_doc = getUploadedFile(req, "owner_id_doc")?.filename || null;
+    const license_doc  = getUploadedFile(req, "license_doc")?.filename || null;
+    const bank_passbook = getUploadedFile(req, "bank_passbook")?.filename || null;
+    const store_photo  = getUploadedFile(req, "store_photo")?.filename || null;
 
     // Owner ID optional; admin will verify later
 
@@ -117,8 +226,8 @@ exports.register = async (req, res) => {
     const data = pickColumns(columns, {
       store_name,
       owner_name,
-      email: email || null,
-      phone,
+      email: normalizedEmail,
+      phone: normalizedPhone,
       address,
       pincode,
       password: hashedPassword,
@@ -132,7 +241,8 @@ exports.register = async (req, res) => {
       bank_account,
       bank_ifsc: String(bank_ifsc || "").trim().toUpperCase(),
       bank_name,
-      bank_branch: bank_branch || null,
+      // DB column is NOT NULL in current schema, keep empty string when optional input is missing.
+      bank_branch: bank_branch ? String(bank_branch).trim() : "",
       status: "PENDING",
       reject_reason: null,
       is_online: 0,
@@ -277,10 +387,10 @@ exports.resubmit = async (req, res) => {
       });
     }
 
-    const owner_id_doc = req.files?.owner_id_doc?.[0]?.filename || null;
-    const license_doc  = req.files?.license_doc?.[0]?.filename || null;
-    const bank_passbook = req.files?.bank_passbook?.[0]?.filename || null;
-    const store_photo  = req.files?.store_photo?.[0]?.filename || null;
+    const owner_id_doc = getUploadedFile(req, "owner_id_doc")?.filename || null;
+    const license_doc  = getUploadedFile(req, "license_doc")?.filename || null;
+    const bank_passbook = getUploadedFile(req, "bank_passbook")?.filename || null;
+    const store_photo  = getUploadedFile(req, "store_photo")?.filename || null;
 
     if (address && !isFullAddress(address)) {
       return res.status(400).json({
@@ -347,7 +457,7 @@ exports.resubmit = async (req, res) => {
 /* =====================================================
    ADD PRODUCT
 ===================================================== */
-exports.addProduct = (req, res) => {
+exports.addProduct = async (req, res) => {
   const { seller_id, name, category, unit, price, stock, mrp } = req.body;
 
   if (!seller_id || !name || !category || !unit || !price || !stock) {
@@ -357,21 +467,43 @@ exports.addProduct = (req, res) => {
     });
   }
 
-  const image = req.file ? req.file.filename : null;
+  try {
+    const columns = await ensureProductsImagesColumn();
+    const singleImage = getUploadedFile(req, "image")?.filename || null;
+    const multiImages = getUploadedFilesByNames(req, ["image", "images", "images[]"])
+      .map((f) => f.filename);
+    const allImages = [...new Set([singleImage, ...multiImages].filter(Boolean))];
+    const primaryImage = allImages[0] || null;
+    const subCategory = String(req.body.sub_category || "").trim();
+    const description = String(req.body.description || subCategory || "").trim();
 
-  db.query(
-    `INSERT INTO products
-     (seller_id, name, category, unit, price, mrp, stock, image)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    [seller_id, name, category, unit, price, mrp || null, stock, image],
-    err => {
-      if (err) {
-        console.error("❌ ADD PRODUCT ERROR:", err.sqlMessage);
-        return res.status(500).json({ success: false });
-      }
-      res.json({ success: true, message: "Product added successfully" });
-    }
-  );
+    const data = pickColumns(columns, {
+      seller_id,
+      name,
+      category,
+      unit,
+      price,
+      mrp: mrp || null,
+      stock,
+      image: primaryImage,
+      images_json: allImages.length ? JSON.stringify(allImages) : null,
+      sub_category: subCategory || null,
+      description: description || null
+    });
+
+    const insertColumns = Object.keys(data);
+    const placeholders = insertColumns.map(() => "?").join(", ");
+    const sql = `
+      INSERT INTO products (${insertColumns.join(", ")})
+      VALUES (${placeholders})
+    `;
+
+    await query(sql, insertColumns.map((k) => data[k]));
+    res.json({ success: true, message: "Product added successfully" });
+  } catch (err) {
+    console.error("❌ ADD PRODUCT ERROR:", err.sqlMessage || err.message || err);
+    res.status(500).json({ success: false, message: "Database error" });
+  }
 };
 
 /* =====================================================
@@ -387,20 +519,42 @@ exports.getMyProducts = (req, res) => {
     });
   }
 
-  db.query(
-    `SELECT id, name, category, unit, price, mrp, stock, image, created_at
-     FROM products
-     WHERE seller_id=?
-     ORDER BY created_at DESC`,
-    [seller_id],
-    (err, rows) => {
-      if (err) {
-        console.error("❌ GET PRODUCTS ERROR:", err.sqlMessage);
-        return res.status(500).json({ success: false, products: [] });
-      }
-      res.json({ success: true, products: rows });
+  (async () => {
+    try {
+      const columns = await getProductColumns();
+      const selectCols = [
+        "id",
+        "name",
+        "category",
+        "unit",
+        "price",
+        "mrp",
+        "stock",
+        "image",
+        "created_at"
+      ];
+
+      if (columns.has("images_json")) selectCols.push("images_json");
+      if (columns.has("description")) selectCols.push("description");
+      if (columns.has("sub_category")) selectCols.push("sub_category");
+
+      const sql = `
+        SELECT ${selectCols.join(", ")}
+        FROM products
+        WHERE seller_id=?
+        ORDER BY created_at DESC
+      `;
+      const [rows] = await query(sql, [seller_id]);
+      const products = rows.map((row) => ({
+        ...row,
+        images: parseProductImages(row)
+      }));
+      res.json({ success: true, products });
+    } catch (err) {
+      console.error("❌ GET PRODUCTS ERROR:", err.sqlMessage || err.message || err);
+      res.status(500).json({ success: false, products: [] });
     }
-  );
+  })();
 };
 
 /* =====================================================

@@ -193,20 +193,35 @@
     }
 
     /* Tabs */
-    .tabs { display: flex; gap: 15px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+    .tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
     .tabs::-webkit-scrollbar { display: none; }
+    .tabs.section-card {
+      padding: 10px;
+      border-radius: 18px;
+    }
     
     .tab-btn {
-      padding: 10px 25px; border-radius: 30px; border: none;
+      padding: 10px 14px; border-radius: 999px; border: none;
       background: var(--chip-bg); color: var(--text-light); font-weight: 600;
       cursor: pointer; transition: 0.3s; white-space: nowrap; flex-shrink: 0;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 44px;
+      font-size: 13px;
     }
     .tab-btn.active {
       background: var(--primary); color: white;
       box-shadow: 0 5px 15px rgba(255, 138, 26, 0.3);
     }
     .badge {
-      background: rgba(0,0,0,0.15); padding: 2px 8px;
+      background: rgba(0,0,0,0.15); padding: 2px 7px;
       border-radius: 10px; font-size: 11px; margin-left: 5px;
     }
 
@@ -477,6 +492,31 @@
       .brand h2 { display: block; /* Ensure logo text shows on menu */ }
       .hero-card h2 { font-size: 19px; }
       .hero-stats { grid-template-columns: 1fr 1fr; }
+      .tabs {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 8px;
+        margin-bottom: 14px;
+        scroll-snap-type: x proximity;
+      }
+      .tab-btn {
+        flex: 0 0 auto;
+        min-width: 140px;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 9px 12px;
+        min-height: 40px;
+        font-size: 12px;
+        scroll-snap-align: start;
+      }
+      .badge {
+        margin-left: 2px;
+        font-size: 10px;
+        padding: 1px 6px;
+      }
     }
   </style>
 
@@ -542,7 +582,7 @@
         </div>
       </div>
 
-      <div class="tabs section-card" style="display:flex; margin-bottom:16px;">
+      <div class="tabs section-card">
         <button class="tab-btn active" onclick="setTab('PENDING')">Requests <span class="badge" id="badge-pending">0</span></button>
         <button class="tab-btn" onclick="setTab('APPROVED')">Active Sellers <span class="badge" id="badge-approved">0</span></button>
         <button class="tab-btn" onclick="setTab('REJECTED')">Rejected <span class="badge" id="badge-rejected">0</span></button>
@@ -647,6 +687,28 @@
       return Array.from(new Set(urls));
     }
 
+    function normalizeSellerRecord(seller) {
+      const status = String(seller?.status || "").trim().toUpperCase();
+      const accountStatus = String(seller?.account_status || "").trim().toUpperCase();
+      return {
+        ...seller,
+        status: status || "PENDING",
+        account_status: accountStatus || "ACTIVE"
+      };
+    }
+
+    function getSellerStatusForUi(seller) {
+      return seller.account_status === "BLOCKED" ? "BLOCKED" : seller.status;
+    }
+
+    function pickInitialTab(sellers, currentTab) {
+      const statuses = (Array.isArray(sellers) ? sellers : []).map(getSellerStatusForUi);
+      if (statuses.includes(currentTab)) return currentTab;
+      const priority = ["PENDING", "APPROVED", "REJECTED", "BLOCKED"];
+      const firstAvailable = priority.find(tab => statuses.includes(tab));
+      return firstAvailable || currentTab;
+    }
+
     function resolveDocUrls(src) {
       const raw = String(src || "").trim();
       if (!raw) return [];
@@ -729,12 +791,14 @@
         if (data.success) {
           const commissionMap = getSellerCommissionMap();
           state.sellers = (Array.isArray(data.sellers) ? data.sellers : []).map(s => {
+            const normalized = normalizeSellerRecord(s);
             const mapped = commissionMap[String(Number(s.id))];
             if (Number.isFinite(Number(mapped))) {
-              return { ...s, commission: Number(mapped) };
+              return { ...normalized, commission: Number(mapped) };
             }
-            return s;
+            return normalized;
           });
+          state.currentTab = pickInitialTab(state.sellers, state.currentTab);
           updateUI();
         } else {
           showToast(data.message || "Failed to load sellers", "error");
@@ -782,7 +846,7 @@
       const counts = { PENDING: 0, APPROVED: 0, REJECTED: 0, BLOCKED: 0 };
       
       state.sellers.forEach(s => {
-        const status = s.account_status === 'BLOCKED' ? 'BLOCKED' : s.status;
+        const status = getSellerStatusForUi(s);
         if (counts[status] !== undefined) counts[status]++;
       });
 
@@ -814,7 +878,7 @@
 
       // Filter Data
       const filtered = state.sellers.filter(s => {
-        const sellerStatus = s.account_status === 'BLOCKED' ? 'BLOCKED' : s.status;
+        const sellerStatus = getSellerStatusForUi(s);
         
         const matchesTab = sellerStatus === state.currentTab;
         const matchesSearch = (

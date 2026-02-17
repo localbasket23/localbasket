@@ -1,12 +1,48 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db/connection");
+const dbp = db.promise();
+
+let productColumnsCache = null;
+
+async function getProductColumns() {
+  if (productColumnsCache) return productColumnsCache;
+  const [rows] = await dbp.query(
+    `
+    SELECT COLUMN_NAME
+    FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+      AND table_name = 'products'
+    `
+  );
+  productColumnsCache = new Set(rows.map((r) => r.COLUMN_NAME));
+  return productColumnsCache;
+}
+
+function parseProductImages(row) {
+  const out = [];
+  const pushSafe = (value) => {
+    const name = String(value || "").trim();
+    if (!name) return;
+    if (!out.includes(name)) out.push(name);
+  };
+
+  if (row?.images_json) {
+    try {
+      const parsed = JSON.parse(row.images_json);
+      if (Array.isArray(parsed)) parsed.forEach(pushSafe);
+    } catch {}
+  }
+
+  pushSafe(row?.image);
+  return out;
+}
 
 /* =====================================================
    GET PRODUCTS BY STORE ID
    URL: /api/products?storeId=1
 ===================================================== */
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
   const storeId = parseInt(req.query.storeId, 10);
 
   if (!storeId) {
@@ -17,45 +53,57 @@ router.get("/", (req, res) => {
     });
   }
 
-  const sql = `
-    SELECT
-      p.id,
-      p.seller_id,
-      p.name,
-      p.category,
-      p.unit,
-      p.price,
-      p.mrp,
-      p.stock,
-      p.image,
-      p.description,
-      COALESCE(r.avg_rating, 0) AS avg_rating,
-      COALESCE(r.rating_count, 0) AS rating_count
-    FROM products p
-    LEFT JOIN (
-      SELECT product_id, AVG(rating) AS avg_rating, COUNT(*) AS rating_count
-      FROM product_reviews
-      GROUP BY product_id
-    ) r ON r.product_id = p.id
-    WHERE p.seller_id = ?
-    ORDER BY p.name ASC
-  `;
+  try {
+    const columns = await getProductColumns();
+    const selectCols = [
+      "p.id",
+      "p.seller_id",
+      "p.name",
+      "p.category",
+      "p.unit",
+      "p.price",
+      "p.mrp",
+      "p.stock",
+      "p.image"
+    ];
 
-  db.query(sql, [storeId], (err, rows) => {
-    if (err) {
-      console.error("❌ PRODUCT FETCH ERROR:", err.sqlMessage);
-      return res.status(500).json({
-        success: false,
-        products: [],
-        message: "Database error"
-      });
-    }
+    if (columns.has("description")) selectCols.push("p.description");
+    if (columns.has("sub_category")) selectCols.push("p.sub_category");
+    if (columns.has("images_json")) selectCols.push("p.images_json");
+
+    const sql = `
+      SELECT
+        ${selectCols.join(", ")},
+        COALESCE(r.avg_rating, 0) AS avg_rating,
+        COALESCE(r.rating_count, 0) AS rating_count
+      FROM products p
+      LEFT JOIN (
+        SELECT product_id, AVG(rating) AS avg_rating, COUNT(*) AS rating_count
+        FROM product_reviews
+        GROUP BY product_id
+      ) r ON r.product_id = p.id
+      WHERE p.seller_id = ?
+      ORDER BY p.name ASC
+    `;
+
+    const [rows] = await dbp.query(sql, [storeId]);
+    const products = (rows || []).map((row) => ({
+      ...row,
+      images: parseProductImages(row)
+    }));
 
     res.json({
       success: true,
-      products: rows || []
+      products
     });
-  });
+  } catch (err) {
+    console.error("PRODUCT FETCH ERROR:", err.sqlMessage || err.message || err);
+    return res.status(500).json({
+      success: false,
+      products: [],
+      message: "Database error"
+    });
+  }
 });
 
 /* =====================================================
@@ -84,7 +132,7 @@ router.get("/:id/reviews", (req, res) => {
 
   db.query(sql, [productId], (err, rows) => {
     if (err) {
-      console.error("❌ PRODUCT REVIEW FETCH ERROR:", err.sqlMessage || err.message);
+      console.error("PRODUCT REVIEW FETCH ERROR:", err.sqlMessage || err.message);
       return res.status(500).json({ success: false, reviews: [], message: "Database error" });
     }
     const ratings = (rows || []).map(r => Number(r.rating || 0));
@@ -116,7 +164,7 @@ router.post("/:id/reviews", (req, res) => {
 
   db.query(sql, [productId, safeStoreId, customer_id || null, safeName, ratingNum, safeComment], (err) => {
     if (err) {
-      console.error("❌ PRODUCT REVIEW INSERT ERROR:", err.sqlMessage || err.message);
+      console.error("PRODUCT REVIEW INSERT ERROR:", err.sqlMessage || err.message);
       return res.status(500).json({ success: false, message: "Database error" });
     }
     res.json({ success: true, message: "Review added" });
@@ -124,5 +172,3 @@ router.post("/:id/reviews", (req, res) => {
 });
 
 module.exports = router;
-
-

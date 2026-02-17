@@ -85,10 +85,13 @@
       <div class="brand">
         <img src="/welcome/logo2.png" alt="Logo">
         <h2>Admin Panel</h2>
+        <p class="brand-sub">Control Center</p>
       </div>
       <div class="menu">
         ${items}
-        <button data-logout style="margin-top: 18px; background: rgba(255,71,87,0.25);">
+      </div>
+      <div class="menu-footer">
+        <button data-logout class="logout-btn">
           <i class="fas fa-sign-out-alt"></i> Logout
         </button>
       </div>

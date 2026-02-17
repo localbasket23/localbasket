@@ -24,12 +24,7 @@ const {
 // REGISTER SELLER
 router.post(
   "/register",
-  upload.fields([
-    { name: "owner_id_doc", maxCount: 1 },
-    { name: "license_doc", maxCount: 1 },
-    { name: "bank_passbook", maxCount: 1 },
-    { name: "store_photo", maxCount: 1 }
-  ]),
+  upload.any(),
   register
 );
 
@@ -39,12 +34,7 @@ router.post("/login", login);
 // RESUBMIT AFTER REJECTION
 router.put(
   "/resubmit/:id",
-  upload.fields([
-    { name: "owner_id_doc", maxCount: 1 },
-    { name: "license_doc", maxCount: 1 },
-    { name: "bank_passbook", maxCount: 1 },
-    { name: "store_photo", maxCount: 1 }
-  ]),
+  upload.any(),
   resubmit
 );
 
@@ -62,7 +52,7 @@ router.put("/status", updateStatus);
 // ADD PRODUCT
 router.post(
   "/products",
-  upload.single("image"),
+  upload.array("image", 8),
   addProduct
 );
 

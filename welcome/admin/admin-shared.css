@@ -47,15 +47,17 @@ body.dark {
   left: 0;
   top: 0;
   z-index: 1002;
-  background: linear-gradient(165deg, var(--lb-side-bg-1), var(--lb-side-bg-2) 45%, var(--lb-side-bg-3)) !important;
+  background: linear-gradient(160deg, var(--lb-primary), var(--lb-primary-light)) !important;
   color: #fff;
-  padding: 26px 18px;
-  box-shadow: 4px 0 20px rgba(0,0,0,0.1);
-  border-right: 1px solid rgba(255,255,255,0.08);
+  padding: 20px 14px;
+  box-shadow: 10px 0 32px rgba(0,0,0,0.24);
+  border-right: 1px solid rgba(255,255,255,0.12);
   transition: transform .35s ease;
   overflow-x: hidden !important;
   overflow-y: hidden !important;
   box-sizing: border-box !important;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar::before {
@@ -83,37 +85,56 @@ body.dark {
 }
 
 .sidebar .brand {
-  text-align: left;
-  margin-bottom: 28px;
-  display: block !important;
-  padding: 0 !important;
-  gap: 0 !important;
+  text-align: center;
+  margin: 0 6px 16px;
+  display: flex !important;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px !important;
+  padding: 14px !important;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 18px;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(6px);
 }
 
 .sidebar .brand img {
-  width: 58px !important;
+  width: 60px !important;
   height: auto !important;
-  margin-bottom: 12px !important;
-  border-radius: 14px !important;
-  background: rgba(255,255,255,0.16) !important;
-  padding: 6px !important;
+  margin-bottom: 2px !important;
+  border-radius: 16px !important;
+  background: rgba(255,255,255,0.2) !important;
+  padding: 7px !important;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
 }
 
 .sidebar .brand h2,
 .sidebar .brand h3 {
-  font-size: 19px;
+  font-size: 24px;
   font-weight: 700;
   color: #fff;
   margin: 0 !important;
+  letter-spacing: 0.3px;
+}
+
+.sidebar .brand .brand-sub {
+  margin: 0;
+  font-size: 12px;
   letter-spacing: 0.4px;
+  color: rgba(255,255,255,0.8);
+  text-transform: uppercase;
 }
 
 .sidebar .menu {
   padding: 0 !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
-  max-height: calc(100vh - 170px);
+  max-height: none;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 8px !important;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -132,38 +153,43 @@ body.dark {
 .close-sidebar {
   display: none;
   position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 38px;
-  height: 38px;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  right: 12px;
+  width: 42px;
+  height: 42px;
   border-radius: 10px;
   border: none;
-  background: rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.24);
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.25);
-  z-index: 2;
+  box-shadow: 0 12px 22px rgba(0,0,0,0.28);
+  z-index: 5;
+  font-size: 18px;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
 }
 
 .sidebar .menu button,
+.sidebar .menu-footer button,
 .sidebar .nav-menu a {
-  width: calc(100% - 8px);
+  width: calc(100% - 10px);
   max-width: 100%;
   border: none;
-  border-radius: 12px;
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.16);
   color: #fff;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px !important;
-  margin: 5px 4px !important;
+  gap: 12px;
+  padding: 13px 14px !important;
+  margin: 5px !important;
   cursor: pointer;
   text-decoration: none;
-  transition: .2s;
-  font-weight: 500 !important;
-  font-size: 12.5px !important;
+  transition: .2s ease;
+  font-weight: 600 !important;
+  font-size: 13px !important;
   text-align: left !important;
   justify-content: flex-start !important;
   box-sizing: border-box !important;
@@ -178,20 +204,24 @@ body.dark {
 }
 
 .sidebar .menu button i,
+.sidebar .menu-footer button i,
 .sidebar .nav-menu a i {
-  width: 18px !important;
-  min-width: 18px !important;
+  width: 20px !important;
+  min-width: 20px !important;
   text-align: center !important;
+  font-size: 14px;
+  opacity: 0.95;
 }
 
 .sidebar .menu button:hover,
 .sidebar .menu button.active,
+.sidebar .menu-footer button:hover,
 .sidebar .nav-menu a:hover,
 .sidebar .nav-menu a.active {
-  background: rgba(255,255,255,0.96);
-  color: var(--lb-side-bg-2);
-  transform: translateX(4px);
-  box-shadow: 0 10px 22px rgba(0,0,0,0.18);
+  background: rgba(255,255,255,0.98);
+  color: #9f4100;
+  transform: translateX(3px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.24);
 }
 
 .sidebar .menu button::before,
@@ -209,7 +239,24 @@ body.dark {
 
 .sidebar .menu button.active::before,
 .sidebar .nav-menu a.active::before {
-  background: var(--lb-side-accent);
+  background: #ff8a1a;
+}
+
+.sidebar .menu-footer {
+  margin-top: auto;
+  padding: 6px 5px 2px;
+}
+
+.sidebar .menu-footer .logout-btn {
+  margin: 0 !important;
+  background: linear-gradient(135deg, #ff7f38, #e2561a) !important;
+  border: 1px solid rgba(255,255,255,0.2) !important;
+  width: 100%;
+}
+
+.sidebar .menu-footer .logout-btn:hover {
+  color: #fff !important;
+  transform: translateX(3px) translateY(-1px);
 }
 
 #sidebarOverlay {
@@ -497,7 +544,7 @@ main,
   .main-content {
     margin-left: 0 !important;
     width: 100% !important;
-    padding: 0 18px 18px !important;
+    padding: calc(env(safe-area-inset-top, 0px) + 10px) 18px 18px !important;
   }
 
   .menu-toggle,
@@ -512,7 +559,7 @@ main,
 @media (max-width: 600px) {
   main,
   .main-content {
-    padding: 0 14px 16px !important;
+    padding: calc(env(safe-area-inset-top, 0px) + 10px) 14px 16px !important;
   }
   .topbar,
   .top-nav,

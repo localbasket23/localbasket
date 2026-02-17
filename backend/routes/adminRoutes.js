@@ -9,6 +9,7 @@ const adminController = require("../controllers/adminController");
 const {
   getDashboardStats,
   getFullReport,
+  downloadFullReportPdf,
   getPayments,
   releasePayout,
   getAllSellers,
@@ -44,6 +45,8 @@ router.get("/dashboard", getDashboardStats);
 
 // GET /api/admin/full-report
 router.get("/full-report", getFullReport);
+// GET /api/admin/full-report/pdf
+router.get("/full-report/pdf", downloadFullReportPdf);
 
 // GET /api/admin/seller-audit
 router.get("/seller-audit", getSellerAuditLogs);

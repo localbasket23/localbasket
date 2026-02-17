@@ -86,18 +86,18 @@
 
         .hero {
             display: grid;
-            grid-template-columns: 1.2fr 1fr;
+            grid-template-columns: 1.35fr 1fr;
             gap: 16px;
             margin-bottom: 18px;
         }
         .hero-card {
             background: linear-gradient(140deg, var(--primary), #ffb347);
             color: #fff;
-            border-radius: var(--radius);
+            border-radius: 16px;
             padding: 20px;
             box-shadow: var(--shadow);
         }
-        .hero-card h2 { font-size: 20px; margin-bottom: 6px; }
+        .hero-card h2 { font-size: 22px; margin-bottom: 6px; }
         .hero-card p { font-size: 13px; opacity: .9; }
         .hero-meta {
             margin-top: 12px;
@@ -106,7 +106,7 @@
             gap: 8px;
             padding: 7px 12px;
             border-radius: 999px;
-            background: rgba(255,255,255,.16);
+            background: rgba(255,255,255,.18);
             font-size: 12px;
         }
         .stat-panel {
@@ -268,6 +268,74 @@
         .toast.error { border-color: var(--danger); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
+        /* Confirm Modal */
+        .confirm-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(2px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1200;
+            padding: 16px;
+        }
+        .confirm-overlay.show { display: flex; }
+        .confirm-box {
+            width: min(420px, 100%);
+            background: #ffffff;
+            color: #111827;
+            border: 1px solid #e5e7eb;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(2, 6, 23, 0.2);
+            overflow: hidden;
+            animation: confirmIn .2s ease-out;
+        }
+        .confirm-head {
+            padding: 14px 16px;
+            font-weight: 700;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+        }
+        .confirm-head i { color: #ff8a1a; }
+        .confirm-body {
+            padding: 16px;
+            color: #374151;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .confirm-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 0 16px 16px;
+        }
+        .confirm-btn {
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .confirm-btn.cancel {
+            background: #ffffff;
+            color: #374151;
+        }
+        .confirm-btn.ok {
+            border: 0;
+            background: linear-gradient(135deg, #ff8a1a 0%, #e56a00 100%);
+            color: #fff;
+            box-shadow: 0 8px 16px -10px rgba(229, 106, 0, 0.7);
+        }
+        @keyframes confirmIn {
+            from { opacity: 0; transform: translateY(8px) scale(.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
         /* Responsive */
         @media (max-width: 900px) {
             .form-grid { grid-template-columns: 1fr 1fr; }
@@ -365,6 +433,16 @@
     </main>
 
     <div id="toast-container"></div>
+    <div id="confirmOverlay" class="confirm-overlay" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+        <div class="confirm-box">
+            <div class="confirm-head" id="confirmTitle"><i class="fas fa-triangle-exclamation"></i> Confirm Action</div>
+            <div class="confirm-body" id="confirmMessage">Are you sure?</div>
+            <div class="confirm-actions">
+                <button type="button" class="confirm-btn cancel" id="confirmCancel">Cancel</button>
+                <button type="button" class="confirm-btn ok" id="confirmOk">Delete</button>
+            </div>
+        </div>
+    </div>
 
 <script>
     // CONFIGURATION
@@ -426,6 +504,40 @@
         document.getElementById("statActive").innerText = active.toLocaleString();
         document.getElementById("statInactive").innerText = inactive.toLocaleString();
         document.getElementById("statUpdated").innerText = new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function showConfirm(message, okText = "OK") {
+        const overlay = document.getElementById("confirmOverlay");
+        const msg = document.getElementById("confirmMessage");
+        const okBtn = document.getElementById("confirmOk");
+        const cancelBtn = document.getElementById("confirmCancel");
+
+        msg.textContent = message;
+        okBtn.textContent = okText;
+        overlay.classList.add("show");
+
+        return new Promise((resolve) => {
+            const close = (value) => {
+                overlay.classList.remove("show");
+                okBtn.removeEventListener("click", onOk);
+                cancelBtn.removeEventListener("click", onCancel);
+                overlay.removeEventListener("click", onOverlayClick);
+                document.removeEventListener("keydown", onEsc);
+                resolve(value);
+            };
+            const onOk = () => close(true);
+            const onCancel = () => close(false);
+            const onOverlayClick = (e) => {
+                if (e.target === overlay) close(false);
+            };
+            const onEsc = (e) => {
+                if (e.key === "Escape") close(false);
+            };
+            okBtn.addEventListener("click", onOk);
+            cancelBtn.addEventListener("click", onCancel);
+            overlay.addEventListener("click", onOverlayClick);
+            document.addEventListener("keydown", onEsc);
+        });
     }
 
     function renderCategories(list) {
@@ -554,7 +666,11 @@
 
     /* ===== DELETE CATEGORY ===== */
     async function deleteCategory(id) {
-        if(!confirm("Are you sure you want to delete this category? This cannot be undone.")) return;
+        const shouldDelete = await showConfirm(
+            "Are you sure you want to delete this category? This cannot be undone.",
+            "Delete"
+        );
+        if(!shouldDelete) return;
 
         const result = await apiCall(`/admin/categories/${id}`, 'DELETE');
         if(result) {

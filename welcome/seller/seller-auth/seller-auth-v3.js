@@ -6,6 +6,28 @@ let resubmitSellerId = null;
 let lastLoginSeller = null;
 let rejectedKeys = [];
 
+const getReadableRejectReason = (rejectReasonRaw) => {
+  if (!rejectReasonRaw) return "Please update the highlighted details.";
+  if (typeof rejectReasonRaw !== "string") return String(rejectReasonRaw);
+
+  const text = rejectReasonRaw.trim();
+  if (!text) return "Please update the highlighted details.";
+
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed && typeof parsed === "object") {
+      const messages = Object.values(parsed)
+        .map(v => String(v || "").trim())
+        .filter(Boolean);
+      if (messages.length) return messages.join(" | ");
+    }
+  } catch {
+    // plain text reason
+  }
+
+  return text;
+};
+
 const fetchJson = async (url, options) => {
   const res = await fetch(url, options);
   const data = await res.json().catch(() => ({}));
@@ -373,8 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showStatusPanel("PENDING", seller);
         break;
       case "REJECTED":
-        localStorage.setItem("lbRejectedSeller", JSON.stringify(seller));
-        window.location.href = "/welcome/seller/seller-auth/seller-resubmit.html";
+        showStatusPanel("REJECTED", seller);
         break;
       case "APPROVED":
         localStorage.setItem("lbSeller", JSON.stringify(seller));
@@ -431,13 +452,23 @@ document.addEventListener("DOMContentLoaded", () => {
     statusText.textContent = status === "REJECTED"
       ? "Please correct the details and resubmit."
       : "Your account is under review. We will notify you once approved.";
-    statusReason.textContent = seller?.reject_reason ? `Reason: ${seller.reject_reason}` : "";
+    statusReason.textContent = status === "REJECTED"
+      ? `Reason: ${getReadableRejectReason(seller?.reject_reason)}`
+      : "";
 
-    if (editResubmitBtn) editResubmitBtn.style.display = status === "REJECTED" ? "inline-flex" : "none";
+    if (editResubmitBtn) {
+      editResubmitBtn.style.display = status === "REJECTED" ? "inline-flex" : "none";
+      editResubmitBtn.textContent = status === "REJECTED" ? "Proceed to Update" : "Edit & Resubmit";
+    }
 
     if (editResubmitBtn) {
       editResubmitBtn.onclick = () => {
         if (!seller) return;
+        if (status === "REJECTED") {
+          localStorage.setItem("lbRejectedSeller", JSON.stringify(seller));
+          window.location.href = "/welcome/seller/seller-auth/seller-resubmit.html";
+          return;
+        }
         isRegister = true;
         isResubmit = true;
         resubmitSellerId = seller.id;

@@ -121,6 +121,14 @@ app.get("*", (req, res) => {
 ===================================================== */
 app.use((err, req, res, next) => {
   console.error("🔥 SERVER ERROR:", err);
+  if (err && err.code === "LIMIT_UNEXPECTED_FILE") {
+    return res.status(400).json({
+      success: false,
+      message: "Unexpected field",
+      field: err.field || null,
+      path: req.originalUrl || req.url || null
+    });
+  }
   res.status(500).json({
     success: false,
     message: err.message || "Internal Server Error"

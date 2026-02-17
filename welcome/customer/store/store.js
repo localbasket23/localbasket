@@ -46,7 +46,8 @@ const state = {
   isStoreOnline: false,
   cart: loadCart(),
   activeProductId: null,
-  activeRating: 0
+  activeRating: 0,
+  activeImageIndex: 0
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -213,7 +214,10 @@ function renderProducts(items) {
     return `
       <div class="product-card" data-id="${p.id}" onclick="openProductView(${p.id})" ${!state.isStoreOnline ? 'style="opacity:.6"' : ""}>
         <div class="product-img-box">
-          <img src="${p.image ? CONFIG.IMAGE_URL + p.image : CONFIG.DEFAULT_IMG}" onerror="this.src='${CONFIG.DEFAULT_IMG}'">
+          <img src="${(() => {
+            const images = getProductImages(p);
+            return images.length ? CONFIG.IMAGE_URL + images[0] : CONFIG.DEFAULT_IMG;
+          })()}" onerror="this.src='${CONFIG.DEFAULT_IMG}'">
           ${hasDiscount ? `<span class="discount-tag" title="${discountPct}% OFF"><span>${discountPct}%<br>OFF</span></span>` : ""}
         </div>
 
@@ -359,15 +363,34 @@ function renderStars(rating) {
   return "★★★★★☆☆☆☆☆".slice(5 - full, 10 - full);
 }
 
+function getProductImages(product) {
+  const out = [];
+  const pushSafe = (value) => {
+    const name = String(value || "").trim();
+    if (!name) return;
+    if (!out.includes(name)) out.push(name);
+  };
+
+  const raw = product?.images;
+  if (Array.isArray(raw)) raw.forEach(pushSafe);
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) parsed.forEach(pushSafe);
+    } catch {}
+  }
+  pushSafe(product?.image);
+
+  return out;
+}
+
 function openProductView(id) {
   const product = state.products.find(p => Number(p.id) === Number(id));
   if (!product) return;
   state.activeProductId = Number(id);
   state.activeRating = 0;
-
-  const img = document.getElementById("pvImg");
-  img.src = product.image ? CONFIG.IMAGE_URL + product.image : CONFIG.DEFAULT_IMG;
-  img.onerror = () => (img.src = CONFIG.DEFAULT_IMG);
+  state.activeImageIndex = 0;
+  renderProductImageSlider(product);
 
   document.getElementById("pvTitle").innerText = product.name || "Product";
   document.getElementById("pvUnit").innerText = product.unit || "Unit";
@@ -380,7 +403,7 @@ function openProductView(id) {
     pvAddBtn.innerText = inStock ? "Add to Basket" : "Out of Stock";
   }
 
-  const desc = product.description || product.details || product.desc || "No description available.";
+  const desc = product.description || product.sub_category || product.details || product.desc || "No description available.";
   document.getElementById("pvDesc").innerText = desc;
 
   const price = Number(product.price || 0);
@@ -426,6 +449,68 @@ function closeProductView() {
   document.body.style.overflow = "";
   state.activeProductId = null;
   state.activeRating = 0;
+  state.activeImageIndex = 0;
+}
+
+function renderProductImageSlider(product) {
+  const images = getProductImages(product);
+  const list = images.length ? images : [null];
+  const maxIdx = Math.max(0, list.length - 1);
+  state.activeImageIndex = Math.min(state.activeImageIndex, maxIdx);
+
+  const img = document.getElementById("pvImg");
+  const prevBtn = document.getElementById("pvPrevBtn");
+  const nextBtn = document.getElementById("pvNextBtn");
+  const dots = document.getElementById("pvDots");
+
+  if (img) {
+    const current = list[state.activeImageIndex];
+    img.src = current ? CONFIG.IMAGE_URL + current : CONFIG.DEFAULT_IMG;
+    img.onerror = () => (img.src = CONFIG.DEFAULT_IMG);
+  }
+
+  const multi = list.length > 1;
+  if (prevBtn) prevBtn.classList.toggle("show", multi);
+  if (nextBtn) nextBtn.classList.toggle("show", multi);
+  if (dots) {
+    dots.innerHTML = multi
+      ? list.map((_, idx) => `<button class="pv-dot ${idx === state.activeImageIndex ? "active" : ""}" onclick="setProductImage(${idx}, event)" aria-label="Image ${idx + 1}"></button>`).join("")
+      : "";
+  }
+}
+
+function setProductImage(index, evt) {
+  if (evt) evt.stopPropagation();
+  if (!state.activeProductId) return;
+  const product = state.products.find((p) => Number(p.id) === Number(state.activeProductId));
+  if (!product) return;
+  const images = getProductImages(product);
+  if (!images.length) return;
+  const safeIndex = Math.max(0, Math.min(Number(index) || 0, images.length - 1));
+  state.activeImageIndex = safeIndex;
+  renderProductImageSlider(product);
+}
+
+function prevProductImage(evt) {
+  if (evt) evt.stopPropagation();
+  if (!state.activeProductId) return;
+  const product = state.products.find((p) => Number(p.id) === Number(state.activeProductId));
+  if (!product) return;
+  const images = getProductImages(product);
+  if (images.length <= 1) return;
+  state.activeImageIndex = (state.activeImageIndex - 1 + images.length) % images.length;
+  renderProductImageSlider(product);
+}
+
+function nextProductImage(evt) {
+  if (evt) evt.stopPropagation();
+  if (!state.activeProductId) return;
+  const product = state.products.find((p) => Number(p.id) === Number(state.activeProductId));
+  if (!product) return;
+  const images = getProductImages(product);
+  if (images.length <= 1) return;
+  state.activeImageIndex = (state.activeImageIndex + 1) % images.length;
+  renderProductImageSlider(product);
 }
 
 function updateProductViewQty() {
@@ -623,6 +708,9 @@ window.addToCartFromView = addToCartFromView;
 window.updateQtyFromView = updateQtyFromView;
 window.submitProductReview = submitProductReview;
 window.setStarRating = setStarRating;
+window.prevProductImage = prevProductImage;
+window.nextProductImage = nextProductImage;
+window.setProductImage = setProductImage;
 
 document.addEventListener("click", (e) => {
   const btn = e.target.closest(".pv-star-btn");
