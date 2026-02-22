@@ -1,28 +1,33 @@
-const mysql = require("mysql2");
+﻿const mysql = require("mysql2");
 
-const db = mysql.createConnection({
+const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   port: process.env.DB_PORT,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
   ssl: {
     rejectUnauthorized: false
   }
 });
 
-db.connect((err) => {
+pool.getConnection((err, connection) => {
   if (err) {
-    console.error("❌ Database connection failed:", err);
-  } else {
-    console.log("✅ MySQL Connected");
-
-    initRatingsTable();
-    initProductReviewsTable();
-    initProductsMrp();
-    initProductsDescription();
-    initSellersMinimumOrder();
+    console.error("❌ Database connection failed", err);
+    return;
   }
+
+  console.log("✅ MySQL Connected");
+  connection.release();
+
+  initRatingsTable();
+  initProductReviewsTable();
+  initProductsMrp();
+  initProductsDescription();
+  initSellersMinimumOrder();
 });
 
 /* ================= TABLE INIT FUNCTIONS ================= */
@@ -40,7 +45,7 @@ function initRatingsTable() {
       KEY idx_store (store_id)
     )
   `;
-  db.query(sql, (err) => {
+  pool.query(sql, (err) => {
     if (err) console.error("store_ratings init failed:", err.message);
   });
 }
@@ -60,7 +65,7 @@ function initProductReviewsTable() {
       KEY idx_store (store_id)
     )
   `;
-  db.query(sql, (err) => {
+  pool.query(sql, (err) => {
     if (err) console.error("product_reviews init failed:", err.message);
   });
 }
@@ -74,11 +79,11 @@ function initProductsMrp() {
       AND COLUMN_NAME = 'mrp'
   `;
 
-  db.query(checkSql, (err, rows) => {
+  pool.query(checkSql, (err, rows) => {
     if (err) return console.error("mrp column check failed:", err.message);
 
     if (!rows[0].cnt) {
-      db.query(
+      pool.query(
         `ALTER TABLE products ADD COLUMN mrp DECIMAL(10,2) DEFAULT NULL`,
         (err2) => {
           if (err2) console.error("mrp column add failed:", err2.message);
@@ -97,11 +102,11 @@ function initProductsDescription() {
       AND COLUMN_NAME = 'description'
   `;
 
-  db.query(checkSql, (err, rows) => {
+  pool.query(checkSql, (err, rows) => {
     if (err) return console.error("description column check failed:", err.message);
 
     if (!rows[0].cnt) {
-      db.query(
+      pool.query(
         `ALTER TABLE products ADD COLUMN description TEXT NULL`,
         (err2) => {
           if (err2) console.error("description column add failed:", err2.message);
@@ -120,11 +125,11 @@ function initSellersMinimumOrder() {
       AND COLUMN_NAME = 'minimum_order'
   `;
 
-  db.query(checkSql, (err, rows) => {
+  pool.query(checkSql, (err, rows) => {
     if (err) return console.error("minimum_order column check failed:", err.message);
 
     if (!rows[0].cnt) {
-      db.query(
+      pool.query(
         `ALTER TABLE sellers ADD COLUMN minimum_order DECIMAL(10,2) NOT NULL DEFAULT 100.00`,
         (err2) => {
           if (err2) console.error("minimum_order column add failed:", err2.message);
@@ -134,4 +139,4 @@ function initSellersMinimumOrder() {
   });
 }
 
-module.exports = db;
+module.exports = pool;
