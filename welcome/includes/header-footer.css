@@ -1444,7 +1444,7 @@ body.lb-footer-full .lb-footer-pro {
 
 @media (max-width: 768px) {
   .lb-footer-pro {
-    padding: 30px 12px 96px;
+    padding: 30px 12px 0;
     border-radius: 0;
   }
   .lb-footer-pro .footer-glass {
@@ -1591,7 +1591,7 @@ body.lb-footer-full .lb-footer-pro {
     gap: 12px;
   }
   .lb-footer-pro .footer-bottom-actions {
-    margin-bottom: calc(84px + env(safe-area-inset-bottom));
+    margin-bottom: calc(72px + env(safe-area-inset-bottom));
   }
   .lb-footer-pro .footer-bottom-actions button {
     min-height: 52px;
