@@ -1,4 +1,4 @@
-﻿<footer class="lb-footer-pro">
+<footer class="lb-footer-pro">
   <div class="footer-glass">
     <div class="footer-grid">
       <div class="footer-brand">
@@ -7,13 +7,23 @@
           <h2>LocalBasket</h2>
         </div>
         <p>Your neighborhood, digitalized. Order fresh groceries from trusted local stores.</p>
+
         <div class="footer-social">
-          <a href="#" aria-label="Website">🌐</a>
-          <a href="#" aria-label="Instagram">📸</a>
-          <a href="#" aria-label="Twitter">✖</a>
-          <a href="#" aria-label="LinkedIn">💼</a>
+          <a href="#" aria-label="Website">
+            <span aria-hidden="true">WEB</span>
+          </a>
+          <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <span aria-hidden="true">IG</span>
+          </a>
+          <a href="https://x.com" target="_blank" rel="noopener noreferrer" aria-label="X">
+            <span aria-hidden="true">X</span>
+          </a>
+          <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+            <span aria-hidden="true">IN</span>
+          </a>
         </div>
       </div>
+
       <div class="footer-col">
         <h4>Company</h4>
         <a href="#">About Us</a>
@@ -21,25 +31,31 @@
         <a href="#">Blog</a>
         <a href="#">Press</a>
       </div>
+
       <div class="footer-col">
         <h4>Support</h4>
-        <a href="#">Help Center</a>
+        <a href="#" data-lb-href="customer/support/support.html">Help Center</a>
         <a href="#">Privacy Policy</a>
         <a href="#">Terms of Service</a>
         <a href="#">Refund Policy</a>
       </div>
+
       <div class="footer-news">
         <h4>Stay in loop</h4>
-        <div class="news-box">
-          <input type="email" placeholder="Email address">
-          <button type="button">Join</button>
-        </div>
+        <form class="news-box" id="lbFooterNewsForm">
+          <input type="email" id="lbFooterEmail" placeholder="Email address" autocomplete="email" required>
+          <button type="submit">Join</button>
+        </form>
+        <p class="footer-news-msg" id="lbFooterNewsMsg" aria-live="polite"></p>
       </div>
     </div>
 
     <div class="footer-bottom-pro">
-      &copy; 2026 LocalBasket • Built in India
+      <div class="footer-bottom-row">
+        <span>&copy; <span id="lbFooterYear"></span> LocalBasket &bull; Built in India</span>
+      </div>
     </div>
+    <button type="button" id="lbFooterTopBtn" class="footer-top-fab" aria-label="Back to top">&#8593;</button>
   </div>
 </footer>
 

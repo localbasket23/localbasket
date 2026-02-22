@@ -184,8 +184,12 @@
             <input id="phone" type="text" placeholder="Mobile Number">
           </div>
           <div class="form-group">
-            <label><i class="fas fa-envelope"></i> Email Address (Read Only)</label>
-            <input id="email" type="email" readonly style="opacity: 0.7; cursor: not-allowed;">
+            <label><i class="fas fa-envelope"></i> Email Address</label>
+            <input id="email" type="email" placeholder="Enter email">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-indian-rupee-sign"></i> Minimum Order (Rs.)</label>
+            <input id="minimumOrder" type="number" min="0" step="1" placeholder="e.g. 100">
           </div>
           <div class="form-group full-width">
             <label><i class="fas fa-map-marker-alt"></i> Store Address</label>
@@ -216,6 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const phone = document.getElementById("phone");
   const address = document.getElementById("address");
   const email = document.getElementById("email");
+  const minimumOrder = document.getElementById("minimumOrder");
   const profileForm = document.getElementById("profileForm");
 
   /* FILL DATA */
@@ -224,6 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
   phone.value = seller.phone || "";
   address.value = seller.address || "";
   email.value = seller.email || "N/A";
+  minimumOrder.value = Number(seller.minimum_order || 100);
   
   document.getElementById("displayStoreName").innerText = seller.store_name || "My Store";
   document.getElementById("displayOwner").innerText = seller.owner_name || "Owner";
@@ -245,7 +251,9 @@ document.addEventListener("DOMContentLoaded", () => {
     fd.append("owner_name", ownerName.value);
     fd.append("store_name", storeName.value);
     fd.append("phone", phone.value);
+    fd.append("email", email.value);
     fd.append("address", address.value);
+    fd.append("minimum_order", minimumOrder.value || "0");
     if(storeImageInput.files[0]) fd.append("store_photo", storeImageInput.files[0]);
 
     try {
@@ -256,8 +264,10 @@ document.addEventListener("DOMContentLoaded", () => {
           owner_name: ownerName.value,
           store_name: storeName.value,
           phone: phone.value,
+          email: data.email || email.value,
           address: address.value,
-          store_photo: data.store_photo || seller.store_photo
+          store_photo: data.store_photo || seller.store_photo,
+          minimum_order: Number(data.minimum_order || minimumOrder.value || 100)
         });
         localStorage.setItem("lbSeller", JSON.stringify(seller));
         alert("Profile updated successfully!");

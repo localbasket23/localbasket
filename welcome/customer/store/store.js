@@ -44,6 +44,7 @@ const state = {
   products: [],
   filtered: [],
   isStoreOnline: false,
+  minimumOrder: 100,
   cart: loadCart(),
   activeProductId: null,
   activeRating: 0,
@@ -75,6 +76,7 @@ async function loadStore() {
     const store = data.store;
     state.store = store;
     state.isStoreOnline = Number(store.is_online) === 1;
+    state.minimumOrder = Number(store.minimum_order || 100);
 
     document.getElementById("storeName").innerText = store.store_name;
     document.getElementById("headerStoreName").innerText = store.store_name;
@@ -148,7 +150,7 @@ async function loadStore() {
     }
 
     const timingEl = document.getElementById("storeTiming");
-    if (timingEl) timingEl.innerText = "Rs. 100";
+    if (timingEl) timingEl.innerText = `Rs. ${state.minimumOrder}`;
     return true;
   } catch (err) {
     console.error("STORE ERROR:", err);
@@ -238,13 +240,15 @@ function renderProducts(items) {
               </div>
             ` : ""}
           </div>
-          <button class="add-btn" ${p.stock <= 0 ? "disabled" : ""} onclick="addToCart(${p.id}); event.stopPropagation();" style="display:${qty ? "none" : "inline-block"};">
-            ${p.stock > 0 ? "Add" : "Out"}
-          </button>
-          <div class="qty-controls" style="display:${qty ? "flex" : "none"};">
-            <button onclick="updateQty(${p.id}, -1); event.stopPropagation();">-</button>
-            <span>${qty}</span>
-            <button onclick="updateQty(${p.id}, 1); event.stopPropagation();">+</button>
+          <div class="card-cart-actions">
+            <button class="add-btn" ${p.stock <= 0 ? "disabled" : ""} onclick="addToCart(${p.id}); event.stopPropagation();" style="display:${qty ? "none" : "inline-block"};">
+              ${p.stock > 0 ? "Add" : "Out"}
+            </button>
+            <div class="qty-controls" style="display:${qty ? "flex" : "none"};">
+              <button onclick="updateQty(${p.id}, -1); event.stopPropagation();">-</button>
+              <span>${qty}</span>
+              <button onclick="updateQty(${p.id}, 1); event.stopPropagation();">+</button>
+            </div>
           </div>
         </div>
       </div>
@@ -517,10 +521,18 @@ function updateProductViewQty() {
   if (!state.activeProductId) return;
   const qty = getCartQty(state.activeProductId);
   const addBtn = document.getElementById("pvAddBtn");
+  const buyNowBtn = document.getElementById("pvBuyNowBtn");
+  const checkoutBtn = document.getElementById("pvCheckoutBtn");
   const qtyBox = document.getElementById("pvQty");
   const qtyVal = document.getElementById("pvQtyValue");
   if (!addBtn || !qtyBox || !qtyVal) return;
-  addBtn.style.display = qty ? "none" : "inline-flex";
+
+  const product = state.products.find(p => Number(p.id) === Number(state.activeProductId));
+  const inStock = Number(product?.stock || 0) > 0;
+
+  addBtn.style.display = qty ? "none" : (inStock ? "inline-flex" : "none");
+  if (buyNowBtn) buyNowBtn.style.display = qty ? "none" : (inStock ? "inline-flex" : "none");
+  if (checkoutBtn) checkoutBtn.style.display = qty ? "inline-flex" : "none";
   qtyBox.style.display = qty ? "flex" : "none";
   qtyVal.innerText = qty || 1;
 }
@@ -529,6 +541,17 @@ function addToCartFromView() {
   if (!state.activeProductId) return;
   addToCart(state.activeProductId);
   updateProductViewQty();
+}
+
+function buyNowFromView() {
+  if (!state.activeProductId) return;
+  const qty = getCartQty(state.activeProductId);
+  if (!qty) addToCart(state.activeProductId);
+  checkout();
+}
+
+function checkoutFromView() {
+  checkout();
 }
 
 function updateQtyFromView(change) {
@@ -644,6 +667,16 @@ function updateCartUI() {
   document.getElementById("mTotalAmount").innerText = `Rs. ${total}`;
   const mobileBar = document.getElementById("mobileBar");
   if (mobileBar) mobileBar.classList.toggle("is-visible", count > 0);
+  const floatingCheckoutBtn = document.getElementById("floatingCheckoutBtn");
+  if (floatingCheckoutBtn) {
+    floatingCheckoutBtn.style.display = count > 0 ? "inline-flex" : "none";
+    floatingCheckoutBtn.style.left = "auto";
+    floatingCheckoutBtn.style.top = "auto";
+    floatingCheckoutBtn.style.right = "20px";
+    floatingCheckoutBtn.style.bottom = "20px";
+    floatingCheckoutBtn.innerText = `Checkout (Rs. ${total})`;
+  }
+  updateFooterSafeOffsets();
 
   const box = document.getElementById("cartItemsContainer");
   if (!count) {
@@ -680,6 +713,12 @@ function checkout() {
     return;
   }
 
+  const total = state.cart.reduce((sum, i) => sum + Number(i.price || 0) * Number(i.qty || 0), 0);
+  if (total < Number(state.minimumOrder || 100)) {
+    alert(`Minimum order is Rs. ${state.minimumOrder}. Please add more items.`);
+    return;
+  }
+
   window.location.href = "/welcome/customer/checkout/checkout.html";
 }
 
@@ -701,10 +740,32 @@ function showError(msg) {
   `;
 }
 
+function updateFooterSafeOffsets() {
+  const footer = document.getElementById("siteFooter");
+  const floatingCheckoutBtn = document.getElementById("floatingCheckoutBtn");
+  const mobileBar = document.getElementById("mobileBar");
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
+  const bottomNav = document.querySelector(".lb-bottom-nav");
+  const navHeight = bottomNav ? Math.ceil(bottomNav.getBoundingClientRect().height || 0) : 0;
+  const nearPageBottom = (window.scrollY + window.innerHeight) >= (document.documentElement.scrollHeight - 8);
+  const footerTop = footer ? footer.getBoundingClientRect().top : Number.POSITIVE_INFINITY;
+  const overlap = nearPageBottom ? Math.max(0, window.innerHeight - footerTop + 10) : 0;
+
+  if (floatingCheckoutBtn && floatingCheckoutBtn.style.display !== "none") {
+    floatingCheckoutBtn.style.bottom = `${20 + overlap}px`;
+  }
+  if (mobileBar && mobileBar.classList.contains("is-visible")) {
+    const mobileBase = isMobile ? Math.max(14, navHeight + 10) : 20;
+    mobileBar.style.bottom = `${mobileBase + overlap}px`;
+  }
+}
+
 window.filterProducts = filterProducts;
 window.openProductView = openProductView;
 window.closeProductView = closeProductView;
 window.addToCartFromView = addToCartFromView;
+window.buyNowFromView = buyNowFromView;
+window.checkoutFromView = checkoutFromView;
 window.updateQtyFromView = updateQtyFromView;
 window.submitProductReview = submitProductReview;
 window.setStarRating = setStarRating;
@@ -718,3 +779,7 @@ document.addEventListener("click", (e) => {
   const value = Number(btn.getAttribute("data-star"));
   setStarRating(value);
 });
+
+window.addEventListener("scroll", updateFooterSafeOffsets, { passive: true });
+window.addEventListener("resize", updateFooterSafeOffsets);
+document.addEventListener("DOMContentLoaded", updateFooterSafeOffsets);

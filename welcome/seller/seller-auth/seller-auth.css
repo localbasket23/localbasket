@@ -47,7 +47,7 @@ body{
   padding:30px;
   border-radius:18px;
   box-shadow:
-    0 20px 45px rgba(106,60,255,.25),
+    0 20px 45px rgba(255,138,26,.2),
     inset 0 0 0 1px rgba(255,255,255,.4);
 }
 
@@ -98,11 +98,11 @@ body{
   outline:none;
   border-color:#ff8a1a;
   box-shadow:
-    0 0 0 3px rgba(106,60,255,.18);
+    0 0 0 3px rgba(255,138,26,.14);
 }
 
 .input-group:focus-within svg{
-  stroke:#4d2db7;
+  stroke:#e56a00;
   transform:translateY(-50%) scale(1.1);
 }
 
@@ -136,12 +136,12 @@ textarea{
   font-weight:600;
   cursor:pointer;
   transition:.3s;
-  box-shadow:0 10px 25px rgba(106,60,255,.35);
+  box-shadow:0 10px 25px rgba(255,138,26,.28);
 }
 
 .btn:hover{
   transform:translateY(-2px);
-  box-shadow:0 14px 30px rgba(106,60,255,.45);
+  box-shadow:0 14px 30px rgba(255,138,26,.34);
 }
 
 .btn:active{
@@ -164,7 +164,7 @@ textarea{
 }
 
 .switch:hover{
-  color:#4d2db7;
+  color:#e56a00;
   text-decoration:underline;
 }
 
@@ -261,5 +261,7 @@ textarea{
     filter: brightness(0.96);
   }
 }
+
+
 
 

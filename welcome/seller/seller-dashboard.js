@@ -10,7 +10,6 @@ const GLOBAL_COMMISSION_STORAGE_KEY = "lbGlobalCommission";
 const SELLER_COMMISSION_MAP_KEY = "lbSellerCommissionMap";
 const SIDEBAR_COLLAPSE_KEY = "lbSellerSidebarCollapsed";
 const SPARK_HISTORY_KEY = "lbSellerSparkHistory";
-const CUSTOMER_FEEDBACK_KEY_PREFIX = "lbOrderFeedback_";
 const ADMIN_API_BASE_CANDIDATES = [
   "http://localhost:5000/api/admin",
   "http://127.0.0.1:5000/api/admin"
@@ -217,27 +216,17 @@ document.addEventListener("DOMContentLoaded", () => {
     svg.innerHTML = `<path class="spark-fill" d="${area}"></path><path d="${line}"></path>`;
   };
 
-  const loadFeedback = () => {
-    const feedbacks = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (!key || !key.startsWith(CUSTOMER_FEEDBACK_KEY_PREFIX)) continue;
-      try {
-        const raw = localStorage.getItem(key);
-        const map = JSON.parse(raw);
-        if (!map || typeof map !== "object") continue;
-        Object.values(map).forEach(entry => {
-          if (entry && entry.rating) feedbacks.push(entry);
-        });
-      } catch {}
-    }
-    return feedbacks;
-  };
-
-  const renderFeedbackSection = () => {
+  const renderFeedbackSection = (feedbacks = []) => {
     if (!el.feedbackList) return;
-    const feedbacks = loadFeedback();
-    if (!feedbacks.length) {
+
+    const safeFeedbacks = (Array.isArray(feedbacks) ? feedbacks : [])
+      .filter(f => Number(f?.rating) >= 1 && Number(f?.rating) <= 5)
+      .map(f => ({
+        rating: Math.max(1, Math.min(5, Number(f.rating || 0))),
+        comment: f.comment || "",
+        created_at: f.created_at || new Date().toISOString()
+      }));
+    if (!safeFeedbacks.length) {
       if (el.avgRating) el.avgRating.textContent = "0.0";
       if (el.avgStars) el.avgStars.textContent = "☆☆☆☆☆";
       if (el.ratingCount) el.ratingCount.textContent = "0";
@@ -248,12 +237,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const counts = [0,0,0,0,0,0]; // 1..5
     let sum = 0;
-    feedbacks.forEach(f => {
+    safeFeedbacks.forEach(f => {
       const r = Math.max(1, Math.min(5, Number(f.rating || 0)));
       counts[r] += 1;
       sum += r;
     });
-    const total = feedbacks.length;
+    const total = safeFeedbacks.length;
     const avg = (sum / total).toFixed(1);
     if (el.avgRating) el.avgRating.textContent = avg;
     if (el.avgStars) el.avgStars.textContent = "★★★★★".slice(0, Math.round(avg)) + "☆☆☆☆☆".slice(0, 5 - Math.round(avg));
@@ -270,7 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setBar(el.bar2, counts[2]);
     setBar(el.bar1, counts[1]);
 
-    const recent = feedbacks
+    const recent = safeFeedbacks
       .slice()
       .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
       .slice(0, 6);
@@ -499,7 +488,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => node.classList.add("show"), 120 + idx * 80);
     });
 
-    renderFeedbackSection();
+    renderFeedbackSection([]);
   };
 
   /* ================= RENDER ORDERS ================= */
@@ -571,11 +560,12 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
       }
 
-      const [ordersData, productsData, dashboardData, adminCommissionPercent] = await Promise.all([
+      const [ordersData, productsData, dashboardData, adminCommissionPercent, feedbackData] = await Promise.all([
         getJson(`${API_BASE}/seller/orders/${seller.id}`),
         getJson(`${API_BASE}/seller/products?seller_id=${seller.id}`),
         getJson(`${API_BASE}/seller/dashboard/${seller.id}`).catch(() => null),
-        fetchSellerCommissionFromAdminApi(seller.id)
+        fetchSellerCommissionFromAdminApi(seller.id),
+        getJson(`${API_BASE}/seller/feedback/${seller.id}`).catch(() => ({ success: false, feedback: [] }))
       ]);
 
       const orders = Array.isArray(ordersData.orders) ? ordersData.orders : [];
@@ -644,6 +634,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       renderOrders(activeOrders);
+      renderFeedbackSection(Array.isArray(feedbackData?.feedback) ? feedbackData.feedback : []);
     } catch (err) {
       console.error("DASHBOARD ERROR:", err);
       if (el.recentOrders) {

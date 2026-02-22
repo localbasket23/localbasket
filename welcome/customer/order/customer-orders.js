@@ -3,7 +3,7 @@
    CLEAN â€¢ SAFE â€¢ STABLE â€¢ BACKEND-ALIGNED
 ===================================================== */
 
-console.log("âœ… customer-orders.js loaded");
+console.log("customer-orders.js loaded");
 
 /* =====================================================
    GLOBAL STATE
@@ -19,7 +19,7 @@ let FEEDBACK_SAVING = false;
 /* =====================================================
    CONFIG
 ===================================================== */
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://localbasket-backend.onrender.com/api";
 const STATUS_FLOW = ["PLACED", "CONFIRMED", "PACKED", "OUT_FOR_DELIVERY", "DELIVERED"];
 
 /* =====================================================
@@ -988,7 +988,7 @@ ALL_ORDERS = await hydrateOrdersWithStoreInfo(ALL_ORDERS);
     if (ALL_ORDERS.length === 0) {
       wrapper.innerHTML = `
         <div class="empty">
-          <h2>No orders yet ðŸ“¦</h2>
+          <h2>No orders yet 📦</h2>
           <p>Start shopping to see your orders here</p>
         </div>`;
       return;
@@ -1484,6 +1484,117 @@ async function reorderWithCurrentPrice(oldCart) {
 ===================================================== */
 const TRACK_FLOW = ["PLACED", "CONFIRMED", "PACKED", "OUT_FOR_DELIVERY", "DELIVERED"];
 
+function getTrackTimestamp(event) {
+  return pickFirstNonEmpty(
+    event?.timestamp,
+    event?.time,
+    event?.event_time,
+    event?.action_time,
+    event?.occurred_at,
+    event?.created_at,
+    event?.createdAt,
+    event?.updated_at,
+    event?.updatedAt,
+    event?.date
+  );
+}
+
+function formatTrackDateTime(value) {
+  if (!value) return "Time unavailable";
+  const dt = new Date(value);
+  if (Number.isNaN(dt.getTime())) return String(value);
+  return dt.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function getExpectedDeliveryText(order) {
+  const raw = pickFirstNonEmpty(
+    order?.expected_delivery,
+    order?.expected_delivery_at,
+    order?.expectedDelivery,
+    order?.expectedDeliveryAt,
+    order?.delivery_eta,
+    order?.eta,
+    order?.delivery_date
+  );
+  if (!raw) return "Expected soon";
+
+  const dt = new Date(raw);
+  if (Number.isNaN(dt.getTime())) return String(raw);
+  return dt.toLocaleString("en-IN", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
+
+function buildTrackingRows(order, fallbackStatus) {
+  const events = getOrderEvents(order);
+  const rows = [];
+
+  for (let i = events.length - 1; i >= 0; i -= 1) {
+    const evt = events[i] || {};
+    const token = getEventStatusToken(evt);
+    const label = token ? getFlowLabel(token) : "Status Update";
+    const when = formatTrackDateTime(getTrackTimestamp(evt));
+    const actor = normalizeActorName(getEventActor(evt), "");
+    const reason = getEventReason(evt);
+    const actorText = actor ? `By ${actor}` : "";
+    const reasonText = reason ? `• ${reason}` : "";
+    rows.push({
+      when,
+      label,
+      meta: `${actorText} ${reasonText}`.trim()
+    });
+  }
+
+  if (!rows.length) {
+    rows.push({
+      when: formatTrackDateTime(order?.created_at || order?.createdAt || ""),
+      label: fallbackStatus || "Order placed",
+      meta: "Order received in system"
+    });
+  }
+
+  return rows.slice(0, 8);
+}
+
+function getTrackOrigin(order) {
+  return pickFirstNonEmpty(
+    order?.pickup_branch,
+    order?.origin,
+    order?.origin_branch,
+    order?.store_name,
+    order?.seller_name,
+    order?.store?.store_name,
+    "Store Branch"
+  );
+}
+
+function getTrackDestination(order) {
+  return pickFirstNonEmpty(
+    order?.delivery_branch,
+    order?.destination,
+    order?.destination_branch,
+    order?.delivery_address,
+    order?.address,
+    "Customer Address"
+  );
+}
+
+function toTitleCaseWords(input) {
+  return String(input || "")
+    .toLowerCase()
+    .replace(/\b\w/g, (ch) => ch.toUpperCase());
+}
+
 function trackOrder(orderId) {
   const info = getOrderActionInsightById(orderId);
   if (!info?.order) {
@@ -1508,35 +1619,89 @@ function trackOrder(orderId) {
     ? Math.max(0, Math.min(getTerminalStopIndex(order, normalizedStatus), TRACK_FLOW.length - 1))
     : -1;
 
-  const timelineHtml = getTimelineSteps(order, displayStatus, TRACK_FLOW)
-    .map(({ state, label }, i) => {
-      let cls = "";
-      if (state === "crossed") {
-        cls = "crossed";
-      } else if (isTerminal) {
-        cls = i < stopIndex ? "done" : "active";
-      } else if (i < currentIndex) {
-        cls = "done";
-      } else if (i === currentIndex) {
-        cls = "active";
-      }
+  const stageIndex = isTerminal ? stopIndex : Math.max(0, currentIndex);
+  const fillPercent = ((stageIndex) / (TRACK_FLOW.length - 1)) * 100;
 
-      return `<div class="track-step ${cls}">${label}</div>`;
-    })
+  const progressNodesHtml = TRACK_FLOW.map((step, i) => {
+    let cls = "pending";
+    if (isTerminal) {
+      if (i < stopIndex) cls = "done";
+      else if (i === stopIndex) cls = "current terminal";
+    } else {
+      if (i < currentIndex) cls = "done";
+      else if (i === currentIndex) cls = "current";
+    }
+    return `
+      <div class="track-node ${cls}">
+        <span class="dot"></span>
+        <span class="lbl">${escapeHtml(toTitleCaseWords(getFlowLabel(step)))}</span>
+      </div>
+    `;
+  }).join("");
+
+  const trackingRowsHtml = buildTrackingRows(order, displayLabel)
+    .map((row) => `
+      <div class="track-detail-row">
+        <div class="track-time">${escapeHtml(row.when)}</div>
+        <div class="track-point"><span class="track-dot"></span></div>
+        <div class="track-event">
+          ${escapeHtml(row.label)}
+          ${row.meta ? `<small>${escapeHtml(row.meta)}</small>` : ""}
+        </div>
+      </div>
+    `)
     .join("");
 
-  if (isTerminal) {
-    const actorText = info.actor || (normalizedStatus === "CANCELLED" ? "CUSTOMER" : "SELLER");
-    const reasonText = info.reason;
-    stepsBox.innerHTML = `
-      ${timelineHtml}
-      <div class="track-step active">${displayLabel}</div>
-      <div class="track-step done">Action By: ${actorText}</div>
-      ${reasonText ? `<div class="track-step done">Reason: ${reasonText}</div>` : ""}
-    `;
-  } else {
-    stepsBox.innerHTML = timelineHtml;
-  }
+  const summaryTitle = escapeHtml(displayLabel.replace(/_/g, " "));
+  const summarySub = isTerminal
+    ? `${summaryTitle}${info.reason ? ` • ${escapeHtml(info.reason)}` : ""}`
+    : `Expected delivery: ${escapeHtml(getExpectedDeliveryText(order))}`;
+  const summaryNote = isTerminal
+    ? `Updated by ${escapeHtml(info.actor || (normalizedStatus === "CANCELLED" ? "CUSTOMER" : "SELLER"))}`
+    : "Live tracking updates from store and delivery flow.";
+  const badgeText = isTerminal ? "Final Status" : "In Progress";
+  const originText = escapeHtml(getTrackOrigin(order));
+  const destinationText = escapeHtml(getTrackDestination(order));
+  const dotRail = TRACK_FLOW.map((_, i) => {
+    if (i < stageIndex) return '<span class="mini done"></span>';
+    if (i === stageIndex) return '<span class="mini current">›</span>';
+    return '<span class="mini"></span>';
+  }).join("");
+
+  stepsBox.innerHTML = `
+    <div class="track-summary">
+      <div>
+        <div class="track-title">${summaryTitle}</div>
+        <div class="track-sub">${summarySub}</div>
+        <div class="track-note">${summaryNote}</div>
+      </div>
+      <span class="track-badge">${badgeText}</span>
+    </div>
+
+    <div class="track-progress-wrap">
+      <div class="track-progress">
+        <div class="track-line"><div class="track-line-fill" style="width:${fillPercent}%"></div></div>
+        <div class="track-nodes">${progressNodesHtml}</div>
+      </div>
+    </div>
+
+    <div class="track-route">
+      <div>
+        <div class="pt">Origin</div>
+        <div class="pv">${originText}</div>
+      </div>
+      <div class="track-dot-rail">${dotRail}</div>
+      <div>
+        <div class="pt">Destination</div>
+        <div class="pv">${destinationText}</div>
+      </div>
+    </div>
+
+    <div class="track-details">
+      <div class="track-details-head">Tracking Details</div>
+      <div class="track-detail-list">${trackingRowsHtml}</div>
+    </div>
+  `;
 
   document.getElementById("trackModal")
     .classList.remove("hidden");

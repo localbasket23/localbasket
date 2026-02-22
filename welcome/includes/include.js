@@ -110,6 +110,50 @@ const initIncludes = async () => {
     if (target) el.setAttribute("src", welcomePath(target));
   });
 
+  const footerYear = document.getElementById("lbFooterYear");
+  if (footerYear) footerYear.textContent = String(new Date().getFullYear());
+
+  const footerNewsForm = document.getElementById("lbFooterNewsForm");
+  if (footerNewsForm) {
+    const newsMsg = document.getElementById("lbFooterNewsMsg");
+    const setNewsMsg = (text, state) => {
+      if (!newsMsg) return;
+      newsMsg.textContent = text;
+      newsMsg.dataset.state = state || "";
+    };
+
+    const emailInput = document.getElementById("lbFooterEmail");
+    if (emailInput) {
+      emailInput.addEventListener("input", () => setNewsMsg("", ""));
+    }
+
+    footerNewsForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const submitBtn = footerNewsForm.querySelector("button[type='submit']");
+      const email = String(emailInput?.value || "").trim().toLowerCase();
+      const ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+      if (!ok) {
+        setNewsMsg("Please enter a valid email address.", "error");
+        if (emailInput) emailInput.focus();
+        return;
+      }
+      localStorage.setItem("lbFooterNewsEmail", email);
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Joining...";
+      }
+      setNewsMsg("Thanks! You are subscribed for updates.", "success");
+      setTimeout(() => {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "Join";
+        }
+        setNewsMsg("", "");
+      }, 1800);
+      footerNewsForm.reset();
+    });
+  }
+
   const RUPEE = "\u20B9";
 
   const ensureCartDrawer = () => {
@@ -247,6 +291,20 @@ const initIncludes = async () => {
 
   if (locBtn) locBtn.addEventListener("click", openLocation);
   if (mobileLocBtn) mobileLocBtn.addEventListener("click", openLocation);
+  const footerLocBtn = document.getElementById("lbFooterLocBtn");
+  if (footerLocBtn) footerLocBtn.addEventListener("click", openLocation);
+
+  const footerTopBtn = document.getElementById("lbFooterTopBtn");
+  if (footerTopBtn) {
+    const toggleFooterTopBtn = () => {
+      footerTopBtn.classList.toggle("is-visible", window.scrollY > 260);
+    };
+    toggleFooterTopBtn();
+    window.addEventListener("scroll", toggleFooterTopBtn, { passive: true });
+    footerTopBtn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
   const goBackSafe = () => {
     if (window.history.length > 1) {
       window.history.back();
@@ -418,6 +476,22 @@ const initIncludes = async () => {
     else if (path.includes("/customer/profile")) setActive("profile");
     else if (path.includes("/customer/checkout")) setActive("cart");
     else setActive("home");
+  }
+
+  // On touch devices, avoid sticky focus state after tapping footer controls.
+  if (window.matchMedia && window.matchMedia("(hover: none)").matches) {
+    const footerHost = document.getElementById("siteFooter");
+    if (footerHost) {
+      footerHost.addEventListener("click", (e) => {
+        const tapControl = e.target.closest(".footer-col a, .footer-help-actions a, .footer-bottom-actions button");
+        if (!tapControl) return;
+        setTimeout(() => {
+          if (document.activeElement === tapControl && typeof tapControl.blur === "function") {
+            tapControl.blur();
+          }
+        }, 0);
+      });
+    }
   }
 };
 

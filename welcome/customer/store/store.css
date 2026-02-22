@@ -4,12 +4,12 @@
 :root{
   --p:#ff8a1a;
   --p2:#ffb347;
-  --p3:#4d2db7;
+  --p3:#0f172a;
 
-  --bg:#f7f5fb;
+  --bg:#ffffff;
   --card:#ffffff;
-  --text:#2c2340;
-  --muted:#7a7396;
+  --text:#0f172a;
+  --muted:#64748b;
 
   --success:#43a047;
   --danger:#e53935;
@@ -18,11 +18,11 @@
   --radius:18px;
   --radius-sm:12px;
 
-  --shadow-soft:0 8px 24px rgba(106,60,255,.12);
-  --shadow-strong:0 16px 40px rgba(106,60,255,.28);
+  --shadow-soft:0 8px 24px rgba(15,23,42,.05);
+  --shadow-strong:0 16px 34px rgba(15,23,42,.12);
 
-  --skeleton-1:#ede9ff;
-  --skeleton-2:#f5f2ff;
+  --skeleton-1:#f1f5f9;
+  --skeleton-2:#f8fafc;
 }
 
 /*************************************************
@@ -76,7 +76,7 @@ body{
   height:36px;
   border-radius:10px;
   background:#ffffff;
-  border:1px solid #ece6ff;
+  border:1px solid #e2e8f0;
   box-shadow:var(--shadow-soft);
   display:flex;
   align-items:center;
@@ -120,7 +120,7 @@ body{
 }
 
 .badge.online{
-  background:rgba(106,60,255,.12);
+  background:rgba(15,23,42,.05);
   color:var(--p3);
 }
 
@@ -175,8 +175,8 @@ body{
 }
 
 .store-info .info-card{
-  background:#fdfbff;
-  border:1px solid #ece6ff;
+  background:#fffaf5;
+  border:1px solid #e2e8f0;
   border-radius:14px;
   padding:10px 12px;
   text-align:center;
@@ -262,7 +262,7 @@ body{
   padding:8px 16px;
   border-radius:20px;
   border:none;
-  background:#efeaff;
+  background:#fff7ed;
   color:var(--p);
   font-weight:500;
   cursor:pointer;
@@ -391,7 +391,7 @@ body{
   flex:1;
   padding:16px;
   overflow-y:auto;
-  background:#faf8ff;
+  background:#fffaf5;
 }
 
 .cart-item{
@@ -583,6 +583,8 @@ body{
   .cart-header, .cart-items, .cart-footer{padding:12px}
   .checkout-btn{height:50px; font-size:14px}
 }
+
+
 
 
 

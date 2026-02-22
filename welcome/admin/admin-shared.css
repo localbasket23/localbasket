@@ -47,10 +47,10 @@ body.dark {
   left: 0;
   top: 0;
   z-index: 1002;
-  background: linear-gradient(160deg, var(--lb-primary), var(--lb-primary-light)) !important;
+  background: var(--lb-primary) !important;
   color: #fff;
   padding: 20px 14px;
-  box-shadow: 10px 0 32px rgba(0,0,0,0.24);
+  box-shadow: 8px 0 24px rgba(15, 23, 42, 0.18);
   border-right: 1px solid rgba(255,255,255,0.12);
   transition: transform .35s ease;
   overflow-x: hidden !important;
@@ -61,27 +61,11 @@ body.dark {
 }
 
 .sidebar::before {
-  content: "";
-  position: absolute;
-  top: -140px;
-  left: -120px;
-  width: 280px;
-  height: 280px;
-  background: radial-gradient(circle, rgba(255,255,255,0.18), rgba(255,255,255,0));
-  opacity: 0.9;
-  pointer-events: none;
+  display: none;
 }
 
 .sidebar::after {
-  content: "";
-  position: absolute;
-  bottom: -160px;
-  right: -140px;
-  width: 320px;
-  height: 320px;
-  background: radial-gradient(circle, rgba(255,255,255,0.12), rgba(255,255,255,0));
-  opacity: 0.7;
-  pointer-events: none;
+  display: none;
 }
 
 .sidebar .brand {

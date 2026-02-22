@@ -230,6 +230,25 @@ async function placeOrder() {
     return;
   }
 
+  const itemsTotal = cart.reduce(
+    (sum, item) => sum + Number(item.price || 0) * Number(item.qty || 0),
+    0
+  );
+  try {
+    const storeId = Number(cart[0]?.storeId || 0);
+    if (storeId) {
+      const res = await fetch(`http://localhost:5000/api/stores/${storeId}`);
+      const data = await res.json();
+      const minOrder = Number(data?.store?.minimum_order || 100);
+      if (itemsTotal < minOrder) {
+        alert(`âŒ Minimum order is Rs. ${minOrder}. Please add more items.`);
+        return;
+      }
+    }
+  } catch {
+    // If min-order check API fails, do not block payment flow.
+  }
+
   const total = Number(grandTotalEl.innerText.replace("Rs. ", ""));
 
   const orderData = {

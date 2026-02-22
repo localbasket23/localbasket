@@ -38,29 +38,13 @@
       align-items: center;
       justify-content: center;
       padding: 20px;
-      /* Modern animated mesh gradient background */
-      background-color: #fff4e6;
-      background-image: 
-        radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-        radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-        radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%);
-      background: linear-gradient(120deg, #ffe1bf 0%, #ff9f45 100%);
+      background: #ffffff;
       position: relative;
       overflow-x: hidden;
     }
 
     /* Decorative Shapes behind the glass */
-    body::before, body::after {
-      content: '';
-      position: absolute;
-      width: 300px;
-      height: 300px;
-      border-radius: 50%;
-      z-index: -1;
-      filter: blur(80px);
-    }
-    body::before { background: #ffb347; top: 10%; left: 10%; opacity: 0.6; }
-    body::after { background: #ff8a1a; bottom: 10%; right: 10%; opacity: 0.6; }
+    body::before, body::after { display: none; }
 
     .container {
       width: 100%;
@@ -177,7 +161,7 @@
     .form-control:focus {
       background: #fff;
       border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+      box-shadow: 0 0 0 4px rgba(255, 138, 26, 0.12);
     }
 
     .form-control:focus + i {
@@ -207,7 +191,7 @@
 
     .file-upload-box:hover {
       border-color: var(--primary);
-      background: rgba(79, 70, 229, 0.05);
+      background: rgba(255, 138, 26, 0.08);
     }
 
     .file-upload-box input {
@@ -239,7 +223,7 @@
       cursor: pointer;
       transition: var(--transition);
       margin-top: 10px;
-      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+      box-shadow: 0 4px 12px rgba(255, 138, 26, 0.28);
     }
     .btn-row {
       display: flex;
@@ -265,7 +249,7 @@
 
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 16px rgba(79, 70, 229, 0.4);
+      box-shadow: 0 8px 16px rgba(255, 138, 26, 0.36);
     }
 
     .btn-primary:active {

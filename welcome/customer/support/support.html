@@ -1,0 +1,209 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Support | LocalBasket</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/welcome/includes/header-footer.css" />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Plus Jakarta Sans", sans-serif; }
+    body { background: #f6f8fc; color: #0f172a; }
+    .support-wrap { max-width: 1220px; margin: 0 auto; padding: 26px 18px 40px; }
+
+    .support-hero {
+      background: linear-gradient(145deg, #fff9f2 0%, #ffffff 68%, #f8fafc 100%);
+      border: 1px solid #ffdcb8;
+      border-radius: 22px;
+      padding: 22px;
+      box-shadow: 0 18px 30px -24px rgba(249, 115, 22, 0.45);
+      margin-bottom: 16px;
+    }
+    .support-hero h1 { font-size: clamp(28px, 3.5vw, 38px); letter-spacing: -0.7px; margin-bottom: 8px; }
+    .support-hero p { color: #64748b; font-size: 15px; line-height: 1.6; max-width: 700px; }
+    .support-actions { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
+    .support-btn {
+      border: 1px solid #dbeafe;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-radius: 12px;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .support-btn:hover { transform: translateY(-1px); background: #dbeafe; }
+    .support-btn.primary { background: #ff8a1a; border-color: #fb923c; color: #fff; }
+    .support-btn.primary:hover { background: #f97316; }
+
+    .support-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .support-panel {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: 0 14px 26px -22px rgba(15, 23, 42, 0.32);
+    }
+    .support-panel h2 { font-size: 20px; margin-bottom: 12px; }
+
+    .topic-list { display: grid; gap: 10px; }
+    .topic-item {
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 12px;
+      display: grid;
+      gap: 6px;
+      scroll-margin-top: 88px;
+    }
+    .topic-item:target { border-color: #fdba74; background: #fff7ed; }
+    .topic-item h3 { font-size: 15px; }
+    .topic-item p { color: #475569; font-size: 13px; line-height: 1.55; }
+
+    .faq-list { display: grid; gap: 8px; margin-top: 6px; }
+    .faq-item { border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; background: #fff; }
+    .faq-btn {
+      width: 100%;
+      text-align: left;
+      border: none;
+      background: transparent;
+      padding: 11px 12px;
+      font-size: 13px;
+      font-weight: 800;
+      color: #1e293b;
+      cursor: pointer;
+    }
+    .faq-content { display: none; padding: 0 12px 12px; color: #64748b; font-size: 13px; line-height: 1.6; }
+    .faq-item.open .faq-content { display: block; }
+
+    .support-form { display: grid; gap: 10px; }
+    .support-form input,
+    .support-form textarea,
+    .support-form select {
+      width: 100%;
+      border: 1px solid #dbe3ef;
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-size: 13px;
+      outline: none;
+      background: #fff;
+      color: #0f172a;
+    }
+    .support-form textarea { min-height: 114px; resize: vertical; }
+    .support-form input:focus,
+    .support-form textarea:focus,
+    .support-form select:focus {
+      border-color: #93c5fd;
+      box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.25);
+    }
+
+    .support-note {
+      margin-top: 10px;
+      border: 1px solid #dbeafe;
+      background: #eff6ff;
+      color: #1e3a8a;
+      border-radius: 12px;
+      padding: 10px 11px;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 920px) {
+      .support-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="siteHeader"></div>
+
+  <main class="support-wrap">
+    <section class="support-hero">
+      <h1>Support Center</h1>
+      <p>Need help with orders, account, or seller connection? We are here to assist you quickly.</p>
+      <div class="support-actions">
+        <a class="support-btn primary" href="tel:+918000000000">Call Support</a>
+        <a class="support-btn" href="https://wa.me/918000000000" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+        <a class="support-btn" href="mailto:support@localbasket.in">Email Us</a>
+      </div>
+    </section>
+
+    <section class="support-grid">
+      <div class="support-panel">
+        <h2>Support Topics</h2>
+        <div class="topic-list">
+          <article class="topic-item" id="help-center">
+            <h3>Help Center</h3>
+            <p>Get help with login issues, address setup, category browsing, and order flow on LocalBasket.</p>
+          </article>
+
+          <article class="topic-item" id="privacy-policy">
+            <h3>Privacy Policy</h3>
+            <p>Your data is used only for platform operations and essential communication. We do not sell personal data.</p>
+          </article>
+
+          <article class="topic-item" id="terms-of-service">
+            <h3>Terms of Service</h3>
+            <p>Use the platform with accurate details, fair usage, and respectful communication with sellers.</p>
+          </article>
+
+          <article class="topic-item" id="seller-support">
+            <h3>Seller Support</h3>
+            <p>Need onboarding, listing updates, or profile optimization help? Our seller support team can assist.</p>
+          </article>
+        </div>
+
+        <h2 style="margin-top:14px;">Quick FAQs</h2>
+        <div class="faq-list" id="faqList">
+          <div class="faq-item open">
+            <button class="faq-btn" type="button">How do I change my location?</button>
+            <div class="faq-content">Use the location button from header or footer "Change location" and set pincode.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-btn" type="button">How can I contact a seller?</button>
+            <div class="faq-content">Open a store profile and use available contact options to connect directly.</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-btn" type="button">Can I track my previous orders?</button>
+            <div class="faq-content">Yes. Visit My Orders from footer or profile to view your order history.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="support-panel">
+        <h2>Raise a Request</h2>
+        <form class="support-form" id="supportForm">
+          <input type="text" id="supportName" placeholder="Your full name" required />
+          <input type="email" id="supportEmail" placeholder="Email address" required />
+          <select id="supportType" required>
+            <option value="">Select issue type</option>
+            <option value="order">Order issue</option>
+            <option value="account">Account issue</option>
+            <option value="seller">Seller support</option>
+            <option value="other">Other</option>
+          </select>
+          <textarea id="supportMessage" placeholder="Describe your issue" required></textarea>
+          <button class="support-btn primary" type="submit">Submit Request</button>
+        </form>
+        <div class="support-note" id="supportNote">Response time: usually within 2-6 working hours.</div>
+      </div>
+    </section>
+  </main>
+
+  <div id="siteFooter"></div>
+
+  <script src="support.js"></script>
+  <script src="/welcome/includes/include.js"></script>
+</body>
+</html>

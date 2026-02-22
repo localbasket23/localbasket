@@ -3,15 +3,15 @@
   --lav: #ff8a1a;
   --lav-light: #ffb347;
   --lav-soft: rgba(255, 138, 26, 0.14);
-  --bg: #f8f9fd;
-  --bg-blob-1: rgba(255, 179, 71, 0.13);
-  --bg-blob-2: rgba(255, 138, 26, 0.11);
+  --bg: #ffffff;
+  --bg-blob-1: transparent;
+  --bg-blob-2: transparent;
   --card: #ffffff;
   --text: #2d3436;
   --text-light: #636e72;
   --radius: 16px;
-  --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
-  --shadow-md: 0 10px 30px rgba(255, 138, 26, 0.16);
+  --shadow-sm: 0 6px 20px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 10px 28px rgba(15, 23, 42, 0.12);
   --green: #00b894;
   --red: #ff7675;
   --white: #ffffff;
@@ -40,10 +40,7 @@ body.dark {
 }
 
 body {
-  background:
-    radial-gradient(circle at 8% 6%, var(--bg-blob-1), transparent 34%),
-    radial-gradient(circle at 88% 12%, var(--bg-blob-2), transparent 36%),
-    var(--bg);
+  background: var(--bg);
   color: var(--text);
   transition: background 0.3s ease, color 0.3s ease;
   overflow-x: hidden;
@@ -56,7 +53,7 @@ body {
   position: fixed;
   left: 0;
   top: 0;
-  background: linear-gradient(160deg, var(--lav), var(--lav-light));
+  background: var(--lav);
   color: var(--white);
   padding: 30px 20px;
   z-index: 1002;

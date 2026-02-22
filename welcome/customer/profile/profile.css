@@ -1,11 +1,11 @@
 :root{
   --p:#ff8a1a;
   --p2:#ffb347;
-  --bg:#f7f5fb;
+  --bg:#ffffff;
   --card:#ffffff;
-  --text:#2c2340;
-  --muted:#777;
-  --shadow:0 10px 30px rgba(106,60,255,.18);
+  --text:#0f172a;
+  --muted:#64748b;
+  --shadow:0 8px 24px rgba(15,23,42,.08);
   --radius:18px;
 }
 
@@ -86,7 +86,7 @@ body{
   align-items:center;
   justify-content:center;
   font-size:28px;
-  box-shadow:0 8px 18px rgba(106,60,255,.35);
+  box-shadow:0 8px 18px rgba(255,138,26,.28);
 }
 
 .profile-info h3{
@@ -105,7 +105,7 @@ body{
   font-size:11px;
   padding:4px 12px;
   border-radius:20px;
-  background:#efeaff;
+  background:#fff7ed;
   color:var(--p);
   font-weight:600;
 }
@@ -157,20 +157,20 @@ body{
   border:none;
   border-radius:22px;
   cursor:pointer;
-  background:#efeaff;
+  background:#fff7ed;
   color:var(--p);
   font-weight:600;
   transition:.25s;
 }
 
 .tab:hover{
-  background:#e3dbff;
+  background:#ffe8d2;
 }
 
 .tab.active{
   background:linear-gradient(135deg,var(--p),var(--p2));
   color:#fff;
-  box-shadow:0 8px 20px rgba(106,60,255,.35);
+  box-shadow:0 8px 20px rgba(255,138,26,.28);
 }
 
 /* ================= CONTENT ================= */
@@ -281,6 +281,8 @@ body{
     margin:0 16px;
   }
 }
+
+
 
 
 
