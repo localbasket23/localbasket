@@ -50,6 +50,7 @@ const state = {
   activeRating: 0,
   activeImageIndex: 0
 };
+const MOBILE_BAR_POS_KEY = "lbMobileBasketPos";
 
 document.addEventListener("DOMContentLoaded", async () => {
   if (!storeId) {
@@ -666,7 +667,10 @@ function updateCartUI() {
   document.getElementById("mItemCount").innerText = `${count} Items`;
   document.getElementById("mTotalAmount").innerText = `Rs. ${total}`;
   const mobileBar = document.getElementById("mobileBar");
-  if (mobileBar) mobileBar.classList.toggle("is-visible", count > 0);
+  const mobileBarBtn = mobileBar ? mobileBar.querySelector("button") : null;
+  if (mobileBarBtn) mobileBarBtn.innerText = `View Basket  ${count}  Rs.${total}`;
+  const cartOpen = document.getElementById("cartPanel")?.classList.contains("active");
+  if (mobileBar) mobileBar.classList.toggle("is-visible", count > 0 && !cartOpen);
   const floatingCheckoutBtn = document.getElementById("floatingCheckoutBtn");
   if (floatingCheckoutBtn) {
     floatingCheckoutBtn.style.display = count > 0 ? "inline-flex" : "none";
@@ -729,6 +733,11 @@ function toggleCart(show) {
   document.getElementById("cartPanel").classList.toggle("active", show);
   const backdrop = document.getElementById("cartBackdrop");
   if (backdrop) backdrop.classList.toggle("active", show);
+  const mobileBar = document.getElementById("mobileBar");
+  if (mobileBar) {
+    const count = state.cart.reduce((sum, i) => sum + i.qty, 0);
+    mobileBar.classList.toggle("is-visible", !show && count > 0);
+  }
   document.body.style.overflow = show ? "hidden" : "";
 }
 
@@ -756,8 +765,89 @@ function updateFooterSafeOffsets() {
   }
   if (mobileBar && mobileBar.classList.contains("is-visible")) {
     const mobileBase = isMobile ? Math.max(14, navHeight + 10) : 20;
-    mobileBar.style.bottom = `${mobileBase + overlap}px`;
+    if (!mobileBar.style.top) {
+      mobileBar.style.bottom = `${mobileBase + overlap}px`;
+    }
   }
+}
+
+function initMobileBarInteractions() {
+  const mobileBar = document.getElementById("mobileBar");
+  const mobileBtn = document.getElementById("mobileBarBtn");
+  if (!mobileBar || !mobileBtn) return;
+
+  const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+  const setBarPosition = (leftPx, topPx) => {
+    const rect = mobileBar.getBoundingClientRect();
+    const maxLeft = Math.max(0, window.innerWidth - rect.width);
+    const maxTop = Math.max(0, window.innerHeight - rect.height);
+    const left = clamp(leftPx, 0, maxLeft);
+    const top = clamp(topPx, 0, maxTop);
+    mobileBar.style.left = `${left}px`;
+    mobileBar.style.top = `${top}px`;
+    mobileBar.style.right = "auto";
+    mobileBar.style.bottom = "auto";
+    localStorage.setItem(MOBILE_BAR_POS_KEY, JSON.stringify({ left, top }));
+  };
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(MOBILE_BAR_POS_KEY) || "null");
+    if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) {
+      setBarPosition(saved.left, saved.top);
+    }
+  } catch {}
+
+  let dragging = false;
+  let moved = false;
+  let suppressClick = false;
+  let startX = 0;
+  let startY = 0;
+  let startLeft = 0;
+  let startTop = 0;
+
+  mobileBar.addEventListener("pointerdown", (e) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    const rect = mobileBar.getBoundingClientRect();
+    dragging = true;
+    moved = false;
+    startX = e.clientX;
+    startY = e.clientY;
+    startLeft = rect.left;
+    startTop = rect.top;
+    if (mobileBar.setPointerCapture) mobileBar.setPointerCapture(e.pointerId);
+  });
+
+  window.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+    if (!moved) return;
+    setBarPosition(startLeft + dx, startTop + dy);
+    e.preventDefault();
+  }, { passive: false });
+
+  window.addEventListener("pointerup", () => {
+    if (!dragging) return;
+    dragging = false;
+    if (moved) suppressClick = true;
+  });
+
+  mobileBtn.addEventListener("click", (e) => {
+    if (suppressClick) {
+      suppressClick = false;
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    toggleCart(true);
+  });
+
+  window.addEventListener("resize", () => {
+    if (!mobileBar.style.left || !mobileBar.style.top) return;
+    const rect = mobileBar.getBoundingClientRect();
+    setBarPosition(rect.left, rect.top);
+  });
 }
 
 window.filterProducts = filterProducts;
@@ -772,6 +862,7 @@ window.setStarRating = setStarRating;
 window.prevProductImage = prevProductImage;
 window.nextProductImage = nextProductImage;
 window.setProductImage = setProductImage;
+window.toggleCart = toggleCart;
 
 document.addEventListener("click", (e) => {
   const btn = e.target.closest(".pv-star-btn");
@@ -783,3 +874,4 @@ document.addEventListener("click", (e) => {
 window.addEventListener("scroll", updateFooterSafeOffsets, { passive: true });
 window.addEventListener("resize", updateFooterSafeOffsets);
 document.addEventListener("DOMContentLoaded", updateFooterSafeOffsets);
+document.addEventListener("DOMContentLoaded", initMobileBarInteractions);
