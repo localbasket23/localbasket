@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -639,7 +639,7 @@
 
     const API_BASE_CANDIDATES = Array.from(new Set([
       (localStorage.getItem("lbApiAdminBase") || "").trim(),
-      "http://localhost:5000/api/admin",
+      "https://localbasket-backend.onrender.com/api/admin",
       "http://127.0.0.1:5000/api/admin",
       ...(!isLikelyStaticPreview ? [`${window.location.origin}/api/admin`] : [])
     ].filter(Boolean)));
@@ -647,7 +647,7 @@
     const IMAGE_BASE_CANDIDATES = Array.from(new Set([
       (localStorage.getItem("lbImageBase") || "").trim(),
       `${window.location.origin}/uploads/`,
-      "http://localhost:5000/uploads/"
+      "https://localbasket-backend.onrender.com/uploads/"
     ].filter(Boolean)));
 
     const IMAGE_BASE = IMAGE_BASE_CANDIDATES[0];
@@ -737,7 +737,7 @@
       });
 
       // Safe local fallback
-      out.push(`http://localhost:5000/uploads/${withoutUploadsPrefix}`);
+      out.push(`https://localbasket-backend.onrender.com/uploads/${withoutUploadsPrefix}`);
 
       return Array.from(new Set(out.filter(Boolean)));
     }

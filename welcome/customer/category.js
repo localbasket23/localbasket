@@ -1,6 +1,6 @@
-const CONFIG = {
-  API_BASE: "http://localhost:5000/api",
-  IMG_BASE: "http://localhost:5000/uploads",
+﻿const CONFIG = {
+  API_BASE: "https://localbasket-backend.onrender.com/api",
+  IMG_BASE: "https://localbasket-backend.onrender.com/uploads",
   DEFAULT_IMG: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80"
 };
 
@@ -159,10 +159,10 @@ const getStoreRating = (store) => {
 const renderStars = (value) => {
   const full = Math.floor(value);
   const hasHalf = value - full >= 0.5;
-  return "★★★★★".split("").map((_, i) => {
-    if (i < full) return "★";
-    if (i === full && hasHalf) return "★";
-    return "☆";
+  return "â˜…â˜…â˜…â˜…â˜…".split("").map((_, i) => {
+    if (i < full) return "â˜…";
+    if (i === full && hasHalf) return "â˜…";
+    return "â˜†";
   }).join("");
 };
 

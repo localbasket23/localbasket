@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seller Earnings — Local Basket</title>
+  <title>Seller Earnings â€” Local Basket</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -188,7 +188,7 @@
   <div class="top-bar">
     <div class="shop-info">
       <div class="text-info">
-        <h3 style="color: var(--lav); font-weight: 700; margin:0;">💰 My Pocket</h3>
+        <h3 style="color: var(--lav); font-weight: 700; margin:0;">ðŸ’° My Pocket</h3>
         <p style="font-size: 12px; color: var(--text-light); margin:0;">Real-time earnings data</p>
       </div>
     </div>
@@ -320,11 +320,11 @@ if (!seller || !seller.id) {
 }
 
 /* ================= CONFIG ================= */
-const API_URL = `http://localhost:5000/api/seller/orders/${seller.id}`;
+const API_URL = `https://localbasket-backend.onrender.com/api/seller/orders/${seller.id}`;
 const GLOBAL_COMMISSION_STORAGE_KEY = "lbGlobalCommission";
 const SELLER_COMMISSION_MAP_KEY = "lbSellerCommissionMap";
 const ADMIN_API_BASE_CANDIDATES = [
-  "http://localhost:5000/api/admin",
+  "https://localbasket-backend.onrender.com/api/admin",
   "http://127.0.0.1:5000/api/admin"
 ];
 
@@ -578,7 +578,7 @@ function updateChart() {
       values.push(total);
     }
   } else {
-    /* CURRENT MONTH (1 → today) */
+    /* CURRENT MONTH (1 â†’ today) */
     const year = now.getFullYear();
     const month = now.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();

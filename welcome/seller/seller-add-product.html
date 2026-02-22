@@ -514,7 +514,7 @@ function restoreDraft() {
 /* ================= LOAD CATEGORY OPTIONS ================= */
 async function loadCategories() {
   try {
-    const res = await fetch("http://localhost:5000/api/admin/categories");
+    const res = await fetch("https://localbasket-backend.onrender.com/api/admin/categories");
     const data = await res.json();
     const list = Array.isArray(data.categories) ? data.categories : [];
     const options = list
@@ -586,7 +586,7 @@ async function addProduct(){
       submitBtn.disabled = true;
       submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Listing...`;
     }
-    const res = await fetch("http://localhost:5000/api/seller/products", { method:"POST", body:fd });
+    const res = await fetch("https://localbasket-backend.onrender.com/api/seller/products", { method:"POST", body:fd });
     const data = await res.json();
     if(data.success){
       localStorage.removeItem(DRAFT_KEY);

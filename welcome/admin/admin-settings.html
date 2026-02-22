@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>System Settings — Local Basket Admin</title>
+ <title>System Settings â€” Local Basket Admin</title>
 
  <!-- Favicon -->
  <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99">
@@ -246,7 +246,7 @@ li{padding:6px 0;font-size:14px}
         <label>Enable Global Commission</label>
       </div>
 
-      <label>Global Commission (0–100%)</label>
+      <label>Global Commission (0â€“100%)</label>
       <input type="range" min="0" max="100" value="5" id="commissionSlider">
       <div><b id="commissionValue">5%</b></div>
 
@@ -298,7 +298,7 @@ function logout(){
 
 /* Commission preview + persistence */
 const COMMISSION_STORAGE_KEY = "lbGlobalCommission";
-const API_BASE = (localStorage.getItem("lbApiAdminBase") || "").trim() || "http://localhost:5000/api/admin";
+const API_BASE = (localStorage.getItem("lbApiAdminBase") || "").trim() || "https://localbasket-backend.onrender.com/api/admin";
 const slider=document.getElementById("commissionSlider");
 const valueText=document.getElementById("commissionValue");
 const preview=document.getElementById("previewBox");

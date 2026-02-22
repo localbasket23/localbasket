@@ -1,17 +1,17 @@
-/* ==========================================================
+﻿/* ==========================================================
    SELLER DASHBOARD LOGIC
    CLEAN  STABLE  ALL FEATURES
 ========================================================== */
 
-const API_BASE = "http://localhost:5000/api";
-const UPLOADS_BASE = "http://localhost:5000/uploads";
+const API_BASE = "https://localbasket-backend.onrender.com/api";
+const UPLOADS_BASE = "https://localbasket-backend.onrender.com/uploads";
 const REFRESH_MS = 15000;
 const GLOBAL_COMMISSION_STORAGE_KEY = "lbGlobalCommission";
 const SELLER_COMMISSION_MAP_KEY = "lbSellerCommissionMap";
 const SIDEBAR_COLLAPSE_KEY = "lbSellerSidebarCollapsed";
 const SPARK_HISTORY_KEY = "lbSellerSparkHistory";
 const ADMIN_API_BASE_CANDIDATES = [
-  "http://localhost:5000/api/admin",
+  "https://localbasket-backend.onrender.com/api/admin",
   "http://127.0.0.1:5000/api/admin"
 ];
 
@@ -228,7 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }));
     if (!safeFeedbacks.length) {
       if (el.avgRating) el.avgRating.textContent = "0.0";
-      if (el.avgStars) el.avgStars.textContent = "☆☆☆☆☆";
+      if (el.avgStars) el.avgStars.textContent = "â˜†â˜†â˜†â˜†â˜†";
       if (el.ratingCount) el.ratingCount.textContent = "0";
       [el.bar1, el.bar2, el.bar3, el.bar4, el.bar5].forEach(b => { if (b) b.style.width = "0%"; });
       el.feedbackList.innerHTML = `<div class="empty-feedback">No feedback yet</div>`;
@@ -245,7 +245,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const total = safeFeedbacks.length;
     const avg = (sum / total).toFixed(1);
     if (el.avgRating) el.avgRating.textContent = avg;
-    if (el.avgStars) el.avgStars.textContent = "★★★★★".slice(0, Math.round(avg)) + "☆☆☆☆☆".slice(0, 5 - Math.round(avg));
+    if (el.avgStars) el.avgStars.textContent = "â˜…â˜…â˜…â˜…â˜…".slice(0, Math.round(avg)) + "â˜†â˜†â˜†â˜†â˜†".slice(0, 5 - Math.round(avg));
     if (el.ratingCount) el.ratingCount.textContent = String(total);
 
     const setBar = (bar, n) => {
@@ -270,7 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <span>${new Date(f.created_at || Date.now()).toLocaleDateString("en-IN")}</span>
           <span>${Number(f.rating).toFixed(1)}</span>
         </div>
-        <div class="stars">${"★".repeat(f.rating)}${"☆".repeat(5 - f.rating)}</div>
+        <div class="stars">${"â˜…".repeat(f.rating)}${"â˜†".repeat(5 - f.rating)}</div>
         <div class="comment">${f.comment ? String(f.comment) : "No comment"}</div>
       </div>
     `).join("");

@@ -97,7 +97,7 @@ renderCart();
 
 /* ================= SAVE ORDER ================= */
 function saveOrder(orderData) {
-  fetch("http://localhost:5000/api/orders/create", {
+  fetch("https://localbasket-backend.onrender.com/api/orders/create", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(orderData)
@@ -113,12 +113,12 @@ function saveOrder(orderData) {
     localStorage.removeItem(CART_KEY);
     window.location.href = "./thankyou.html";
   })
-  .catch(() => alert("âŒ Server error"));
+  .catch(() => alert(" Server error"));
 }
 
 /* ================= RAZORPAY PAYMENT ================= */
 function startRazorpayPayment(orderData) {
-  fetch("http://localhost:5000/api/payment/create", {
+  fetch("https://localbasket-backend.onrender.com/api/payment/create", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ amount: orderData.total_amount })
@@ -237,7 +237,7 @@ async function placeOrder() {
   try {
     const storeId = Number(cart[0]?.storeId || 0);
     if (storeId) {
-      const res = await fetch(`http://localhost:5000/api/stores/${storeId}`);
+      const res = await fetch(`https://localbasket-backend.onrender.com/api/stores/${storeId}`);
       const data = await res.json();
       const minOrder = Number(data?.store?.minimum_order || 100);
       if (itemsTotal < minOrder) {

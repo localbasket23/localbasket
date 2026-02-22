@@ -1,6 +1,6 @@
 ﻿/* ================= CONFIG ================= */
-// Note: API_BASE Dashboard se match hona chahiye (http://localhost:5000/api)
-const API_BASE = "http://localhost:5000/api"; 
+// Note: API_BASE Dashboard se match hona chahiye (https://localbasket-backend.onrender.com/api)
+const API_BASE = "https://localbasket-backend.onrender.com/api"; 
 const seller = JSON.parse(localStorage.getItem("lbSeller"));
 
 if (!seller || !seller.id) {

@@ -1,4 +1,4 @@
-/* ================= AUTH ================= */
+﻿/* ================= AUTH ================= */
 const seller = JSON.parse(localStorage.getItem("lbSeller"));
 if (!seller || !seller.id) {
   window.location.href = "/welcome/seller-auth/seller-auth.html";
@@ -17,7 +17,7 @@ function toggleTheme() {
 async function loadSellerDashboard() {
   try {
     const res = await fetch(
-      `http://localhost:5000/api/seller/dashboard/${seller.id}`
+      `https://localbasket-backend.onrender.com/api/seller/dashboard/${seller.id}`
     );
     const data = await res.json();
     if (!data.success) return;
@@ -39,7 +39,7 @@ async function loadSellerDashboard() {
       data.recentOrders.forEach(o => {
         list.innerHTML += `
           <li>
-            Order #${o.id} – Rs. ${o.total}
+            Order #${o.id} â€“ Rs. ${o.total}
             <span>${o.status}</span>
           </li>`;
       });

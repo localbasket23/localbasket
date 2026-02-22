@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product Approval — Local Basket Admin</title>
+  <title>Product Approval â€” Local Basket Admin</title>
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99">
   <link rel="icon" type="image/png" sizes="32x32" href="/welcome/logo2.png?v=200">
@@ -401,7 +401,7 @@ function renderProducts(list) {
   table.innerHTML = list.map(p => `
     <tr>
       <td>
-        <img class="product-img" src="http://localhost:5000/uploads/${p.image}" onerror="this.src='https://via.placeholder.com/60'">
+        <img class="product-img" src="https://localbasket-backend.onrender.com/uploads/${p.image}" onerror="this.src='https://via.placeholder.com/60'">
       </td>
       <td style="font-weight:700;">${p.name}</td>
       <td style="color:var(--lav); font-weight:500;">${p.seller_name}</td>
@@ -424,7 +424,8 @@ function renderProducts(list) {
     mobile.innerHTML = list.map(p => `
       <div class="product-card">
         <div class="product-head">
-          <img src="http://localhost:5000/uploads/${p.image}" onerror="this.src='https://via.placeholder.com/60'">
+         <img src="https://localbasket-backend.onrender.com/uploads/${p.image}" 
+     onerror="this.src='https://via.placeholder.com/60'">
           <div>
             <div class="product-title">${p.name}</div>
             <div class="product-meta">${p.seller_name}</div>
@@ -466,7 +467,9 @@ async function loadProducts() {
   table.innerHTML = `<tr><td colspan="8" style="padding:40px;">Fetching pending products...</td></tr>`;
 
   try {
-    const res = await fetch("http://localhost:5000/api/admin/products/pending");
+   const res = await fetch(
+  "https://localbasket-backend.onrender.com/api/admin/products/pending"
+);
     const data = await res.json();
 
     if (!data.success || data.products.length === 0) {
@@ -499,11 +502,14 @@ async function updateStatus(id, status, isMobile = false) {
   if (!confirm(`Are you sure you want to ${status.toLowerCase()} this product?`)) return;
 
   try {
-    const res = await fetch("http://localhost:5000/api/admin/product/status", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ productId: id, status, reason })
-    });
+    const res = await fetch(
+  "https://localbasket-backend.onrender.com/api/admin/product/status",
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ productId: id, status, reason })
+  }
+);
     const d = await res.json();
     alert(d.message || "Status Updated Successfully");
     loadProducts(); // Refresh

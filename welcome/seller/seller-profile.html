@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seller Profile — Local Basket</title>
+  <title>Seller Profile â€” Local Basket</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="seller-dashboard.css">
@@ -134,7 +134,7 @@
   <div class="top-bar">
     <div class="shop-info">
       <div class="text-info">
-        <h3 style="color: var(--lav); font-weight: 700;">👤 Store Profile</h3>
+        <h3 style="color: var(--lav); font-weight: 700;">ðŸ‘¤ Store Profile</h3>
         <span class="badge">Account Settings</span>
       </div>
     </div>
@@ -235,7 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("displayOwner").innerText = seller.owner_name || "Owner";
 
   previewPic.src = seller.store_photo 
-    ? "http://localhost:5000/uploads/" + seller.store_photo 
+    ? "https://localbasket-backend.onrender.com/uploads/" + seller.store_photo 
     : "https://cdn-icons-png.flaticon.com/512/9131/9131529.png";
 
   /* IMAGE PREVIEW */
@@ -257,7 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if(storeImageInput.files[0]) fd.append("store_photo", storeImageInput.files[0]);
 
     try {
-      const res = await fetch("http://localhost:5000/api/seller/update-profile", { method:"POST", body:fd });
+      const res = await fetch("https://localbasket-backend.onrender.com/api/seller/update-profile", { method:"POST", body:fd });
       const data = await res.json();
       if(data.success) {
         Object.assign(seller, {
@@ -280,7 +280,7 @@ document.addEventListener("DOMContentLoaded", () => {
   removeImageBtn.onclick = async () => {
     if(!confirm("Remove store image?")) return;
     try {
-      const res = await fetch("http://localhost:5000/api/seller/remove-store-image", {
+      const res = await fetch("https://localbasket-backend.onrender.com/api/seller/remove-store-image", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({ seller_id:seller.id })

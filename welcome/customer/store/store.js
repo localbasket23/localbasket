@@ -1,10 +1,10 @@
-/* =====================================================
+﻿/* =====================================================
    LOCALBASKET  STORE ENGINE (CUSTOMER)
 ===================================================== */
 
 const CONFIG = {
-  API_URL: "http://localhost:5000/api",
-  IMAGE_URL: "http://localhost:5000/uploads/",
+  API_URL: "https://localbasket-backend.onrender.com/api",
+  IMAGE_URL: "https://localbasket-backend.onrender.com/uploads/",
   DEFAULT_IMG: "https://placehold.co/200?text=No+Image"
 };
 
@@ -364,7 +364,7 @@ function getProductRating(p) {
 function renderStars(rating) {
   const rounded = Math.max(0, Math.min(5, Number(rating) || 0));
   const full = Math.round(rounded);
-  return "★★★★★☆☆☆☆☆".slice(5 - full, 10 - full);
+  return "â˜…â˜…â˜…â˜…â˜…â˜†â˜†â˜†â˜†â˜†".slice(5 - full, 10 - full);
 }
 
 function getProductImages(product) {

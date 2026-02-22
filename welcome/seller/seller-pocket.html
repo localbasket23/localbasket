@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seller Pocket — Local Basket</title>
+  <title>Seller Pocket â€” Local Basket</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="seller-dashboard.css">
@@ -93,7 +93,7 @@
   <div class="top-bar">
     <div class="shop-info">
       <div class="text-info">
-        <h3 style="color: var(--lav); font-weight: 700; margin:0;">💰 Pocket & Earnings</h3>
+        <h3 style="color: var(--lav); font-weight: 700; margin:0;">ðŸ’° Pocket & Earnings</h3>
         <span class="badge" id="syncStatus">Live Data Syncing...</span>
       </div>
     </div>
@@ -194,11 +194,11 @@ if (!seller || !seller.id) {
 }
 
 /* ================= CONFIG ================= */
-const API_URL = `http://localhost:5000/api/orders/seller/${seller.id}`;
+const API_URL = `https://localbasket-backend.onrender.com/api/orders/seller/${seller.id}`;
 const GLOBAL_COMMISSION_STORAGE_KEY = "lbGlobalCommission";
 const SELLER_COMMISSION_MAP_KEY = "lbSellerCommissionMap";
 const ADMIN_API_BASE_CANDIDATES = [
-  "http://localhost:5000/api/admin",
+  "https://localbasket-backend.onrender.com/api/admin",
   "http://127.0.0.1:5000/api/admin"
 ];
 let runtimeCommissionPercent = null;
@@ -261,7 +261,7 @@ async function fetchSellerCommissionFromAdminApi() {
 }
 
 /* ================= DEMO EARNING CALC ================= */
-/* (No real settlement, no wallet logic — demo only) */
+/* (No real settlement, no wallet logic â€” demo only) */
 function calculateSellerEarning(order) {
   const total = Number(order?.total_amount || 0);
   if (!total || isNaN(total)) return 0;

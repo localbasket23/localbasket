@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -362,7 +362,7 @@ function toggleMenu(){
 }
 
 async function loadDashboard() {
-  const API_BASE = "http://localhost:5000/api/admin";
+  const API_BASE = "https://localbasket-backend.onrender.com/api/admin";
 
   try {
     const res = await fetch(`${API_BASE}/dashboard`);

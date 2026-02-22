@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin — Payments | Local Basket</title>
+  <title>Admin â€” Payments | Local Basket</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99">
@@ -470,7 +470,7 @@
       }
     }
 
-    const API = "http://localhost:5000/api/admin";
+    const API = "https://localbasket-backend.onrender.com/api/admin";
     const state = { payments: [], filtered: [], showPendingOnly: true };
 
     function resolvePassbookUrl(src) {
@@ -479,7 +479,7 @@
       if (/^https?:\/\//i.test(raw) || raw.startsWith("data:")) return raw;
       const normalized = raw.replace(/\\/g, "/").replace(/^\/+/, "");
       const withoutUploads = normalized.replace(/^uploads\/+/i, "");
-      return `http://localhost:5000/uploads/${withoutUploads}`;
+      return `https://localbasket-backend.onrender.com/uploads/${withoutUploads}`;
     }
 
     function hasValidBank(p) {
@@ -572,7 +572,7 @@
               </div>
               <div class="pay-row">
                 <span>Bank</span>
-                <span>${p.bank_holder || "N/A"} · ${maskAccount(p.bank_account)}</span>
+                <span>${p.bank_holder || "N/A"} Â· ${maskAccount(p.bank_account)}</span>
               </div>
               <div class="pay-row">
                 <span>IFSC</span>

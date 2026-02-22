@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:5000/api";
+﻿const API_BASE = "https://localbasket-backend.onrender.com/api";
 
 const form = document.getElementById("resubmitForm");
 const submitBtn = document.getElementById("submitBtn");

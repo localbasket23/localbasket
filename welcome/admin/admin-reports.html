@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin — Full Report | Local Basket</title>
+  <title>Admin â€” Full Report | Local Basket</title>
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99">
   <link rel="icon" type="image/png" sizes="32x32" href="/welcome/logo2.png?v=200">
@@ -349,7 +349,7 @@
   const isLikelyStaticPreview = ["null", "file:"].includes(String(window.location.origin));
   const API_BASE_CANDIDATES = Array.from(new Set([
     (localStorage.getItem("lbApiAdminBase") || "").trim(),
-    "http://localhost:5000/api/admin",
+    "https://localbasket-backend.onrender.com/api/admin",
     "http://127.0.0.1:5000/api/admin",
     ...(!isLikelyStaticPreview ? [`${window.location.origin}/api/admin`] : [])
   ].filter(Boolean)));
