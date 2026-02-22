@@ -351,7 +351,8 @@ exports.login = async (req, res) => {
         category: seller.category,
         pincode: seller.pincode,
         store_photo: seller.store_photo,
-        is_online: seller.is_online
+        is_online: seller.is_online,
+        minimum_order: Number(seller.minimum_order || 100)
       }
     });
 
@@ -581,6 +582,140 @@ exports.updateStatus = (req, res) => {
       res.json({ success: true, message: "Status updated successfully" });
     }
   );
+};
+
+/* =====================================================
+   SELLER PROFILE UPDATE
+===================================================== */
+exports.updateProfile = async (req, res) => {
+  try {
+    const sellerId = Number(req.body.seller_id);
+    if (!sellerId) {
+      return res.status(400).json({ success: false, message: "Seller ID missing" });
+    }
+
+    const {
+      owner_name,
+      store_name,
+      phone,
+      email,
+      address
+    } = req.body;
+    const minOrderRaw = req.body.minimum_order;
+    const minimumOrder =
+      minOrderRaw === undefined || minOrderRaw === null || String(minOrderRaw).trim() === ""
+        ? null
+        : Number(minOrderRaw);
+
+    if (minimumOrder !== null && (!Number.isFinite(minimumOrder) || minimumOrder < 0)) {
+      return res.status(400).json({
+        success: false,
+        message: "Minimum order must be a valid amount"
+      });
+    }
+
+    const normalizedPhone = String(phone || "").trim();
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    if (normalizedPhone) {
+      const [dupRows] = await query(
+        "SELECT id FROM sellers WHERE phone = ? AND id <> ? LIMIT 1",
+        [normalizedPhone, sellerId]
+      );
+      if (dupRows.length) {
+        return res.status(409).json({
+          success: false,
+          message: "Phone already used by another seller"
+        });
+      }
+    }
+    if (normalizedEmail) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(normalizedEmail)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid email format"
+        });
+      }
+      const [dupEmail] = await query(
+        "SELECT id FROM sellers WHERE email = ? AND id <> ? LIMIT 1",
+        [normalizedEmail, sellerId]
+      );
+      if (dupEmail.length) {
+        return res.status(409).json({
+          success: false,
+          message: "Email already used by another seller"
+        });
+      }
+    }
+
+    const storePhoto = getUploadedFile(req, "store_photo")?.filename || null;
+    const columns = await getSellerColumns();
+    const data = pickColumns(columns, {
+      owner_name: owner_name || null,
+      store_name: store_name || null,
+      phone: normalizedPhone || null,
+      email: normalizedEmail || null,
+      address: address || null,
+      store_photo: storePhoto,
+      minimum_order: minimumOrder === null ? null : Number(minimumOrder.toFixed(2))
+    });
+
+    const keys = Object.keys(data);
+    if (!keys.length) {
+      return res.status(400).json({ success: false, message: "No profile fields to update" });
+    }
+
+    const setSql = keys.map((k) => `${k} = COALESCE(?, ${k})`).join(", ");
+    const sql = `UPDATE sellers SET ${setSql} WHERE id = ?`;
+    const values = keys.map((k) => data[k]).concat([sellerId]);
+    const [result] = await query(sql, values);
+
+    if (!result.affectedRows) {
+      return res.status(404).json({ success: false, message: "Seller not found" });
+    }
+
+    const [rows] = await query(
+      "SELECT store_photo, minimum_order, email FROM sellers WHERE id = ? LIMIT 1",
+      [sellerId]
+    );
+    const row = rows[0] || {};
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      store_photo: row.store_photo || null,
+      minimum_order: Number(row.minimum_order || 100),
+      email: row.email || null
+    });
+  } catch (err) {
+    console.error("❌ SELLER UPDATE PROFILE ERROR:", err.sqlMessage || err.message || err);
+    res.status(500).json({ success: false, message: "Profile update failed" });
+  }
+};
+
+/* =====================================================
+   SELLER REMOVE STORE IMAGE
+===================================================== */
+exports.removeStoreImage = async (req, res) => {
+  try {
+    const sellerId = Number(req.body.seller_id);
+    if (!sellerId) {
+      return res.status(400).json({ success: false, message: "Seller ID missing" });
+    }
+
+    const [result] = await query(
+      "UPDATE sellers SET store_photo = NULL WHERE id = ?",
+      [sellerId]
+    );
+    if (!result.affectedRows) {
+      return res.status(404).json({ success: false, message: "Seller not found" });
+    }
+
+    res.json({ success: true, message: "Store image removed" });
+  } catch (err) {
+    console.error("❌ SELLER REMOVE IMAGE ERROR:", err.sqlMessage || err.message || err);
+    res.status(500).json({ success: false, message: "Failed to remove image" });
+  }
 };
 
 /* =====================================================

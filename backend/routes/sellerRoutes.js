@@ -14,7 +14,9 @@ const {
   addProduct,
   getMyProducts,
   getDashboard,
-  updateStatus
+  updateStatus,
+  updateProfile,
+  removeStoreImage
 } = sellerController;
 
 /* =====================================================
@@ -44,6 +46,8 @@ router.put(
 
 // PUT /api/seller/status
 router.put("/status", updateStatus);
+router.post("/update-profile", upload.any(), updateProfile);
+router.post("/remove-store-image", removeStoreImage);
 
 /* =====================================================
    3️⃣ PRODUCT MANAGEMENT
@@ -338,6 +342,34 @@ router.put("/orders/:orderId/status", (req, res) => {
     });
     }
   );
+});
+
+// GET /api/seller/feedback/:sellerId
+router.get("/feedback/:sellerId", (req, res) => {
+  const sellerId = Number(req.params.sellerId);
+  if (!sellerId) {
+    return res.status(400).json({ success: false, feedback: [], message: "Invalid seller id" });
+  }
+
+  const sql = `
+    SELECT
+      sr.rating,
+      sr.comment,
+      sr.created_at
+    FROM store_ratings sr
+    INNER JOIN orders o ON o.id = sr.order_id
+    WHERE o.seller_id = ?
+    ORDER BY sr.created_at DESC
+    LIMIT 100
+  `;
+
+  db.query(sql, [sellerId], (err, rows) => {
+    if (err) {
+      console.error("❌ SELLER FEEDBACK ERROR:", err.sqlMessage || err.message);
+      return res.status(500).json({ success: false, feedback: [], message: "Database error" });
+    }
+    res.json({ success: true, feedback: rows || [] });
+  });
 });
 
 /* =====================================================

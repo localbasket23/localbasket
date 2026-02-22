@@ -16,6 +16,7 @@ db.connect((err) => {
     initProductReviewsTable();
     initProductsMrp();
     initProductsDescription();
+    initSellersMinimumOrder();
   }
 });
 
@@ -109,6 +110,31 @@ function initProductReviewsTable() {
     if (err) {
       console.error("product_reviews init failed:", err.sqlMessage || err.message);
     }
+  });
+}
+
+function initSellersMinimumOrder() {
+  const checkSql = `
+    SELECT COUNT(*) AS cnt
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'sellers'
+      AND COLUMN_NAME = 'minimum_order'
+  `;
+  db.query(checkSql, (err, rows) => {
+    if (err) {
+      console.error("minimum_order column check failed:", err.sqlMessage || err.message);
+      return;
+    }
+    const exists = rows && rows[0] && Number(rows[0].cnt) > 0;
+    if (exists) return;
+
+    const sql = `ALTER TABLE sellers ADD COLUMN minimum_order DECIMAL(10,2) NOT NULL DEFAULT 100.00`;
+    db.query(sql, (err2) => {
+      if (err2) {
+        console.error("minimum_order column add failed:", err2.sqlMessage || err2.message);
+      }
+    });
   });
 }
 module.exports = db;
