@@ -44,7 +44,7 @@ app.use(express.urlencoded({ extended: true }));
 /* =====================================================
    STATIC FILES — PUBLIC (FRONTEND)
 ===================================================== */
-const publicDir = path.join(__dirname, "..", "frontend");
+const publicDir = path.join(__dirname, "..");
 app.use(express.static(publicDir));
 
 /* =====================================================
