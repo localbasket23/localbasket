@@ -42,12 +42,6 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 /* =====================================================
-   STATIC FILES — PUBLIC (FRONTEND)
-===================================================== */
-const publicDir = path.join(__dirname, "..");
-app.use(express.static(publicDir));
-
-/* =====================================================
    STATIC FILES — UPLOADS
 ===================================================== */
 const uploadDir = path.join(__dirname, "uploads");
@@ -88,7 +82,10 @@ app.use("/api/payment", paymentRoutes);
    ROOT ROUTE
 ===================================================== */
 app.get("/", (req, res) => {
-  res.sendFile(path.join(publicDir, "index.html"));
+  res.json({
+    success: true,
+    message: "LocalBasket Backend Running 🚀"
+  });
 });
 
 /* =====================================================
@@ -99,21 +96,6 @@ app.use("/api", (req, res) => {
     success: false,
     message: "API route not found"
   });
-});
-
-/* =====================================================
-   FRONTEND FALLBACK
-===================================================== */
-app.get("*", (req, res) => {
-  // Avoid path.join swallowing publicDir when req.path is absolute (starts with "/")
-  const safePath = req.path.replace(/^\/+/, "");
-  const filePath = path.join(publicDir, safePath);
-
-  if (fs.existsSync(filePath)) {
-    return res.sendFile(filePath);
-  }
-
-  res.status(404).send("Page Not Found");
 });
 
 /* =====================================================
