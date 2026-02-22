@@ -154,6 +154,36 @@ const initIncludes = async () => {
     });
   }
 
+  const quickPinForm = document.getElementById("lbQuickPinForm");
+  if (quickPinForm) {
+    const quickPinInput = document.getElementById("lbQuickPinInput");
+    const quickPinMsg = document.getElementById("lbQuickPinMsg");
+    const savedPin = localStorage.getItem("lbQuickPin");
+    if (quickPinInput && savedPin) quickPinInput.value = savedPin;
+
+    const setQuickPinMsg = (text, state) => {
+      if (!quickPinMsg) return;
+      quickPinMsg.textContent = text;
+      quickPinMsg.dataset.state = state || "";
+    };
+
+    quickPinForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const rawPin = String(quickPinInput?.value || "").trim();
+      const pin = rawPin.replace(/\D/g, "");
+      if (!/^\d{6}$/.test(pin)) {
+        setQuickPinMsg("Enter a valid 6-digit pincode.", "error");
+        if (quickPinInput) quickPinInput.focus();
+        return;
+      }
+      if (quickPinInput) quickPinInput.value = pin;
+      localStorage.setItem("lbQuickPin", pin);
+      const slowZone = pin.startsWith("8") || pin.startsWith("9");
+      const eta = slowZone ? "45-70 mins" : "20-40 mins";
+      setQuickPinMsg(`Great news! Delivery available in ${eta} for ${pin}.`, "success");
+    });
+  }
+
   const RUPEE = "\u20B9";
 
   const ensureCartDrawer = () => {
@@ -293,14 +323,23 @@ const initIncludes = async () => {
   if (mobileLocBtn) mobileLocBtn.addEventListener("click", openLocation);
   const footerLocBtn = document.getElementById("lbFooterLocBtn");
   if (footerLocBtn) footerLocBtn.addEventListener("click", openLocation);
+  const footerSellerBtn = document.getElementById("lbFooterSellerBtn");
+  if (footerSellerBtn) {
+    footerSellerBtn.addEventListener("click", () => {
+      window.location.href = welcomePath("seller/seller-auth/seller-auth.html");
+    });
+  }
 
   const footerTopBtn = document.getElementById("lbFooterTopBtn");
   if (footerTopBtn) {
-    const toggleFooterTopBtn = () => {
-      footerTopBtn.classList.toggle("is-visible", window.scrollY > 260);
-    };
-    toggleFooterTopBtn();
-    window.addEventListener("scroll", toggleFooterTopBtn, { passive: true });
+    const isInlineTopBtn = footerTopBtn.dataset.mode === "inline";
+    if (!isInlineTopBtn) {
+      const toggleFooterTopBtn = () => {
+        footerTopBtn.classList.toggle("is-visible", window.scrollY > 260);
+      };
+      toggleFooterTopBtn();
+      window.addEventListener("scroll", toggleFooterTopBtn, { passive: true });
+    }
     footerTopBtn.addEventListener("click", () => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     });

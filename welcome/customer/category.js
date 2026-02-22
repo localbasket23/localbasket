@@ -159,10 +159,10 @@ const getStoreRating = (store) => {
 const renderStars = (value) => {
   const full = Math.floor(value);
   const hasHalf = value - full >= 0.5;
-  return "â˜…â˜…â˜…â˜…â˜…".split("").map((_, i) => {
-    if (i < full) return "â˜…";
-    if (i === full && hasHalf) return "â˜…";
-    return "â˜†";
+  return Array.from({ length: 5 }).map((_, i) => {
+    if (i < full) return "\u2605";
+    if (i === full && hasHalf) return "\u2605";
+    return "\u2606";
   }).join("");
 };
 

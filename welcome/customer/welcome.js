@@ -1058,10 +1058,10 @@ function getStoreRating(store) {
 function renderStars(value) {
     const full = Math.floor(value);
     const hasHalf = value - full >= 0.5;
-    let stars = "â˜…â˜…â˜…â˜…â˜…".split("").map((s, i) => {
-        if (i < full) return "â˜…";
-        if (i === full && hasHalf) return "â˜…";
-        return "â˜†";
+    let stars = Array.from({ length: 5 }).map((_, i) => {
+        if (i < full) return "\u2605";
+        if (i === full && hasHalf) return "\u2605";
+        return "\u2606";
     });
     return stars.join("");
 }

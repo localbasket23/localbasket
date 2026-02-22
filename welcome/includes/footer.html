@@ -9,9 +9,6 @@
         <p>Your neighborhood, digitalized. Order fresh groceries from trusted local stores.</p>
 
         <div class="footer-social">
-          <a href="#" aria-label="Website">
-            <span aria-hidden="true">WEB</span>
-          </a>
           <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
             <span aria-hidden="true">IG</span>
           </a>
@@ -21,23 +18,58 @@
           <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
             <span aria-hidden="true">IN</span>
           </a>
+          <a href="mailto:support@localbasket.shop" aria-label="Mail">
+            <span aria-hidden="true">Mail</span>
+          </a>
+        </div>
+
+        <div class="footer-quick-check">
+          <p class="quick-check-title">Quick Delivery Check</p>
+          <form class="quick-check-form" id="lbQuickPinForm">
+            <input type="text" id="lbQuickPinInput" inputmode="numeric" maxlength="6" placeholder="Enter pincode" autocomplete="postal-code" />
+            <button type="submit">Check</button>
+          </form>
+          <p class="quick-check-msg" id="lbQuickPinMsg" aria-live="polite"></p>
         </div>
       </div>
 
       <div class="footer-col">
-        <h4>Company</h4>
-        <a href="#">About Us</a>
-        <a href="#">Careers</a>
-        <a href="#">Blog</a>
-        <a href="#">Press</a>
+        <h4>Quick Links</h4>
+        <a href="#" data-lb-href="customer/index.html">Home</a>
+        <a href="#" data-lb-href="customer/category.html">Browse Categories</a>
+        <a href="#" data-lb-href="customer/order/customer-orders.html">My Orders</a>
+        <a href="#" data-lb-href="customer/profile/profile.html">My Profile</a>
       </div>
 
-      <div class="footer-col">
+      <div class="footer-col footer-seller">
+        <span class="seller-kicker">For Shop Owners</span>
+        <h4>Become a LocalBasket Seller</h4>
+        <p class="seller-copy">Grow your shop with daily nearby orders, zero app setup headache, and faster repeat customers.</p>
+        <div class="seller-points">
+          <span>Fast onboarding</span>
+          <span>Local reach boost</span>
+          <span>Direct payouts</span>
+        </div>
+        <div class="seller-cta-row">
+          <a href="#" class="seller-cta primary" data-lb-href="seller/seller-auth/seller-auth.html">Start Selling</a>
+          <a href="#" class="seller-cta" data-lb-href="seller/seller-auth/seller-auth.html">Seller Login</a>
+        </div>
+      </div>
+
+      <div class="footer-col footer-support">
         <h4>Support</h4>
         <a href="#" data-lb-href="customer/support/support.html">Help Center</a>
         <a href="#">Privacy Policy</a>
         <a href="#">Terms of Service</a>
         <a href="#">Refund Policy</a>
+      </div>
+
+      <div class="footer-col footer-support-mobile">
+        <h4>Support</h4>
+        <a href="#" data-lb-href="customer/support/support.html">Help Center</a>
+        <a href="tel:+919999999999">Call Support</a>
+        <a href="mailto:support@localbasket.shop">Email Us</a>
+        <a href="#">Track Issue</a>
       </div>
 
       <div class="footer-news">
@@ -53,9 +85,11 @@
     <div class="footer-bottom-pro">
       <div class="footer-bottom-row">
         <span>&copy; <span id="lbFooterYear"></span> LocalBasket &bull; Built in India</span>
+        <div class="footer-bottom-actions">
+          <button type="button" id="lbFooterSellerBtn" aria-label="Sell on LocalBasket">Sell on LocalBasket</button>
+        </div>
       </div>
     </div>
-    <button type="button" id="lbFooterTopBtn" class="footer-top-fab" aria-label="Back to top">&#8593;</button>
   </div>
 </footer>
 

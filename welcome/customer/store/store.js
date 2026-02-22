@@ -364,7 +364,7 @@ function getProductRating(p) {
 function renderStars(rating) {
   const rounded = Math.max(0, Math.min(5, Number(rating) || 0));
   const full = Math.round(rounded);
-  return "â˜…â˜…â˜…â˜…â˜…â˜†â˜†â˜†â˜†â˜†".slice(5 - full, 10 - full);
+  return "\u2605".repeat(full) + "\u2606".repeat(5 - full);
 }
 
 function getProductImages(product) {
