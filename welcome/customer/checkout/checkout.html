@@ -316,7 +316,7 @@
           <span id="grandTotal">Rs. 0</span>
         </div>
 
-        <button class="checkout-btn" onclick="placeOrder()">Place Order</button>
+        <button id="checkoutActionBtn" class="checkout-btn" onclick="placeOrder()">Place Order</button>
       </aside>
     </section>
   </main>
@@ -334,8 +334,11 @@
     </div>
   </div>
 
+  <script>
+    window.LB_BRAND_LOGO_URL = "https://localbasket.co.in/welcome/logo2.png";
+  </script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-  <script src="checkout.js"></script>
+  <script src="checkout.js?v=20260224-logo"></script>
   <script src="/welcome/includes/include.js"></script>
 </body>
 </html>

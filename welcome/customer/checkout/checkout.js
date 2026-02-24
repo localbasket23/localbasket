@@ -30,7 +30,67 @@ const itemsTotalEl  = document.getElementById("itemsTotal");
 const deliveryFeeEl = document.getElementById("deliveryFee");
 const gstFeeEl      = document.getElementById("gstFee");
 const grandTotalEl  = document.getElementById("grandTotal");
+const checkoutActionBtn = document.getElementById("checkoutActionBtn");
 const GST_RATE = 0.05;
+const LOCAL_API_BASES = [
+  "http://localhost:5000",
+  "http://127.0.0.1:5000"
+];
+const FALLBACK_API_BASE = "https://localbasket-backend.onrender.com";
+
+function getApiBases() {
+  const bases = [];
+  const byWindow = typeof window !== "undefined" ? window.LB_API_BASE : null;
+  const byStorage = localStorage.getItem("lbApiBase");
+  const byOrigin =
+    typeof window !== "undefined" &&
+    window.location &&
+    /^https?:\/\//i.test(window.location.origin)
+      ? window.location.origin
+      : null;
+
+  [byWindow, byStorage, byOrigin, ...LOCAL_API_BASES, FALLBACK_API_BASE].forEach((base) => {
+    if (!base || typeof base !== "string") return;
+    const clean = base.trim().replace(/\/+$/, "");
+    if (!clean || bases.includes(clean)) return;
+    bases.push(clean);
+  });
+
+  return bases;
+}
+
+async function fetchJsonWithFallback(path, options = {}) {
+  const bases = getApiBases();
+  let lastError = "Unknown network error";
+
+  for (const base of bases) {
+    try {
+      const res = await fetch(`${base}${path}`, options);
+      const text = await res.text();
+      let data = null;
+
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        data = null;
+      }
+
+      if (!res.ok) {
+        lastError =
+          (data && data.message) ||
+          (data && data.error) ||
+          `HTTP ${res.status}`;
+        continue;
+      }
+
+      return data || {};
+    } catch (err) {
+      lastError = err && err.message ? err.message : "Network request failed";
+    }
+  }
+
+  throw new Error(lastError);
+}
 
 /* ================= AUTO FILL USER ================= */
 const nameInput  = document.getElementById("name");
@@ -38,6 +98,19 @@ const phoneInput = document.getElementById("phone");
 
 if (nameInput)  nameInput.value  = user.name  || "";
 if (phoneInput) phoneInput.value = user.phone || "";
+
+function syncCheckoutButtonText() {
+  const paymentEl = document.getElementById("payment");
+  if (!checkoutActionBtn || !paymentEl) return;
+  checkoutActionBtn.textContent =
+    paymentEl.value === "ONLINE" ? "Proceed to Pay" : "Place Order";
+}
+
+const paymentSelect = document.getElementById("payment");
+if (paymentSelect) {
+  paymentSelect.addEventListener("change", syncCheckoutButtonText);
+}
+syncCheckoutButtonText();
 
 /* ================= ADDRESS AUTO SAVE ================= */
 ["address", "area", "pincode"].forEach(id => {
@@ -96,45 +169,67 @@ function renderCart() {
 renderCart();
 
 /* ================= SAVE ORDER ================= */
-function saveOrder(orderData) {
-  fetch("https://localbasket-backend.onrender.com/api/orders/create", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(orderData)
-  })
-  .then(res => res.json())
-  .then(data => {
+async function saveOrder(orderData) {
+  try {
+    const data = await fetchJsonWithFallback("/api/orders/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(orderData)
+    });
+
     if (!data.success) {
-      alert("âŒ Order failed");
+      alert(`Order failed: ${data.message || "Unable to save order"}`);
       return;
     }
 
-    /* âœ… CLEAR CART */
     localStorage.removeItem(CART_KEY);
     window.location.href = "./thankyou.html";
-  })
-  .catch(() => alert(" Server error"));
+  } catch (err) {
+    alert(`Server error: ${err && err.message ? err.message : "Unknown error"}`);
+  }
 }
 
 /* ================= RAZORPAY PAYMENT ================= */
 function startRazorpayPayment(orderData) {
-  fetch("https://localbasket-backend.onrender.com/api/payment/create", {
+  const DEFAULT_PUBLIC_LOGO = "https://localbasket.co.in/welcome/logo2.png";
+  const brandLogo = (() => {
+    const configured =
+      (typeof window !== "undefined" && window.LB_BRAND_LOGO_URL) ||
+      localStorage.getItem("lbBrandLogoUrl");
+    if (configured) return configured;
+    return DEFAULT_PUBLIC_LOGO;
+  })();
+
+  const payload = {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ amount: orderData.total_amount })
-  })
-  .then(res => res.json())
-  .then(rpOrder => {
-    if (!rpOrder || !rpOrder.id) {
-      alert("âŒ Payment init failed");
+  };
+
+  fetchJsonWithFallback("/api/payment/create-order", payload)
+  .catch(() => fetchJsonWithFallback("/api/payment/create", payload))
+  .then((rpOrder) => {
+    if (!rpOrder || rpOrder.success === false) {
+      alert(`Payment init failed: ${rpOrder?.message || "Unknown error"}`);
+      return;
+    }
+
+    if (!rpOrder.id || !rpOrder.key_id) {
+      alert("Payment init failed: Invalid order response");
+      return;
+    }
+
+    if (typeof Razorpay === "undefined") {
+      alert("Payment SDK failed to load. Please refresh and try again.");
       return;
     }
 
     const options = {
-      key: "rzp_test_S00oIIfqinUdN2",
+      key: rpOrder.key_id,
       amount: rpOrder.amount,
       currency: "INR",
       name: "Local Basket",
+      image: brandLogo,
       description: "Order Payment",
       order_id: rpOrder.id,
       handler: response => {
@@ -151,7 +246,7 @@ function startRazorpayPayment(orderData) {
 
     new Razorpay(options).open();
   })
-  .catch(() => alert("âŒ Payment error"));
+  .catch((err) => alert(`Payment init failed: ${err?.message || "Network error"}`));
 }
 
 
@@ -237,8 +332,7 @@ async function placeOrder() {
   try {
     const storeId = Number(cart[0]?.storeId || 0);
     if (storeId) {
-      const res = await fetch(`https://localbasket-backend.onrender.com/api/stores/${storeId}`);
-      const data = await res.json();
+      const data = await fetchJsonWithFallback(`/api/stores/${storeId}`);
       const minOrder = Number(data?.store?.minimum_order || 100);
       if (itemsTotal < minOrder) {
         alert(`âŒ Minimum order is Rs. ${minOrder}. Please add more items.`);
