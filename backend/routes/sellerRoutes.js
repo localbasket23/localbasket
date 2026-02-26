@@ -36,6 +36,10 @@ router.post(
 router.post("/login", login);
 router.post("/login-otp/request", requestLoginOtp);
 router.post("/login-otp/verify", verifyLoginOtp);
+router.post("/request-otp", requestLoginOtp);
+router.post("/otp/request", requestLoginOtp);
+router.post("/verify-otp", verifyLoginOtp);
+router.post("/otp/verify", verifyLoginOtp);
 
 // RESUBMIT AFTER REJECTION
 router.put(

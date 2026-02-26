@@ -78,6 +78,26 @@ app.use("/api/location", locationRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payment", paymentRoutes);
 
+app.get("/api", (req, res) => {
+  res.json({
+    success: true,
+    message: "LocalBasket API base",
+    endpoints: {
+      health: "/health",
+      customer: [
+        "POST /api/customer/login",
+        "POST /api/customer/login-otp/request",
+        "POST /api/customer/login-otp/verify"
+      ],
+      seller: [
+        "POST /api/seller/login",
+        "POST /api/seller/login-otp/request",
+        "POST /api/seller/login-otp/verify"
+      ]
+    }
+  });
+});
+
 /* =====================================================
    ROOT ROUTE
 ===================================================== */
