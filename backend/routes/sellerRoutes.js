@@ -10,6 +10,8 @@ const sellerController = require("../controllers/sellerController");
 const {
   register,
   login,
+  requestLoginOtp,
+  verifyLoginOtp,
   resubmit,
   addProduct,
   getMyProducts,
@@ -32,6 +34,8 @@ router.post(
 
 // LOGIN SELLER
 router.post("/login", login);
+router.post("/login-otp/request", requestLoginOtp);
+router.post("/login-otp/verify", verifyLoginOtp);
 
 // RESUBMIT AFTER REJECTION
 router.put(

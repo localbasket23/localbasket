@@ -59,6 +59,7 @@ const state = {
         pincode: localStorage.getItem("lbPin") || null
     },
     authMode: "login",
+    authUseOtp: false,
     token: localStorage.getItem("lbToken") || null,
     stores: [],
     activeCategory: "all",
@@ -92,6 +93,10 @@ const dom = {
     registerFields: () => getEl("registerFields"),
     authPhone: () => getEl("authPhone"),
     authPassword: () => getEl("authPassword"),
+    authOtp: () => getEl("authOtp"),
+    authOtpRow: () => getEl("authOtpRow"),
+    authUseOtpBtn: () => getEl("authUseOtpBtn"),
+    authRequestOtpBtn: () => getEl("authRequestOtpBtn"),
     cartDrawer: () => getEl("cartDrawer"),
     cartOverlay: () => getEl("cartOverlay"),
     cartItems: () => getEl("cartItems"),
@@ -393,6 +398,7 @@ function updateAuthUI() {
 
 function switchTab(mode) {
     state.authMode = mode;
+    state.authUseOtp = false;
     const tabs = document.querySelectorAll(".auth-tab-btn");
     const regFields = dom.registerFields();
 
@@ -405,6 +411,7 @@ function switchTab(mode) {
         tabs[0]?.classList.add("active");
         if (regFields) regFields.style.display = "none";
     }
+    updateOtpAuthUI();
 }
 
 function openAuth() {
@@ -414,16 +421,80 @@ function openAuth() {
     overlay.style.display = "flex";
 }
 
+function updateOtpAuthUI() {
+    const isOtp = state.authMode === "login" && state.authUseOtp;
+    const otpRow = dom.authOtpRow();
+    const otpInput = dom.authOtp();
+    const passInput = dom.authPassword();
+    const otpToggleBtn = dom.authUseOtpBtn();
+
+    if (otpRow) otpRow.classList.toggle("active", isOtp);
+    if (otpInput) {
+        otpInput.required = isOtp;
+        if (!isOtp) otpInput.value = "";
+    }
+    if (passInput) {
+        passInput.style.display = isOtp ? "none" : "block";
+        passInput.required = state.authMode === "login" && !isOtp;
+        if (isOtp) passInput.value = "";
+    }
+    if (otpToggleBtn) {
+        otpToggleBtn.style.display = state.authMode === "login" ? "block" : "none";
+        otpToggleBtn.textContent = isOtp ? "Back to Password Login" : "Forgot password? Login with OTP";
+    }
+}
+
+function toggleOtpLogin() {
+    if (state.authMode !== "login") return;
+    state.authUseOtp = !state.authUseOtp;
+    updateOtpAuthUI();
+}
+
+async function requestCustomerOtp() {
+    if (state.authMode !== "login") return;
+    const identifier = String(dom.authPhone()?.value || "").trim();
+    if (!identifier) return alert("Enter phone/email first");
+
+    const btn = dom.authRequestOtpBtn();
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = "Sending...";
+    }
+    try {
+        const res = await fetch(`${CONFIG.API_BASE}/customer/login-otp/request`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ identifier })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.message || "OTP send failed");
+        const otpText = data.dev_otp ? ` OTP: ${data.dev_otp}` : "";
+        alert(`OTP sent successfully.${otpText}`);
+    } catch (err) {
+        alert(`Error: ${err.message}`);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.textContent = "Send OTP";
+        }
+    }
+}
+
 async function submitAuth() {
     const phone = dom.authPhone()?.value.trim();
     const password = dom.authPassword()?.value.trim();
+    const otp = dom.authOtp()?.value.trim();
 
-    if (!phone || !password) return alert("Enter credentials");
+    if (!phone) return alert("Enter phone/email");
+    if (state.authMode === "login" && !state.authUseOtp && !password) return alert("Enter password");
+    if (state.authMode === "login" && state.authUseOtp && !otp) return alert("Enter OTP");
 
-    const endpoint = state.authMode === "login" ? "/customer/login" : "/customer/register";
+    const endpoint = state.authMode === "login"
+        ? (state.authUseOtp ? "/customer/login-otp/verify" : "/customer/login")
+        : "/customer/register";
     
     const payload = state.authMode === "login" 
-        ? { identifier: phone, password } 
+        ? (state.authUseOtp ? { identifier: phone, otp } : { identifier: phone, password })
         : { 
             name: getEl("regName")?.value.trim(),
             phone,
@@ -1282,7 +1353,7 @@ function updateQty(id, change) {
 
 /* ============ 7. GLOBAL EXPORTS ============ */
 Object.assign(window, {
-    switchTab, submitAuth, openAuth, logoutUser, 
+    switchTab, submitAuth, openAuth, logoutUser, toggleOtpLogin, requestCustomerOtp,
     searchByPincode, toggleCart, getLocation, openStore, toggleTopPick,
     openCategoryPage: () => window.location.href = welcomePath("customer/category.html"),
     viewProfile: () => window.location.href = welcomePath("customer/profile/profile.html"),

@@ -84,7 +84,10 @@
 
     <div class="footer-bottom-pro">
       <div class="footer-bottom-row">
-        <span>&copy; <span id="lbFooterYear"></span> LocalBasket &bull; Built in India</span>
+        <span>
+          <button type="button" class="lb-admin-trigger" id="lbAdminLoginBtn">Admin Login</button>
+          &copy; <span id="lbFooterYear"></span> LocalBasket &bull; Built in India
+        </span>
         <div class="footer-bottom-actions">
           <button type="button" id="lbFooterSellerBtn" aria-label="Sell on LocalBasket">Sell on LocalBasket</button>
         </div>
@@ -92,6 +95,19 @@
     </div>
   </div>
 </footer>
+
+<div class="lb-admin-popup-overlay" id="lbAdminPopupOverlay" hidden>
+  <div class="lb-admin-popup" role="dialog" aria-modal="true" aria-labelledby="lbAdminPopupTitle">
+    <button type="button" class="lb-admin-popup-close" id="lbAdminPopupClose" aria-label="Close">&times;</button>
+    <h3 id="lbAdminPopupTitle">Admin Login</h3>
+    <form id="lbAdminPopupForm">
+      <input type="text" id="lbAdminUser" placeholder="Admin ID" autocomplete="username" required>
+      <input type="password" id="lbAdminPass" placeholder="Password" autocomplete="current-password" required>
+      <p class="lb-admin-popup-error" id="lbAdminPopupError" aria-live="polite"></p>
+      <button type="submit" class="lb-admin-popup-submit">Login</button>
+    </form>
+  </div>
+</div>
 
 <nav class="lb-bottom-nav" aria-label="Bottom Navigation">
   <button class="lb-nav-item" data-nav="home" type="button">

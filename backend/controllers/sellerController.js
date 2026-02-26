@@ -4,6 +4,8 @@ const dbp = db.promise();
 const query = dbp.query.bind(dbp);
 let sellerColumnsCache = null;
 let productColumnsCache = null;
+const OTP_EXPIRY_MS = 5 * 60 * 1000;
+const sellerOtpStore = new Map();
 
 const getSellerColumns = async () => {
   if (sellerColumnsCache) return sellerColumnsCache;
@@ -117,6 +119,100 @@ const isFullAddress = (value) => {
   const hasNumber = /\d/.test(text);
   const wordCount = text.split(/\s+/).filter(Boolean).length;
   return hasNumber && wordCount >= 5;
+};
+
+const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000));
+const sellerOtpKey = (phone) => String(phone || "").trim();
+
+const issueSellerOtp = (phone) => {
+  const key = sellerOtpKey(phone);
+  const otp = generateOtp();
+  sellerOtpStore.set(key, {
+    otp,
+    expiresAt: Date.now() + OTP_EXPIRY_MS
+  });
+  return otp;
+};
+
+const verifySellerOtp = (phone, otp) => {
+  const key = sellerOtpKey(phone);
+  const rec = sellerOtpStore.get(key);
+  if (!rec) return { ok: false, message: "OTP not requested" };
+  if (Date.now() > rec.expiresAt) {
+    sellerOtpStore.delete(key);
+    return { ok: false, message: "OTP expired. Please request again." };
+  }
+  if (String(rec.otp) !== String(otp || "").trim()) {
+    return { ok: false, message: "Invalid OTP" };
+  }
+  sellerOtpStore.delete(key);
+  return { ok: true };
+};
+
+const fetchSellerByPhone = async (phone) => {
+  const [rows] = await query(
+    `SELECT s.*, c.name AS category
+     FROM sellers s
+     JOIN categories c ON s.category_id = c.id
+     WHERE s.phone=? LIMIT 1`,
+    [phone]
+  );
+  return rows[0] || null;
+};
+
+const buildSellerLoginPayload = (seller) => {
+  if (!seller) {
+    return {
+      statusCode: 401,
+      payload: { success: false, message: "Invalid credentials" }
+    };
+  }
+
+  if (seller.account_status === "BLOCKED") {
+    return {
+      statusCode: 403,
+      payload: { success: false, message: "Your account is blocked by admin" }
+    };
+  }
+
+  if (seller.status !== "APPROVED") {
+    return {
+      statusCode: 200,
+      payload: {
+        success: true,
+        status: seller.status,
+        seller: {
+          id: seller.id,
+          store_name: seller.store_name,
+          owner_name: seller.owner_name,
+          phone: seller.phone,
+          address: seller.address,
+          category: seller.category,
+          reject_reason: seller.reject_reason
+        }
+      }
+    };
+  }
+
+  return {
+    statusCode: 200,
+    payload: {
+      success: true,
+      status: "APPROVED",
+      seller: {
+        id: seller.id,
+        store_name: seller.store_name,
+        owner_name: seller.owner_name,
+        email: seller.email,
+        phone: seller.phone,
+        category: seller.category,
+        pincode: seller.pincode,
+        store_photo: seller.store_photo,
+        is_online: seller.is_online,
+        minimum_order: Number(seller.minimum_order || 100)
+      }
+    }
+  };
 };
 
 /* =====================================================
@@ -291,22 +387,13 @@ exports.login = async (req, res) => {
       });
     }
 
-    const [rows] = await query(
-      `SELECT s.*, c.name AS category
-       FROM sellers s
-       JOIN categories c ON s.category_id = c.id
-       WHERE s.phone=? LIMIT 1`,
-      [phone]
-    );
-
-    if (rows.length === 0) {
+    const seller = await fetchSellerByPhone(phone);
+    if (!seller) {
       return res.status(401).json({
         success: false,
         message: "Invalid credentials"
       });
     }
-
-    const seller = rows[0];
 
     const match = await bcrypt.compare(password, seller.password);
     if (!match) {
@@ -316,49 +403,94 @@ exports.login = async (req, res) => {
       });
     }
 
-    if (seller.account_status === "BLOCKED") {
-      return res.status(403).json({
+    const out = buildSellerLoginPayload(seller);
+    return res.status(out.statusCode).json(out.payload);
+
+  } catch (err) {
+    console.error("SELLER LOGIN ERROR:", err);
+    res.status(500).json({ success: false });
+  }
+};
+
+/* =====================================================
+   REQUEST SELLER OTP LOGIN
+   POST /api/seller/login-otp/request
+===================================================== */
+exports.requestLoginOtp = async (req, res) => {
+  try {
+    const phone = String(req.body.phone || "").trim();
+    if (!/^[0-9]{10}$/.test(phone)) {
+      return res.status(400).json({
         success: false,
-        message: "Your account is blocked by admin"
+        message: "Enter valid 10-digit mobile number"
       });
     }
 
-    if (seller.status !== "APPROVED") {
-      return res.json({
-        success: true,
-        status: seller.status,
-        seller: {
-          id: seller.id,
-          store_name: seller.store_name,
-          owner_name: seller.owner_name,
-          phone: seller.phone,
-          address: seller.address,
-          category: seller.category,
-          reject_reason: seller.reject_reason
-        }
+    const seller = await fetchSellerByPhone(phone);
+    if (!seller) {
+      return res.status(404).json({
+        success: false,
+        message: "Seller account not found"
       });
     }
+
+    const otp = issueSellerOtp(phone);
+    console.log(`SELLER OTP (${phone}): ${otp}`);
 
     res.json({
       success: true,
-      status: "APPROVED",
-      seller: {
-        id: seller.id,
-        store_name: seller.store_name,
-        owner_name: seller.owner_name,
-        email: seller.email,
-        phone: seller.phone,
-        category: seller.category,
-        pincode: seller.pincode,
-        store_photo: seller.store_photo,
-        is_online: seller.is_online,
-        minimum_order: Number(seller.minimum_order || 100)
-      }
+      message: "OTP sent successfully",
+      dev_otp: otp
     });
-
   } catch (err) {
-    console.error("❌ SELLER LOGIN ERROR:", err);
-    res.status(500).json({ success: false });
+    console.error("SELLER OTP REQUEST ERROR:", err);
+    res.status(500).json({
+      success: false,
+      message: "Unable to send OTP"
+    });
+  }
+};
+
+/* =====================================================
+   VERIFY SELLER OTP LOGIN
+   POST /api/seller/login-otp/verify
+===================================================== */
+exports.verifyLoginOtp = async (req, res) => {
+  try {
+    const phone = String(req.body.phone || "").trim();
+    const otp = String(req.body.otp || "").trim();
+
+    if (!phone || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone and OTP are required"
+      });
+    }
+
+    const seller = await fetchSellerByPhone(phone);
+    if (!seller) {
+      return res.status(404).json({
+        success: false,
+        message: "Seller account not found"
+      });
+    }
+
+    const check = verifySellerOtp(phone, otp);
+    if (!check.ok) {
+      return res.status(401).json({
+        success: false,
+        message: check.message
+      });
+    }
+
+    const out = buildSellerLoginPayload(seller);
+    return res.status(out.statusCode).json(out.payload);
+  } catch (err) {
+    console.error("SELLER OTP VERIFY ERROR:", err);
+    res.status(500).json({
+      success: false,
+      message: "OTP login failed"
+    });
   }
 };
 
@@ -787,4 +919,5 @@ exports.getDashboard = async (req, res) => {
     });
   }
 };
+
 

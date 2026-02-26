@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product Approval â€” Local Basket Admin</title>
+  <title>Product Approval — Local Basket Admin</title>
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="/welcome/logo2.png?v=99">
   <link rel="icon" type="image/png" sizes="32x32" href="/welcome/logo2.png?v=200">
@@ -401,7 +401,9 @@ function renderProducts(list) {
   table.innerHTML = list.map(p => `
     <tr>
       <td>
-        <img class="product-img" src="https://localbasket-backend.onrender.com/uploads/${p.image}" onerror="this.src='https://via.placeholder.com/60'">
+       <img class="product-img" 
+     src="https://localbasket-backend.onrender.com/uploads/${p.image}" 
+     onerror="this.src='https://via.placeholder.com/60'">
       </td>
       <td style="font-weight:700;">${p.name}</td>
       <td style="color:var(--lav); font-weight:500;">${p.seller_name}</td>

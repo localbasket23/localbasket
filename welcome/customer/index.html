@@ -1254,6 +1254,44 @@
             cursor: pointer; margin-top: 10px; transition: var(--anim-fast);
         }
         .btn-auth:hover { background: var(--primary-dark); }
+        .auth-link-btn {
+            width: 100%;
+            border: none;
+            background: none;
+            color: var(--primary);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            text-align: right;
+            margin: 2px 0 6px;
+        }
+        .auth-link-btn:hover { text-decoration: underline; }
+        .auth-otp-row {
+            display: none;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .auth-otp-row.active {
+            display: flex;
+            align-items: center;
+        }
+        .auth-otp-row input {
+            margin-bottom: 0;
+            flex: 1;
+        }
+        .auth-otp-row button {
+            width: auto;
+            height: 44px;
+            margin-top: 0;
+            border-radius: 12px;
+            border: none;
+            background: var(--primary-soft);
+            color: var(--primary);
+            font-weight: 700;
+            padding: 0 12px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
 
         /* Location Modal Styles */
         .modal-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -1745,16 +1783,21 @@
         <button class="auth-tab-btn active" onclick="switchTab('login')">Login</button>
         <button class="auth-tab-btn" onclick="switchTab('register')">Sign Up</button>
       </div>
-      <div class="form-group">
-        <div id="registerFields" style="display: none;">
-          <input type="text" id="regName" placeholder="Full Name">
-          <input type="email" id="regEmail" placeholder="Email Address">
+        <div class="form-group">
+          <div id="registerFields" style="display: none;">
+            <input type="text" id="regName" placeholder="Full Name">
+            <input type="email" id="regEmail" placeholder="Email Address">
+          </div>
+          <input type="number" id="authPhone" placeholder="Phone Number">
+          <input type="password" id="authPassword" placeholder="Password">
+          <button type="button" class="auth-link-btn" id="authUseOtpBtn" onclick="toggleOtpLogin()">Forgot password? Login with OTP</button>
+          <div class="auth-otp-row" id="authOtpRow">
+            <input type="number" id="authOtp" placeholder="Enter OTP">
+            <button type="button" id="authRequestOtpBtn" onclick="requestCustomerOtp()">Send OTP</button>
+          </div>
+          <button class="btn-auth" onclick="submitAuth()">Continue</button>
+          <button onclick="document.getElementById('authOverlay').style.display='none'" style="width:100%; border:none; background:none; margin-top:15px; color:var(--slate); cursor:pointer; font-weight: 600;">Cancel</button>
         </div>
-        <input type="number" id="authPhone" placeholder="Phone Number">
-        <input type="password" id="authPassword" placeholder="Password">
-        <button class="btn-auth" onclick="submitAuth()">Continue</button>
-        <button onclick="document.getElementById('authOverlay').style.display='none'" style="width:100%; border:none; background:none; margin-top:15px; color:var(--slate); cursor:pointer; font-weight: 600;">Cancel</button>
-      </div>
     </div>
   </div>
 

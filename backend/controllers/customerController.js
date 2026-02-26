@@ -7,6 +7,8 @@ const query = util.promisify(db.query).bind(db);
 
 const JWT_SECRET = process.env.JWT_SECRET || "localbasket_dev_secret";
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+const OTP_EXPIRY_MS = 5 * 60 * 1000;
+const customerOtpStore = new Map();
 
 const signToken = (customer) => {
   return jwt.sign(
@@ -14,6 +16,34 @@ const signToken = (customer) => {
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );
+};
+
+const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000));
+const otpKey = (identifier) => String(identifier || "").trim().toLowerCase();
+
+const issueCustomerOtp = (identifier) => {
+  const key = otpKey(identifier);
+  const otp = generateOtp();
+  customerOtpStore.set(key, {
+    otp,
+    expiresAt: Date.now() + OTP_EXPIRY_MS
+  });
+  return otp;
+};
+
+const verifyCustomerOtp = (identifier, otp) => {
+  const key = otpKey(identifier);
+  const rec = customerOtpStore.get(key);
+  if (!rec) return { ok: false, message: "OTP not requested" };
+  if (Date.now() > rec.expiresAt) {
+    customerOtpStore.delete(key);
+    return { ok: false, message: "OTP expired. Please request again." };
+  }
+  if (String(rec.otp) !== String(otp || "").trim()) {
+    return { ok: false, message: "Invalid OTP" };
+  }
+  customerOtpStore.delete(key);
+  return { ok: true };
 };
 
 /* =====================================================
@@ -142,6 +172,117 @@ exports.login = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Login failed"
+    });
+  }
+};
+
+/* =====================================================
+   REQUEST CUSTOMER OTP LOGIN
+   POST /api/customer/login-otp/request
+===================================================== */
+exports.requestLoginOtp = async (req, res) => {
+  try {
+    const identifier = String(req.body.identifier || req.body.phone || req.body.email || "").trim();
+    if (!identifier) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone or email is required"
+      });
+    }
+
+    const rows = await query(
+      `SELECT id, phone, email
+       FROM customers
+       WHERE email = ? OR phone = ?
+       LIMIT 1`,
+      [identifier, identifier]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer account not found"
+      });
+    }
+
+    const customer = rows[0];
+    const target = customer.phone || customer.email;
+    const otp = issueCustomerOtp(target);
+    console.log(`CUSTOMER OTP (${target}): ${otp}`);
+
+    res.json({
+      success: true,
+      message: "OTP sent successfully",
+      dev_otp: otp
+    });
+  } catch (err) {
+    console.error("CUSTOMER OTP REQUEST ERROR:", err);
+    res.status(500).json({
+      success: false,
+      message: "Unable to send OTP"
+    });
+  }
+};
+
+/* =====================================================
+   VERIFY CUSTOMER OTP LOGIN
+   POST /api/customer/login-otp/verify
+===================================================== */
+exports.verifyLoginOtp = async (req, res) => {
+  try {
+    const identifier = String(req.body.identifier || req.body.phone || req.body.email || "").trim();
+    const otp = String(req.body.otp || "").trim();
+
+    if (!identifier || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Identifier and OTP are required"
+      });
+    }
+
+    const rows = await query(
+      `SELECT id, name, email, phone
+       FROM customers
+       WHERE email = ? OR phone = ?
+       LIMIT 1`,
+      [identifier, identifier]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer account not found"
+      });
+    }
+
+    const customer = rows[0];
+    const check = verifyCustomerOtp(customer.phone || customer.email, otp);
+    if (!check.ok) {
+      return res.status(401).json({
+        success: false,
+        message: check.message
+      });
+    }
+
+    const user = {
+      id: customer.id,
+      name: customer.name,
+      email: customer.email,
+      phone: customer.phone
+    };
+    const token = signToken(user);
+
+    res.json({
+      success: true,
+      message: "OTP login successful",
+      token,
+      user
+    });
+  } catch (err) {
+    console.error("CUSTOMER OTP VERIFY ERROR:", err);
+    res.status(500).json({
+      success: false,
+      message: "OTP login failed"
     });
   }
 };

@@ -330,6 +330,57 @@ const initIncludes = async () => {
     });
   }
 
+  const adminLoginBtn = document.getElementById("lbAdminLoginBtn");
+  const adminPopupOverlay = document.getElementById("lbAdminPopupOverlay");
+  const adminPopupClose = document.getElementById("lbAdminPopupClose");
+  const adminPopupForm = document.getElementById("lbAdminPopupForm");
+  const adminUserInput = document.getElementById("lbAdminUser");
+  const adminPassInput = document.getElementById("lbAdminPass");
+  const adminPopupError = document.getElementById("lbAdminPopupError");
+  const openAdminPopup = () => {
+    if (!adminPopupOverlay) return;
+    adminPopupOverlay.hidden = false;
+    if (adminPopupError) adminPopupError.textContent = "";
+    if (adminPopupForm) adminPopupForm.reset();
+    if (adminUserInput) adminUserInput.focus();
+    document.body.style.overflow = "hidden";
+  };
+  const closeAdminPopup = () => {
+    if (!adminPopupOverlay) return;
+    adminPopupOverlay.hidden = true;
+    if (adminPopupError) adminPopupError.textContent = "";
+    document.body.style.overflow = "";
+  };
+  if (adminLoginBtn) {
+    adminLoginBtn.addEventListener("click", openAdminPopup);
+  }
+  if (adminPopupClose) {
+    adminPopupClose.addEventListener("click", closeAdminPopup);
+  }
+  if (adminPopupOverlay) {
+    adminPopupOverlay.addEventListener("click", (e) => {
+      if (e.target === adminPopupOverlay) closeAdminPopup();
+    });
+  }
+  if (adminPopupForm) {
+    adminPopupForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const userId = String(adminUserInput?.value || "").trim();
+      const pass = String(adminPassInput?.value || "").trim();
+      if (userId === "shubham" && pass === "1234") {
+        closeAdminPopup();
+        window.location.href = welcomePath("admin/admin.html");
+        return;
+      }
+      if (adminPopupError) adminPopupError.textContent = "Invalid ID or password.";
+    });
+  }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && adminPopupOverlay && !adminPopupOverlay.hidden) {
+      closeAdminPopup();
+    }
+  });
+
   const footerTopBtn = document.getElementById("lbFooterTopBtn");
   if (footerTopBtn) {
     const isInlineTopBtn = footerTopBtn.dataset.mode === "inline";

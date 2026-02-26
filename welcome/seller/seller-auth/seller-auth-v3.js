@@ -5,6 +5,7 @@ let isResubmit = false;
 let resubmitSellerId = null;
 let lastLoginSeller = null;
 let rejectedKeys = [];
+let isOtpLogin = false;
 
 const getReadableRejectReason = (rejectReasonRaw) => {
   if (!rejectReasonRaw) return "Please update the highlighted details.";
@@ -61,6 +62,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const prevStepBtn = document.getElementById("prevStepBtn");
   const reviewBox = document.getElementById("reviewBox");
   const loginFields = document.getElementById("loginFields");
+  const sellerUseOtpBtn = document.getElementById("sellerUseOtpBtn");
+  const sellerOtpRow = document.getElementById("sellerOtpRow");
+  const sellerRequestOtpBtn = document.getElementById("sellerRequestOtpBtn");
 
   const inputs = {
     ownerName: document.getElementById("ownerName"),
@@ -70,6 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
     password: document.getElementById("password"),
     loginPhone: document.getElementById("loginPhone"),
     loginPassword: document.getElementById("loginPassword"),
+    sellerOtp: document.getElementById("sellerOtp"),
     pincode: document.getElementById("pincode"),
     altPhone: document.getElementById("altPhone"),
     ownerId: document.getElementById("ownerId"),
@@ -189,8 +194,31 @@ document.addEventListener("DOMContentLoaded", () => {
         inputs.loginPassword.disabled = false;
         inputs.loginPassword.required = true;
       }
+      setOtpLogin(false);
     }
     resetForm();
+  };
+
+  const setOtpLogin = (enable) => {
+    isOtpLogin = !!enable;
+    if (sellerOtpRow) sellerOtpRow.classList.toggle("active", isOtpLogin);
+    if (sellerUseOtpBtn) {
+      sellerUseOtpBtn.textContent = isOtpLogin
+        ? "Back to Password Login"
+        : "Forgot password? Login with OTP";
+      sellerUseOtpBtn.style.display = isRegister ? "none" : "block";
+    }
+    if (inputs.loginPassword) {
+      inputs.loginPassword.disabled = isOtpLogin;
+      inputs.loginPassword.required = !isOtpLogin;
+      inputs.loginPassword.closest(".input-wrapper").style.display = isOtpLogin ? "none" : "block";
+      if (isOtpLogin) inputs.loginPassword.value = "";
+    }
+    if (inputs.sellerOtp) {
+      inputs.sellerOtp.required = isOtpLogin;
+      inputs.sellerOtp.disabled = !isOtpLogin;
+      if (!isOtpLogin) inputs.sellerOtp.value = "";
+    }
   };
 
   const toggleRegisterFields = (enable) => {
@@ -259,7 +287,11 @@ document.addEventListener("DOMContentLoaded", () => {
           await registerSeller();
         }
       } else {
-        await loginSeller();
+        if (isOtpLogin) {
+          await loginSellerWithOtp();
+        } else {
+          await loginSeller();
+        }
       }
     } catch (err) {
       showToast("Error", err.message || "Server error", "error");
@@ -269,6 +301,42 @@ document.addEventListener("DOMContentLoaded", () => {
       submitBtn.textContent = isRegister ? "Register & Continue" : "Login to Dashboard";
     }
   });
+
+  if (sellerUseOtpBtn) {
+    sellerUseOtpBtn.addEventListener("click", () => {
+      if (isRegister) return;
+      setOtpLogin(!isOtpLogin);
+      setMessage("");
+    });
+  }
+
+  if (sellerRequestOtpBtn) {
+    sellerRequestOtpBtn.addEventListener("click", async () => {
+      const phone = String(inputs.loginPhone?.value || "").trim();
+      if (!/^[0-9]{10}$/.test(phone)) {
+        setMessage("Enter valid 10-digit mobile number", "#ef4444");
+        return;
+      }
+      sellerRequestOtpBtn.disabled = true;
+      sellerRequestOtpBtn.textContent = "Sending...";
+      try {
+        const data = await fetchJson(`${API_BASE}/seller/login-otp/request`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone })
+        });
+        const otpText = data.dev_otp ? ` OTP: ${data.dev_otp}` : "";
+        showToast("Success", `OTP sent successfully.${otpText}`);
+        setMessage("OTP sent. Enter OTP to login.", "var(--accent)");
+      } catch (err) {
+        showToast("Error", err.message || "OTP request failed", "error");
+        setMessage(err.message || "OTP request failed", "#ef4444");
+      } finally {
+        sellerRequestOtpBtn.disabled = false;
+        sellerRequestOtpBtn.textContent = "Send OTP";
+      }
+    });
+  }
 
   async function registerSeller() {
     const fd = new FormData();
@@ -378,6 +446,59 @@ document.addEventListener("DOMContentLoaded", () => {
     ).toUpperCase();
 
     // Fallback mapping for backends that only return boolean-like approval flags
+    if (!status) {
+      if (seller?.is_approved === 1 || seller?.is_approved === true || seller?.verified === 1 || seller?.verified === true) {
+        status = "APPROVED";
+      } else if (seller?.is_rejected === 1 || seller?.is_rejected === true) {
+        status = "REJECTED";
+      } else {
+        status = "PENDING";
+      }
+    }
+
+    lastLoginSeller = seller;
+
+    switch (status) {
+      case "PENDING":
+        showStatusPanel("PENDING", seller);
+        break;
+      case "REJECTED":
+        showStatusPanel("REJECTED", seller);
+        break;
+      case "APPROVED":
+        localStorage.setItem("lbSeller", JSON.stringify(seller));
+        window.location.href = "/welcome/seller/seller-dashboard.html";
+        break;
+      default:
+        throw new Error(data.message || "Unable to identify seller account status");
+    }
+  }
+
+  async function loginSellerWithOtp() {
+    const phone = String(inputs.loginPhone?.value || "").trim();
+    const otp = String(inputs.sellerOtp?.value || "").trim();
+
+    const data = await fetchJson(`${API_BASE}/seller/login-otp/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, otp })
+    });
+
+    const seller =
+      data.seller ||
+      data.user ||
+      data.data?.seller ||
+      data.data ||
+      null;
+
+    let status = String(
+      data.status ||
+      data.seller_status ||
+      data.approval_status ||
+      seller?.status ||
+      ""
+    ).toUpperCase();
+
     if (!status) {
       if (seller?.is_approved === 1 || seller?.is_approved === true || seller?.verified === 1 || seller?.verified === true) {
         status = "APPROVED";
@@ -627,8 +748,13 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!/^[0-9]{10}$/.test(sanitize(inputs.loginPhone?.value)))
         return "Enter valid 10-digit mobile number";
 
-      if (sanitize(inputs.loginPassword?.value).length < 4)
-        return "Password must be at least 4 characters";
+      if (isOtpLogin) {
+        if (!/^[0-9]{6}$/.test(sanitize(inputs.sellerOtp?.value)))
+          return "Enter valid 6-digit OTP";
+      } else {
+        if (sanitize(inputs.loginPassword?.value).length < 4)
+          return "Password must be at least 4 characters";
+      }
 
       return null;
     }
