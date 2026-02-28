@@ -10,12 +10,9 @@
     { "src": "/uploads/(.*)", "dest": "/backend/server.js" },
     { "handle": "filesystem" },
     { "src": "/", "dest": "/index.html" },
-    { "src": "/welcome/customer", "dest": "/welcome/customer/index.html" },
-    { "src": "/welcome/customer/(.*)", "dest": "/welcome/customer/index.html" },
-    { "src": "/welcome/seller", "dest": "/welcome/seller/index.html" },
-    { "src": "/welcome/seller/(.*)", "dest": "/welcome/seller/index.html" },
-    { "src": "/welcome/admin", "dest": "/welcome/admin/index.html" },
-    { "src": "/welcome/admin/(.*)", "dest": "/welcome/admin/index.html" },
+    { "src": "/welcome/customer(/.*)?", "dest": "/welcome/customer/index.html" },
+    { "src": "/welcome/seller(/.*)?", "dest": "/welcome/seller/index.html" },
+    { "src": "/welcome/admin(/.*)?", "dest": "/welcome/admin/index.html" },
     { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
