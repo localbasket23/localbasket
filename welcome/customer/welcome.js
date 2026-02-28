@@ -14,10 +14,10 @@ const hostedOrigin = window.location.origin;
 const CONFIG = {
     API_BASE: IS_LOCAL_HOST
         ? `${localApiOrigin}/api`
-        : (isVercelHost ? `${hostedOrigin}/api` : "https://localbasket-backend.onrender.com/api"),
+        : (isVercelHost ? `${hostedOrigin}/api` : "/api"),
     IMG_BASE: IS_LOCAL_HOST
         ? `${localApiOrigin}/uploads`
-        : (isVercelHost ? `${hostedOrigin}/uploads` : "https://localbasket-backend.onrender.com/uploads"),
+        : (isVercelHost ? `${hostedOrigin}/uploads` : "/uploads"),
     DEFAULT_IMG: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80"
 };
 

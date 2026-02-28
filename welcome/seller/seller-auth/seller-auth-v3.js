@@ -1,5 +1,5 @@
-﻿// ================== SELLER AUTH LOGIC ==================
-const API_BASE = "https://localbasket-backend.onrender.com/api";
+// ================== SELLER AUTH LOGIC ==================
+const API_BASE = "/api";
 let isRegister = false;
 let isResubmit = false;
 let resubmitSellerId = null;

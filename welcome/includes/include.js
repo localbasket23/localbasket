@@ -239,7 +239,7 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
   const hostedOrigin = window.location.origin;
   const API_BASE = isLocalHost
     ? `${localOrigin}/api`
-    : (isVercelHost ? `${hostedOrigin}/api` : "https://localbasket-backend.onrender.com/api");
+    : (isVercelHost ? `${hostedOrigin}/api` : "/api");
   const THEME_KEY = "lbThemeMode";
   const isMobileViewport = () =>
     !!(window.matchMedia && window.matchMedia("(max-width: 768px)").matches);

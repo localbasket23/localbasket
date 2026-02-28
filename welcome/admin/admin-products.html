@@ -402,7 +402,7 @@ function renderProducts(list) {
     <tr>
       <td>
        <img class="product-img" 
-     src="https://localbasket-backend.onrender.com/uploads/${p.image}" 
+     src="/uploads/${p.image}" 
      onerror="this.src='https://via.placeholder.com/60'">
       </td>
       <td style="font-weight:700;">${p.name}</td>
@@ -426,7 +426,7 @@ function renderProducts(list) {
     mobile.innerHTML = list.map(p => `
       <div class="product-card">
         <div class="product-head">
-         <img src="https://localbasket-backend.onrender.com/uploads/${p.image}" 
+         <img src="/uploads/${p.image}" 
      onerror="this.src='https://via.placeholder.com/60'">
           <div>
             <div class="product-title">${p.name}</div>
@@ -470,7 +470,7 @@ async function loadProducts() {
 
   try {
    const res = await fetch(
-  "https://localbasket-backend.onrender.com/api/admin/products/pending"
+  "/api/admin/products/pending"
 );
     const data = await res.json();
 
@@ -505,7 +505,7 @@ async function updateStatus(id, status, isMobile = false) {
 
   try {
     const res = await fetch(
-  "https://localbasket-backend.onrender.com/api/admin/product/status",
+  "/api/admin/product/status",
   {
     method: "POST",
     headers: { "Content-Type": "application/json" },

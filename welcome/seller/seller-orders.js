@@ -1,6 +1,6 @@
-﻿/* ================= CONFIG ================= */
-// Note: API_BASE Dashboard se match hona chahiye (https://localbasket-backend.onrender.com/api)
-const API_BASE = "https://localbasket-backend.onrender.com/api"; 
+/* ================= CONFIG ================= */
+// Note: API_BASE Dashboard se match hona chahiye (/api)
+const API_BASE = "/api"; 
 const seller = JSON.parse(localStorage.getItem("lbSeller"));
 
 if (!seller || !seller.id) {
@@ -258,7 +258,7 @@ async function fetchOrders() {
             renderOrders();
         }
     } catch (err) {
-        console.error("âŒ Fetch error:", err);
+        console.error("❌ Fetch error:", err);
     }
 }
 

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -196,12 +196,12 @@ if (!seller || !seller.id) {
 }
 
 /* ================= CONFIG ================= */
-const API_URL = `https://localbasket-backend.onrender.com/api/orders/seller/${seller.id}`;
+const API_URL = `/api/orders/seller/${seller.id}`;
 const GLOBAL_COMMISSION_STORAGE_KEY = "lbGlobalCommission";
 const SELLER_COMMISSION_MAP_KEY = "lbSellerCommissionMap";
 const ADMIN_API_BASE_CANDIDATES = [
-  "https://localbasket-backend.onrender.com/api/admin",
-  "http://127.0.0.1:5000/api/admin"
+  "/api/admin",
+  "/api/admin"
 ];
 let runtimeCommissionPercent = null;
 

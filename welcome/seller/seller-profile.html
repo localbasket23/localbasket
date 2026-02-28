@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -237,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("displayOwner").innerText = seller.owner_name || "Owner";
 
   previewPic.src = seller.store_photo 
-    ? "https://localbasket-backend.onrender.com/uploads/" + seller.store_photo 
+    ? "/uploads/" + seller.store_photo 
     : "https://cdn-icons-png.flaticon.com/512/9131/9131529.png";
 
   /* IMAGE PREVIEW */
@@ -259,7 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if(storeImageInput.files[0]) fd.append("store_photo", storeImageInput.files[0]);
 
     try {
-      const res = await fetch("https://localbasket-backend.onrender.com/api/seller/update-profile", { method:"POST", body:fd });
+      const res = await fetch("/api/seller/update-profile", { method:"POST", body:fd });
       const data = await res.json();
       if(data.success) {
         Object.assign(seller, {
@@ -282,7 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
   removeImageBtn.onclick = async () => {
     if(!confirm("Remove store image?")) return;
     try {
-      const res = await fetch("https://localbasket-backend.onrender.com/api/seller/remove-store-image", {
+      const res = await fetch("/api/seller/remove-store-image", {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({ seller_id:seller.id })

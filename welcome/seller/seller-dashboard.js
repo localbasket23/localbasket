@@ -1,18 +1,18 @@
-﻿/* ==========================================================
+/* ==========================================================
    SELLER DASHBOARD LOGIC
    CLEAN  STABLE  ALL FEATURES
 ========================================================== */
 
-const API_BASE = "https://localbasket-backend.onrender.com/api";
-const UPLOADS_BASE = "https://localbasket-backend.onrender.com/uploads";
+const API_BASE = "/api";
+const UPLOADS_BASE = "/uploads";
 const REFRESH_MS = 15000;
 const GLOBAL_COMMISSION_STORAGE_KEY = "lbGlobalCommission";
 const SELLER_COMMISSION_MAP_KEY = "lbSellerCommissionMap";
 const SIDEBAR_COLLAPSE_KEY = "lbSellerSidebarCollapsed";
 const SPARK_HISTORY_KEY = "lbSellerSparkHistory";
 const ADMIN_API_BASE_CANDIDATES = [
-  "https://localbasket-backend.onrender.com/api/admin",
-  "http://127.0.0.1:5000/api/admin"
+  "/api/admin",
+  "/api/admin"
 ];
 
 const getJson = async (url, options) => {

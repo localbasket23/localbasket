@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Add Product â€” Local Basket</title>
+  <title>Add Product — Local Basket</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="seller-dashboard.css"> <style>
@@ -514,7 +514,7 @@ function restoreDraft() {
 /* ================= LOAD CATEGORY OPTIONS ================= */
 async function loadCategories() {
   try {
-    const res = await fetch("https://localbasket-backend.onrender.com/api/admin/categories");
+    const res = await fetch("/api/admin/categories");
     const data = await res.json();
     const list = Array.isArray(data.categories) ? data.categories : [];
     const options = list
@@ -586,7 +586,7 @@ async function addProduct(){
       submitBtn.disabled = true;
       submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Listing...`;
     }
-    const res = await fetch("https://localbasket-backend.onrender.com/api/seller/products", { method:"POST", body:fd });
+    const res = await fetch("/api/seller/products", { method:"POST", body:fd });
     const data = await res.json();
     if(data.success){
       localStorage.removeItem(DRAFT_KEY);

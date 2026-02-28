@@ -36,7 +36,12 @@ const LOCAL_API_BASES = [
   "http://localhost:5000",
   "http://127.0.0.1:5000"
 ];
-const FALLBACK_API_BASE = "https://localbasket-backend.onrender.com";
+const FALLBACK_API_BASE =
+  typeof window !== "undefined" &&
+  window.location &&
+  /^https?:\/\//i.test(window.location.origin)
+    ? window.location.origin
+    : "";
 
 function getApiBases() {
   const bases = [];

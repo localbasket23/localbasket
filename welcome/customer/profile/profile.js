@@ -1,8 +1,8 @@
-﻿/* =====================================================
+/* =====================================================
    LOCALBASKET - CUSTOMER PROFILE LOGIC
 ===================================================== */
 
-const API_URL = "https://localbasket-backend.onrender.com/api";
+const API_URL = "/api";
 let currentUser = null;
 
 document.addEventListener("DOMContentLoaded", () => {

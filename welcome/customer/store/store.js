@@ -11,10 +11,10 @@ const hostedOrigin = window.location.origin;
 const CONFIG = {
   API_URL: isLocalHost
     ? `${localOrigin}/api`
-    : (isVercelHost ? `${hostedOrigin}/api` : "https://localbasket-backend.onrender.com/api"),
+    : (isVercelHost ? `${hostedOrigin}/api` : "/api"),
   IMAGE_URL: isLocalHost
     ? `${localOrigin}/uploads/`
-    : (isVercelHost ? `${hostedOrigin}/uploads/` : "https://localbasket-backend.onrender.com/uploads/"),
+    : (isVercelHost ? `${hostedOrigin}/uploads/` : "/uploads/"),
   DEFAULT_IMG: "https://placehold.co/200?text=No+Image"
 };
 
