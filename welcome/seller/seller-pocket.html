@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seller Pocket â€” Local Basket</title>
+  <title>Seller Pocket - Local Basket</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="seller-dashboard.css">
@@ -93,7 +93,9 @@
   <div class="top-bar">
     <div class="shop-info">
       <div class="text-info">
-        <h3 style="color: var(--lav); font-weight: 700; margin:0;">ðŸ’° Pocket & Earnings</h3>
+        <h3 style="color: var(--lav); font-weight: 700; margin:0;">
+          <i class="fas fa-wallet" aria-hidden="true" style="margin-right: 8px;"></i>Pocket & Earnings
+        </h3>
         <span class="badge" id="syncStatus">Live Data Syncing...</span>
       </div>
     </div>
@@ -261,7 +263,7 @@ async function fetchSellerCommissionFromAdminApi() {
 }
 
 /* ================= DEMO EARNING CALC ================= */
-/* (No real settlement, no wallet logic â€” demo only) */
+/* (No real settlement, no wallet logic - demo only) */
 function calculateSellerEarning(order) {
   const total = Number(order?.total_amount || 0);
   if (!total || isNaN(total)) return 0;

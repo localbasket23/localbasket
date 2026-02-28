@@ -881,7 +881,14 @@ function getStatusLabel(order) {
 }
 
 function getFlowLabel(step) {
-  return step === "OUT_FOR_DELIVERY" ? "OUT FOR DELIVERY" : step;
+  const flowLabels = {
+    PLACED: "Placed",
+    CONFIRMED: "Confirm",
+    PACKED: "Packed",
+    OUT_FOR_DELIVERY: "Out",
+    DELIVERED: "Done"
+  };
+  return flowLabels[step] || step;
 }
 
 function getTerminalStopIndex(order, terminalStatus) {
@@ -1054,6 +1061,33 @@ function renderFilteredOrders() {
   wrapper.innerHTML = filtered.map(renderOrderCard).join("");
 }
 
+function getOrderDomSafeKey(orderId) {
+  return String(normalizeOrderIdKey(orderId))
+    .replace(/[^a-zA-Z0-9_-]/g, "_");
+}
+
+function toggleOrderDetails(detailsId, toggleId) {
+  const detailsEl = document.getElementById(detailsId);
+  const toggleEl = document.getElementById(toggleId);
+  if (!detailsEl || !toggleEl) return;
+
+  const shouldOpen = !detailsEl.classList.contains("open");
+  document.querySelectorAll(".order-details.open").forEach(el => {
+    if (el.id !== detailsId) el.classList.remove("open");
+  });
+  document.querySelectorAll(".order-summary-btn.open").forEach(el => {
+    if (el.id !== toggleId) {
+      el.classList.remove("open");
+      el.setAttribute("aria-expanded", "false");
+    }
+  });
+
+  const isOpen = shouldOpen;
+  detailsEl.classList.toggle("open", isOpen);
+  toggleEl.classList.toggle("open", isOpen);
+  toggleEl.setAttribute("aria-expanded", isOpen ? "true" : "false");
+}
+
 /* =====================================================
    ORDER CARD TEMPLATE
 ===================================================== */
@@ -1104,17 +1138,39 @@ function renderOrderCard(order) {
   const actionInsight = getOrderActionInsight(order);
   const actionReason = actionInsight.reason;
   const actionActor = actionInsight.actor;
+  const domKey = getOrderDomSafeKey(orderId);
+  const detailsId = `orderDetails-${domKey}`;
+  const toggleId = `orderToggle-${domKey}`;
+  const safeDetailsId = JSON.stringify(detailsId);
+  const safeToggleId = JSON.stringify(toggleId);
+  const itemCount = cart.reduce((sum, item) => sum + Math.max(0, Number(item?.qty || 0)), 0);
+  const firstItem = cart[0]?.name ? String(cart[0].name) : "Items";
+  const summarySubtitle = itemCount > 0 ? `${itemCount} item${itemCount > 1 ? "s" : ""} • ${firstItem}` : "No items";
 
   return `
     <div class="order-card ${isCancelled ? "cancelled" : ""} ${isRejected ? "rejected" : ""}">
-
-      <div class="card-top">
-        <div>
-          <div class="order-id">#LB-${order.id}</div>
-          <div class="order-date">${formatDate(order.created_at)}</div>
+      <button
+        id="${toggleId}"
+        class="order-summary-btn"
+        type="button"
+        aria-expanded="false"
+        aria-controls="${detailsId}"
+        onclick='toggleOrderDetails(${safeDetailsId}, ${safeToggleId})'>
+        <div class="order-summary-main">
+          <div class="order-summary-row">
+            <div class="order-id">#LB-${order.id}</div>
+            <span class="status ${statusClass}">${displayLabel}</span>
+          </div>
+          <div class="order-summary-row">
+            <div class="order-date">${formatDate(order.created_at)} • ${escapeHtml(storeName)}</div>
+            <div class="order-summary-amount">Rs. ${order.total_amount}</div>
+          </div>
+          <div class="order-summary-sub">${escapeHtml(summarySubtitle)}</div>
         </div>
-        <span class="status ${statusClass}">${displayLabel}</span>
-      </div>
+        <span class="order-summary-chevron" aria-hidden="true">⌄</span>
+      </button>
+
+      <div id="${detailsId}" class="order-details">
 
       <div class="store-info">
         <div class="store-name">🏪 ${storeName}</div>
@@ -1141,16 +1197,17 @@ function renderOrderCard(order) {
         }
       </div>
 
-      <div class="footer">
-        <div>
+      <div class="card-footer">
+        <div class="footer-meta">
           <div class="payment">
             ${order.payment_method} • ${order.payment_status}
           </div>
           ${
             actionReason
-              ? `<div class="payment" style="color:#b91c1c; font-weight:700; margin-top:4px;">${actionActor ? `By: ${actionActor} • ` : ""}Reason: ${actionReason}</div>`
+              ? `<div class="payment payment-alert">${actionActor ? `By: ${actionActor} • ` : ""}Reason: ${actionReason}</div>`
               : ""
           }
+          <div class="amount-label">Order Total</div>
           <div class="amount">Rs. ${order.total_amount}</div>
         </div>
 
@@ -1201,6 +1258,7 @@ function renderOrderCard(order) {
             `
             : ""
         }
+      </div>
       </div>
     </div>
   `;
@@ -1711,4 +1769,3 @@ function closeTrackModal() {
   document.getElementById("trackModal")
     .classList.add("hidden");
 }
-

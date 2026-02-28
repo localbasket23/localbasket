@@ -23,6 +23,7 @@ const productRoutes  = require("./routes/productRoutes");
 const locationRoutes = require("./routes/locationRoutes");
 const orderRoutes    = require("./routes/orderRoutes");
 const paymentRoutes  = require("./routes/paymentRoutes");
+const authRoutes     = require("./routes/authRoutes");
 
 /* =====================================================
    APP INIT
@@ -77,6 +78,8 @@ app.use("/api/products", productRoutes);
 app.use("/api/location", locationRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/auth", authRoutes);
+app.use("/api/auth", authRoutes);
 
 app.get("/api", (req, res) => {
   res.json({
@@ -93,6 +96,12 @@ app.get("/api", (req, res) => {
         "POST /api/seller/login",
         "POST /api/seller/login-otp/request",
         "POST /api/seller/login-otp/verify"
+      ],
+      auth: [
+        "POST /auth/send-otp",
+        "POST /auth/verify-otp",
+        "POST /api/auth/send-otp",
+        "POST /api/auth/verify-otp"
       ]
     }
   });
@@ -137,27 +146,31 @@ app.use((err, req, res, next) => {
   });
 });
 
-/* =====================================================
-   SERVER START (🔥 MOBILE SAFE 🔥)
-===================================================== */
-const PORT = process.env.PORT || 5000;
+if (require.main === module) {
+  /* =====================================================
+     SERVER START (🔥 MOBILE SAFE 🔥)
+  ===================================================== */
+  const PORT = process.env.PORT || 5000;
 
-const server = app.listen(PORT, "0.0.0.0", () => {
-  console.log(`✅ Server running on all devices`);
-  console.log(`🌐 http://localhost:${PORT}`);
-  console.log(`🌐 http://<YOUR-IP>:${PORT}`);
-  console.log(`📌 Health Check : /health`);
-});
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log(`✅ Server running on all devices`);
+    console.log(`🌐 http://localhost:${PORT}`);
+    console.log(`🌐 http://<YOUR-IP>:${PORT}`);
+    console.log(`📌 Health Check : /health`);
+  });
 
-/* =====================================================
-   PROCESS SAFETY
-===================================================== */
-process.on("unhandledRejection", err => {
-  console.error("❌ Unhandled Promise Rejection:", err);
-  server.close(() => process.exit(1));
-});
+  /* =====================================================
+     PROCESS SAFETY
+  ===================================================== */
+  process.on("unhandledRejection", err => {
+    console.error("❌ Unhandled Promise Rejection:", err);
+    server.close(() => process.exit(1));
+  });
 
-process.on("uncaughtException", err => {
-  console.error("❌ Uncaught Exception:", err);
-  server.close(() => process.exit(1));
-});
+  process.on("uncaughtException", err => {
+    console.error("❌ Uncaught Exception:", err);
+    server.close(() => process.exit(1));
+  });
+}
+
+module.exports = app;

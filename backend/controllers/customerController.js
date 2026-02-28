@@ -2,6 +2,8 @@ const db = require("../db/connection");
 const bcrypt = require("bcrypt");
 const util = require("util");
 const jwt = require("jsonwebtoken");
+const https = require("https");
+const nodemailer = require("nodemailer");
 
 const query = util.promisify(db.query).bind(db);
 
@@ -20,6 +22,142 @@ const signToken = (customer) => {
 
 const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000));
 const otpKey = (identifier) => String(identifier || "").trim().toLowerCase();
+const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(value || "").trim().toLowerCase());
+const isPhone10 = (value) => /^[0-9]{10}$/.test(String(value || "").trim());
+const normalizeLoginIdentifier = (raw) => {
+  const input = String(raw || "").trim();
+  if (!input) return "";
+  if (isEmail(input)) return input.toLowerCase();
+  const digits = input.replace(/\D/g, "");
+  if (digits.length === 10) return digits;
+  if (digits.length === 12 && digits.startsWith("91")) return digits.slice(2);
+  return input;
+};
+const normalizeWhatsappPhone = (raw) => {
+  const digits = String(raw || "").replace(/\D/g, "");
+  if (digits.length === 10) return `91${digits}`;
+  if (digits.length === 12 && digits.startsWith("91")) return digits;
+  return null;
+};
+
+const httpsPostJson = (url, payload, headers = {}) => {
+  return new Promise((resolve, reject) => {
+    const body = JSON.stringify(payload);
+    const req = https.request(
+      url,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Content-Length": Buffer.byteLength(body),
+          ...headers
+        }
+      },
+      (res) => {
+        let data = "";
+        res.on("data", (chunk) => (data += chunk));
+        res.on("end", () => {
+          let parsed = null;
+          try {
+            parsed = data ? JSON.parse(data) : null;
+          } catch {
+            parsed = data;
+          }
+          resolve({
+            ok: res.statusCode >= 200 && res.statusCode < 300,
+            statusCode: res.statusCode,
+            body: parsed
+          });
+        });
+      }
+    );
+    req.on("error", reject);
+    req.write(body);
+    req.end();
+  });
+};
+
+const sendWhatsappOtp = async ({ phone, otp }) => {
+  const token = String(process.env.WHATSAPP_TOKEN || "").trim();
+  const phoneNumberId = String(process.env.PHONE_NUMBER_ID || "").trim();
+  const templateName = String(process.env.WHATSAPP_TEMPLATE_NAME || "").trim();
+  const templateLang = String(process.env.WHATSAPP_TEMPLATE_LANG || "en").trim();
+
+  if (!token || !phoneNumberId) {
+    return { success: false, message: "WhatsApp API config missing" };
+  }
+
+  const url = `https://graph.facebook.com/v20.0/${encodeURIComponent(phoneNumberId)}/messages`;
+  const payload = templateName
+    ? {
+        messaging_product: "whatsapp",
+        to: phone,
+        type: "template",
+        template: {
+          name: templateName,
+          language: { code: templateLang },
+          components: [
+            {
+              type: "body",
+              parameters: [{ type: "text", text: otp }]
+            }
+          ]
+        }
+      }
+    : {
+        messaging_product: "whatsapp",
+        to: phone,
+        type: "text",
+        text: { body: `Your LocalBasket OTP is ${otp}. Do not share it.` }
+      };
+
+  const res = await httpsPostJson(url, payload, {
+    Authorization: `Bearer ${token}`
+  });
+
+  if (!res.ok) {
+    return {
+      success: false,
+      message: "WhatsApp OTP delivery failed",
+      details: res.body
+    };
+  }
+
+  return { success: true };
+};
+
+const sendEmailOtp = async ({ email, otp }) => {
+  const user = String(process.env.EMAIL_USER || "localbasket.helpdesk@gmail.com").trim();
+  const pass = String(process.env.EMAIL_PASS || "").trim();
+
+  if (!user || !pass) {
+    return { success: false, message: "Email SMTP config missing" };
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: { user, pass }
+  });
+
+  try {
+    await transporter.verify();
+    await transporter.sendMail({
+      from: `"LocalBasket" <${user}>`,
+      to: email,
+      subject: "LocalBasket OTP Verification",
+      text: `Your LocalBasket OTP is ${otp}. Do not share it.`
+    });
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      message: "Email OTP delivery failed",
+      details: err.message
+    };
+  }
+};
 
 const issueCustomerOtp = (identifier) => {
   const key = otpKey(identifier);
@@ -57,10 +195,16 @@ exports.register = async (req, res) => {
     const phone = String(req.body.phone || "").trim();
     const password = String(req.body.password || "");
 
-    if (!name || !phone || !password) {
+    if (!name || !email || !phone || !password) {
       return res.status(400).json({
         success: false,
-        message: "Name, phone and password are required"
+        message: "Name, email, phone and password are required"
+      });
+    }
+    if (!isEmail(email)) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter valid email address"
       });
     }
 
@@ -76,13 +220,13 @@ exports.register = async (req, res) => {
     const result = await query(
       `INSERT INTO customers (name, email, phone, password)
        VALUES (?, ?, ?, ?)`,
-      [name, email || null, phone, hashedPassword]
+      [name, email, phone, hashedPassword]
     );
 
     const user = {
       id: result.insertId,
       name,
-      email: email || null,
+      email,
       phone
     };
 
@@ -182,11 +326,17 @@ exports.login = async (req, res) => {
 ===================================================== */
 exports.requestLoginOtp = async (req, res) => {
   try {
-    const identifier = String(req.body.identifier || req.body.phone || req.body.email || "").trim();
+    const identifier = normalizeLoginIdentifier(req.body.email || req.body.phone || req.body.identifier || "");
     if (!identifier) {
       return res.status(400).json({
         success: false,
-        message: "Phone or email is required"
+        message: "Registered email or phone is required"
+      });
+    }
+    if (!isEmail(identifier) && !isPhone10(identifier)) {
+      return res.status(400).json({
+        success: false,
+        message: "Wrong input. Enter valid registered email or phone"
       });
     }
 
@@ -201,19 +351,46 @@ exports.requestLoginOtp = async (req, res) => {
     if (!rows.length) {
       return res.status(404).json({
         success: false,
-        message: "Customer account not found"
+        message: "Wrong input. Email/phone is not registered"
       });
     }
 
     const customer = rows[0];
-    const target = customer.phone || customer.email;
-    const otp = issueCustomerOtp(target);
-    console.log(`CUSTOMER OTP (${target}): ${otp}`);
+    const targetEmail = String(customer.email || "").trim().toLowerCase();
+    if (!isEmail(targetEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Customer email missing or invalid in account"
+      });
+    }
+
+    const otp = issueCustomerOtp(targetEmail);
+    const whatsappPhone = normalizeWhatsappPhone(customer.phone);
+    const [mail, whatsapp] = await Promise.all([
+      sendEmailOtp({ email: targetEmail, otp }),
+      whatsappPhone
+        ? sendWhatsappOtp({ phone: whatsappPhone, otp })
+        : Promise.resolve({ success: false, message: "Registered phone missing or invalid" })
+    ]);
+
+    if (!mail.success) console.error("CUSTOMER EMAIL OTP FAILURE:", mail);
+    if (!whatsapp.success) console.error("CUSTOMER WHATSAPP OTP FAILURE:", whatsapp);
+
+    const sentOn = [];
+    if (mail.success) sentOn.push("email");
+    if (whatsapp.success) sentOn.push("WhatsApp");
+
+    if (!sentOn.length) {
+      return res.status(502).json({
+        success: false,
+        message: "OTP delivery failed on all channels"
+      });
+    }
 
     res.json({
       success: true,
-      message: "OTP sent successfully",
-      dev_otp: otp
+      message: `OTP sent to your registered ${sentOn.join(" and ")}`,
+      customer_id: customer.id
     });
   } catch (err) {
     console.error("CUSTOMER OTP REQUEST ERROR:", err);
@@ -230,13 +407,19 @@ exports.requestLoginOtp = async (req, res) => {
 ===================================================== */
 exports.verifyLoginOtp = async (req, res) => {
   try {
-    const identifier = String(req.body.identifier || req.body.phone || req.body.email || "").trim();
+    const identifier = normalizeLoginIdentifier(req.body.email || req.body.phone || req.body.identifier || "");
     const otp = String(req.body.otp || "").trim();
 
     if (!identifier || !otp) {
       return res.status(400).json({
         success: false,
-        message: "Identifier and OTP are required"
+        message: "Registered email/phone and OTP are required"
+      });
+    }
+    if (!isEmail(identifier) && !isPhone10(identifier)) {
+      return res.status(400).json({
+        success: false,
+        message: "Wrong input. Enter valid registered email or phone"
       });
     }
 
@@ -256,7 +439,7 @@ exports.verifyLoginOtp = async (req, res) => {
     }
 
     const customer = rows[0];
-    const check = verifyCustomerOtp(customer.phone || customer.email, otp);
+    const check = verifyCustomerOtp(customer.email, otp);
     if (!check.ok) {
       return res.status(401).json({
         success: false,

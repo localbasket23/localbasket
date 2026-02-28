@@ -1,10 +1,23 @@
-﻿/******************************************************
- * LOCALBASKET â€” FULL ENGINE (V2 OPTIMIZED)
+/******************************************************
+ * LOCALBASKET — FULL ENGINE (V2 OPTIMIZED)
  ******************************************************/
 
+const host = String(window.location.hostname || "").trim();
+const isPrivateLanHost = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(host);
+const isVercelHost = host.endsWith(".vercel.app");
+const IS_LOCAL_HOST =
+    ["localhost", "127.0.0.1"].includes(host) ||
+    isPrivateLanHost ||
+    window.location.protocol === "file:";
+const localApiOrigin = window.location.protocol === "file:" ? "http://localhost:5000" : `${window.location.protocol}//${host}:5000`;
+const hostedOrigin = window.location.origin;
 const CONFIG = {
-    API_BASE: "https://localbasket-backend.onrender.com/api",
-    IMG_BASE: "https://localbasket-backend.onrender.com/uploads",
+    API_BASE: IS_LOCAL_HOST
+        ? `${localApiOrigin}/api`
+        : (isVercelHost ? `${hostedOrigin}/api` : "https://localbasket-backend.onrender.com/api"),
+    IMG_BASE: IS_LOCAL_HOST
+        ? `${localApiOrigin}/uploads`
+        : (isVercelHost ? `${hostedOrigin}/uploads` : "https://localbasket-backend.onrender.com/uploads"),
     DEFAULT_IMG: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80"
 };
 
@@ -23,6 +36,30 @@ const safeParse = (value, fallback = null) => {
     } catch {
         return fallback;
     }
+};
+
+const resolveImageUrl = (rawPath) => {
+    const input = String(rawPath || "").trim();
+    if (!input) return CONFIG.DEFAULT_IMG;
+    if (/^(https?:)?\/\//i.test(input) || input.startsWith("data:") || input.startsWith("blob:")) {
+        return input;
+    }
+
+    const imgBase = String(CONFIG.IMG_BASE || "").replace(/\/+$/, "");
+    let path = input.replace(/\\/g, "/").trim();
+
+    if (path.startsWith("/uploads/")) path = path.slice("/uploads/".length);
+    else if (path.startsWith("uploads/")) path = path.slice("uploads/".length);
+    else if (path.startsWith("/")) return `${window.location.origin}${path}`;
+
+    return `${imgBase}/${encodeURI(path.replace(/^\/+/, ""))}`;
+};
+
+const pickProductImage = (item) => {
+    if (!item || typeof item !== "object") return CONFIG.DEFAULT_IMG;
+    const images = Array.isArray(item.images) ? item.images : [];
+    const candidate = item.image || images[0] || "";
+    return resolveImageUrl(candidate);
 };
 
 /* ============ CART KEY (PER USER) ============ */
@@ -75,6 +112,13 @@ const state = {
     topProducts: [],
     topPicks: safeParse(localStorage.getItem("lbTopPicks"), [])
 };
+const AUTO_LOCATION_SESSION_KEY = "lbAutoLocAttempted";
+const AUTO_LOCATION_FRESH_MS = 30 * 60 * 1000;
+const LOCATION_CACHE_KEY = "lbLocGeoCacheV1";
+const LOCATION_CACHE_TTL_MS = 12 * 60 * 1000;
+const LOCATION_LOOKUP_TIMEOUT_MS = 7000;
+let locationMap = null;
+let locationMarker = null;
 
 /* ============ 2. DOM SELECTORS ============ */
 const getEl = (id) => document.getElementById(id);
@@ -145,9 +189,12 @@ function initApp() {
     updateCartUI();
     updateLocationUI();
     applyViewMode(state.viewMode);
+    updateMobileSortButtons();
     updateHeroInsights();
     updateStoreMeta(0, "Enter your pincode to start browsing");
     hydrateLocationStatus();
+    enrichAddressFromSavedCoords().catch(() => {});
+    initLocationMap();
     renderRecentStores();
     loadCategories();
 
@@ -158,6 +205,46 @@ function initApp() {
             showPincodeRequired();
         }
     }
+    setTimeout(() => {
+        autoDetectLocationOnLoad().catch(() => {});
+    }, 260);
+}
+
+function isLocationModalVisible() {
+    const modal = dom.locModal();
+    if (!modal) return false;
+    return getComputedStyle(modal).display !== "none";
+}
+
+function syncLocationMapSize() {
+    if (!(locationMap && typeof locationMap.invalidateSize === "function")) return;
+    const redrawTiles = () => {
+        if (!locationMap || typeof locationMap.eachLayer !== "function") return;
+        locationMap.eachLayer((layer) => {
+            if (layer && typeof layer.redraw === "function") {
+                try { layer.redraw(); } catch {}
+            }
+        });
+    };
+    const run = () => {
+        const mapEl = dom.mapFrame();
+        if (mapEl && (mapEl.offsetWidth < 40 || mapEl.offsetHeight < 40)) return;
+        locationMap.invalidateSize({ pan: false, animate: false });
+        redrawTiles();
+        if (locationMarker && typeof locationMarker.getLatLng === "function") {
+            const p = locationMarker.getLatLng();
+            locationMap.setView([p.lat, p.lng], locationMap.getZoom() || 13, { animate: false });
+        }
+    };
+    [0, 90, 220, 420, 700].forEach((ms) => setTimeout(run, ms));
+}
+
+function updateMobileSortButtons() {
+    const row = getEl("mobileSortRow");
+    if (!row) return;
+    row.querySelectorAll(".mobile-sort-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.getAttribute("data-sort") === state.storeSort);
+    });
 }
 
 function setupEventListeners() {
@@ -194,6 +281,36 @@ function setupEventListeners() {
     const improveBtn = dom.improveLocBtn();
     if (improveBtn) {
         improveBtn.addEventListener("click", () => getLocation(true));
+    }
+    const useSavedLocBtn = getEl("useSavedLocBtn");
+    if (useSavedLocBtn) {
+        const hasSavedPin = /^[0-9]{6}$/.test(String(localStorage.getItem("lbPin") || ""));
+        useSavedLocBtn.disabled = !hasSavedPin;
+        useSavedLocBtn.addEventListener("click", useSavedLocation);
+    }
+    const useDroppedPinBtn = getEl("useDroppedPinBtn");
+    if (useDroppedPinBtn) {
+        useDroppedPinBtn.addEventListener("click", useDroppedPinLocation);
+    }
+    ["locBtn", "mobileLocBtn"].forEach((id) => {
+        const trigger = getEl(id);
+        if (!trigger) return;
+        trigger.addEventListener("click", () => {
+            syncLocationMapSize();
+        });
+    });
+    window.addEventListener("lb-location-modal-opened", syncLocationMapSize);
+    window.addEventListener("resize", () => {
+        if (isLocationModalVisible()) syncLocationMapSize();
+    }, { passive: true });
+    window.addEventListener("orientationchange", () => {
+        if (isLocationModalVisible()) syncLocationMapSize();
+    }, { passive: true });
+    const modalPinInput = dom.modalPinInput();
+    if (modalPinInput) {
+        modalPinInput.addEventListener("input", () => {
+            modalPinInput.value = String(modalPinInput.value || "").replace(/[^\d]/g, "").slice(0, 6);
+        });
     }
     const storeSearchInput = dom.storeSearchInput();
     if (storeSearchInput) {
@@ -250,6 +367,19 @@ function setupEventListeners() {
     if (storeSortSelect) {
         storeSortSelect.addEventListener("change", () => {
             state.storeSort = storeSortSelect.value || "relevance";
+            updateMobileSortButtons();
+            applyCategoryFilter();
+        });
+    }
+    const mobileSortRow = getEl("mobileSortRow");
+    if (mobileSortRow) {
+        mobileSortRow.addEventListener("click", (e) => {
+            const btn = e.target.closest(".mobile-sort-btn");
+            if (!btn) return;
+            const next = String(btn.getAttribute("data-sort") || "relevance");
+            state.storeSort = next;
+            if (storeSortSelect) storeSortSelect.value = next;
+            updateMobileSortButtons();
             applyCategoryFilter();
         });
     }
@@ -281,6 +411,7 @@ function setupEventListeners() {
                 state.storeSort = "relevance";
                 const sel = dom.storeSortSelect();
                 if (sel) sel.value = "relevance";
+                updateMobileSortButtons();
             } else if (kind === "clear-all") {
                 state.storeSearch = "";
                 state.openNowOnly = false;
@@ -292,6 +423,7 @@ function setupEventListeners() {
                 if (input) input.value = "";
                 if (toggle) toggle.checked = false;
                 if (sel) sel.value = "relevance";
+                updateMobileSortButtons();
             }
             setActiveCategory(state.activeCategory);
         });
@@ -427,6 +559,7 @@ function updateOtpAuthUI() {
     const otpInput = dom.authOtp();
     const passInput = dom.authPassword();
     const otpToggleBtn = dom.authUseOtpBtn();
+    const authInput = dom.authPhone();
 
     if (otpRow) otpRow.classList.toggle("active", isOtp);
     if (otpInput) {
@@ -442,6 +575,18 @@ function updateOtpAuthUI() {
         otpToggleBtn.style.display = state.authMode === "login" ? "block" : "none";
         otpToggleBtn.textContent = isOtp ? "Back to Password Login" : "Forgot password? Login with OTP";
     }
+    if (authInput) {
+        if (state.authMode === "register") {
+            authInput.placeholder = "Phone Number";
+            authInput.type = "text";
+        } else if (isOtp) {
+            authInput.placeholder = "Registered Email or Phone";
+            authInput.type = "text";
+        } else {
+            authInput.placeholder = "Phone Number or Email";
+            authInput.type = "text";
+        }
+    }
 }
 
 function toggleOtpLogin() {
@@ -453,7 +598,7 @@ function toggleOtpLogin() {
 async function requestCustomerOtp() {
     if (state.authMode !== "login") return;
     const identifier = String(dom.authPhone()?.value || "").trim();
-    if (!identifier) return alert("Enter phone/email first");
+    if (!identifier) return alert("Enter registered email or phone first");
 
     const btn = dom.authRequestOtpBtn();
     if (btn) {
@@ -468,8 +613,7 @@ async function requestCustomerOtp() {
         });
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.message || "OTP send failed");
-        const otpText = data.dev_otp ? ` OTP: ${data.dev_otp}` : "";
-        alert(`OTP sent successfully.${otpText}`);
+        alert("OTP sent successfully. Please check your registered email/WhatsApp.");
     } catch (err) {
         alert(`Error: ${err.message}`);
     } finally {
@@ -484,10 +628,16 @@ async function submitAuth() {
     const phone = dom.authPhone()?.value.trim();
     const password = dom.authPassword()?.value.trim();
     const otp = dom.authOtp()?.value.trim();
+    const regEmail = getEl("regEmail")?.value.trim();
+    const regName = getEl("regName")?.value.trim();
+    const emailOk = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(value || "").trim().toLowerCase());
 
     if (!phone) return alert("Enter phone/email");
     if (state.authMode === "login" && !state.authUseOtp && !password) return alert("Enter password");
     if (state.authMode === "login" && state.authUseOtp && !otp) return alert("Enter OTP");
+    if (state.authMode === "register" && !regName) return alert("Enter full name");
+    if (state.authMode === "register" && !regEmail) return alert("Enter email");
+    if (state.authMode === "register" && !emailOk(regEmail)) return alert("Enter valid email");
 
     const endpoint = state.authMode === "login"
         ? (state.authUseOtp ? "/customer/login-otp/verify" : "/customer/login")
@@ -496,9 +646,9 @@ async function submitAuth() {
     const payload = state.authMode === "login" 
         ? (state.authUseOtp ? { identifier: phone, otp } : { identifier: phone, password })
         : { 
-            name: getEl("regName")?.value.trim(),
+            name: regName,
             phone,
-            email: getEl("regEmail")?.value.trim(),
+            email: regEmail,
             password 
           };
 
@@ -554,10 +704,19 @@ function logoutUser() {
 /* ============ 5. LOCATION & STORE ENGINE ============ */
 
 function updateLocationUI() {
+    const address = state.location.address;
     const locEl = dom.locText();
-    if (locEl) locEl.innerText = state.location.address;
+    if (typeof window.lbSetLocDesktopText === "function") {
+        window.lbSetLocDesktopText(address);
+    } else if (locEl) {
+        locEl.innerText = address;
+    }
     const locMobile = document.getElementById("locTextMobile");
-    if (locMobile) locMobile.innerText = state.location.address;
+    if (typeof window.lbSetLocMobileText === "function") {
+        window.lbSetLocMobileText(address);
+    } else if (locMobile) {
+        locMobile.innerText = address;
+    }
 }
 
 function setLocationStatus(message, tone = "info") {
@@ -575,6 +734,276 @@ function hydrateLocationStatus() {
     const suffix = timeText ? ` at ${timeText}` : "";
     const tone = acc <= 100 ? "success" : (acc <= 220 ? "warn" : "error");
     setLocationStatus(`Last accuracy: ~${Math.round(acc)}m${suffix}`, tone);
+}
+
+function getCachedGeoResult() {
+    const cached = safeParse(localStorage.getItem(LOCATION_CACHE_KEY), null);
+    if (!cached || typeof cached !== "object") return null;
+    const ts = Number(cached.ts || 0);
+    if (!Number.isFinite(ts) || (Date.now() - ts) > LOCATION_CACHE_TTL_MS) return null;
+    const pincode = String(cached.pincode || "");
+    if (!/^[0-9]{6}$/.test(pincode)) return null;
+    return cached;
+}
+
+function setCachedGeoResult(payload) {
+    if (!payload || typeof payload !== "object") return;
+    const pincode = String(payload.pincode || "");
+    if (!/^[0-9]{6}$/.test(pincode)) return;
+    localStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify({
+        pincode,
+        area: String(payload.area || ""),
+        fullAddress: String(payload.fullAddress || ""),
+        lat: Number(payload.lat || 0) || 0,
+        lon: Number(payload.lon || 0) || 0,
+        acc: Number(payload.acc || 0) || 0,
+        ts: Date.now()
+    }));
+}
+
+function initLocationMap() {
+    const mapEl = dom.mapFrame();
+    if (!mapEl || locationMap || typeof window.L === "undefined") return;
+
+    const savedLat = Number(localStorage.getItem("lbLocLat") || 19.076);
+    const savedLon = Number(localStorage.getItem("lbLocLon") || 72.8777);
+    locationMap = window.L.map(mapEl, {
+        preferCanvas: true,
+        zoomControl: true,
+        attributionControl: true
+    }).setView([savedLat, savedLon], 13);
+
+    window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(locationMap);
+
+    locationMarker = window.L.marker([savedLat, savedLon], {
+        draggable: true,
+        autoPan: true
+    }).addTo(locationMap);
+
+    locationMarker.on("dragend", () => {
+        const pos = locationMarker.getLatLng();
+        localStorage.setItem("lbLocLat", String(pos.lat));
+        localStorage.setItem("lbLocLon", String(pos.lng));
+        setLocationStatus("Pin moved. Tap 'Use Dropped Pin' to apply this location.", "info");
+    });
+
+    locationMap.whenReady(() => {
+        syncLocationMapSize();
+    });
+
+    if (isLocationModalVisible()) syncLocationMapSize();
+}
+
+function updateMapFromCoords(lat, lon) {
+    const map = dom.mapFrame();
+    if (!map || !lat || !lon) return;
+    if (locationMap && locationMarker) {
+        locationMarker.setLatLng([lat, lon]);
+        locationMap.setView([lat, lon], Math.max(locationMap.getZoom() || 13, 13), { animate: true });
+        return;
+    }
+    if (map.tagName === "IFRAME") {
+        const d = 0.02;
+        const bbox = `${lon - d},${lat - d},${lon + d},${lat + d}`;
+        map.src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lon}`;
+    }
+}
+
+async function fetchNearbyStoresByCoords(lat, lon) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), LOCATION_LOOKUP_TIMEOUT_MS);
+    try {
+        const res = await fetch(`${CONFIG.API_BASE}/location/nearby-stores`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ latitude: lat, longitude: lon }),
+            signal: controller.signal
+        });
+        return await res.json().catch(() => ({}));
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
+
+async function fetchReverseAddress(lat, lon) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6500);
+    try {
+        const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&addressdetails=1&zoom=18`;
+        const res = await fetch(url, {
+            method: "GET",
+            headers: { "Accept": "application/json" },
+            signal: controller.signal
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data) return "";
+        const full = String(data.display_name || "").trim();
+        if (full) return full;
+        const addr = data.address || {};
+        const parts = [
+            addr.road,
+            addr.suburb || addr.neighbourhood,
+            addr.city || addr.town || addr.village,
+            addr.state_district || addr.state,
+            addr.postcode
+        ].filter(Boolean);
+        return parts.join(", ");
+    } catch {
+        return "";
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
+
+function buildDisplayAddress({ fullAddress = "", area = "", pincode = "" } = {}) {
+    const full = String(fullAddress || "").trim();
+    if (full) return full;
+    const cleanArea = String(area || "").trim();
+    if (cleanArea) return `Area: ${cleanArea}`;
+    const cleanPin = String(pincode || "").trim();
+    if (cleanPin) return `Pincode: ${cleanPin}`;
+    return "Select Location";
+}
+
+function looksShortAreaAddress(text) {
+    const raw = String(text || "").trim();
+    if (!raw) return true;
+    if (/^area\s*:/i.test(raw)) return true;
+    if (/^pincode\s*:/i.test(raw)) return true;
+    return raw.length < 24;
+}
+
+async function enrichAddressFromSavedCoords(force = false) {
+    const current = String(localStorage.getItem("lbAddr") || state.location.address || "").trim();
+    if (!force && !looksShortAreaAddress(current)) return;
+
+    const lat = Number(localStorage.getItem("lbLocLat") || 0);
+    const lon = Number(localStorage.getItem("lbLocLon") || 0);
+    const pin = String(localStorage.getItem("lbPin") || state.location.pincode || "").trim();
+    if (!lat || !lon) return;
+
+    const fullAddress = await fetchReverseAddress(lat, lon).catch(() => "");
+    if (!fullAddress) return;
+
+    state.location.address = fullAddress;
+    localStorage.setItem("lbAddr", fullAddress);
+    localStorage.setItem("lbLocFullAddr", fullAddress);
+    updateLocationUI();
+
+    if (pin && /^[0-9]{6}$/.test(pin)) {
+        const cached = getCachedGeoResult() || {};
+        setCachedGeoResult({
+            pincode: pin,
+            area: String(cached.area || "").replace(/^Area:\s*/i, ""),
+            fullAddress,
+            lat,
+            lon,
+            acc: Number(localStorage.getItem("lbLocAccM") || cached.acc || 0)
+        });
+    }
+}
+
+function applyResolvedPincode(pincode, area = "", meta = {}) {
+    if (!/^[0-9]{6}$/.test(String(pincode || ""))) return false;
+    state.location.pincode = String(pincode);
+    state.location.address = buildDisplayAddress({
+        fullAddress: meta.fullAddress || "",
+        area,
+        pincode: state.location.pincode
+    });
+    localStorage.setItem("lbPin", state.location.pincode);
+    localStorage.setItem("lbAddr", state.location.address);
+    if (meta.fullAddress) localStorage.setItem("lbLocFullAddr", String(meta.fullAddress));
+    localStorage.setItem("lbLocUpdatedAt", new Date().toISOString());
+    if (meta.acc) localStorage.setItem("lbLocAccM", String(Math.round(meta.acc)));
+    if (meta.lat && meta.lon) {
+        localStorage.setItem("lbLocLat", String(meta.lat));
+        localStorage.setItem("lbLocLon", String(meta.lon));
+        updateMapFromCoords(Number(meta.lat), Number(meta.lon));
+    }
+    setCachedGeoResult({
+        pincode: state.location.pincode,
+        area,
+        fullAddress: meta.fullAddress || "",
+        lat: meta.lat,
+        lon: meta.lon,
+        acc: meta.acc
+    });
+    updateLocationUI();
+    if (dom.locModal()) dom.locModal().style.display = "none";
+    loadStores(state.location.pincode, true);
+    return true;
+}
+
+function useSavedLocation() {
+    const pincode = String(localStorage.getItem("lbPin") || "");
+    if (!/^[0-9]{6}$/.test(pincode)) {
+        setLocationStatus("No saved pincode found. Use current location once.", "warn");
+        return;
+    }
+    const areaText = String(localStorage.getItem("lbAddr") || "");
+    const area = areaText.startsWith("Area: ") ? areaText.slice(6) : "";
+    const lat = Number(localStorage.getItem("lbLocLat") || 0);
+    const lon = Number(localStorage.getItem("lbLocLon") || 0);
+    applyResolvedPincode(pincode, area, { lat, lon });
+    setLocationStatus(`Using saved location (${pincode}).`, "success");
+}
+
+async function useDroppedPinLocation() {
+    if (!(locationMarker && locationMap)) {
+        setLocationStatus("Map is still loading. Please try again.", "warn");
+        return;
+    }
+    const pos = locationMarker.getLatLng();
+    const lat = Number(pos?.lat || 0);
+    const lon = Number(pos?.lng || 0);
+    if (!lat || !lon) {
+        setLocationStatus("Invalid dropped pin location. Try dragging again.", "error");
+        return;
+    }
+    setLocationStatus("Resolving dropped pin location...", "info");
+    const [data, fullAddress] = await Promise.all([
+        fetchNearbyStoresByCoords(lat, lon).catch(() => ({})),
+        fetchReverseAddress(lat, lon).catch(() => "")
+    ]);
+    if (data?.success && data?.pincode) {
+        applyResolvedPincode(data.pincode, data.area || "", {
+            lat,
+            lon,
+            fullAddress: fullAddress || data.full_address || data.address || ""
+        });
+        setLocationStatus(`Location set from dropped pin (${data.pincode}).`, "success");
+        return;
+    }
+    setLocationStatus("Couldn't resolve pincode from pin. Move pin slightly and retry.", "warn");
+}
+
+function shouldAutoDetectLocation() {
+    if (!navigator.geolocation) return false;
+    if (sessionStorage.getItem(AUTO_LOCATION_SESSION_KEY) === "1") return false;
+    const lastUpdate = Date.parse(localStorage.getItem("lbLocUpdatedAt") || "");
+    if (state.location.pincode && Number.isFinite(lastUpdate) && (Date.now() - lastUpdate) < AUTO_LOCATION_FRESH_MS) {
+        return false;
+    }
+    return true;
+}
+
+async function autoDetectLocationOnLoad() {
+    if (!shouldAutoDetectLocation()) return;
+    sessionStorage.setItem(AUTO_LOCATION_SESSION_KEY, "1");
+    if (navigator.permissions?.query) {
+        try {
+            const status = await navigator.permissions.query({ name: "geolocation" });
+            if (status.state === "denied") {
+                setLocationStatus("Location permission is blocked. Tap Change and enable location.", "warn");
+                return;
+            }
+        } catch {}
+    }
+    await getLocation({ silent: true, fastMode: true });
 }
 
 function getGeoPosition(options) {
@@ -604,48 +1033,42 @@ async function applyDetectedLocation(pos, { fallback = false } = {}) {
     const accuracy = Number(pos?.coords?.accuracy || 0);
     if (!lat || !lon) throw new Error("Invalid location coordinates");
 
-    const map = dom.mapFrame();
-    if (map) {
-        const d = 0.02;
-        const bbox = `${lon - d},${lat - d},${lon + d},${lat + d}`;
-        map.src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lon}`;
-    }
+    updateMapFromCoords(lat, lon);
 
     const roundedAcc = Number.isFinite(accuracy) && accuracy > 0 ? Math.round(accuracy) : null;
     const accText = roundedAcc ? `~${roundedAcc}m` : "N/A";
     setLocationStatus(`Location locked (${accText} accuracy).`, fallback ? "warn" : "success");
 
-    try {
-        const res = await fetch(`${CONFIG.API_BASE}/location/nearby-stores`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ latitude: lat, longitude: lon })
+    const [data, fullAddress] = await Promise.all([
+        fetchNearbyStoresByCoords(lat, lon).catch(() => ({})),
+        fetchReverseAddress(lat, lon).catch(() => "")
+    ]);
+    if (data?.success && data?.pincode) {
+        applyResolvedPincode(data.pincode, data.area || "", {
+            lat,
+            lon,
+            acc: roundedAcc || 0,
+            fullAddress: fullAddress || data.full_address || data.address || ""
         });
-        const data = await res.json();
-        if (data.success && data.pincode) {
-            state.location.pincode = data.pincode;
-            state.location.address = data.area ? `Area: ${data.area}` : `Pincode: ${data.pincode}`;
-            localStorage.setItem("lbPin", data.pincode);
-            localStorage.setItem("lbAddr", state.location.address);
-            if (roundedAcc) localStorage.setItem("lbLocAccM", String(roundedAcc));
-            localStorage.setItem("lbLocUpdatedAt", new Date().toISOString());
-            updateLocationUI();
-            if (dom.locModal()) dom.locModal().style.display = "none";
-            loadStores(data.pincode, true);
-            return;
-        }
-    } catch {}
+        return;
+    }
 
-    state.location.address = "Current Location";
-    localStorage.setItem("lbAddr", "Current Location");
+    state.location.address = buildDisplayAddress({ fullAddress, pincode: "" }) || "Current Location";
+    localStorage.setItem("lbAddr", state.location.address);
     if (roundedAcc) localStorage.setItem("lbLocAccM", String(roundedAcc));
     localStorage.setItem("lbLocUpdatedAt", new Date().toISOString());
+    localStorage.setItem("lbLocLat", String(lat));
+    localStorage.setItem("lbLocLon", String(lon));
     updateLocationUI();
     if (dom.locModal()) dom.locModal().style.display = "none";
 }
 
 function searchByPincode() {
-    const raw = (dom.modalPinInput()?.value || dom.heroPinInput()?.value || "").trim();
+    const heroRaw = String(dom.heroPinInput()?.value || "").trim();
+    const modalRaw = String(dom.modalPinInput()?.value || "").trim();
+    const raw = isLocationModalVisible()
+        ? (modalRaw || heroRaw)
+        : (heroRaw || modalRaw);
     if (!/^[0-9]{6}$/.test(raw)) {
         alert("Enter valid 6-digit pincode");
         return;
@@ -659,28 +1082,69 @@ function searchByPincode() {
     updateLocationUI();
     setLocationStatus(`Manual pin set: ${raw}`, "info");
     if (dom.locModal()) dom.locModal().style.display = 'none';
+    scrollToStoresArea();
     loadStores(raw, true);
 }
 
-async function getLocation(forceHighAccuracy = false) {
+function scrollToStoresArea() {
+    const target = getEl("storesSection") || dom.storeGrid() || getEl("categorySection");
+    if (!target) return;
+    const headerOffset = window.innerWidth <= 768 ? 88 : 96;
+    const y = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+}
+
+async function getLocation(optionsOrForce = false) {
+    const opts = typeof optionsOrForce === "boolean"
+        ? { forceHighAccuracy: optionsOrForce, silent: false, fastMode: false }
+        : { forceHighAccuracy: false, silent: false, fastMode: false, ...(optionsOrForce || {}) };
+    const forceHighAccuracy = !!opts.forceHighAccuracy;
+    const silent = !!opts.silent;
+    const fastMode = !!opts.fastMode;
+
     if (!navigator.geolocation) {
-        alert("Geolocation not supported on this browser");
+        if (!silent) alert("Geolocation not supported on this browser");
         setLocationStatus("Geolocation not supported on this browser.", "error");
         return;
     }
+    const improveBtn = dom.improveLocBtn();
+    const useSavedLocBtn = getEl("useSavedLocBtn");
+    const setLocLoading = (loading) => {
+        if (improveBtn) {
+            improveBtn.disabled = loading;
+            improveBtn.textContent = loading ? "Improving..." : "Refresh With High Accuracy";
+        }
+        if (useSavedLocBtn) useSavedLocBtn.disabled = loading;
+    };
     try {
+        if (!forceHighAccuracy) {
+            const cached = getCachedGeoResult();
+            if (cached && applyResolvedPincode(cached.pincode, cached.area || "", {
+                lat: Number(cached.lat || 0),
+                lon: Number(cached.lon || 0),
+                acc: Number(cached.acc || 0),
+                fullAddress: String(cached.fullAddress || "")
+            })) {
+                setLocationStatus("Using recent location cache for faster loading.", "success");
+                if (!String(cached.fullAddress || "").trim()) {
+                    enrichAddressFromSavedCoords(true).catch(() => {});
+                }
+                return;
+            }
+        }
+        setLocLoading(true);
         setLocationStatus("Detecting location with high accuracy...", "info");
-        let pos = await getBestGeoPosition(forceHighAccuracy ? 3 : 2, {
-            enableHighAccuracy: true,
-            timeout: forceHighAccuracy ? 18000 : 12000,
-            maximumAge: 0
+        let pos = await getBestGeoPosition(forceHighAccuracy ? 3 : 1, {
+            enableHighAccuracy: forceHighAccuracy || !fastMode,
+            timeout: forceHighAccuracy ? 18000 : (fastMode ? 6500 : 9500),
+            maximumAge: fastMode ? 45000 : 0
         });
 
         const acc = Number(pos?.coords?.accuracy || 0);
-        if (!forceHighAccuracy && acc > 180) {
+        if (!forceHighAccuracy && acc > (fastMode ? 260 : 180)) {
             setLocationStatus(`Weak GPS signal (~${Math.round(acc)}m). Retrying...`, "warn");
             try {
-                pos = await getBestGeoPosition(2, {
+                pos = await getBestGeoPosition(1, {
                     enableHighAccuracy: true,
                     timeout: 15000,
                     maximumAge: 0
@@ -691,7 +1155,7 @@ async function getLocation(forceHighAccuracy = false) {
         const finalAcc = Number(pos?.coords?.accuracy || 0);
         if (finalAcc > 350) {
             setLocationStatus(`Low accuracy (~${Math.round(finalAcc)}m). Move to open area or use pincode.`, "error");
-            alert("GPS accuracy is low. Please try 'Improve Accuracy' or enter pincode.");
+            if (!silent) alert("GPS accuracy is low. Please try 'Improve Accuracy' or enter pincode.");
             return;
         }
 
@@ -707,14 +1171,16 @@ async function getLocation(forceHighAccuracy = false) {
             const fallbackAcc = Number(fallbackPos?.coords?.accuracy || 0);
             if (fallbackAcc > 500) {
                 setLocationStatus(`Fallback location too broad (~${Math.round(fallbackAcc)}m). Enter pincode manually.`, "error");
-                alert("Couldn't get precise location. Please enter pincode.");
+                if (!silent) alert("Couldn't get precise location. Please enter pincode.");
                 return;
             }
             await applyDetectedLocation(fallbackPos, { fallback: true });
         } catch {
             setLocationStatus("Unable to detect location. Enter pincode manually.", "error");
-            alert("Unable to access location");
+            if (!silent) alert("Unable to access location");
         }
+    } finally {
+        setLocLoading(false);
     }
 }
 
@@ -779,7 +1245,7 @@ function renderStores(stores) {
     grid.innerHTML = stores.map(store => `
         <div class="store-card" onclick="openStore(${store.id})">
             <div class="store-img-wrap">
-                <img class="store-img" src="${store.store_photo ? CONFIG.IMG_BASE+'/'+store.store_photo : CONFIG.DEFAULT_IMG}" 
+                <img class="store-img" src="${resolveImageUrl(store.store_photo)}" 
                      alt="${store.store_name}" 
                      onerror="this.src='${CONFIG.DEFAULT_IMG}'">
                 <span class="status-badge ${store.is_online ? 'online' : 'offline'}">
@@ -915,7 +1381,7 @@ function renderTopProducts(list = null) {
       <div class="tp-card" onclick="openStore(${item.store_id})">
         <button class="tp-save ${saved ? "saved" : ""}" type="button" data-pick-key="${pickKey}" aria-pressed="${saved ? "true" : "false"}" onclick="toggleTopPick(event, '${pickKey}')">${saved ? "Saved" : "Save"}</button>
         <div class="tp-img">
-          <img src="${item.image ? `${CONFIG.IMG_BASE}/${item.image}` : CONFIG.DEFAULT_IMG}" onerror="this.src='${CONFIG.DEFAULT_IMG}'" alt="${item.name}">
+          <img src="${pickProductImage(item)}" onerror="this.src='${CONFIG.DEFAULT_IMG}'" alt="${item.name}">
         </div>
         <div class="tp-body">
           <div class="tp-name">${item.name || "Product"}</div>
@@ -1043,7 +1509,7 @@ function renderRecentStores() {
     grid.innerHTML = list.map(store => `
         <div class="store-card" onclick="window.location.href='${welcomePath("customer/store/store.html")}?id=${store.id}'">
             <div class="store-img-wrap">
-                <img class="store-img" src="${store.store_photo ? CONFIG.IMG_BASE+'/'+store.store_photo : CONFIG.DEFAULT_IMG}" 
+                <img class="store-img" src="${resolveImageUrl(store.store_photo)}" 
                      alt="${store.store_name}" 
                      onerror="this.src='${CONFIG.DEFAULT_IMG}'">
                 <span class="status-badge ${store.is_online ? 'online' : 'offline'}">
@@ -1129,7 +1595,7 @@ function getStoreRating(store) {
 function renderStars(value) {
     const full = Math.floor(value);
     const hasHalf = value - full >= 0.5;
-    let stars = Array.from({ length: 5 }).map((_, i) => {
+    let stars = "\u2605\u2605\u2605\u2605\u2605".split("").map((s, i) => {
         if (i < full) return "\u2605";
         if (i === full && hasHalf) return "\u2605";
         return "\u2606";
@@ -1176,6 +1642,7 @@ function applyCategoryFilter() {
         updateStoreMeta(0, "No stores match current filters.");
         return;
     }
+    updateMobileSortButtons();
     renderStores(filtered);
     updateStoreMeta(filtered.length);
 }
@@ -1359,4 +1826,3 @@ Object.assign(window, {
     viewProfile: () => window.location.href = welcomePath("customer/profile/profile.html"),
     viewOrders: () => window.location.href = welcomePath("customer/order/customer-orders.html")
 });
-

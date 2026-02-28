@@ -1,12 +1,38 @@
-﻿/* =====================================================
+/* =====================================================
    LOCALBASKET  STORE ENGINE (CUSTOMER)
 ===================================================== */
 
+const host = String(window.location.hostname || "").trim();
+const isPrivateLanHost = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(host);
+const isLocalHost = ["localhost", "127.0.0.1"].includes(host) || isPrivateLanHost || window.location.protocol === "file:";
+const isVercelHost = host.endsWith(".vercel.app");
+const localOrigin = window.location.protocol === "file:" ? "http://localhost:5000" : `${window.location.protocol}//${host}:5000`;
+const hostedOrigin = window.location.origin;
 const CONFIG = {
-  API_URL: "https://localbasket-backend.onrender.com/api",
-  IMAGE_URL: "https://localbasket-backend.onrender.com/uploads/",
+  API_URL: isLocalHost
+    ? `${localOrigin}/api`
+    : (isVercelHost ? `${hostedOrigin}/api` : "https://localbasket-backend.onrender.com/api"),
+  IMAGE_URL: isLocalHost
+    ? `${localOrigin}/uploads/`
+    : (isVercelHost ? `${hostedOrigin}/uploads/` : "https://localbasket-backend.onrender.com/uploads/"),
   DEFAULT_IMG: "https://placehold.co/200?text=No+Image"
 };
+
+function resolveImageUrl(rawPath) {
+  const input = String(rawPath || "").trim();
+  if (!input) return CONFIG.DEFAULT_IMG;
+  if (/^(https?:)?\/\//i.test(input) || input.startsWith("data:") || input.startsWith("blob:")) {
+    return input;
+  }
+
+  const base = String(CONFIG.IMAGE_URL || "").replace(/\/+$/, "");
+  let path = input.replace(/\\/g, "/").trim();
+  if (path.startsWith("/uploads/")) path = path.slice("/uploads/".length);
+  else if (path.startsWith("uploads/")) path = path.slice("uploads/".length);
+  else if (path.startsWith("/")) return `${window.location.origin}${path}`;
+
+  return `${base}/${encodeURI(path.replace(/^\/+/, ""))}`;
+}
 
 const params = new URLSearchParams(window.location.search);
 const storeId = params.get("id");
@@ -50,9 +76,273 @@ const state = {
   activeRating: 0,
   activeImageIndex: 0
 };
-const MOBILE_BAR_POS_KEY = "lbMobileBasketPos";
+const FLOATING_CHECKOUT_POS_KEY = "lbFloatingCheckoutPosV1";
+const MOBILE_BAR_POS_KEY = "lbMobileBarPosV1";
+let floatingCheckoutDragBound = false;
+let mobileBarDragBound = false;
+
+function getFloatingCheckoutBtn() {
+  return document.getElementById("floatingCheckoutBtn");
+}
+
+function readFloatingCheckoutPos() {
+  try {
+    const raw = localStorage.getItem(FLOATING_CHECKOUT_POS_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    const x = Number(data?.x);
+    const y = Number(data?.y);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+    return { x, y };
+  } catch {
+    return null;
+  }
+}
+
+function writeFloatingCheckoutPos(x, y) {
+  localStorage.setItem(FLOATING_CHECKOUT_POS_KEY, JSON.stringify({ x, y }));
+}
+
+function clampFloatingCheckoutPos(x, y, btn) {
+  const width = Math.max(150, btn.offsetWidth || 0);
+  const height = Math.max(1, btn.offsetHeight || 48);
+  const minX = 8;
+  const minY = 8;
+  const maxX = Math.max(minX, window.innerWidth - width - 8);
+  const maxY = Math.max(minY, window.innerHeight - height - 8);
+  return {
+    x: Math.min(maxX, Math.max(minX, x)),
+    y: Math.min(maxY, Math.max(minY, y))
+  };
+}
+
+function setFloatingCheckoutDefaultPosition(btn) {
+  btn.style.left = "auto";
+  btn.style.top = "auto";
+  btn.style.right = "20px";
+  btn.style.bottom = "20px";
+}
+
+function getMobileBarEl() {
+  return document.getElementById("mobileBar");
+}
+
+function readMobileBarPos() {
+  try {
+    const raw = localStorage.getItem(MOBILE_BAR_POS_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    const x = Number(data?.x);
+    const y = Number(data?.y);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+    return { x, y };
+  } catch {
+    return null;
+  }
+}
+
+function writeMobileBarPos(x, y) {
+  localStorage.setItem(MOBILE_BAR_POS_KEY, JSON.stringify({ x, y }));
+}
+
+function clampMobileBarPos(x, y, el) {
+  const width = Math.max(132, el.offsetWidth || 0);
+  const height = Math.max(1, el.offsetHeight || 40);
+  const minX = 8;
+  const minY = 8;
+  const maxX = Math.max(minX, window.innerWidth - width - 8);
+  const maxY = Math.max(minY, window.innerHeight - height - 8);
+  return {
+    x: Math.min(maxX, Math.max(minX, x)),
+    y: Math.min(maxY, Math.max(minY, y))
+  };
+}
+
+function applyMobileBarSavedPosition(el) {
+  const pos = readMobileBarPos();
+  if (!pos) return false;
+  const safe = clampMobileBarPos(pos.x, pos.y, el);
+  el.style.left = `${safe.x}px`;
+  el.style.top = `${safe.y}px`;
+  el.style.right = "auto";
+  el.style.bottom = "auto";
+  return true;
+}
+
+function applyFloatingCheckoutSavedPosition(btn) {
+  const pos = readFloatingCheckoutPos();
+  if (!pos) {
+    setFloatingCheckoutDefaultPosition(btn);
+    return false;
+  }
+  const safe = clampFloatingCheckoutPos(pos.x, pos.y, btn);
+  btn.style.left = `${safe.x}px`;
+  btn.style.top = `${safe.y}px`;
+  btn.style.right = "auto";
+  btn.style.bottom = "auto";
+  return true;
+}
+
+function initFloatingCheckoutDrag() {
+  if (floatingCheckoutDragBound) return;
+  const btn = getFloatingCheckoutBtn();
+  if (!btn) return;
+  floatingCheckoutDragBound = true;
+
+  let dragging = false;
+  let moved = false;
+  let offsetX = 0;
+  let offsetY = 0;
+  let pointerId = null;
+
+  const onPointerMove = (e) => {
+    if (!dragging) return;
+    if (pointerId !== null && e.pointerId !== pointerId) return;
+    const nextX = e.clientX - offsetX;
+    const nextY = e.clientY - offsetY;
+    const safe = clampFloatingCheckoutPos(nextX, nextY, btn);
+    btn.style.left = `${safe.x}px`;
+    btn.style.top = `${safe.y}px`;
+    btn.style.right = "auto";
+    btn.style.bottom = "auto";
+    if (Math.abs(nextX - safe.x) > 1 || Math.abs(nextY - safe.y) > 1) moved = true;
+    e.preventDefault();
+  };
+
+  const onPointerUp = (e) => {
+    if (!dragging) return;
+    if (pointerId !== null && e.pointerId !== pointerId) return;
+    dragging = false;
+    pointerId = null;
+    btn.classList.remove("dragging");
+    const x = parseFloat(btn.style.left || "0");
+    const y = parseFloat(btn.style.top || "0");
+    if (Number.isFinite(x) && Number.isFinite(y)) writeFloatingCheckoutPos(x, y);
+    setTimeout(() => { moved = false; }, 0);
+  };
+
+  btn.addEventListener("pointerdown", (e) => {
+    if (btn.style.display === "none") return;
+    pointerId = e.pointerId;
+    dragging = true;
+    moved = false;
+    const rect = btn.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+    btn.classList.add("dragging");
+    try { btn.setPointerCapture(e.pointerId); } catch {}
+    e.preventDefault();
+  });
+
+  btn.addEventListener("click", (e) => {
+    if (moved) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  window.addEventListener("pointermove", onPointerMove, { passive: false });
+  window.addEventListener("pointerup", onPointerUp, { passive: true });
+  window.addEventListener("resize", () => {
+    const pos = readFloatingCheckoutPos();
+    if (!pos || btn.style.display === "none") return;
+    const safe = clampFloatingCheckoutPos(pos.x, pos.y, btn);
+    btn.style.left = `${safe.x}px`;
+    btn.style.top = `${safe.y}px`;
+    btn.style.right = "auto";
+    btn.style.bottom = "auto";
+    writeFloatingCheckoutPos(safe.x, safe.y);
+  }, { passive: true });
+}
+
+function initMobileBarDrag() {
+  if (mobileBarDragBound) return;
+  const bar = getMobileBarEl();
+  if (!bar) return;
+  mobileBarDragBound = true;
+
+  let dragging = false;
+  let moved = false;
+  let pointerId = null;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  const onMove = (e) => {
+    if (!dragging) return;
+    if (pointerId !== null && e.pointerId !== pointerId) return;
+    const nextX = e.clientX - offsetX;
+    const nextY = e.clientY - offsetY;
+    const safe = clampMobileBarPos(nextX, nextY, bar);
+    bar.style.left = `${safe.x}px`;
+    bar.style.top = `${safe.y}px`;
+    bar.style.right = "auto";
+    bar.style.bottom = "auto";
+    moved = true;
+    e.preventDefault();
+  };
+
+  const onUp = (e) => {
+    if (!dragging) return;
+    if (pointerId !== null && e.pointerId !== pointerId) return;
+    dragging = false;
+    pointerId = null;
+    const x = parseFloat(bar.style.left || "0");
+    const y = parseFloat(bar.style.top || "0");
+    if (Number.isFinite(x) && Number.isFinite(y)) writeMobileBarPos(x, y);
+    setTimeout(() => { moved = false; }, 0);
+  };
+
+  bar.addEventListener("pointerdown", (e) => {
+    if (!bar.classList.contains("is-visible")) return;
+    pointerId = e.pointerId;
+    dragging = true;
+    moved = false;
+    const rect = bar.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+    try { bar.setPointerCapture(e.pointerId); } catch {}
+    e.preventDefault();
+  });
+
+  bar.addEventListener("click", (e) => {
+    if (moved) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+
+  const btn = document.getElementById("mobileBarBtn");
+  if (btn) {
+    btn.addEventListener("click", (e) => {
+      if (moved) return;
+      e.preventDefault();
+      toggleCart(true);
+    });
+  }
+
+  window.addEventListener("pointermove", onMove, { passive: false });
+  window.addEventListener("pointerup", onUp, { passive: true });
+  window.addEventListener("resize", () => {
+    const pos = readMobileBarPos();
+    if (!pos) return;
+    const safe = clampMobileBarPos(pos.x, pos.y, bar);
+    writeMobileBarPos(safe.x, safe.y);
+    if (bar.classList.contains("is-visible")) {
+      bar.style.left = `${safe.x}px`;
+      bar.style.top = `${safe.y}px`;
+      bar.style.right = "auto";
+      bar.style.bottom = "auto";
+    }
+  }, { passive: true });
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
+  const panel = document.getElementById("cartPanel");
+  const backdrop = document.getElementById("cartBackdrop");
+  if (panel) panel.classList.remove("active");
+  if (backdrop) backdrop.classList.remove("active");
+  document.body.style.overflow = "";
+
   if (!storeId) {
     showError("Invalid Store Link");
     return;
@@ -83,7 +373,7 @@ async function loadStore() {
     document.getElementById("headerStoreName").innerText = store.store_name;
 
     const img = document.getElementById("storeImg");
-    img.src = store.store_photo ? CONFIG.IMAGE_URL + store.store_photo : CONFIG.DEFAULT_IMG;
+    img.src = resolveImageUrl(store.store_photo);
     img.onerror = () => (img.src = CONFIG.DEFAULT_IMG);
 
     const tag = document.querySelector(".online-tag");
@@ -219,7 +509,7 @@ function renderProducts(items) {
         <div class="product-img-box">
           <img src="${(() => {
             const images = getProductImages(p);
-            return images.length ? CONFIG.IMAGE_URL + images[0] : CONFIG.DEFAULT_IMG;
+            return images.length ? resolveImageUrl(images[0]) : CONFIG.DEFAULT_IMG;
           })()}" onerror="this.src='${CONFIG.DEFAULT_IMG}'">
           ${hasDiscount ? `<span class="discount-tag" title="${discountPct}% OFF"><span>${discountPct}%<br>OFF</span></span>` : ""}
         </div>
@@ -470,7 +760,7 @@ function renderProductImageSlider(product) {
 
   if (img) {
     const current = list[state.activeImageIndex];
-    img.src = current ? CONFIG.IMAGE_URL + current : CONFIG.DEFAULT_IMG;
+    img.src = current ? resolveImageUrl(current) : CONFIG.DEFAULT_IMG;
     img.onerror = () => (img.src = CONFIG.DEFAULT_IMG);
   }
 
@@ -661,24 +951,28 @@ function renderReviewCards(reviews) {
 function updateCartUI() {
   const count = state.cart.reduce((sum, i) => sum + i.qty, 0);
   const total = state.cart.reduce((sum, i) => sum + i.price * i.qty, 0);
+  const totalText = `Rs. ${Math.round(total)}`;
+  const isCartOpen = !!document.getElementById("cartPanel")?.classList.contains("active");
 
   document.getElementById("cartCountLabel").innerText = `Basket (${count})`;
-  document.getElementById("cartTotal").innerText = `Rs. ${total}`;
+  document.getElementById("cartTotal").innerText = totalText;
   document.getElementById("mItemCount").innerText = `${count} Items`;
-  document.getElementById("mTotalAmount").innerText = `Rs. ${total}`;
+  document.getElementById("mTotalAmount").innerText = totalText;
   const mobileBar = document.getElementById("mobileBar");
-  const mobileBarBtn = mobileBar ? mobileBar.querySelector("button") : null;
-  if (mobileBarBtn) mobileBarBtn.innerText = `View Basket  ${count}  Rs.${total}`;
-  const cartOpen = document.getElementById("cartPanel")?.classList.contains("active");
-  if (mobileBar) mobileBar.classList.toggle("is-visible", count > 0 && !cartOpen);
+  if (mobileBar) {
+    mobileBar.classList.toggle("is-visible", count > 0 && !isCartOpen);
+    if (count > 0 && !isCartOpen) applyMobileBarSavedPosition(mobileBar);
+  }
   const floatingCheckoutBtn = document.getElementById("floatingCheckoutBtn");
   if (floatingCheckoutBtn) {
-    floatingCheckoutBtn.style.display = count > 0 ? "inline-flex" : "none";
-    floatingCheckoutBtn.style.left = "auto";
-    floatingCheckoutBtn.style.top = "auto";
-    floatingCheckoutBtn.style.right = "20px";
-    floatingCheckoutBtn.style.bottom = "20px";
-    floatingCheckoutBtn.innerText = `Checkout (Rs. ${total})`;
+    floatingCheckoutBtn.style.display = count > 0 && !isCartOpen ? "inline-flex" : "none";
+    if (count > 0 && !isCartOpen) {
+      const positioned = applyFloatingCheckoutSavedPosition(floatingCheckoutBtn);
+      if (!positioned) setFloatingCheckoutDefaultPosition(floatingCheckoutBtn);
+    } else {
+      setFloatingCheckoutDefaultPosition(floatingCheckoutBtn);
+    }
+    floatingCheckoutBtn.innerText = `Checkout (${totalText})`;
   }
   updateFooterSafeOffsets();
 
@@ -734,9 +1028,12 @@ function toggleCart(show) {
   const backdrop = document.getElementById("cartBackdrop");
   if (backdrop) backdrop.classList.toggle("active", show);
   const mobileBar = document.getElementById("mobileBar");
-  if (mobileBar) {
-    const count = state.cart.reduce((sum, i) => sum + i.qty, 0);
-    mobileBar.classList.toggle("is-visible", !show && count > 0);
+  const floatingCheckoutBtn = document.getElementById("floatingCheckoutBtn");
+  if (show) {
+    if (mobileBar) mobileBar.classList.remove("is-visible");
+    if (floatingCheckoutBtn) floatingCheckoutBtn.style.display = "none";
+  } else {
+    updateCartUI();
   }
   document.body.style.overflow = show ? "hidden" : "";
 }
@@ -761,93 +1058,18 @@ function updateFooterSafeOffsets() {
   const overlap = nearPageBottom ? Math.max(0, window.innerHeight - footerTop + 10) : 0;
 
   if (floatingCheckoutBtn && floatingCheckoutBtn.style.display !== "none") {
-    floatingCheckoutBtn.style.bottom = `${20 + overlap}px`;
+    const hasCustom = !!readFloatingCheckoutPos();
+    if (!hasCustom) {
+      floatingCheckoutBtn.style.bottom = `${20 + overlap}px`;
+    }
   }
   if (mobileBar && mobileBar.classList.contains("is-visible")) {
-    const mobileBase = isMobile ? Math.max(14, navHeight + 10) : 20;
-    if (!mobileBar.style.top) {
+    const hasCustom = !!readMobileBarPos();
+    if (!hasCustom) {
+      const mobileBase = isMobile ? Math.max(14, navHeight + 10) : 20;
       mobileBar.style.bottom = `${mobileBase + overlap}px`;
     }
   }
-}
-
-function initMobileBarInteractions() {
-  const mobileBar = document.getElementById("mobileBar");
-  const mobileBtn = document.getElementById("mobileBarBtn");
-  if (!mobileBar || !mobileBtn) return;
-
-  const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
-  const setBarPosition = (leftPx, topPx) => {
-    const rect = mobileBar.getBoundingClientRect();
-    const maxLeft = Math.max(0, window.innerWidth - rect.width);
-    const maxTop = Math.max(0, window.innerHeight - rect.height);
-    const left = clamp(leftPx, 0, maxLeft);
-    const top = clamp(topPx, 0, maxTop);
-    mobileBar.style.left = `${left}px`;
-    mobileBar.style.top = `${top}px`;
-    mobileBar.style.right = "auto";
-    mobileBar.style.bottom = "auto";
-    localStorage.setItem(MOBILE_BAR_POS_KEY, JSON.stringify({ left, top }));
-  };
-
-  try {
-    const saved = JSON.parse(localStorage.getItem(MOBILE_BAR_POS_KEY) || "null");
-    if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) {
-      setBarPosition(saved.left, saved.top);
-    }
-  } catch {}
-
-  let dragging = false;
-  let moved = false;
-  let suppressClick = false;
-  let startX = 0;
-  let startY = 0;
-  let startLeft = 0;
-  let startTop = 0;
-
-  mobileBar.addEventListener("pointerdown", (e) => {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    const rect = mobileBar.getBoundingClientRect();
-    dragging = true;
-    moved = false;
-    startX = e.clientX;
-    startY = e.clientY;
-    startLeft = rect.left;
-    startTop = rect.top;
-    if (mobileBar.setPointerCapture) mobileBar.setPointerCapture(e.pointerId);
-  });
-
-  window.addEventListener("pointermove", (e) => {
-    if (!dragging) return;
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
-    if (!moved) return;
-    setBarPosition(startLeft + dx, startTop + dy);
-    e.preventDefault();
-  }, { passive: false });
-
-  window.addEventListener("pointerup", () => {
-    if (!dragging) return;
-    dragging = false;
-    if (moved) suppressClick = true;
-  });
-
-  mobileBtn.addEventListener("click", (e) => {
-    if (suppressClick) {
-      suppressClick = false;
-      e.preventDefault();
-      e.stopPropagation();
-      return;
-    }
-    toggleCart(true);
-  });
-
-  window.addEventListener("resize", () => {
-    if (!mobileBar.style.left || !mobileBar.style.top) return;
-    const rect = mobileBar.getBoundingClientRect();
-    setBarPosition(rect.left, rect.top);
-  });
 }
 
 window.filterProducts = filterProducts;
@@ -862,7 +1084,6 @@ window.setStarRating = setStarRating;
 window.prevProductImage = prevProductImage;
 window.nextProductImage = nextProductImage;
 window.setProductImage = setProductImage;
-window.toggleCart = toggleCart;
 
 document.addEventListener("click", (e) => {
   const btn = e.target.closest(".pv-star-btn");
@@ -873,5 +1094,8 @@ document.addEventListener("click", (e) => {
 
 window.addEventListener("scroll", updateFooterSafeOffsets, { passive: true });
 window.addEventListener("resize", updateFooterSafeOffsets);
-document.addEventListener("DOMContentLoaded", updateFooterSafeOffsets);
-document.addEventListener("DOMContentLoaded", initMobileBarInteractions);
+document.addEventListener("DOMContentLoaded", () => {
+  initFloatingCheckoutDrag();
+  initMobileBarDrag();
+  updateFooterSafeOffsets();
+});

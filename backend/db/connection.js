@@ -28,6 +28,7 @@ pool.getConnection((err, connection) => {
   initProductsMrp();
   initProductsDescription();
   initSellersMinimumOrder();
+  initOtpVerificationsTable();
 });
 
 /* ================= TABLE INIT FUNCTIONS ================= */
@@ -136,6 +137,24 @@ function initSellersMinimumOrder() {
         }
       );
     }
+  });
+}
+
+function initOtpVerificationsTable() {
+  const sql = `
+    CREATE TABLE IF NOT EXISTS otp_verifications (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      phone VARCHAR(20) NOT NULL,
+      email VARCHAR(255) NOT NULL,
+      otp VARCHAR(6) NOT NULL,
+      expires_at DATETIME NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      KEY idx_phone_email (phone, email),
+      KEY idx_expires (expires_at)
+    )
+  `;
+  pool.query(sql, (err) => {
+    if (err) console.error("otp_verifications init failed:", err.message);
   });
 }
 

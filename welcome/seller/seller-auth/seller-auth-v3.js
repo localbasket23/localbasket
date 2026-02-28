@@ -325,8 +325,7 @@ document.addEventListener("DOMContentLoaded", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ phone })
         });
-        const otpText = data.dev_otp ? ` OTP: ${data.dev_otp}` : "";
-        showToast("Success", `OTP sent successfully.${otpText}`);
+        showToast("Success", "OTP sent successfully. Please check your WhatsApp and Email.");
         setMessage("OTP sent. Enter OTP to login.", "var(--accent)");
       } catch (err) {
         showToast("Error", err.message || "OTP request failed", "error");

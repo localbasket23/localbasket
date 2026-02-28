@@ -1,6 +1,17 @@
-﻿const CONFIG = {
-  API_BASE: "https://localbasket-backend.onrender.com/api",
-  IMG_BASE: "https://localbasket-backend.onrender.com/uploads",
+const host = String(window.location.hostname || "").trim();
+const isPrivateLanHost = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(host);
+const isLocalHost = ["localhost", "127.0.0.1"].includes(host) || isPrivateLanHost || window.location.protocol === "file:";
+const isVercelHost = host.endsWith(".vercel.app");
+const localOrigin = window.location.protocol === "file:" ? "http://localhost:5000" : `${window.location.protocol}//${host}:5000`;
+const hostedOrigin = window.location.origin;
+
+const CONFIG = {
+  API_BASE: isLocalHost
+    ? `${localOrigin}/api`
+    : (isVercelHost ? `${hostedOrigin}/api` : "https://localbasket-backend.onrender.com/api"),
+  IMG_BASE: isLocalHost
+    ? `${localOrigin}/uploads`
+    : (isVercelHost ? `${hostedOrigin}/uploads` : "https://localbasket-backend.onrender.com/uploads"),
   DEFAULT_IMG: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80"
 };
 
@@ -159,7 +170,7 @@ const getStoreRating = (store) => {
 const renderStars = (value) => {
   const full = Math.floor(value);
   const hasHalf = value - full >= 0.5;
-  return Array.from({ length: 5 }).map((_, i) => {
+  return "\u2605\u2605\u2605\u2605\u2605".split("").map((_, i) => {
     if (i < full) return "\u2605";
     if (i === full && hasHalf) return "\u2605";
     return "\u2606";

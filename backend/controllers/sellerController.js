@@ -1,5 +1,6 @@
 const db = require("../db/connection");
 const bcrypt = require("bcrypt");
+const { sendOtpSms } = require("../utils/otpSender");
 const dbp = db.promise();
 const query = dbp.query.bind(dbp);
 let sellerColumnsCache = null;
@@ -435,12 +436,17 @@ exports.requestLoginOtp = async (req, res) => {
     }
 
     const otp = issueSellerOtp(phone);
-    console.log(`SELLER OTP (${phone}): ${otp}`);
+    const sms = await sendOtpSms({ phone, otp });
+    if (!sms.success) {
+      return res.status(500).json({
+        success: false,
+        message: sms.message || "Failed to send OTP to phone number"
+      });
+    }
 
     res.json({
       success: true,
-      message: "OTP sent successfully",
-      dev_otp: otp
+      message: "OTP sent successfully"
     });
   } catch (err) {
     console.error("SELLER OTP REQUEST ERROR:", err);
