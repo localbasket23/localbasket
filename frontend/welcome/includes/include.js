@@ -217,19 +217,30 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
 
   ensureGlobalDarkCustomerStyles();
 
-  // Resolve assets/components from the site root so nested pages can always fetch them.
-  const welcomePath = (suffix) => `/welcome/${String(suffix || "").replace(/^\/+/, "")}`;
-  const relativeIncludeBase = (() => {
+  // Derive include and welcome bases from the script URL so paths work regardless of hosting root.
+  const includeBase = (() => {
+    try {
+      const script =
+        document.currentScript ||
+        Array.from(document.querySelectorAll("script[src]")).find((s) => s.src.includes("include.js"));
+      if (script && script.src) return new URL("./", script.src).href;
+    } catch {}
     try {
       return new URL("../includes/", window.location.href).href;
     } catch {
       return null;
     }
   })();
+  const welcomeBase = includeBase ? includeBase.replace(/includes\/?$/, "") : null;
+  const welcomePath = (suffix) => {
+    const clean = String(suffix || "").replace(/^\/+/, "");
+    if (welcomeBase) return `${welcomeBase}${clean}`;
+    return `/welcome/${clean}`;
+  };
   const includeCandidates = (name) => {
     const candidates = [];
-    if (relativeIncludeBase) candidates.push(`${relativeIncludeBase}${name}`);
-    candidates.push(welcomePath(`includes/${name}`));
+    if (includeBase) candidates.push(`${includeBase}${name}`);
+    candidates.push(`${welcomePath("includes/")}${name}`);
     return candidates;
   };
   const hostName = String(window.location.hostname || "").trim();
