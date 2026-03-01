@@ -99,7 +99,8 @@
     }
   </style>
 </head>
-<body>
+
+  <div id="header"></div>
 
 <header class="mobile-header">`n  <base href="/" />
   <button id="menuBtn"><i class="fas fa-bars"></i></button>
@@ -315,8 +316,14 @@ if(localStorage.getItem('theme') === 'dark') { themeToggle.checked = true; docum
 function go(p){ location.href=p }
 function logout(){ localStorage.removeItem("lbSeller"); location.href="./seller-auth/seller-auth.html"; }
 </script>
+  <div id="footer"></div>
+  <script src="/js/include.js"></script>
 </body>
 </html>
+
+
+
+
 
 
 
