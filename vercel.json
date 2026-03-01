@@ -1,18 +1,6 @@
 {
-  "version": 2,
-  "builds": [
-    { "src": "backend/server.js", "use": "@vercel/node" }
-  ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/backend/server.js" },
-    { "src": "/auth/(.*)", "dest": "/backend/server.js" },
-    { "src": "/health", "dest": "/backend/server.js" },
-    { "src": "/uploads/(.*)", "dest": "/backend/server.js" },
-    { "handle": "filesystem" },
-    { "src": "/", "dest": "/index.html" },
-    { "src": "/welcome/customer(/.*)?", "dest": "/welcome/customer/index.html" },
-    { "src": "/welcome/seller(/.*)?", "dest": "/welcome/seller/index.html" },
-    { "src": "/welcome/admin(/.*)?", "dest": "/welcome/admin/index.html" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
