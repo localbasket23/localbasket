@@ -217,8 +217,8 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
 
   ensureGlobalDarkCustomerStyles();
 
-  // Build paths relative to the current site root so static hosting (e.g., Vercel) resolves correctly.
-  const welcomePath = (suffix) => `./welcome/${String(suffix || "").replace(/^\/+/, "")}`;
+  // Resolve assets/components from the site root so nested pages can always fetch them.
+  const welcomePath = (suffix) => `/welcome/${String(suffix || "").replace(/^\/+/, "")}`;
   const relativeIncludeBase = (() => {
     try {
       return new URL("../includes/", window.location.href).href;
