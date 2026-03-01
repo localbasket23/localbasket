@@ -238,7 +238,8 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
     return `/welcome/${clean}`;
   };
   const includeCandidates = (name) => {
-    const candidates = [];
+    // Prefer root-based components so nested routes fetch correctly on Vercel.
+    const candidates = [`/components/${name}`];
     if (includeBase) candidates.push(`${includeBase}${name}`);
     candidates.push(`${welcomePath("includes/")}${name}`);
     return candidates;
