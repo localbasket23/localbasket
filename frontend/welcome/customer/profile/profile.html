@@ -266,6 +266,62 @@
       box-shadow:0 10px 20px rgba(255,138,26,.24);
     }
 
+    html.lb-theme-dark {
+      --bg:#06122b;
+      --card:#0f1f42;
+      --text-main:#e8eefc;
+      --text-muted:#a9badc;
+      --primary-light:rgba(255,138,26,.16);
+      --shadow:0 16px 34px -12px rgba(0,0,0,.65);
+    }
+
+    html.lb-theme-dark body {
+      background: radial-gradient(circle at top right, #152c57 0%, #081632 55%, #06122b 100%);
+    }
+
+    html.lb-theme-dark .sidebar,
+    html.lb-theme-dark .main-card {
+      border: 1px solid rgba(255,255,255,.09);
+    }
+
+    html.lb-theme-dark .input-wrapper input {
+      background:#0a1936;
+      border-color:#21355f;
+      color:var(--text-main);
+    }
+
+    html.lb-theme-dark .input-wrapper input:focus {
+      background:#0d2145;
+      border-color:var(--primary);
+      box-shadow:0 0 0 4px rgba(255,138,26,.16);
+    }
+
+    html.lb-theme-dark .input-wrapper input[readonly] {
+      background:#0a1730;
+      color:#95a9cf;
+    }
+
+    html.lb-theme-dark .settings-block {
+      background:#0b1a38;
+      border-color:#21355f;
+    }
+
+    html.lb-theme-dark .pref-row {
+      border-bottom-color:#253c67;
+    }
+
+    html.lb-theme-dark .slider {
+      background:#304a77;
+    }
+
+    html.lb-theme-dark .toggle-pass {
+      color:#c3d2ee;
+    }
+
+    html.lb-theme-dark .main-card hr {
+      background:#243b66 !important;
+    }
+
     @media (max-width:900px) {
       .dashboard { grid-template-columns:1fr; margin:20px auto; }
       .sidebar { position:relative; top:0; }
