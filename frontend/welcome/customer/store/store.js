@@ -341,6 +341,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const backdrop = document.getElementById("cartBackdrop");
   if (panel) panel.classList.remove("active");
   if (backdrop) backdrop.classList.remove("active");
+  if (typeof window.lbOpenCart === "function") {
+    if (panel) panel.style.display = "none";
+    if (backdrop) backdrop.style.display = "none";
+  }
   document.body.style.overflow = "";
 
   if (!storeId) {
@@ -952,7 +956,9 @@ function updateCartUI() {
   const count = state.cart.reduce((sum, i) => sum + i.qty, 0);
   const total = state.cart.reduce((sum, i) => sum + i.price * i.qty, 0);
   const totalText = `Rs. ${Math.round(total)}`;
-  const isCartOpen = !!document.getElementById("cartPanel")?.classList.contains("active");
+  const isLegacyCartOpen = !!document.getElementById("cartPanel")?.classList.contains("active");
+  const isSharedCartOpen = !!document.getElementById("lbCartDrawer")?.classList.contains("active");
+  const isCartOpen = isLegacyCartOpen || isSharedCartOpen;
 
   document.getElementById("cartCountLabel").innerText = `Basket (${count})`;
   document.getElementById("cartTotal").innerText = totalText;
@@ -1024,6 +1030,20 @@ function checkout() {
    HELPERS
 ===================================================== */
 function toggleCart(show) {
+  if (typeof window.lbOpenCart === "function" && typeof window.lbCloseCart === "function") {
+    const mobileBar = document.getElementById("mobileBar");
+    const floatingCheckoutBtn = document.getElementById("floatingCheckoutBtn");
+    if (show) {
+      window.lbOpenCart();
+      if (mobileBar) mobileBar.classList.remove("is-visible");
+      if (floatingCheckoutBtn) floatingCheckoutBtn.style.display = "none";
+    } else {
+      window.lbCloseCart();
+      updateCartUI();
+    }
+    return;
+  }
+
   document.getElementById("cartPanel").classList.toggle("active", show);
   const backdrop = document.getElementById("cartBackdrop");
   if (backdrop) backdrop.classList.toggle("active", show);
