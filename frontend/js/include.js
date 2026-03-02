@@ -38,6 +38,54 @@ document.addEventListener("DOMContentLoaded", async () => {
   function reInitializeUI() {
     const OPEN_LOCATION_FLAG = "lbOpenLocationAfterRedirect";
     const OPEN_CART_FLAG = "lbOpenCartAfterRedirect";
+    const escapeHtml = (value) =>
+      String(value || "").replace(/[&<>"']/g, (ch) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[ch]));
+    const setLocationTicker = (elementId, text, opts = {}) => {
+      const target = document.getElementById(elementId);
+      if (!target) return;
+
+      const rawText = String(text || "Select Location");
+      const safeText = escapeHtml(rawText);
+      const spacer = Number(opts.spacer || 32);
+      const minOverflow = Number(opts.minOverflow || 6);
+      const minSpeed = Number(opts.minSpeed || 7);
+      const maxSpeed = Number(opts.maxSpeed || 18);
+      const speedDivisor = Number(opts.speedDivisor || 22);
+
+      target.innerHTML = `<span class="lb-loc-marquee-track"><span class="lb-loc-copy">${safeText}</span></span>`;
+      target.classList.remove("is-marquee");
+      target.style.removeProperty("--lb-loc-loop");
+      target.style.removeProperty("--lb-loc-speed");
+
+      const track = target.querySelector(".lb-loc-marquee-track");
+      const copy = target.querySelector(".lb-loc-copy");
+      if (!track) return;
+
+      requestAnimationFrame(() => {
+        const copyWidth = Math.ceil(copy ? copy.scrollWidth : track.scrollWidth);
+        const overflow = Math.ceil(copyWidth - target.clientWidth);
+        if (overflow > minOverflow) {
+          const loop = copyWidth + spacer;
+          const speed = Math.max(minSpeed, Math.min(maxSpeed, loop / speedDivisor));
+          track.innerHTML = `<span class="lb-loc-copy">${safeText}</span><span class="lb-loc-gap" aria-hidden="true" style="display:inline-block;min-width:${spacer}px;"></span><span class="lb-loc-copy" aria-hidden="true">${safeText}</span>`;
+          target.style.setProperty("--lb-loc-loop", String(loop));
+          target.style.setProperty("--lb-loc-speed", `${speed}s`);
+          target.classList.add("is-marquee");
+        }
+      });
+    };
+    const setMobileLocationTicker = (text) =>
+      setLocationTicker("locTextMobile", text, { spacer: 32, minOverflow: 6, minSpeed: 7, maxSpeed: 18, speedDivisor: 22 });
+    const setDesktopLocationTicker = (text) =>
+      setLocationTicker("locText", text, { spacer: 26, minOverflow: 8, minSpeed: 8, maxSpeed: 20, speedDivisor: 24 });
+    window.lbSetLocMobileText = setMobileLocationTicker;
+    window.lbSetLocDesktopText = setDesktopLocationTicker;
 
     // Login popup
     if (window.initAuth) {
@@ -112,10 +160,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const savedAddress = String(localStorage.getItem("lbAddr") || "").trim();
     if (savedAddress) {
-      const desktopLoc = document.getElementById("locText");
-      const mobileLoc = document.getElementById("locTextMobile");
-      if (desktopLoc) desktopLoc.textContent = savedAddress;
-      if (mobileLoc) mobileLoc.textContent = savedAddress;
+      setDesktopLocationTicker(savedAddress);
+      setMobileLocationTicker(savedAddress);
     }
 
     const goBackSafe = () => {

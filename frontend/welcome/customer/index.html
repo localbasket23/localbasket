@@ -2019,15 +2019,16 @@
 
   .search-wrapper input {
     width: 100%;
-    height: 56px;
-    border: 2px solid #d8e1ee;
+    height: 60px;
+    border: 2.5px solid #cfd9e7;
     border-radius: 14px;
-    padding: 0 16px;
+    padding: 0 18px;
     background: #f8fafc;
-    font-size: 17px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: 800;
     color: var(--dark);
     text-align: left;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
   }
   .search-wrapper input::placeholder {
     color: #64748b;
@@ -2258,9 +2259,10 @@
     gap: 8px;
   }
   .search-wrapper input {
-    height: 52px;
-    font-size: 16px;
-    padding: 0 15px;
+    height: 56px;
+    font-size: 17px;
+    padding: 0 16px;
+    border-width: 2.4px;
   }
   .btn-find {
     width: 82%;
@@ -2269,6 +2271,13 @@
     border-radius: 11px;
     font-size: 13px;
     font-weight: 900;
+  }
+
+  html.lb-theme-dark .search-wrapper input {
+    border-color: rgba(191, 212, 244, 0.62) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 0 0 1px rgba(191, 212, 244, 0.15);
   }
 
   .cat-btn {
