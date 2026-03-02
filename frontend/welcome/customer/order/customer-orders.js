@@ -1,6 +1,6 @@
 /* =====================================================
-   LOCALBASKET â€” CUSTOMER ORDERS SCRIPT
-   CLEAN â€¢ SAFE â€¢ STABLE â€¢ BACKEND-ALIGNED
+   LOCALBASKET - CUSTOMER ORDERS SCRIPT
+   CLEAN - SAFE - STABLE - BACKEND-ALIGNED
 ===================================================== */
 
 console.log("customer-orders.js loaded");
@@ -29,13 +29,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const wrapper = document.getElementById("ordersWrapper");
 
   if (!wrapper) {
-    console.error("âŒ ordersWrapper not found");
+    console.error("X ordersWrapper not found");
     return;
   }
 
   const user = getCurrentUser();
   if (!user) {
-    console.warn("âš  User not logged in");
+    console.warn("Warning: User not logged in");
     function goHome() {
   window.location.href = "/welcome/customer/index.html";
 }
@@ -56,7 +56,7 @@ function getCurrentUser() {
 
     if (!user) return null;
 
-    // ðŸ”¥ HARD CHECK
+    // HARD CHECK
     if (!user.id) {
       console.error("User ID missing in lbUser:", user);
       return null;
@@ -1189,7 +1189,7 @@ function renderOrderCard(order) {
           cart.length
             ? cart.map(i => `
               <div class="item">
-                <span>${i.qty} × ${i.name}</span>
+                <span>${i.qty} - ${i.name}</span>
                 <strong>Rs. ${i.qty * i.price}</strong>
               </div>
             `).join("")
@@ -1200,11 +1200,11 @@ function renderOrderCard(order) {
       <div class="card-footer">
         <div class="footer-meta">
           <div class="payment">
-            ${order.payment_method} • ${order.payment_status}
+            ${order.payment_method} - ${order.payment_status}
           </div>
           ${
             actionReason
-              ? `<div class="payment payment-alert">${actionActor ? `By: ${actionActor} • ` : ""}Reason: ${actionReason}</div>`
+              ? `<div class="payment payment-alert">${actionActor ? `By: ${actionActor}  ` : ""}Reason: ${actionReason}</div>`
               : ""
           }
           <div class="amount-label">Order Total</div>
@@ -1214,14 +1214,14 @@ function renderOrderCard(order) {
         <div class="actions">
           <button class="btn track"
             onclick='trackOrder(${safeOrderIdLiteral})'>
-            ?? Track
+            Track
           </button>
 
           ${
             canCancel(displayStatus)
               ? `<button class="btn cancel"
                    onclick='openCancelModal(${safeOrderIdLiteral})'>
-                   ? Cancel
+                   Cancel
                  </button>`
               : ""
           }
@@ -1231,7 +1231,7 @@ function renderOrderCard(order) {
               ? `<a class="btn invoice"
                    href="${API_URL}/orders/${safeOrderIdForUrl}/invoice"
                    target="_blank">
-                   ?? Invoice
+                   Invoice
                  </a>`
               : ""
           }
@@ -1247,7 +1247,7 @@ function renderOrderCard(order) {
 
           <button class="btn reorder"
             onclick='reorder(${JSON.stringify(cart)})'>
-            ?? Re-order
+            Re-order
           </button>
         </div>
         ${
@@ -1446,7 +1446,7 @@ async function confirmCancel() {
       );
     }
   } catch (err) {
-    console.error("? Cancel error:", err);
+    console.error("Cancel error:", err);
     alert("Unable to cancel order");
   }
 }
@@ -1605,7 +1605,7 @@ function buildTrackingRows(order, fallbackStatus) {
     const actor = normalizeActorName(getEventActor(evt), "");
     const reason = getEventReason(evt);
     const actorText = actor ? `By ${actor}` : "";
-    const reasonText = reason ? `• ${reason}` : "";
+    const reasonText = reason ? ` ${reason}` : "";
     rows.push({
       when,
       label,
@@ -1712,7 +1712,7 @@ function trackOrder(orderId) {
 
   const summaryTitle = escapeHtml(displayLabel.replace(/_/g, " "));
   const summarySub = isTerminal
-    ? `${summaryTitle}${info.reason ? ` • ${escapeHtml(info.reason)}` : ""}`
+    ? `${summaryTitle}${info.reason ? `  ${escapeHtml(info.reason)}` : ""}`
     : `Expected delivery: ${escapeHtml(getExpectedDeliveryText(order))}`;
   const summaryNote = isTerminal
     ? `Updated by ${escapeHtml(info.actor || (normalizedStatus === "CANCELLED" ? "CUSTOMER" : "SELLER"))}`
@@ -1722,7 +1722,7 @@ function trackOrder(orderId) {
   const destinationText = escapeHtml(getTrackDestination(order));
   const dotRail = TRACK_FLOW.map((_, i) => {
     if (i < stageIndex) return '<span class="mini done"></span>';
-    if (i === stageIndex) return '<span class="mini current">›</span>';
+    if (i === stageIndex) return '<span class="mini current"></span>';
     return '<span class="mini"></span>';
   }).join("");
 
@@ -1769,4 +1769,4 @@ function closeTrackModal() {
   document.getElementById("trackModal")
     .classList.add("hidden");
 }
-
+
