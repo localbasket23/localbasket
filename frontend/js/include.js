@@ -54,6 +54,42 @@ document.addEventListener("DOMContentLoaded", async () => {
       window.initTheme();
     }
 
+    const syncHeaderAuth = () => {
+      let user = null;
+      try {
+        user = JSON.parse(localStorage.getItem("lbUser") || "null");
+      } catch (err) {
+        user = null;
+      }
+
+      const loginBtn = document.getElementById("loginBtn");
+      const userAccount = document.getElementById("userAccount");
+      const userInitials = document.getElementById("userInitials");
+      const userFullName = document.getElementById("userFullName");
+
+      const hasUser = !!(user && (user.id || user.customer_id || user.phone || user.email || user.name));
+
+      if (loginBtn) loginBtn.style.display = hasUser ? "none" : "inline-flex";
+      if (userAccount) userAccount.style.display = hasUser ? "flex" : "none";
+
+      if (hasUser) {
+        const fullName = String(user.name || user.full_name || user.phone || user.email || "User").trim();
+        const initials = fullName
+          .split(/\s+/)
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((part) => part.charAt(0).toUpperCase())
+          .join("") || "U";
+        if (userInitials) userInitials.textContent = initials;
+        if (userFullName) userFullName.textContent = fullName;
+      } else {
+        if (userInitials) userInitials.textContent = "";
+        if (userFullName) userFullName.textContent = "Welcome!";
+      }
+    };
+
+    syncHeaderAuth();
+
     // Navbar buttons
     document.querySelectorAll("[data-login]")
       .forEach(btn => btn.onclick = () =>
@@ -191,9 +227,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (!actionBtn) return;
         const action = String(actionBtn.getAttribute("data-action") || "").trim();
 
-        if (action === "profile" && window.viewProfile) window.viewProfile();
-        if (action === "orders" && window.viewOrders) window.viewOrders();
-        if (action === "logout" && window.logoutUser) window.logoutUser();
+        if (action === "profile") {
+          if (window.viewProfile) window.viewProfile();
+          else window.location.href = "/welcome/customer/profile/profile.html";
+        }
+        if (action === "orders") {
+          if (window.viewOrders) window.viewOrders();
+          else window.location.href = "/welcome/customer/order/customer-orders.html";
+        }
+        if (action === "logout") {
+          if (window.logoutUser) window.logoutUser();
+          else {
+            localStorage.removeItem("lbUser");
+            localStorage.removeItem("lbToken");
+            userMenu.style.display = "none";
+            syncHeaderAuth();
+            window.dispatchEvent(new Event("lb-auth-updated"));
+          }
+        }
       });
       userMenu.dataset.lbMenuActionBound = "1";
     }
@@ -206,6 +257,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         menu.style.display = "none";
       });
       document.body.dataset.lbAccountOutsideBound = "1";
+    }
+
+    if (!document.body.dataset.lbAuthSyncBound) {
+      window.addEventListener("lb-auth-updated", syncHeaderAuth);
+      window.addEventListener("storage", (e) => {
+        if (e.key === "lbUser" || e.key === "lbToken") syncHeaderAuth();
+      });
+      document.body.dataset.lbAuthSyncBound = "1";
     }
   }
 
