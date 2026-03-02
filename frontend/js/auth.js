@@ -1,17 +1,24 @@
 (function () {
+  var OPEN_AUTH_FLAG = "lbOpenAuthAfterRedirect";
+
+  function getAuthContainer() {
+    return document.getElementById("authOverlay") || document.getElementById("authModal");
+  }
+
+  function isCustomerHome() {
+    var p = String(window.location.pathname || "").toLowerCase();
+    return p.endsWith("/welcome/customer/index.html") || p === "/welcome/customer/index.html";
+  }
+
   function openAuthPopup() {
-    var authOverlay = document.getElementById("authOverlay");
-    if (authOverlay) {
-      authOverlay.style.display = "flex";
-      authOverlay.classList.add("active");
-      return;
+    var authContainer = getAuthContainer();
+    if (authContainer) {
+      authContainer.style.display = "flex";
+      authContainer.classList.add("active");
+      return true;
     }
 
-    var authModal = document.getElementById("authModal");
-    if (authModal) {
-      authModal.classList.add("active");
-      authModal.style.display = "flex";
-    }
+    return false;
   }
 
   function bindLoginButtons() {
@@ -20,7 +27,17 @@
       if (!btn || btn.dataset.lbAuthBound) return;
       btn.addEventListener("click", function (e) {
         if (e) e.preventDefault();
-        openAuthPopup();
+        var opened = openAuthPopup();
+        if (!opened) {
+          try {
+            sessionStorage.setItem(OPEN_AUTH_FLAG, "1");
+          } catch (err) {
+            // ignore storage failures
+          }
+          if (!isCustomerHome()) {
+            window.location.href = "/welcome/customer/index.html";
+          }
+        }
       });
       btn.dataset.lbAuthBound = "1";
     });
@@ -28,6 +45,14 @@
 
   function initAuth() {
     bindLoginButtons();
+    try {
+      if (sessionStorage.getItem(OPEN_AUTH_FLAG) === "1") {
+        sessionStorage.removeItem(OPEN_AUTH_FLAG);
+        openAuthPopup();
+      }
+    } catch (err) {
+      // ignore storage failures
+    }
   }
 
   window.initAuth = initAuth;
