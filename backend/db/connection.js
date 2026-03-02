@@ -112,6 +112,7 @@ function initCoreTables(done) {
       total_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
       payment_method VARCHAR(30) DEFAULT 'COD',
       payment_status VARCHAR(30) DEFAULT 'PENDING',
+      payment_id VARCHAR(80) NULL,
       status VARCHAR(30) DEFAULT 'PLACED',
       cancelled_by VARCHAR(80) NULL,
       cancelled_by_role VARCHAR(30) NULL,
