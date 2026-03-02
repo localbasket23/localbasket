@@ -118,6 +118,59 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.addEventListener("click", openCart);
       btn.dataset.lbCartBound = "1";
     });
+
+    const accountBtn = document.getElementById("accountBtn");
+    const userMenu = document.getElementById("userMenu");
+    const userAccount = document.getElementById("userAccount");
+
+    if (accountBtn && !accountBtn.dataset.lbAccountBound) {
+      accountBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const isLoggedIn =
+          userAccount && getComputedStyle(userAccount).display !== "none";
+
+        if (!isLoggedIn) {
+          if (window.openAuth) {
+            window.openAuth();
+          } else {
+            const loginBtn = document.getElementById("loginBtn");
+            if (loginBtn) loginBtn.click();
+          }
+          return;
+        }
+
+        if (userMenu) {
+          const isOpen = userMenu.style.display === "flex";
+          userMenu.style.display = isOpen ? "none" : "flex";
+        }
+      });
+      accountBtn.dataset.lbAccountBound = "1";
+    }
+
+    if (userMenu && !userMenu.dataset.lbMenuActionBound) {
+      userMenu.addEventListener("click", (e) => {
+        const actionBtn = e.target.closest("button[data-action]");
+        if (!actionBtn) return;
+        const action = String(actionBtn.getAttribute("data-action") || "").trim();
+
+        if (action === "profile" && window.viewProfile) window.viewProfile();
+        if (action === "orders" && window.viewOrders) window.viewOrders();
+        if (action === "logout" && window.logoutUser) window.logoutUser();
+      });
+      userMenu.dataset.lbMenuActionBound = "1";
+    }
+
+    if (!document.body.dataset.lbAccountOutsideBound) {
+      window.addEventListener("click", (e) => {
+        const menu = document.getElementById("userMenu");
+        if (!menu) return;
+        if (e.target.closest("#accountBtn") || e.target.closest("#userMenu")) return;
+        menu.style.display = "none";
+      });
+      document.body.dataset.lbAccountOutsideBound = "1";
+    }
   }
 
   async function loadHeader() {
