@@ -182,17 +182,17 @@ const buildSellerLoginPayload = (seller) => {
       payload: {
         success: true,
         status: seller.status,
-        seller: {
-          id: seller.id,
-          store_name: seller.store_name,
-          owner_name: seller.owner_name,
-          phone: seller.phone,
-          address: seller.address,
-          category: seller.category,
-          reject_reason: seller.reject_reason
-        }
+      seller: {
+        id: seller.id,
+        store_name: seller.store_name,
+        owner_name: seller.owner_name,
+        phone: seller.phone,
+        address: seller.address,
+        category: seller.category,
+        reject_reason: seller.reject_reason
       }
-    };
+    }
+  };
   }
 
   return {
@@ -207,6 +207,7 @@ const buildSellerLoginPayload = (seller) => {
         email: seller.email,
         phone: seller.phone,
         category: seller.category,
+        address: seller.address,
         pincode: seller.pincode,
         store_photo: seller.store_photo,
         is_online: seller.is_online,

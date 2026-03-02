@@ -203,9 +203,10 @@
           </div>
         </div>
         
-        <button type="submit" class="btn-accept" style="width: 100%; padding: 14px; margin-top: 10px;">
+        <button id="saveProfileBtn" type="submit" class="btn-accept" style="width: 100%; padding: 14px; margin-top: 10px;">
           <i class="fas fa-save"></i> Save Profile Changes
         </button>
+        <p id="profileStatus" style="margin-top:10px; font-size:13px; color:var(--text-light);"></p>
       </form>
     </div>
   </div>
@@ -240,13 +241,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const email = document.getElementById("email");
   const minimumOrder = document.getElementById("minimumOrder");
   const profileForm = document.getElementById("profileForm");
+  const saveProfileBtn = document.getElementById("saveProfileBtn");
+  const profileStatus = document.getElementById("profileStatus");
 
   /* FILL DATA */
   ownerName.value = seller.owner_name || "";
   storeName.value = seller.store_name || "";
   phone.value = seller.phone || "";
   address.value = seller.address || "";
-  email.value = seller.email || "N/A";
+  email.value = seller.email || "";
   minimumOrder.value = Number(seller.minimum_order || 100);
   
   document.getElementById("displayStoreName").innerText = seller.store_name || "My Store";
@@ -264,34 +267,57 @@ document.addEventListener("DOMContentLoaded", () => {
   /* SAVE PROFILE */
   profileForm.onsubmit = async e => {
     e.preventDefault();
+    if (profileStatus) profileStatus.textContent = "";
     const fd = new FormData();
     fd.append("seller_id", seller.id);
-    fd.append("owner_name", ownerName.value);
-    fd.append("store_name", storeName.value);
-    fd.append("phone", phone.value);
-    fd.append("email", email.value);
-    fd.append("address", address.value);
+    fd.append("owner_name", ownerName.value.trim());
+    fd.append("store_name", storeName.value.trim());
+    fd.append("phone", phone.value.trim());
+    if (email.value.trim()) fd.append("email", email.value.trim());
+    fd.append("address", address.value.trim());
     fd.append("minimum_order", minimumOrder.value || "0");
     if(storeImageInput.files[0]) fd.append("store_photo", storeImageInput.files[0]);
 
     try {
+      if (saveProfileBtn) {
+        saveProfileBtn.disabled = true;
+        saveProfileBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
+      }
       const res = await fetch(`${window.API_BASE_URL}/api/seller/update-profile`, { method:"POST", body:fd });
       const data = await res.json();
-      if(data.success) {
+      if(data && data.success) {
         Object.assign(seller, {
-          owner_name: ownerName.value,
-          store_name: storeName.value,
-          phone: phone.value,
-          email: data.email || email.value,
-          address: address.value,
+          owner_name: ownerName.value.trim(),
+          store_name: storeName.value.trim(),
+          phone: phone.value.trim(),
+          email: data.email || email.value.trim(),
+          address: address.value.trim(),
           store_photo: data.store_photo || seller.store_photo,
           minimum_order: Number(data.minimum_order || minimumOrder.value || 100)
         });
         localStorage.setItem("lbSeller", JSON.stringify(seller));
-        alert("Profile updated successfully!");
-        location.reload();
+        document.getElementById("displayStoreName").innerText = seller.store_name || "My Store";
+        document.getElementById("displayOwner").innerText = seller.owner_name || "Owner";
+        if (profileStatus) {
+          profileStatus.style.color = "var(--green)";
+          profileStatus.textContent = "Profile updated successfully.";
+        }
+      } else {
+        const msg = (data && data.message) ? data.message : "Update failed";
+        if (profileStatus) {
+          profileStatus.style.color = "var(--red)";
+          profileStatus.textContent = msg;
+        } else {
+          alert(msg);
+        }
       }
     } catch(err) { alert("Update failed!"); }
+    finally {
+      if (saveProfileBtn) {
+        saveProfileBtn.disabled = false;
+        saveProfileBtn.innerHTML = `<i class="fas fa-save"></i> Save Profile Changes`;
+      }
+    }
   };
 
   /* REMOVE IMAGE */
