@@ -72,10 +72,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         const copyWidth = Math.ceil(copy ? copy.scrollWidth : track.scrollWidth);
         const overflow = Math.ceil(copyWidth - target.clientWidth);
         if (overflow > minOverflow) {
-          const loop = copyWidth + spacer;
-          const speed = Math.max(minSpeed, Math.min(maxSpeed, loop / speedDivisor));
-          track.innerHTML = `<span class="lb-loc-copy">${safeText}</span><span class="lb-loc-gap" aria-hidden="true" style="display:inline-block;min-width:${spacer}px;"></span><span class="lb-loc-copy" aria-hidden="true">${safeText}</span>`;
-          target.style.setProperty("--lb-loc-loop", String(loop));
+          const shift = overflow + spacer;
+          const speed = Math.max(minSpeed, Math.min(maxSpeed, shift / speedDivisor));
+          target.style.setProperty("--lb-loc-loop", String(shift));
+          target.style.setProperty("--lb-loc-gap", `${spacer}px`);
           target.style.setProperty("--lb-loc-speed", `${speed}s`);
           target.classList.add("is-marquee");
         }

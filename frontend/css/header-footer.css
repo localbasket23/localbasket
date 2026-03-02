@@ -616,11 +616,12 @@ html.lb-theme-dark .user-menu button[data-action="logout"] {
 }
 #locText.is-marquee .lb-loc-marquee-track,
 #locTextMobile.is-marquee .lb-loc-marquee-track {
+  padding-right: var(--lb-loc-gap, 24px);
   animation: lbLocMarquee var(--lb-loc-speed, 10s) linear infinite;
 }
 @keyframes lbLocMarquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(calc(-1px * var(--lb-loc-loop, 0))); }
+  0%, 18% { transform: translateX(0); }
+  82%, 100% { transform: translateX(calc(-1px * var(--lb-loc-loop, 0))); }
 }
 html.lb-theme-dark .mobile-loc-btn {
   background: linear-gradient(165deg, #0f1c31, #162b48);
