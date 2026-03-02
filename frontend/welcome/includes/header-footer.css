@@ -2098,13 +2098,20 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
     gap: 12px;
   }
   .lb-footer-pro .footer-bottom-actions {
-    margin-bottom: calc(72px + env(safe-area-inset-bottom));
+    position: relative;
+    z-index: 4;
+    margin-bottom: calc(96px + env(safe-area-inset-bottom));
   }
   .lb-footer-pro .footer-bottom-actions button,
   .lb-footer-pro .footer-bottom-actions a {
     min-height: 52px;
     font-size: 12px;
     border-radius: 13px;
+  }
+  .lb-footer-pro #lbFooterSellerBtn {
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 

@@ -319,7 +319,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const sellerBtn = document.getElementById("lbFooterSellerBtn");
     if (sellerBtn && !sellerBtn.dataset.lbBound) {
-      sellerBtn.addEventListener("click", () => {
+      sellerBtn.addEventListener("click", (e) => {
+        e.preventDefault();
         window.location.href = welcomePath("seller/seller-auth/seller-auth.html");
       });
       sellerBtn.dataset.lbBound = "1";
