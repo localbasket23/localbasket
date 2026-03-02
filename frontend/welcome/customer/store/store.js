@@ -8,13 +8,21 @@ const isLocalHost = ["localhost", "127.0.0.1"].includes(host) || isPrivateLanHos
 const isVercelHost = host.endsWith(".vercel.app");
 const localOrigin = window.location.protocol === "file:" ? "http://localhost:5000" : `${window.location.protocol}//${host}:5000`;
 const hostedOrigin = window.location.origin;
+const API_BASE_URL = (() => {
+  const stored = (typeof localStorage !== "undefined" && localStorage.getItem("lbApiBase")) || "";
+  const byWindow = window.API_BASE_URL || window.LB_API_BASE || stored;
+  const byOrigin = window.location.protocol === "file:" ? localOrigin : window.location.origin;
+  const clean = String(byWindow || byOrigin || "").trim().replace(/\/+$/, "");
+  if (clean) window.API_BASE_URL = window.API_BASE_URL || clean;
+  return clean;
+})();
 const CONFIG = {
   API_URL: isLocalHost
-    ? `${window.API_BASE_URL}/api`
-    : (isVercelHost ? `${window.API_BASE_URL}/api` : `${window.API_BASE_URL}/api`),
+    ? `${API_BASE_URL}/api`
+    : (isVercelHost ? `${API_BASE_URL}/api` : `${API_BASE_URL}/api`),
   IMAGE_URL: isLocalHost
     ? `${localOrigin}/uploads/`
-    : `${window.API_BASE_URL}/uploads/`,
+    : `${API_BASE_URL}/uploads/`,
   DEFAULT_IMG: "https://placehold.co/200?text=No+Image"
 };
 
@@ -25,10 +33,12 @@ function resolveImageUrl(rawPath) {
     return input;
   }
 
-  const base = String(CONFIG.IMAGE_URL || "").replace(/\/+$/, "");
+  const base = String(CONFIG.IMAGE_URL || `${window.location.origin}/uploads`).replace(/\/+$/, "");
   let path = input.replace(/\\/g, "/").trim();
-  if (path.startsWith("/uploads/")) path = path.slice("/uploads/".length);
-  else if (path.startsWith("uploads/")) path = path.slice("uploads/".length);
+  const lower = path.toLowerCase();
+  const idx = lower.lastIndexOf("/uploads/");
+  if (idx !== -1) path = path.slice(idx + "/uploads/".length);
+  else if (lower.startsWith("uploads/")) path = path.slice("uploads/".length);
   else if (path.startsWith("/")) return `${window.location.origin}${path}`;
 
   return `${base}/${encodeURI(path.replace(/^\/+/, ""))}`;

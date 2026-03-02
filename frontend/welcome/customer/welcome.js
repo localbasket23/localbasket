@@ -11,13 +11,21 @@ const IS_LOCAL_HOST =
     window.location.protocol === "file:";
 const localApiOrigin = window.location.protocol === "file:" ? "http://localhost:5000" : `${window.location.protocol}//${host}:5000`;
 const hostedOrigin = window.location.origin;
+const API_BASE_URL = (() => {
+    const stored = (typeof localStorage !== "undefined" && localStorage.getItem("lbApiBase")) || "";
+    const byWindow = window.API_BASE_URL || window.LB_API_BASE || stored;
+    const byOrigin = window.location.protocol === "file:" ? localApiOrigin : window.location.origin;
+    const clean = String(byWindow || byOrigin || "").trim().replace(/\/+$/, "");
+    if (clean) window.API_BASE_URL = window.API_BASE_URL || clean;
+    return clean;
+})();
 const CONFIG = {
     API_BASE: IS_LOCAL_HOST
-        ? `${window.API_BASE_URL}/api`
-        : (isVercelHost ? `${window.API_BASE_URL}/api` : `${window.API_BASE_URL}/api`),
+        ? `${API_BASE_URL}/api`
+        : (isVercelHost ? `${API_BASE_URL}/api` : `${API_BASE_URL}/api`),
     IMG_BASE: IS_LOCAL_HOST
         ? `${localApiOrigin}/uploads`
-        : `${window.API_BASE_URL}/uploads`,
+        : `${API_BASE_URL}/uploads`,
     DEFAULT_IMG: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80"
 };
 
@@ -54,11 +62,12 @@ const resolveImageUrl = (rawPath) => {
         return input;
     }
 
-    const imgBase = String(CONFIG.IMG_BASE || "").replace(/\/+$/, "");
+    const imgBase = String(CONFIG.IMG_BASE || `${window.location.origin}/uploads`).replace(/\/+$/, "");
     let path = input.replace(/\\/g, "/").trim();
-
-    if (path.startsWith("/uploads/")) path = path.slice("/uploads/".length);
-    else if (path.startsWith("uploads/")) path = path.slice("uploads/".length);
+    const lower = path.toLowerCase();
+    const idx = lower.lastIndexOf("/uploads/");
+    if (idx !== -1) path = path.slice(idx + "/uploads/".length);
+    else if (lower.startsWith("uploads/")) path = path.slice("uploads/".length);
     else if (path.startsWith("/")) return `${window.location.origin}${path}`;
 
     return `${imgBase}/${encodeURI(path.replace(/^\/+/, ""))}`;

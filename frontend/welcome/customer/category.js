@@ -4,14 +4,22 @@ const isLocalHost = ["localhost", "127.0.0.1"].includes(host) || isPrivateLanHos
 const isVercelHost = host.endsWith(".vercel.app");
 const localOrigin = window.location.protocol === "file:" ? "http://localhost:5000" : `${window.location.protocol}//${host}:5000`;
 const hostedOrigin = window.location.origin;
+const API_BASE_URL = (() => {
+  const stored = (typeof localStorage !== "undefined" && localStorage.getItem("lbApiBase")) || "";
+  const byWindow = window.API_BASE_URL || window.LB_API_BASE || stored;
+  const byOrigin = window.location.protocol === "file:" ? localOrigin : window.location.origin;
+  const clean = String(byWindow || byOrigin || "").trim().replace(/\/+$/, "");
+  if (clean) window.API_BASE_URL = window.API_BASE_URL || clean;
+  return clean;
+})();
 
 const CONFIG = {
   API_BASE: isLocalHost
-    ? `${window.API_BASE_URL}/api`
-    : (isVercelHost ? `${window.API_BASE_URL}/api` : `${window.API_BASE_URL}/api`),
+    ? `${API_BASE_URL}/api`
+    : (isVercelHost ? `${API_BASE_URL}/api` : `${API_BASE_URL}/api`),
   IMG_BASE: isLocalHost
     ? `${localOrigin}/uploads`
-    : `${window.API_BASE_URL}/uploads`,
+    : `${API_BASE_URL}/uploads`,
   DEFAULT_IMG: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80"
 };
 
@@ -37,6 +45,22 @@ const slugify = (text) => {
 const mapStoreCategory = (store) => {
   const raw = String(store.category_slug || store.category_name || store.category || store.business_type || "").toLowerCase();
   return slugify(raw || "grocery");
+};
+
+const resolveImageUrl = (rawPath) => {
+  const input = String(rawPath || "").trim();
+  if (!input) return CONFIG.DEFAULT_IMG;
+  if (/^(https?:)?\/\//i.test(input) || input.startsWith("data:") || input.startsWith("blob:")) {
+    return input;
+  }
+  const base = String(CONFIG.IMG_BASE || `${window.location.origin}/uploads`).replace(/\/+$/, "");
+  let path = input.replace(/\\/g, "/").trim();
+  const lower = path.toLowerCase();
+  const idx = lower.lastIndexOf("/uploads/");
+  if (idx !== -1) path = path.slice(idx + "/uploads/".length);
+  else if (lower.startsWith("uploads/")) path = path.slice("uploads/".length);
+  else if (path.startsWith("/")) return `${window.location.origin}${path}`;
+  return `${base}/${encodeURI(path.replace(/^\/+/, ""))}`;
 };
 
 const getStoredQuery = () => {
@@ -116,7 +140,7 @@ const renderSection = (title, stores) => {
         ${stores.map(store => `
           <div class="store-card" onclick="location.href='/welcome/customer/store/store.html?id=${store.id}'">
             <div class="store-img">
-              <img src="${store.store_photo ? CONFIG.IMG_BASE + '/' + store.store_photo : CONFIG.DEFAULT_IMG}" onerror="this.src='${CONFIG.DEFAULT_IMG}'">
+              <img src="${resolveImageUrl(store.store_photo)}" onerror="this.src='${CONFIG.DEFAULT_IMG}'">
               <span class="status-pill ${Number(store.is_online) === 1 ? "open" : "closed"}">
                 ${Number(store.is_online) === 1 ? "OPEN" : "CLOSED"}
               </span>
