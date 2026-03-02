@@ -128,8 +128,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         e.preventDefault();
         e.stopPropagation();
 
-        const isLoggedIn =
-          userAccount && getComputedStyle(userAccount).display !== "none";
+        const hasStoredUser = (() => {
+          try {
+            const raw = localStorage.getItem("lbUser");
+            if (!raw) return false;
+            const parsed = JSON.parse(raw);
+            return !!(parsed && (parsed.id || parsed.customer_id || parsed.phone || parsed.email));
+          } catch (err) {
+            return false;
+          }
+        })();
+        const isVisibleLoggedIn =
+          !!(userAccount && getComputedStyle(userAccount).display !== "none");
+        const isLoggedIn = hasStoredUser || isVisibleLoggedIn;
 
         if (!isLoggedIn) {
           if (window.openAuth) {
@@ -141,10 +152,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           return;
         }
 
-        if (userMenu) {
-          const isOpen = userMenu.style.display === "flex";
-          userMenu.style.display = isOpen ? "none" : "flex";
-        }
+        if (!userMenu) return;
+        const isOpen = userMenu.style.display === "flex";
+        userMenu.style.display = isOpen ? "none" : "flex";
       });
       accountBtn.dataset.lbAccountBound = "1";
     }

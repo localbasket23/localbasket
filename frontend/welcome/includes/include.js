@@ -1145,7 +1145,7 @@ html.lb-theme-dark .lb-global-btn.primary{background:linear-gradient(135deg,#ff8
       userMenu.style.display = userMenu.style.display === "flex" ? "none" : "flex";
     });
     document.addEventListener("click", (e) => {
-      if (!userMenu.contains(e.target) && e.target !== accountBtn) {
+      if (!userMenu.contains(e.target) && !e.target.closest("#accountBtn")) {
         userMenu.style.display = "none";
       }
     });
