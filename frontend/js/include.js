@@ -118,6 +118,28 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (mobileLoc) mobileLoc.textContent = savedAddress;
     }
 
+    const goBackSafe = () => {
+      if (window.history.length > 1) {
+        window.history.back();
+        return;
+      }
+      window.location.href = "/welcome/customer/index.html";
+    };
+
+    const currentPath = String(window.location.pathname || "").toLowerCase();
+    const isHomePage =
+      currentPath.endsWith("/welcome/customer/index.html") ||
+      currentPath === "/welcome/customer/index.html";
+
+    ["lbHeaderBackBtn", "lbHeaderBackBtnMobile"].forEach((id) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.style.display = isHomePage ? "none" : "inline-flex";
+      if (btn.dataset.lbBackBound) return;
+      btn.addEventListener("click", goBackSafe);
+      btn.dataset.lbBackBound = "1";
+    });
+
     const openLocation = () => {
       const modal = document.getElementById("locationModal");
       if (modal) {
