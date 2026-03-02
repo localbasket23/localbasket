@@ -1,5 +1,5 @@
-/*************************************
- * CHECKOUT SCRIPT — FINAL (FIXED)
+﻿/*************************************
+ * CHECKOUT SCRIPT â€” FINAL (FIXED)
  *************************************/
 
 /* ================= AUTH CHECK ================= */
@@ -45,6 +45,7 @@ const FALLBACK_API_BASE =
 
 function getApiBases() {
   const bases = [];
+  const byConfigured = typeof window !== "undefined" ? window.API_BASE_URL : null;
   const byWindow = typeof window !== "undefined" ? window.LB_API_BASE : null;
   const byStorage = localStorage.getItem("lbApiBase");
   const byOrigin =
@@ -54,7 +55,7 @@ function getApiBases() {
       ? window.location.origin
       : null;
 
-  [byWindow, byStorage, byOrigin, ...LOCAL_API_BASES, FALLBACK_API_BASE].forEach((base) => {
+  [byConfigured, byWindow, byStorage, byOrigin, ...LOCAL_API_BASES, FALLBACK_API_BASE].forEach((base) => {
     if (!base || typeof base !== "string") return;
     const clean = base.trim().replace(/\/+$/, "");
     if (!clean || bases.includes(clean)) return;
@@ -65,6 +66,28 @@ function getApiBases() {
 }
 
 async function fetchJsonWithFallback(path, options = {}) {
+  const isAbsolute = /^https?:\/\//i.test(String(path || "").trim());
+  if (isAbsolute) {
+    const res = await fetch(path, options);
+    const text = await res.text();
+    let data = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = null;
+    }
+
+    if (!res.ok) {
+      throw new Error(
+        (data && data.message) ||
+        (data && data.error) ||
+        `HTTP ${res.status}`
+      );
+    }
+
+    return data || {};
+  }
+
   const bases = getApiBases();
   let lastError = "Unknown network error";
 
@@ -153,7 +176,7 @@ function renderCart() {
 
     orderItemsBox.innerHTML += `
       <div class="cart-item">
-        <span>${itemName} � ${qty}</span>
+        <span>${itemName} × ${qty}</span>
         <span>Rs. ${sub}</span>
       </div>
     `;
@@ -311,22 +334,22 @@ async function placeOrder() {
   const paymentMethod = document.getElementById("payment").value;
 
   if (!name || !phone || !address || !pincode) {
-    alert("❌ Fill all required fields");
+    alert("âŒ Fill all required fields");
     return;
   }
 
   if (!/^[6-9]\d{9}$/.test(phone)) {
-    alert("❌ Invalid phone number");
+    alert("âŒ Invalid phone number");
     return;
   }
 
   if (!/^\d{6}$/.test(pincode)) {
-    alert("❌ Invalid pincode");
+    alert("âŒ Invalid pincode");
     return;
   }
 
   if (!cart.length) {
-    alert("❌ Cart is empty");
+    alert("âŒ Cart is empty");
     return;
   }
 
@@ -340,7 +363,7 @@ async function placeOrder() {
       const data = await fetchJsonWithFallback(`${window.API_BASE_URL}/api/stores/${storeId}`);
       const minOrder = Number(data?.store?.minimum_order || 100);
       if (itemsTotal < minOrder) {
-        alert(`❌ Minimum order is Rs. ${minOrder}. Please add more items.`);
+        alert(`âŒ Minimum order is Rs. ${minOrder}. Please add more items.`);
         return;
       }
     }
