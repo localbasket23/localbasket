@@ -7,6 +7,8 @@ const {
   login,
   requestLoginOtp,
   verifyLoginOtp,
+  requestPasswordResetOtp,
+  resetPasswordWithOtp,
   updateProfile,
   requireAuth
 } = customerController;
@@ -31,6 +33,14 @@ router.post("/otp/request", requestLoginOtp);
 router.post("/login-otp/verify", verifyLoginOtp);
 router.post("/verify-otp", verifyLoginOtp);
 router.post("/otp/verify", verifyLoginOtp);
+
+// POST /api/customer/password-reset/request
+router.post("/password-reset/request", requestPasswordResetOtp);
+router.post("/forgot-password/request", requestPasswordResetOtp);
+
+// POST /api/customer/password-reset/verify
+router.post("/password-reset/verify", resetPasswordWithOtp);
+router.post("/forgot-password/verify", resetPasswordWithOtp);
 
 // PUT /api/customer/profile
 router.put("/profile", requireAuth, updateProfile);

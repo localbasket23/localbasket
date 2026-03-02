@@ -589,13 +589,13 @@ function updateOtpAuthUI() {
         if (!isOtp) otpInput.value = "";
     }
     if (passInput) {
-        passInput.style.display = isOtp ? "none" : "block";
-        passInput.required = state.authMode === "login" && !isOtp;
-        if (isOtp) passInput.value = "";
+        passInput.style.display = "block";
+        passInput.required = state.authMode === "login";
+        passInput.placeholder = isOtp ? "New Password" : "Password";
     }
     if (otpToggleBtn) {
         otpToggleBtn.style.display = state.authMode === "login" ? "block" : "none";
-        otpToggleBtn.textContent = isOtp ? "Back to Password Login" : "Forgot password? Login with OTP";
+        otpToggleBtn.textContent = isOtp ? "Back to Password Login" : "Forgot password? Reset with OTP";
     }
     if (authInput) {
         if (state.authMode === "register") {
@@ -621,6 +621,10 @@ async function requestCustomerOtp() {
     if (state.authMode !== "login") return;
     const identifier = String(dom.authPhone()?.value || "").trim();
     if (!identifier) return alert("Enter registered email or phone first");
+    if (!state.authUseOtp) {
+        state.authUseOtp = true;
+        updateOtpAuthUI();
+    }
 
     const btn = dom.authRequestOtpBtn();
     if (btn) {
@@ -628,14 +632,17 @@ async function requestCustomerOtp() {
         btn.textContent = "Sending...";
     }
     try {
-        const res = await fetch(`${CONFIG.API_BASE}/customer/login-otp/request`, {
+        const endpoint = state.authUseOtp
+            ? "/customer/password-reset/request"
+            : "/customer/login-otp/request";
+        const res = await fetch(`${CONFIG.API_BASE}${endpoint}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ identifier })
         });
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.message || "OTP send failed");
-        alert("OTP sent successfully. Please check your registered email/WhatsApp.");
+        alert("OTP sent successfully. Please check your registered email.");
     } catch (err) {
         alert(`Error: ${err.message}`);
     } finally {
@@ -657,16 +664,17 @@ async function submitAuth() {
     if (!phone) return alert("Enter phone/email");
     if (state.authMode === "login" && !state.authUseOtp && !password) return alert("Enter password");
     if (state.authMode === "login" && state.authUseOtp && !otp) return alert("Enter OTP");
+    if (state.authMode === "login" && state.authUseOtp && !password) return alert("Enter new password");
     if (state.authMode === "register" && !regName) return alert("Enter full name");
     if (state.authMode === "register" && !regEmail) return alert("Enter email");
     if (state.authMode === "register" && !emailOk(regEmail)) return alert("Enter valid email");
 
     const endpoint = state.authMode === "login"
-        ? (state.authUseOtp ? "/customer/login-otp/verify" : "/customer/login")
+        ? (state.authUseOtp ? "/customer/password-reset/verify" : "/customer/login")
         : "/customer/register";
     
     const payload = state.authMode === "login" 
-        ? (state.authUseOtp ? { identifier: phone, otp } : { identifier: phone, password })
+        ? (state.authUseOtp ? { identifier: phone, otp, newPassword: password } : { identifier: phone, password })
         : { 
             name: regName,
             phone,
@@ -685,6 +693,15 @@ async function submitAuth() {
 
         if (!res.ok || !data.success) {
             throw new Error(data.message || "Auth failed");
+        }
+
+        if (state.authMode === "login" && state.authUseOtp) {
+            alert(data.message || "Password reset successful. Please login with new password.");
+            state.authUseOtp = false;
+            updateOtpAuthUI();
+            const otpInput = dom.authOtp();
+            if (otpInput) otpInput.value = "";
+            return;
         }
 
         // Success

@@ -142,7 +142,6 @@ const sendEmailOtp = async ({ email, otp }) => {
   });
 
   try {
-    await transporter.verify();
     await transporter.sendMail({
       from: `"LocalBasket" <${user}>`,
       to: email,
@@ -483,6 +482,150 @@ exports.verifyLoginOtp = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "OTP login failed"
+    });
+  }
+};
+
+/* =====================================================
+   REQUEST PASSWORD RESET OTP
+   POST /api/customer/password-reset/request
+===================================================== */
+exports.requestPasswordResetOtp = async (req, res) => {
+  try {
+    const identifier = normalizeLoginIdentifier(
+      req.body.email || req.body.phone || req.body.identifier || ""
+    );
+    if (!identifier) {
+      return res.status(400).json({
+        success: false,
+        message: "Registered email or phone is required"
+      });
+    }
+    if (!isEmail(identifier) && !isPhone10(identifier)) {
+      return res.status(400).json({
+        success: false,
+        message: "Wrong input. Enter valid registered email or phone"
+      });
+    }
+
+    const rows = await query(
+      `SELECT id, phone, email
+       FROM customers
+       WHERE email = ? OR phone = ?
+       LIMIT 1`,
+      [identifier, identifier]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Wrong input. Email/phone is not registered"
+      });
+    }
+
+    const customer = rows[0];
+    const targetEmail = String(customer.email || "").trim().toLowerCase();
+    if (!isEmail(targetEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Customer email missing or invalid in account"
+      });
+    }
+
+    const otp = issueCustomerOtp(targetEmail);
+    const mail = await sendEmailOtp({ email: targetEmail, otp });
+    if (!mail.success) {
+      console.error("CUSTOMER PASSWORD RESET EMAIL OTP FAILURE:", mail);
+      return res.status(502).json({
+        success: false,
+        message: "Unable to send OTP email right now. Please try again."
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "OTP sent to your registered email",
+      customer_id: customer.id
+    });
+  } catch (err) {
+    console.error("CUSTOMER PASSWORD RESET OTP REQUEST ERROR:", err);
+    res.status(500).json({
+      success: false,
+      message: "Unable to send OTP"
+    });
+  }
+};
+
+/* =====================================================
+   RESET PASSWORD WITH OTP
+   POST /api/customer/password-reset/verify
+===================================================== */
+exports.resetPasswordWithOtp = async (req, res) => {
+  try {
+    const identifier = normalizeLoginIdentifier(
+      req.body.email || req.body.phone || req.body.identifier || ""
+    );
+    const otp = String(req.body.otp || "").trim();
+    const newPassword = String(req.body.newPassword || req.body.password || "").trim();
+
+    if (!identifier || !otp || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Registered email/phone, OTP and new password are required"
+      });
+    }
+    if (!isEmail(identifier) && !isPhone10(identifier)) {
+      return res.status(400).json({
+        success: false,
+        message: "Wrong input. Enter valid registered email or phone"
+      });
+    }
+    if (newPassword.length < 4) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 4 characters"
+      });
+    }
+
+    const rows = await query(
+      `SELECT id, email
+       FROM customers
+       WHERE email = ? OR phone = ?
+       LIMIT 1`,
+      [identifier, identifier]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({
+        success: false,
+        message: "Customer account not found"
+      });
+    }
+
+    const customer = rows[0];
+    const check = verifyCustomerOtp(customer.email, otp);
+    if (!check.ok) {
+      return res.status(401).json({
+        success: false,
+        message: check.message
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await query("UPDATE customers SET password = ? WHERE id = ?", [
+      hashedPassword,
+      customer.id
+    ]);
+
+    res.json({
+      success: true,
+      message: "Password reset successful. Please login with new password."
+    });
+  } catch (err) {
+    console.error("CUSTOMER PASSWORD RESET VERIFY ERROR:", err);
+    res.status(500).json({
+      success: false,
+      message: "Password reset failed"
     });
   }
 };
