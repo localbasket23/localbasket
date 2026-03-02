@@ -189,7 +189,12 @@ const buildSellerLoginPayload = (seller) => {
         phone: seller.phone,
         address: seller.address,
         category: seller.category,
-        reject_reason: seller.reject_reason
+        reject_reason: seller.reject_reason,
+        bank_holder: seller.bank_holder || null,
+        bank_account: seller.bank_account || null,
+        bank_ifsc: seller.bank_ifsc || null,
+        bank_name: seller.bank_name || null,
+        bank_branch: seller.bank_branch || null
       }
     }
   };
@@ -211,7 +216,12 @@ const buildSellerLoginPayload = (seller) => {
         pincode: seller.pincode,
         store_photo: seller.store_photo,
         is_online: seller.is_online,
-        minimum_order: Number(seller.minimum_order || 100)
+        minimum_order: Number(seller.minimum_order || 100),
+        bank_holder: seller.bank_holder || null,
+        bank_account: seller.bank_account || null,
+        bank_ifsc: seller.bank_ifsc || null,
+        bank_name: seller.bank_name || null,
+        bank_branch: seller.bank_branch || null
       }
     }
   };
@@ -816,7 +826,12 @@ exports.updateProfile = async (req, res) => {
       store_name,
       phone,
       email,
-      address
+      address,
+      bank_holder,
+      bank_account,
+      bank_ifsc,
+      bank_name,
+      bank_branch
     } = req.body;
     const minOrderRaw = req.body.minimum_order;
     const minimumOrder =
@@ -865,6 +880,19 @@ exports.updateProfile = async (req, res) => {
       }
     }
 
+    if (bank_account && !isValidAccount(bank_account)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid account number"
+      });
+    }
+    if (bank_ifsc && !isValidIfsc(bank_ifsc)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid IFSC code"
+      });
+    }
+
     const storePhoto = getUploadedFile(req, "store_photo")?.filename || null;
     const columns = await getSellerColumns();
     const data = pickColumns(columns, {
@@ -874,7 +902,12 @@ exports.updateProfile = async (req, res) => {
       email: normalizedEmail || null,
       address: address || null,
       store_photo: storePhoto,
-      minimum_order: minimumOrder === null ? null : Number(minimumOrder.toFixed(2))
+      minimum_order: minimumOrder === null ? null : Number(minimumOrder.toFixed(2)),
+      bank_holder: bank_holder ? String(bank_holder).trim() : null,
+      bank_account: bank_account ? String(bank_account).trim() : null,
+      bank_ifsc: bank_ifsc ? String(bank_ifsc).trim().toUpperCase() : null,
+      bank_name: bank_name ? String(bank_name).trim() : null,
+      bank_branch: bank_branch ? String(bank_branch).trim() : null
     });
 
     const keys = Object.keys(data);

@@ -64,6 +64,21 @@
       box-shadow: var(--shadow-sm);
       border: 1px solid var(--border-color);
     }
+    .form-section-title {
+      grid-column: span 2;
+      margin: 6px 0 2px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-light);
+      font-weight: 700;
+    }
+    .section-divider {
+      grid-column: span 2;
+      height: 1px;
+      background: var(--border-color);
+      margin: 2px 0 6px;
+    }
     .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -177,6 +192,8 @@
     <div class="form-card">
       <form id="profileForm">
         <div class="form-grid">
+          <div class="form-section-title">Store Details</div>
+          <div class="section-divider"></div>
           <div class="form-group">
             <label><i class="fas fa-user"></i> Owner Full Name</label>
             <input id="ownerName" type="text" placeholder="Owner Name">
@@ -200,6 +217,28 @@
           <div class="form-group full-width">
             <label><i class="fas fa-map-marker-alt"></i> Store Address</label>
             <textarea id="address" rows="3" placeholder="Complete address..."></textarea>
+          </div>
+          <div class="form-section-title">Bank Details</div>
+          <div class="section-divider"></div>
+          <div class="form-group">
+            <label><i class="fas fa-user"></i> Account Holder Name</label>
+            <input id="bankHolder" type="text" placeholder="Account holder name">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-credit-card"></i> Account Number</label>
+            <input id="bankAccount" type="text" placeholder="Account number">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-university"></i> Bank Name</label>
+            <input id="bankName" type="text" placeholder="Bank name">
+          </div>
+          <div class="form-group">
+            <label><i class="fas fa-code"></i> IFSC Code</label>
+            <input id="bankIfsc" type="text" placeholder="IFSC code">
+          </div>
+          <div class="form-group full-width">
+            <label><i class="fas fa-map-marker-alt"></i> Bank Branch</label>
+            <input id="bankBranch" type="text" placeholder="Branch name">
           </div>
         </div>
         
@@ -240,6 +279,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const address = document.getElementById("address");
   const email = document.getElementById("email");
   const minimumOrder = document.getElementById("minimumOrder");
+  const bankHolder = document.getElementById("bankHolder");
+  const bankAccount = document.getElementById("bankAccount");
+  const bankName = document.getElementById("bankName");
+  const bankIfsc = document.getElementById("bankIfsc");
+  const bankBranch = document.getElementById("bankBranch");
   const profileForm = document.getElementById("profileForm");
   const saveProfileBtn = document.getElementById("saveProfileBtn");
   const profileStatus = document.getElementById("profileStatus");
@@ -251,6 +295,11 @@ document.addEventListener("DOMContentLoaded", () => {
   address.value = seller.address || "";
   email.value = seller.email || "";
   minimumOrder.value = Number(seller.minimum_order || 100);
+  if (bankHolder) bankHolder.value = seller.bank_holder || "";
+  if (bankAccount) bankAccount.value = seller.bank_account || "";
+  if (bankName) bankName.value = seller.bank_name || "";
+  if (bankIfsc) bankIfsc.value = seller.bank_ifsc || "";
+  if (bankBranch) bankBranch.value = seller.bank_branch || "";
   
   document.getElementById("displayStoreName").innerText = seller.store_name || "My Store";
   document.getElementById("displayOwner").innerText = seller.owner_name || "Owner";
@@ -275,6 +324,11 @@ document.addEventListener("DOMContentLoaded", () => {
     fd.append("phone", phone.value.trim());
     if (email.value.trim()) fd.append("email", email.value.trim());
     fd.append("address", address.value.trim());
+    if (bankHolder && bankHolder.value.trim()) fd.append("bank_holder", bankHolder.value.trim());
+    if (bankAccount && bankAccount.value.trim()) fd.append("bank_account", bankAccount.value.trim());
+    if (bankName && bankName.value.trim()) fd.append("bank_name", bankName.value.trim());
+    if (bankIfsc && bankIfsc.value.trim()) fd.append("bank_ifsc", bankIfsc.value.trim());
+    if (bankBranch && bankBranch.value.trim()) fd.append("bank_branch", bankBranch.value.trim());
     fd.append("minimum_order", minimumOrder.value || "0");
     if(storeImageInput.files[0]) fd.append("store_photo", storeImageInput.files[0]);
 
@@ -293,7 +347,12 @@ document.addEventListener("DOMContentLoaded", () => {
           email: data.email || email.value.trim(),
           address: address.value.trim(),
           store_photo: data.store_photo || seller.store_photo,
-          minimum_order: Number(data.minimum_order || minimumOrder.value || 100)
+          minimum_order: Number(data.minimum_order || minimumOrder.value || 100),
+          bank_holder: bankHolder ? bankHolder.value.trim() : seller.bank_holder,
+          bank_account: bankAccount ? bankAccount.value.trim() : seller.bank_account,
+          bank_name: bankName ? bankName.value.trim() : seller.bank_name,
+          bank_ifsc: bankIfsc ? bankIfsc.value.trim().toUpperCase() : seller.bank_ifsc,
+          bank_branch: bankBranch ? bankBranch.value.trim() : seller.bank_branch
         });
         localStorage.setItem("lbSeller", JSON.stringify(seller));
         document.getElementById("displayStoreName").innerText = seller.store_name || "My Store";
