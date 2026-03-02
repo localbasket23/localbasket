@@ -1813,11 +1813,15 @@ function toggleCart(show) {
 
 function renderCartItems() {
     const box = dom.cartItems();
+    const drawer = dom.cartDrawer();
+    const checkoutBtn = drawer ? drawer.querySelector(".btn-auth") : null;
     if (!box) return;
     if (!state.cart.length) {
         box.innerHTML = `<div style="text-align:center;color:#64748b;">Your basket is empty.</div>`;
+        if (checkoutBtn) checkoutBtn.style.display = "none";
         return;
     }
+    if (checkoutBtn) checkoutBtn.style.display = "block";
     box.innerHTML = state.cart.map(i => `
         <div class="cart-row">
             <div>
