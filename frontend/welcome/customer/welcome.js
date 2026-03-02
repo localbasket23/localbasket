@@ -632,21 +632,32 @@ async function requestCustomerOtp() {
         btn.textContent = "Sending...";
     }
     try {
-        const endpoint = state.authUseOtp
-            ? "/customer/password-reset/request"
-            : "/customer/login-otp/request";
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 15000);
-        const res = await fetch(`${CONFIG.API_BASE}${endpoint}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ identifier }),
-            signal: controller.signal
-        });
-        clearTimeout(timeout);
-        const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.message || "OTP send failed");
-        alert("OTP sent successfully. Please check your registered email.");
+        const endpoints = state.authUseOtp
+            ? ["/customer/password-reset/request", "/customer/login-otp/request"]
+            : ["/customer/login-otp/request"];
+        let lastErr = null;
+
+        for (const endpoint of endpoints) {
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 15000);
+                const res = await fetch(`${CONFIG.API_BASE}${endpoint}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ identifier }),
+                    signal: controller.signal
+                });
+                clearTimeout(timeout);
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.message || "OTP send failed");
+                alert(data.message || "OTP sent successfully. Please check your registered email.");
+                return;
+            } catch (err) {
+                lastErr = err;
+            }
+        }
+
+        throw lastErr || new Error("OTP send failed");
     } catch (err) {
         const msg = err && err.name === "AbortError"
             ? "OTP request timed out. Please try again."
@@ -690,25 +701,90 @@ async function submitAuth() {
           };
 
     try {
-        const res = await fetch(`${CONFIG.API_BASE}${endpoint}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-
-        const data = await res.json();
-
-        if (!res.ok || !data.success) {
-            throw new Error(data.message || "Auth failed");
-        }
+        const fetchJson = async (url, options = {}) => {
+            const res = await fetch(url, options);
+            const data = await res.json().catch(() => ({}));
+            return { res, data };
+        };
 
         if (state.authMode === "login" && state.authUseOtp) {
-            alert(data.message || "Password reset successful. Please login with new password.");
+            const resetTry = await fetchJson(`${CONFIG.API_BASE}/customer/password-reset/verify`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ identifier: phone, otp, newPassword: password })
+            });
+
+            if (resetTry.res.ok && resetTry.data?.success) {
+                alert(resetTry.data.message || "Password reset successful. Please login with new password.");
+                state.authUseOtp = false;
+                updateOtpAuthUI();
+                const otpInput = dom.authOtp();
+                if (otpInput) otpInput.value = "";
+                return;
+            }
+
+            const resetMsg = String(resetTry.data?.message || "");
+            const canFallback =
+                resetTry.res.status === 404 ||
+                resetTry.res.status === 405 ||
+                /cannot post|not found|route/i.test(resetMsg);
+
+            if (!canFallback) {
+                throw new Error(resetMsg || "Password reset failed");
+            }
+
+            const otpLogin = await fetchJson(`${CONFIG.API_BASE}/customer/login-otp/verify`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ identifier: phone, otp })
+            });
+            if (!otpLogin.res.ok || !otpLogin.data?.success) {
+                throw new Error(otpLogin.data?.message || "OTP verification failed");
+            }
+
+            const resolvedUser = normalizeUser(
+                otpLogin.data.user || otpLogin.data.customer || otpLogin.data.account || null
+            );
+            const token = otpLogin.data.token || "";
+            if (!resolvedUser || !resolvedUser.id || !token) {
+                throw new Error("OTP verified but user session missing");
+            }
+
+            const updateRes = await fetchJson(`${CONFIG.API_BASE}/customer/profile`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    id: resolvedUser.id,
+                    name: resolvedUser.name || "User",
+                    email: resolvedUser.email || "",
+                    phone: resolvedUser.phone || "",
+                    password
+                })
+            });
+
+            if (!updateRes.res.ok || !updateRes.data?.success) {
+                throw new Error(updateRes.data?.message || "Password update failed");
+            }
+
+            alert("Password reset successful. Please login with new password.");
             state.authUseOtp = false;
             updateOtpAuthUI();
             const otpInput = dom.authOtp();
             if (otpInput) otpInput.value = "";
             return;
+        }
+
+        const res = await fetch(`${CONFIG.API_BASE}${endpoint}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            throw new Error(data.message || "Auth failed");
         }
 
         // Success
