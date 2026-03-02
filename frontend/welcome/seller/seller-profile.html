@@ -133,6 +133,40 @@
       .profile-header-card { padding: 22px; }
     }
 
+
+    .btn-photo {
+      padding: 8px 14px;
+      font-size: 12px;
+      border-radius: 10px;
+    }
+    .profile-quick {
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .quick-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255, 138, 26, 0.12);
+      color: var(--lav);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .quick-pill.subtle {
+      background: rgba(15, 23, 42, 0.08);
+      color: var(--text);
+    }
+    .save-btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 10px;
+    }
+
 </style>
 </head>
 <body>
@@ -195,17 +229,21 @@
       <div class="profile-img-wrapper">
         <img id="previewPic" class="profile-img" src="https://cdn-icons-png.flaticon.com/512/9131/9131529.png">
       </div>
-      <h2 id="displayStoreName" style="margin-top:15px; margin-bottom:5px;">Store Name</h2>
-      <p id="displayOwner" style="color: var(--text-light); font-size: 14px;">Owner Name</p>
+      <h2 id="displayStoreName" class="profile-title">Store Name</h2>
+      <p id="displayOwner" class="profile-subtitle">Owner Name</p>
       
       <div class="upload-btn-wrapper">
         <input type="file" id="storeImageInput" accept="image/*" style="display:none">
-        <button class="btn-accept" onclick="document.getElementById('storeImageInput').click()" style="padding: 8px 15px; font-size: 12px; background: var(--lav);">
+        <button class="btn-accept btn-photo" onclick="document.getElementById('storeImageInput').click()">
           <i class="fas fa-camera"></i> Change Photo
         </button>
-        <button class="btn-reject" id="removeImageBtn" style="padding: 8px 15px; font-size: 12px;">
+        <button class="btn-reject btn-photo" id="removeImageBtn">
           <i class="fas fa-trash"></i> Remove
         </button>
+      </div>
+      <div class="profile-quick">
+        <span class="quick-pill"><i class="fas fa-store"></i> Shop Profile</span>
+        <span class="quick-pill subtle">Verified Seller</span>
       </div>
     </div>
 
@@ -262,10 +300,10 @@
           </div>
         </div>
         
-        <button id="saveProfileBtn" type="submit" class="btn-accept" style="width: 100%; padding: 14px; margin-top: 10px;">
+        <button id="saveProfileBtn" type="submit" class="btn-accept save-btn">
           <i class="fas fa-save"></i> Save Profile Changes
         </button>
-        <p id="profileStatus" style="margin-top:10px; font-size:13px; color:var(--text-light);"></p>
+        <p id="profileStatus" class="profile-status"></p>
       </form>
     </div>
   </div>
