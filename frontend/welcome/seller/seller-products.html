@@ -133,7 +133,10 @@
 
     /* Modal Styling */
     .modal {
-      display: none; position: fixed; inset: 0; z-index: 2000;
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
       background: rgba(0,0,0,0.55);
       align-items: center;
       justify-content: center;
@@ -151,10 +154,30 @@
       max-height: min(86vh, 820px);
       overflow: auto;
       scrollbar-gutter: stable;
+      position: relative;
+      left: auto;
+      top: auto;
+      transform: none;
+    }
+    /* Force center for edit/delete modals */
+    #editModal,
+    #deleteModal {
+      display: none;
       position: fixed;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
+      inset: 0;
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+    #editModal .modal-content,
+    #deleteModal .modal-content {
+      position: relative;
+      left: auto;
+      top: auto;
+      transform: none;
+      margin: 0;
+      width: min(720px, calc(100vw - 36px));
     }
     .edit-grid {
       display: grid;
@@ -228,6 +251,15 @@
         top: auto;
         bottom: 0;
         transform: none;
+      }
+      #editModal,
+      #deleteModal {
+        align-items: flex-end;
+        padding: 0;
+      }
+      #editModal .modal-content,
+      #deleteModal .modal-content {
+        width: 100%;
       }
       .modal-actions { flex-direction: column-reverse; }
     }
