@@ -240,18 +240,25 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     const openCart = () => {
-      const drawer = document.getElementById("cartDrawer");
-      if (window.toggleCart && drawer) {
+      if (typeof window.toggleCart === "function") {
         window.toggleCart(true);
         return;
       }
 
-      try {
-        sessionStorage.setItem(OPEN_CART_FLAG, "1");
-      } catch (err) {
-        // ignore storage failures
+      const drawer = document.getElementById("cartDrawer");
+      const overlay = document.getElementById("cartOverlay");
+      if (drawer && overlay) {
+        drawer.classList.add("active");
+        overlay.style.display = "block";
+        return;
       }
-      window.location.href = "/welcome/customer/index.html";
+
+      const sharedDrawer = document.getElementById("lbCartDrawer");
+      const sharedOverlay = document.getElementById("lbCartOverlay");
+      if (sharedDrawer && sharedOverlay) {
+        sharedDrawer.classList.add("active");
+        sharedOverlay.style.display = "block";
+      }
     };
 
     ["cartPill"].forEach((id) => {

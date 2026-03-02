@@ -34,11 +34,27 @@
   }
 
   function openCart() {
-    var drawer = document.getElementById("cartDrawer");
-    if (window.toggleCart && drawer) {
+    if (typeof window.toggleCart === "function") {
       window.toggleCart(true);
       return true;
     }
+
+    var drawer = document.getElementById("cartDrawer");
+    var overlay = document.getElementById("cartOverlay");
+    if (drawer && overlay) {
+      drawer.classList.add("active");
+      overlay.style.display = "block";
+      return true;
+    }
+
+    var sharedDrawer = document.getElementById("lbCartDrawer");
+    var sharedOverlay = document.getElementById("lbCartOverlay");
+    if (sharedDrawer && sharedOverlay) {
+      sharedDrawer.classList.add("active");
+      sharedOverlay.style.display = "block";
+      return true;
+    }
+
     return false;
   }
 
@@ -48,18 +64,7 @@
       if (!btn || btn.dataset.lbCartBound) return;
       btn.addEventListener("click", function (e) {
         if (e) e.preventDefault();
-        var opened = openCart();
-        if (!opened) {
-          try {
-            sessionStorage.setItem(OPEN_CART_FLAG, "1");
-          } catch (err) {
-            // ignore storage failure
-          }
-          var path = String(window.location.pathname || "").toLowerCase();
-          if (!path.endsWith("/welcome/customer/index.html")) {
-            window.location.href = "/welcome/customer/index.html";
-          }
-        }
+        openCart();
       });
       btn.dataset.lbCartBound = "1";
     });
