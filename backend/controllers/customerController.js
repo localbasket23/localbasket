@@ -261,7 +261,8 @@ exports.register = async (req, res) => {
 ===================================================== */
 exports.login = async (req, res) => {
   try {
-    const identifier = String(req.body.identifier || "").trim();
+    const identifierRaw = String(req.body.identifier || "").trim();
+    const identifier = normalizeLoginIdentifier(identifierRaw);
     const password = String(req.body.password || "");
 
     if (!identifier || !password) {
@@ -287,7 +288,23 @@ exports.login = async (req, res) => {
     }
 
     const customer = rows[0];
-    const isMatch = await bcrypt.compare(password, customer.password);
+    const storedPassword = String(customer.password || "");
+    const looksHashed = /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(storedPassword);
+    let isMatch = false;
+
+    if (looksHashed) {
+      isMatch = await bcrypt.compare(password, storedPassword);
+    } else {
+      // Backward compatibility for legacy plain-text rows.
+      isMatch = storedPassword === password;
+      if (isMatch) {
+        const upgradedHash = await bcrypt.hash(password, 10);
+        await query(
+          "UPDATE customers SET password = ? WHERE id = ?",
+          [upgradedHash, customer.id]
+        );
+      }
+    }
 
     if (!isMatch) {
       return res.status(401).json({

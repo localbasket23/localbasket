@@ -379,7 +379,8 @@ exports.register = async (req, res) => {
 ===================================================== */
 exports.login = async (req, res) => {
   try {
-    const { phone, password } = req.body;
+    const phone = String(req.body.phone || req.body.identifier || "").trim();
+    const password = String(req.body.password || "");
 
     if (!phone || !password) {
       return res.status(400).json({
@@ -396,7 +397,23 @@ exports.login = async (req, res) => {
       });
     }
 
-    const match = await bcrypt.compare(password, seller.password);
+    const storedPassword = String(seller.password || "");
+    const looksHashed = /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(storedPassword);
+    let match = false;
+
+    if (looksHashed) {
+      match = await bcrypt.compare(password, storedPassword);
+    } else {
+      // Backward compatibility for legacy plain-text rows.
+      match = storedPassword === password;
+      if (match) {
+        const upgradedHash = await bcrypt.hash(password, 10);
+        await query(
+          "UPDATE sellers SET password = ? WHERE id = ?",
+          [upgradedHash, seller.id]
+        );
+      }
+    }
     if (!match) {
       return res.status(401).json({
         success: false,
