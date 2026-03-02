@@ -1,4 +1,4 @@
-const initIncludes = async () => {
+﻿const initIncludes = async () => {
   const installGlobalToastUI = () => {
     if (window.__lbToastInstalled) return;
     window.__lbToastInstalled = true;
@@ -251,8 +251,8 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
   const localOrigin = window.location.protocol === "file:" ? "http://localhost:5000" : `${window.location.protocol}//${hostName}:5000`;
   const hostedOrigin = window.location.origin;
   const API_BASE = isLocalHost
-    ? `${localOrigin}/api`
-    : (isVercelHost ? `${hostedOrigin}/api` : "/api");
+    ? `${window.API_BASE_URL}`
+    : (isVercelHost ? `${window.API_BASE_URL}` : `${window.API_BASE_URL}`);
   const THEME_KEY = "lbThemeMode";
   const isMobileViewport = () =>
     !!(window.matchMedia && window.matchMedia("(max-width: 768px)").matches);
@@ -1207,3 +1207,5 @@ if (document.readyState === "loading") {
 } else {
   initIncludes();
 }
+
+

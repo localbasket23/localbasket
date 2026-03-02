@@ -1,5 +1,5 @@
-// ================== SELLER AUTH LOGIC ==================
-const API_BASE = "/api";
+﻿// ================== SELLER AUTH LOGIC ==================
+const API_BASE = `${window.API_BASE_URL}`;
 let isRegister = false;
 let isResubmit = false;
 let resubmitSellerId = null;
@@ -856,3 +856,4 @@ document.addEventListener("DOMContentLoaded", () => {
   initFileLabels();
   loadCategories();
 });
+

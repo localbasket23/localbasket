@@ -1,8 +1,8 @@
-/* =====================================================
+﻿/* =====================================================
    LOCALBASKET - CUSTOMER PROFILE LOGIC
 ===================================================== */
 
-const API_URL = "/api";
+const API_URL = `${window.API_BASE_URL}`;
 let currentUser = null;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -186,3 +186,4 @@ function handleLogout() {
 
   window.location.href = "/welcome/customer/index.html";
 }
+

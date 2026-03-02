@@ -1,4 +1,4 @@
-/* =====================================================
+﻿/* =====================================================
    LOCALBASKET  STORE ENGINE (CUSTOMER)
 ===================================================== */
 
@@ -10,8 +10,8 @@ const localOrigin = window.location.protocol === "file:" ? "http://localhost:500
 const hostedOrigin = window.location.origin;
 const CONFIG = {
   API_URL: isLocalHost
-    ? `${localOrigin}/api`
-    : (isVercelHost ? `${hostedOrigin}/api` : "/api"),
+    ? `${window.API_BASE_URL}`
+    : (isVercelHost ? `${window.API_BASE_URL}` : `${window.API_BASE_URL}`),
   IMAGE_URL: isLocalHost
     ? `${localOrigin}/uploads/`
     : (isVercelHost ? `${hostedOrigin}/uploads/` : "/uploads/"),
@@ -1099,3 +1099,5 @@ document.addEventListener("DOMContentLoaded", () => {
   initMobileBarDrag();
   updateFooterSafeOffsets();
 });
+
+

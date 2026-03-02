@@ -1,4 +1,4 @@
-const API_BASE = "/api";
+﻿const API_BASE = `${window.API_BASE_URL}`;
 
 const form = document.getElementById("resubmitForm");
 const submitBtn = document.getElementById("submitBtn");
@@ -356,3 +356,4 @@ form.addEventListener("submit", async (e) => {
   const rejectedKeys = Array.from(new Set([...parseRejectKeys(), ...requiredKeys]));
   lockAllExcept(rejectedKeys);
 })();
+

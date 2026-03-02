@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>window.API_BASE_URL = "https://localbasket-egpn.onrender.com/api";</script>
   <base href="/" />
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Product Approval — Local Basket Admin</title>
+  <title>Product Approval â€” Local Basket Admin</title>
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="./welcome/logo2.png?v=99">
   <link rel="icon" type="image/png" sizes="32x32" href="./welcome/logo2.png?v=200">
@@ -473,7 +474,7 @@ async function loadProducts() {
 
   try {
    const res = await fetch(
-  "/api/admin/products/pending"
+  `${window.API_BASE_URL}/admin/products/pending`
 );
     const data = await res.json();
 
@@ -508,7 +509,7 @@ async function updateStatus(id, status, isMobile = false) {
 
   try {
     const res = await fetch(
-  "/api/admin/product/status",
+  `${window.API_BASE_URL}/admin/product/status`,
   {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -537,8 +538,13 @@ loadProducts();
 <script src='admin-layout.js'></script>
   <div id="footer"></div>
   <script src="/js/include.js"></script>
+  <script src="/js/config.js"></script>
 </body>
 </html>
+
+
+
+
 
 
 

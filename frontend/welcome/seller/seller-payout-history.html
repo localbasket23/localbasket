@@ -1,10 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>window.API_BASE_URL = "https://localbasket-egpn.onrender.com/api";</script>
   <base href="/" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seller Earnings — Local Basket</title>
+  <title>Seller Earnings â€” Local Basket</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -325,12 +326,12 @@ if (!seller || !seller.id) {
 }
 
 /* ================= CONFIG ================= */
-const API_URL = `/api/seller/orders/${seller.id}`;
+const API_URL = `${window.API_BASE_URL}/seller/orders/${seller.id}`;
 const GLOBAL_COMMISSION_STORAGE_KEY = "lbGlobalCommission";
 const SELLER_COMMISSION_MAP_KEY = "lbSellerCommissionMap";
 const ADMIN_API_BASE_CANDIDATES = [
-  "/api/admin",
-  "/api/admin"
+  `${window.API_BASE_URL}/admin`,
+  `${window.API_BASE_URL}/admin`
 ];
 
 /* ================= STATE ================= */
@@ -583,7 +584,7 @@ function updateChart() {
       values.push(total);
     }
   } else {
-    /* CURRENT MONTH (1 → today) */
+    /* CURRENT MONTH (1 â†’ today) */
     const year = now.getFullYear();
     const month = now.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -738,8 +739,13 @@ loadWalletData();
 
   <div id="footer"></div>
   <script src="/js/include.js"></script>
+  <script src="/js/config.js"></script>
 </body>
 </html>
+
+
+
+
 
 
 

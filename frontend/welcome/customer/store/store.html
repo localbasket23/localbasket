@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>window.API_BASE_URL = "https://localbasket-egpn.onrender.com/api";</script>
   <base href="/" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -1216,7 +1217,7 @@
         </div>
 
         <div class="pv-rating">
-          <span class="pv-stars" id="pvStars">★★★★★</span>
+          <span class="pv-stars" id="pvStars">â˜…â˜…â˜…â˜…â˜…</span>
           <span id="pvRatingText">4.5 (12)</span>
         </div>
 
@@ -1244,11 +1245,11 @@
         <div class="pv-review-form">
           <label>Add your rating</label>
           <div class="pv-star-input" id="pvStarInput">
-            <button class="pv-star-btn" type="button" data-star="1" onclick="setStarRating(1)">★</button>
-            <button class="pv-star-btn" type="button" data-star="2" onclick="setStarRating(2)">★</button>
-            <button class="pv-star-btn" type="button" data-star="3" onclick="setStarRating(3)">★</button>
-            <button class="pv-star-btn" type="button" data-star="4" onclick="setStarRating(4)">★</button>
-            <button class="pv-star-btn" type="button" data-star="5" onclick="setStarRating(5)">★</button>
+            <button class="pv-star-btn" type="button" data-star="1" onclick="setStarRating(1)">â˜…</button>
+            <button class="pv-star-btn" type="button" data-star="2" onclick="setStarRating(2)">â˜…</button>
+            <button class="pv-star-btn" type="button" data-star="3" onclick="setStarRating(3)">â˜…</button>
+            <button class="pv-star-btn" type="button" data-star="4" onclick="setStarRating(4)">â˜…</button>
+            <button class="pv-star-btn" type="button" data-star="5" onclick="setStarRating(5)">â˜…</button>
             <span id="pvStarLabel" style="font-size:12px;color:var(--text-mute);font-weight:700;">Tap to rate</span>
           </div>
           <textarea id="pvReviewText" placeholder="Write a short review (optional)"></textarea>
@@ -1297,8 +1298,12 @@
   <script src="store.js"></script>
   <div id="footer"></div>
   <script src="/js/include.js"></script>
+  <script src="/js/config.js"></script>
 </body>
 </html>
+
+
+
 
 
 

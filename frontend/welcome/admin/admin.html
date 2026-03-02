@@ -1,6 +1,7 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
+  <script>window.API_BASE_URL = "https://localbasket-egpn.onrender.com/api";</script>
   <base href="/" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -365,7 +366,7 @@ function toggleMenu(){
 }
 
 async function loadDashboard() {
-  const API_BASE = "/api/admin";
+  const API_BASE = `${window.API_BASE_URL}/admin`;
 
   try {
     const res = await fetch(`${API_BASE}/dashboard`);
@@ -500,8 +501,13 @@ window.onload = () => {
 <script src='admin-layout.js'></script>
   <div id="footer"></div>
   <script src="/js/include.js"></script>
+  <script src="/js/config.js"></script>
 </body>
 </html>
+
+
+
+
 
 
 

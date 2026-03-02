@@ -1,5 +1,5 @@
-/******************************************************
- * LOCALBASKET — FULL ENGINE (V2 OPTIMIZED)
+﻿/******************************************************
+ * LOCALBASKET â€” FULL ENGINE (V2 OPTIMIZED)
  ******************************************************/
 
 const host = String(window.location.hostname || "").trim();
@@ -13,8 +13,8 @@ const localApiOrigin = window.location.protocol === "file:" ? "http://localhost:
 const hostedOrigin = window.location.origin;
 const CONFIG = {
     API_BASE: IS_LOCAL_HOST
-        ? `${localApiOrigin}/api`
-        : (isVercelHost ? `${hostedOrigin}/api` : "/api"),
+        ? `${window.API_BASE_URL}`
+        : (isVercelHost ? `${window.API_BASE_URL}` : `${window.API_BASE_URL}`),
     IMG_BASE: IS_LOCAL_HOST
         ? `${localApiOrigin}/uploads`
         : (isVercelHost ? `${hostedOrigin}/uploads` : "/uploads"),
@@ -1826,3 +1826,5 @@ Object.assign(window, {
     viewProfile: () => window.location.href = welcomePath("customer/profile/profile.html"),
     viewOrders: () => window.location.href = welcomePath("customer/order/customer-orders.html")
 });
+
+

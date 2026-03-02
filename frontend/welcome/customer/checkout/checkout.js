@@ -176,7 +176,7 @@ renderCart();
 /* ================= SAVE ORDER ================= */
 async function saveOrder(orderData) {
   try {
-    const data = await fetchJsonWithFallback("/api/orders/create", {
+    const data = await fetchJsonWithFallback(`${window.API_BASE_URL}/orders/create`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(orderData)
@@ -211,8 +211,8 @@ function startRazorpayPayment(orderData) {
     body: JSON.stringify({ amount: orderData.total_amount })
   };
 
-  fetchJsonWithFallback("/api/payment/create-order", payload)
-  .catch(() => fetchJsonWithFallback("/api/payment/create", payload))
+  fetchJsonWithFallback(`${window.API_BASE_URL}/payment/create-order`, payload)
+  .catch(() => fetchJsonWithFallback(`${window.API_BASE_URL}/payment/create`, payload))
   .then((rpOrder) => {
     if (!rpOrder || rpOrder.success === false) {
       alert(`Payment init failed: ${rpOrder?.message || "Unknown error"}`);
@@ -337,7 +337,7 @@ async function placeOrder() {
   try {
     const storeId = Number(cart[0]?.storeId || 0);
     if (storeId) {
-      const data = await fetchJsonWithFallback(`/api/stores/${storeId}`);
+      const data = await fetchJsonWithFallback(`${window.API_BASE_URL}/stores/${storeId}`);
       const minOrder = Number(data?.store?.minimum_order || 100);
       if (itemsTotal < minOrder) {
         alert(`âŒ Minimum order is Rs. ${minOrder}. Please add more items.`);
@@ -375,5 +375,6 @@ async function placeOrder() {
     saveOrder(orderData);
   }
 }
+
 
 

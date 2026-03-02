@@ -1,6 +1,6 @@
-/* ================= CONFIG ================= */
+﻿/* ================= CONFIG ================= */
 // Note: API_BASE Dashboard se match hona chahiye (/api)
-const API_BASE = "/api"; 
+const API_BASE = `${window.API_BASE_URL}`; 
 const seller = JSON.parse(localStorage.getItem("lbSeller"));
 
 if (!seller || !seller.id) {
@@ -258,7 +258,7 @@ async function fetchOrders() {
             renderOrders();
         }
     } catch (err) {
-        console.error("❌ Fetch error:", err);
+        console.error("âŒ Fetch error:", err);
     }
 }
 
@@ -522,6 +522,7 @@ function logout() {
         window.location.href = "seller-auth/seller-auth.html";
     }
 }
+
 
 
 

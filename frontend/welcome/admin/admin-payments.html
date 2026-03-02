@@ -1,11 +1,12 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
+  <script>window.API_BASE_URL = "https://localbasket-egpn.onrender.com/api";</script>
   <base href="/" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin — Payments | Local Basket</title>
+  <title>Admin â€” Payments | Local Basket</title>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="./welcome/logo2.png?v=99">
@@ -473,7 +474,7 @@
       }
     }
 
-    const API = "/api/admin";
+    const API = `${window.API_BASE_URL}/admin`;
     const state = { payments: [], filtered: [], showPendingOnly: true };
 
     function resolvePassbookUrl(src) {
@@ -575,7 +576,7 @@
               </div>
               <div class="pay-row">
                 <span>Bank</span>
-                <span>${p.bank_holder || "N/A"} · ${maskAccount(p.bank_account)}</span>
+                <span>${p.bank_holder || "N/A"} Â· ${maskAccount(p.bank_account)}</span>
               </div>
               <div class="pay-row">
                 <span>IFSC</span>
@@ -668,9 +669,14 @@
 <script src='admin-layout.js'></script>
   <div id="footer"></div>
   <script src="/js/include.js"></script>
+  <script src="/js/config.js"></script>
 </body>
 
 </html>
+
+
+
+
 
 
 

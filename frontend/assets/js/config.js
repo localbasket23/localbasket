@@ -7,10 +7,11 @@ const hostedOrigin = window.location.origin;
 
 const CONFIG = {
   API_BASE: isLocalHost
-    ? `${localOrigin}/api`
-    : `${hostedOrigin}/api`,
+    ? `${window.API_BASE_URL}`
+    : `${window.API_BASE_URL}`,
   IMG_BASE: isLocalHost
     ? `${localOrigin}/uploads`
     : `${hostedOrigin}/uploads`,
   DEFAULT_IMG: "https://placehold.co/200?text=No+Image"
 };
+

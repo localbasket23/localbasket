@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>window.API_BASE_URL = "https://localbasket-egpn.onrender.com/api";</script>
   <base href="/" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -199,12 +200,12 @@ if (!seller || !seller.id) {
 }
 
 /* ================= CONFIG ================= */
-const API_URL = `/api/orders/seller/${seller.id}`;
+const API_URL = `${window.API_BASE_URL}/orders/seller/${seller.id}`;
 const GLOBAL_COMMISSION_STORAGE_KEY = "lbGlobalCommission";
 const SELLER_COMMISSION_MAP_KEY = "lbSellerCommissionMap";
 const ADMIN_API_BASE_CANDIDATES = [
-  "/api/admin",
-  "/api/admin"
+  `${window.API_BASE_URL}/admin`,
+  `${window.API_BASE_URL}/admin`
 ];
 let runtimeCommissionPercent = null;
 
@@ -417,8 +418,13 @@ setInterval(syncPocketData, 30000);
 
   <div id="footer"></div>
   <script src="/js/include.js"></script>
+  <script src="/js/config.js"></script>
 </body>
 </html>
+
+
+
+
 
 
 
