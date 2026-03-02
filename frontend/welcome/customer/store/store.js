@@ -14,7 +14,7 @@ const CONFIG = {
     : (isVercelHost ? `${window.API_BASE_URL}/api` : `${window.API_BASE_URL}/api`),
   IMAGE_URL: isLocalHost
     ? `${localOrigin}/uploads/`
-    : (isVercelHost ? `${hostedOrigin}/uploads/` : "/uploads/"),
+    : `${window.API_BASE_URL}/uploads/`,
   DEFAULT_IMG: "https://placehold.co/200?text=No+Image"
 };
 

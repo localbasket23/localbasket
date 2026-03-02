@@ -650,6 +650,7 @@
 
     const IMAGE_BASE_CANDIDATES = Array.from(new Set([
       (localStorage.getItem("lbImageBase") || "").trim(),
+      `${window.API_BASE_URL}/uploads/`,
       `${window.location.origin}/uploads/`,
       "/uploads/"
     ].filter(Boolean)));

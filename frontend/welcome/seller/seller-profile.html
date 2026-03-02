@@ -241,7 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("displayOwner").innerText = seller.owner_name || "Owner";
 
   previewPic.src = seller.store_photo 
-    ? "/uploads/" + seller.store_photo 
+    ? `${window.API_BASE_URL}/uploads/` + seller.store_photo 
     : "https://cdn-icons-png.flaticon.com/512/9131/9131529.png";
 
   /* IMAGE PREVIEW */

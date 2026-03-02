@@ -483,7 +483,7 @@
       if (/^https?:\/\//i.test(raw) || raw.startsWith("data:")) return raw;
       const normalized = raw.replace(/\\/g, "/").replace(/^\/+/, "");
       const withoutUploads = normalized.replace(/^uploads\/+/i, "");
-      return `/uploads/${withoutUploads}`;
+      return `${window.API_BASE_URL}/uploads/${withoutUploads}`;
     }
 
     function hasValidBank(p) {

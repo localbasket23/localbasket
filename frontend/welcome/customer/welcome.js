@@ -17,7 +17,7 @@ const CONFIG = {
         : (isVercelHost ? `${window.API_BASE_URL}/api` : `${window.API_BASE_URL}/api`),
     IMG_BASE: IS_LOCAL_HOST
         ? `${localApiOrigin}/uploads`
-        : (isVercelHost ? `${hostedOrigin}/uploads` : "/uploads"),
+        : `${window.API_BASE_URL}/uploads`,
     DEFAULT_IMG: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80"
 };
 

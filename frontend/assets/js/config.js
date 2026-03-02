@@ -11,7 +11,7 @@ const CONFIG = {
     : `${window.API_BASE_URL}/api`,
   IMG_BASE: isLocalHost
     ? `${localOrigin}/uploads`
-    : `${hostedOrigin}/uploads`,
+    : `${window.API_BASE_URL}/uploads`,
   DEFAULT_IMG: "https://placehold.co/200?text=No+Image"
 };
 

@@ -406,7 +406,7 @@ function renderProducts(list) {
     <tr>
       <td>
        <img class="product-img" 
-     src="./uploads/${p.image}" 
+     src="${window.API_BASE_URL}/uploads/${p.image}" 
      onerror="this.src='/welcome/logo2.png'">
       </td>
       <td style="font-weight:700;">${p.name}</td>
@@ -430,7 +430,7 @@ function renderProducts(list) {
     mobile.innerHTML = list.map(p => `
       <div class="product-card">
         <div class="product-head">
-         <img src="./uploads/${p.image}" 
+         <img src="${window.API_BASE_URL}/uploads/${p.image}" 
      onerror="this.src='/welcome/logo2.png'">
           <div>
             <div class="product-title">${p.name}</div>
