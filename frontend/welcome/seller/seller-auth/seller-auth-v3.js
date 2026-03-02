@@ -539,6 +539,8 @@ document.addEventListener("DOMContentLoaded", () => {
     fd.append("store_name", storeName.value.trim());
     fd.append("owner_name", inputs.ownerName.value.trim());
     if (inputs.email?.value?.trim()) fd.append("email", inputs.email.value.trim().toLowerCase());
+    if (inputs.phone?.value?.trim()) fd.append("phone", inputs.phone.value.trim());
+    if (inputs.altPhone?.value?.trim()) fd.append("alt_phone", inputs.altPhone.value.trim());
     fd.append("category_id", inputs.category.value);
     fd.append("address", inputs.address.value.trim());
     fd.append("pincode", inputs.pincode.value.trim());
@@ -622,6 +624,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (inputs.address) inputs.address.value = seller.address || "";
     if (inputs.pincode) inputs.pincode.value = seller.pincode || "";
     if (inputs.phone) inputs.phone.value = seller.phone || "";
+    if (inputs.altPhone) inputs.altPhone.value = seller.alt_phone || "";
     if (inputs.bankHolder) inputs.bankHolder.value = seller.bank_holder || seller.account_holder || "";
     if (inputs.bankAccount) inputs.bankAccount.value = seller.bank_account || seller.account_number || "";
     if (inputs.bankIfsc) inputs.bankIfsc.value = seller.bank_ifsc || seller.ifsc || "";
@@ -655,6 +658,8 @@ document.addEventListener("DOMContentLoaded", () => {
     lockField(storeName, "store_name");
     lockField(inputs.ownerName, "owner_name");
     lockField(inputs.email, "email");
+    lockField(inputs.phone, "phone");
+    lockField(inputs.altPhone, "alt_phone");
     lockField(inputs.category, "category_id");
     lockField(inputs.address, "address");
     lockField(inputs.pincode, "pincode");
@@ -712,6 +717,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (editable(inputs.phone)) {
         if (!/^[0-9]{10}$/.test(sanitize(inputs.phone.value))) return "Enter valid 10-digit mobile number";
+      }
+      if (editable(inputs.altPhone)) {
+        const alt = sanitize(inputs.altPhone.value);
+        if (alt && !/^[0-9]{10}$/.test(alt)) return "Enter valid 10-digit alternate mobile number";
       }
       if (editable(inputs.password) && sanitize(inputs.password.value).length < 4) return "Password must be at least 4 characters";
     }

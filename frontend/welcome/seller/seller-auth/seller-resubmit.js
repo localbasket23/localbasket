@@ -9,7 +9,9 @@ const fields = {
   ownerName: document.getElementById("ownerName"),
   category: document.getElementById("category"),
   pincode: document.getElementById("pincode"),
+  email: document.getElementById("email"),
   phone: document.getElementById("phone"),
+  altPhone: document.getElementById("altPhone"),
   address: document.getElementById("shopAddress"),
   ownerId: document.getElementById("ownerId"),
   license: document.getElementById("license"),
@@ -178,7 +180,9 @@ function prefill() {
   fields.ownerName.value = seller.owner_name || "";
   fields.address.value = seller.address || "";
   fields.pincode.value = seller.pincode || "";
+  fields.email.value = seller.email || "";
   fields.phone.value = seller.phone || "";
+  fields.altPhone.value = seller.alt_phone || "";
   fields.bankHolder.value = seller.bank_holder || "";
   fields.bankAccount.value = seller.bank_account || "";
   fields.bankIfsc.value = seller.bank_ifsc || "";
@@ -201,6 +205,9 @@ function parseRejectKeys() {
     if (txt.includes("category")) keys.push("category_id");
     if (txt.includes("owner name")) keys.push("owner_name");
     if (txt.includes("store name")) keys.push("store_name");
+    if (txt.includes("email")) keys.push("email");
+    if (txt.includes("alternate phone") || txt.includes("alt phone")) keys.push("alt_phone");
+    if (txt.includes("phone")) keys.push("phone");
     if (txt.includes("bank holder")) keys.push("bank_holder");
     if (txt.includes("account")) keys.push("bank_account");
     if (txt.includes("ifsc")) keys.push("bank_ifsc");
@@ -233,9 +240,12 @@ function lockAllExcept(keys) {
 
   setFieldState(fields.storeName, "store_name");
   setFieldState(fields.ownerName, "owner_name");
+  setFieldState(fields.email, "email");
   setFieldState(fields.category, "category_id");
   setFieldState(fields.address, "address");
   setFieldState(fields.pincode, "pincode");
+  setFieldState(fields.phone, "phone");
+  setFieldState(fields.altPhone, "alt_phone");
   setFieldState(fields.ownerId, "owner_id_doc");
   setFieldState(fields.license, "license_doc");
   setFieldState(fields.storePhoto, "store_photo");
@@ -253,7 +263,19 @@ function validate() {
   const accountRegex = /^[0-9]{9,18}$/;
   const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
 
-  if (!fields.phone.value || fields.phone.value.length < 10) return "Phone missing";
+  if (!fields.email.disabled) {
+    const email = String(fields.email.value || "").trim().toLowerCase();
+    if (!email) return "Email required";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return "Enter valid email address";
+  }
+  if (!fields.phone.disabled) {
+    const phone = String(fields.phone.value || "").trim();
+    if (!/^[0-9]{10}$/.test(phone)) return "Enter valid 10-digit phone";
+  }
+  if (!fields.altPhone.disabled) {
+    const alt = String(fields.altPhone.value || "").trim();
+    if (alt && !/^[0-9]{10}$/.test(alt)) return "Enter valid 10-digit alternate phone";
+  }
   if (!fields.storeName.disabled && !fields.storeName.value.trim()) return "Store name required";
   if (!fields.ownerName.disabled && !fields.ownerName.value.trim()) return "Owner name required";
   if (!fields.category.disabled && !fields.category.value) return "Select category";
@@ -296,6 +318,9 @@ form.addEventListener("submit", async (e) => {
   const fd = new FormData();
   fd.append("store_name", fields.storeName.value.trim());
   fd.append("owner_name", fields.ownerName.value.trim());
+  fd.append("email", fields.email.value.trim().toLowerCase());
+  fd.append("phone", fields.phone.value.trim());
+  if (fields.altPhone.value.trim()) fd.append("alt_phone", fields.altPhone.value.trim());
   fd.append("category_id", fields.category.value);
   fd.append("address", fields.address.value.trim());
   fd.append("pincode", fields.pincode.value.trim());

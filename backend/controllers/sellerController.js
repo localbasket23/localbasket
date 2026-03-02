@@ -533,6 +533,9 @@ exports.resubmit = async (req, res) => {
     const {
       store_name,
       owner_name,
+      email,
+      phone,
+      alt_phone,
       address,
       category_id,
       pincode,
@@ -574,10 +577,61 @@ exports.resubmit = async (req, res) => {
       });
     }
 
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const normalizedPhone = String(phone || "").trim();
+    const normalizedAltPhone = String(alt_phone || "").trim();
+
+    if (normalizedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(normalizedEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email format"
+      });
+    }
+    if (normalizedPhone && !/^[0-9]{10}$/.test(normalizedPhone)) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter valid 10-digit phone number"
+      });
+    }
+    if (normalizedAltPhone && !/^[0-9]{10}$/.test(normalizedAltPhone)) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter valid 10-digit alternate phone number"
+      });
+    }
+
+    if (normalizedPhone) {
+      const [phoneDup] = await query(
+        "SELECT id FROM sellers WHERE phone = ? AND id <> ? LIMIT 1",
+        [normalizedPhone, sellerId]
+      );
+      if (Array.isArray(phoneDup) && phoneDup.length > 0) {
+        return res.status(409).json({
+          success: false,
+          message: "Phone already in use"
+        });
+      }
+    }
+    if (normalizedEmail) {
+      const [emailDup] = await query(
+        "SELECT id FROM sellers WHERE email = ? AND id <> ? LIMIT 1",
+        [normalizedEmail, sellerId]
+      );
+      if (Array.isArray(emailDup) && emailDup.length > 0) {
+        return res.status(409).json({
+          success: false,
+          message: "Email already in use"
+        });
+      }
+    }
+
     const columns = await getSellerColumns();
     const data = pickColumns(columns, {
       store_name,
       owner_name,
+      email: normalizedEmail || null,
+      phone: normalizedPhone || null,
+      alt_phone: normalizedAltPhone || null,
       address,
       pincode: pincode || null,
       category_id,
