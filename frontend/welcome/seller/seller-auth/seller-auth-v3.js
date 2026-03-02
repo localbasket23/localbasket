@@ -68,6 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const inputs = {
     ownerName: document.getElementById("ownerName"),
+    email: document.getElementById("email"),
     category: document.querySelector("select"),
     address: document.getElementById("shopAddress"),
     phone: document.getElementById("phone"),
@@ -255,6 +256,10 @@ document.addEventListener("DOMContentLoaded", () => {
       inputs.phone.disabled = !enable;
       inputs.phone.required = enable;
     }
+    if (inputs.email) {
+      inputs.email.disabled = !enable;
+      inputs.email.required = enable;
+    }
     if (inputs.password) {
       inputs.password.disabled = !enable;
       inputs.password.required = enable;
@@ -342,6 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     fd.append("store_name", storeName.value.trim());
     fd.append("owner_name", inputs.ownerName.value.trim());
+    fd.append("email", inputs.email.value.trim().toLowerCase());
     fd.append("category_id", inputs.category.value);
     fd.append("address", inputs.address.value.trim());
     fd.append("phone", inputs.phone.value.trim());
@@ -532,6 +538,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const fd = new FormData();
     fd.append("store_name", storeName.value.trim());
     fd.append("owner_name", inputs.ownerName.value.trim());
+    if (inputs.email?.value?.trim()) fd.append("email", inputs.email.value.trim().toLowerCase());
     fd.append("category_id", inputs.category.value);
     fd.append("address", inputs.address.value.trim());
     fd.append("pincode", inputs.pincode.value.trim());
@@ -611,6 +618,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function prefillSeller(seller) {
     if (storeName) storeName.value = seller.store_name || "";
     if (inputs.ownerName) inputs.ownerName.value = seller.owner_name || "";
+    if (inputs.email) inputs.email.value = seller.email || "";
     if (inputs.address) inputs.address.value = seller.address || "";
     if (inputs.pincode) inputs.pincode.value = seller.pincode || "";
     if (inputs.phone) inputs.phone.value = seller.phone || "";
@@ -646,6 +654,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     lockField(storeName, "store_name");
     lockField(inputs.ownerName, "owner_name");
+    lockField(inputs.email, "email");
     lockField(inputs.category, "category_id");
     lockField(inputs.address, "address");
     lockField(inputs.pincode, "pincode");
@@ -696,6 +705,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (step === 1) {
       if (editable(inputs.ownerName) && !sanitize(inputs.ownerName.value)) return "Owner name required";
+      if (editable(inputs.email)) {
+        const email = sanitize(inputs.email.value).toLowerCase();
+        if (!email) return "Email required";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return "Enter valid email address";
+      }
       if (editable(inputs.phone)) {
         if (!/^[0-9]{10}$/.test(sanitize(inputs.phone.value))) return "Enter valid 10-digit mobile number";
       }
@@ -784,6 +798,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!reviewBox) return;
     const items = [
       ["Owner Name", sanitize(inputs.ownerName?.value)],
+      ["Email", sanitize(inputs.email?.value)],
       ["Mobile", sanitize(inputs.phone?.value)],
       ["Store Name", sanitize(storeName?.value)],
       ["Category", inputs.category?.selectedOptions?.[0]?.textContent || ""],

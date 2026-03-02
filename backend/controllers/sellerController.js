@@ -239,11 +239,18 @@ exports.register = async (req, res) => {
     } = req.body;
     const normalizedPhone = String(phone || "").trim();
     const normalizedEmail = String(email || "").trim().toLowerCase() || null;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-    if (!store_name || !owner_name || !normalizedPhone || !pincode || !password || !category_id) {
+    if (!store_name || !owner_name || !normalizedEmail || !normalizedPhone || !pincode || !password || !category_id) {
       return res.status(400).json({
         success: false,
-        message: "Required fields missing"
+        message: "Store name, owner name, email, phone, pincode, password and category are required"
+      });
+    }
+    if (!emailRegex.test(normalizedEmail)) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter valid email address"
       });
     }
     if (!address || !isFullAddress(address)) {
