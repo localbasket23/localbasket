@@ -85,20 +85,20 @@
     <div class="footer-bottom-pro">
       <div class="footer-bottom-row">
         <span>
-          <button type="button" class="lb-admin-trigger" id="lbAdminLoginBtn">Admin Login</button>
+          <button type="button" class="lb-admin-trigger" id="lbAdminLoginBtn" onclick="(function(){var o=document.getElementById('lbAdminPopupOverlay');if(o){o.hidden=false;document.body.style.overflow='hidden';}else{window.location.href='/welcome/admin/admin.html';}})();">Admin Login</button>
           &copy; <span id="lbFooterYear"></span> LocalBasket &bull; Built in India
         </span>
         <div class="footer-bottom-actions">
-          <button type="button" id="lbFooterSellerBtn" aria-label="Sell on LocalBasket">Sell on LocalBasket</button>
+          <button type="button" id="lbFooterSellerBtn" aria-label="Sell on LocalBasket" onclick="window.location.href='/welcome/seller/seller-auth/seller-auth.html';">Sell on LocalBasket</button>
         </div>
       </div>
     </div>
   </div>
 </footer>
 
-<div class="lb-admin-popup-overlay" id="lbAdminPopupOverlay" hidden>
+<div class="lb-admin-popup-overlay" id="lbAdminPopupOverlay" hidden onclick="if(event.target===this){this.hidden=true;document.body.style.overflow='';}">
   <div class="lb-admin-popup" role="dialog" aria-modal="true" aria-labelledby="lbAdminPopupTitle">
-    <button type="button" class="lb-admin-popup-close" id="lbAdminPopupClose" aria-label="Close">&times;</button>
+    <button type="button" class="lb-admin-popup-close" id="lbAdminPopupClose" aria-label="Close" onclick="var o=document.getElementById('lbAdminPopupOverlay');if(o){o.hidden=true;}document.body.style.overflow='';">&times;</button>
     <h3 id="lbAdminPopupTitle">Admin Login</h3>
     <form id="lbAdminPopupForm">
       <input type="text" id="lbAdminUser" placeholder="Admin ID" autocomplete="username" required>
