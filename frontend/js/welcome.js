@@ -38,6 +38,15 @@ const safeParse = (value, fallback = null) => {
     }
 };
 
+const normalizeUser = (raw) => {
+    if (!raw || typeof raw !== "object") return null;
+    const user = { ...raw };
+    const canonicalId = user.id || user.customer_id || user._id || user.user_id || user.customerId || null;
+    if (canonicalId != null) user.id = canonicalId;
+    if (!user.name && user.full_name) user.name = user.full_name;
+    return user;
+};
+
 const resolveImageUrl = (rawPath) => {
     const input = String(rawPath || "").trim();
     if (!input) return CONFIG.DEFAULT_IMG;
@@ -64,7 +73,7 @@ const pickProductImage = (item) => {
 
 /* ============ CART KEY (PER USER) ============ */
 const getCartKey = () => {
-    const u = safeParse(localStorage.getItem("lbUser"), null);
+    const u = normalizeUser(safeParse(localStorage.getItem("lbUser"), null));
     const id = u && u.id ? u.id : "guest";
     return `lbCart_${id}`;
 };
@@ -89,7 +98,7 @@ const saveCart = (cart) => {
 
 /* ============ 1. STATE MANAGEMENT ============ */
 const state = {
-    user: safeParse(localStorage.getItem("lbUser"), null),
+    user: normalizeUser(safeParse(localStorage.getItem("lbUser"), null)),
     cart: loadCart(),
     location: {
         address: localStorage.getItem("lbAddr") || "Select Location",
@@ -679,9 +688,14 @@ async function submitAuth() {
         }
 
         // Success
-        state.user = data.user;
+        const resolvedUser = normalizeUser(data.user || data.customer || data.account || null);
+        if (!resolvedUser) {
+            throw new Error("Login response missing user details");
+        }
+
+        state.user = resolvedUser;
         state.token = data.token || null;
-        localStorage.setItem("lbUser", JSON.stringify(data.user));
+        localStorage.setItem("lbUser", JSON.stringify(resolvedUser));
         if (state.token) localStorage.setItem("lbToken", state.token);
 
         state.cart = loadCart();

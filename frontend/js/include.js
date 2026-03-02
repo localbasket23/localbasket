@@ -67,7 +67,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       const userInitials = document.getElementById("userInitials");
       const userFullName = document.getElementById("userFullName");
 
-      const hasUser = !!(user && (user.id || user.customer_id || user.phone || user.email || user.name));
+      const normalizedId = user && (user.id || user.customer_id || user._id || user.user_id || user.customerId);
+      if (user && !user.id && normalizedId) {
+        user.id = normalizedId;
+        try {
+          localStorage.setItem("lbUser", JSON.stringify(user));
+        } catch (err) {
+          // ignore storage failures
+        }
+      }
+
+      const token = String(localStorage.getItem("lbToken") || "").trim();
+      const hasUser = !!(
+        token ||
+        (user && (user.id || user.customer_id || user._id || user.user_id || user.phone || user.email || user.name))
+      );
 
       if (loginBtn) loginBtn.style.display = hasUser ? "none" : "inline-flex";
       if (userAccount) userAccount.style.display = hasUser ? "flex" : "none";
