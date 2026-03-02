@@ -269,6 +269,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.dataset.lbCartBound = "1";
     });
 
+    const isUserLoggedIn = () => {
+      try {
+        const raw = localStorage.getItem("lbUser");
+        if (!raw) return false;
+        const parsed = JSON.parse(raw);
+        return !!(parsed && (parsed.id || parsed.customer_id || parsed.phone || parsed.email));
+      } catch (err) {
+        return false;
+      }
+    };
+
+    const openLoginPopup = () => {
+      if (window.openAuth) {
+        window.openAuth();
+        return;
+      }
+      const loginBtn = document.getElementById("loginBtn");
+      if (loginBtn) loginBtn.click();
+    };
+
     const navItems = document.querySelectorAll(".lb-nav-item[data-nav]");
     if (navItems.length) {
       navItems.forEach((btn) => {
@@ -279,7 +299,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           if (key === "home") window.location.href = "/welcome/customer/index.html";
           if (key === "browse") window.location.href = "/welcome/customer/category.html";
           if (key === "cart") openCart();
-          if (key === "profile") window.location.href = "/welcome/customer/profile/profile.html";
+          if (key === "profile") {
+            if (!isUserLoggedIn()) {
+              openLoginPopup();
+              return;
+            }
+            window.location.href = "/welcome/customer/profile/profile.html";
+          }
         });
         btn.dataset.lbNavBound = "1";
       });
@@ -304,27 +330,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         e.preventDefault();
         e.stopPropagation();
 
-        const hasStoredUser = (() => {
-          try {
-            const raw = localStorage.getItem("lbUser");
-            if (!raw) return false;
-            const parsed = JSON.parse(raw);
-            return !!(parsed && (parsed.id || parsed.customer_id || parsed.phone || parsed.email));
-          } catch (err) {
-            return false;
-          }
-        })();
+        const hasStoredUser = isUserLoggedIn();
         const isVisibleLoggedIn =
           !!(userAccount && getComputedStyle(userAccount).display !== "none");
         const isLoggedIn = hasStoredUser || isVisibleLoggedIn;
 
         if (!isLoggedIn) {
-          if (window.openAuth) {
-            window.openAuth();
-          } else {
-            const loginBtn = document.getElementById("loginBtn");
-            if (loginBtn) loginBtn.click();
-          }
+          openLoginPopup();
           return;
         }
 

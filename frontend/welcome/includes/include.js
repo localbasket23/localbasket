@@ -1139,9 +1139,30 @@ html.lb-theme-dark .lb-global-btn.primary{background:linear-gradient(135deg,#ff8
 
   const accountBtn = document.getElementById("accountBtn");
   const userMenu = document.getElementById("userMenu");
+  const isUserLoggedIn = () => {
+    try {
+      const raw = localStorage.getItem("lbUser");
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      return !!(parsed && (parsed.id || parsed.customer_id || parsed.phone || parsed.email));
+    } catch {
+      return false;
+    }
+  };
+  const openLoginPopup = () => {
+    if (typeof window.openAuth === "function") {
+      window.openAuth();
+      return;
+    }
+    if (loginBtn) loginBtn.click();
+  };
   if (accountBtn && userMenu) {
     accountBtn.addEventListener("click", (e) => {
       e.stopPropagation();
+      if (!isUserLoggedIn()) {
+        openLoginPopup();
+        return;
+      }
       userMenu.style.display = userMenu.style.display === "flex" ? "none" : "flex";
     });
     document.addEventListener("click", (e) => {
@@ -1152,10 +1173,22 @@ html.lb-theme-dark .lb-global-btn.primary{background:linear-gradient(135deg,#ff8
   }
 
   document.querySelectorAll("[data-action='profile']").forEach(btn => {
-    btn.addEventListener("click", () => window.location.href = welcomePath("customer/profile/profile.html"));
+    btn.addEventListener("click", () => {
+      if (!isUserLoggedIn()) {
+        openLoginPopup();
+        return;
+      }
+      window.location.href = welcomePath("customer/profile/profile.html");
+    });
   });
   document.querySelectorAll("[data-action='orders']").forEach(btn => {
-    btn.addEventListener("click", () => window.location.href = welcomePath("customer/order/customer-orders.html"));
+    btn.addEventListener("click", () => {
+      if (!isUserLoggedIn()) {
+        openLoginPopup();
+        return;
+      }
+      window.location.href = welcomePath("customer/order/customer-orders.html");
+    });
   });
   document.querySelectorAll("[data-action='logout']").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -1175,7 +1208,13 @@ html.lb-theme-dark .lb-global-btn.primary{background:linear-gradient(135deg,#ff8
         if (key === "home") window.location.href = welcomePath("customer/index.html");
         if (key === "browse") window.location.href = welcomePath("customer/category.html");
         if (key === "cart") window.toggleCart ? window.toggleCart(true) : window.location.href = welcomePath("customer/checkout/checkout.html");
-        if (key === "profile") window.location.href = welcomePath("customer/profile/profile.html");
+        if (key === "profile") {
+          if (!isUserLoggedIn()) {
+            openLoginPopup();
+            return;
+          }
+          window.location.href = welcomePath("customer/profile/profile.html");
+        }
       });
     });
     const setActive = (k) => navItems.forEach(b => b.classList.toggle("active", b.getAttribute("data-nav") === k));
