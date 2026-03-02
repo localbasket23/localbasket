@@ -35,30 +35,51 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  async function load(id, path) {
-    const el = document.getElementById(id);
-    if (!el) return;
+  function reInitializeUI() {
 
-    const res = await fetch(path);
+    // Login popup
+    if (window.initAuth) {
+      window.initAuth();
+    }
 
-    el.innerHTML = await res.text();
-    applySharedAssetBindings(el);
+    // Cart system
+    if (window.initCart) {
+      window.initCart();
+    }
+
+    // Theme toggle
+    if (window.initTheme) {
+      window.initTheme();
+    }
+
+    // Navbar buttons
+    document.querySelectorAll("[data-login]")
+      .forEach(btn => btn.onclick = () =>
+        document.getElementById("authModal")?.classList.add("active")
+      );
   }
 
   async function loadHeader() {
-    await load("header", "/components/header.html");
+    const headerContainer = document.getElementById("header");
+    if (!headerContainer) return;
+
+    const res = await fetch("/components/header.html");
+    const html = await res.text();
+    headerContainer.innerHTML = html;
+    reInitializeUI();
+    applySharedAssetBindings(headerContainer);
   }
 
   async function loadFooter() {
-    await load("footer", "/components/footer.html");
+    const footerContainer = document.getElementById("footer");
+    if (!footerContainer) return;
+
+    const res = await fetch("/components/footer.html");
+    const html = await res.text();
+    footerContainer.innerHTML = html;
+    applySharedAssetBindings(footerContainer);
   }
+  await loadHeader();
+  await loadFooter();
 
-  loadHeader();
-  loadFooter();
-
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-  if(window.initAuth) initAuth();
-  if(window.initTheme) initTheme();
 });
