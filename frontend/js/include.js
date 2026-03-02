@@ -379,10 +379,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     const openAdminPopup = () => {
-      if (getAdminAuth()) {
-        goAdminDashboard();
-        return;
-      }
       if (!adminOverlay) {
         try {
           sessionStorage.setItem(ADMIN_LOGIN_REDIRECT_FLAG, "1");
