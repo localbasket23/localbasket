@@ -1,6 +1,25 @@
 (function () {
   var OPEN_CART_FLAG = "lbOpenCartAfterRedirect";
   var RUPEE = "\u20B9";
+  var pathName = String(window.location.pathname || "").toLowerCase();
+  var isNonCustomerPage =
+    pathName.indexOf("/seller/") !== -1 ||
+    pathName.indexOf("/admin/") !== -1 ||
+    pathName.indexOf("/seller-auth/") !== -1 ||
+    pathName.indexOf("/welcome/seller") !== -1 ||
+    pathName.indexOf("/welcome/admin") !== -1;
+
+  if (isNonCustomerPage) {
+    try {
+      sessionStorage.removeItem(OPEN_CART_FLAG);
+    } catch (err) {
+      // ignore storage issues
+    }
+    window.initCart = function () {};
+    window.lbOpenCart = function () { return false; };
+    window.lbCloseCart = function () {};
+    return;
+  }
 
   function getUser() {
     var user = null;
