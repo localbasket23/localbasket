@@ -12,6 +12,7 @@ pool.getConnection((err, connection) => {
   connection.release();
 
   initCoreTables(() => {
+    ensureOrdersPaymentIdColumn();
     initRatingsTable();
     initProductReviewsTable();
     initProductsMrp();
@@ -186,6 +187,33 @@ function initCoreTables(done) {
   };
 
   runNext(0);
+}
+
+function ensureOrdersPaymentIdColumn() {
+  const checkSql = `
+    SELECT COLUMN_NAME
+    FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'orders'
+      AND COLUMN_NAME = 'payment_id'
+    LIMIT 1
+  `;
+  pool.query(checkSql, (err, rows) => {
+    if (err) {
+      console.error("payment_id column check failed:", err.message);
+      return;
+    }
+    if (rows && rows.length) return;
+
+    const alterSql = `ALTER TABLE orders ADD COLUMN payment_id VARCHAR(80) NULL`;
+    pool.query(alterSql, (alterErr) => {
+      if (alterErr) {
+        console.error("payment_id column add failed:", alterErr.message);
+        return;
+      }
+      console.log("payment_id column added to orders");
+    });
+  });
 }
 
 function initRatingsTable() {
