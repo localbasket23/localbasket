@@ -2582,11 +2582,11 @@
     </div>
   </div>
 
-  <div id="cartOverlay" onclick="document.getElementById('cartDrawer').classList.remove('active'); document.getElementById('cartOverlay').style.display='none'"></div>
+  <div id="cartOverlay" onclick="document.getElementById('cartDrawer').classList.remove('active'); document.getElementById('cartOverlay').style.display='none'; document.body.style.overflow=''; document.documentElement.style.overflow='';"></div>
   <div id="cartDrawer">
     <div class="cart-header">
       <h3 style="font-weight: 800;">Your Basket</h3>
-      <button class="close-cart" onclick="document.getElementById('cartDrawer').classList.remove('active'); document.getElementById('cartOverlay').style.display='none'">&times;</button>
+      <button class="close-cart" onclick="document.getElementById('cartDrawer').classList.remove('active'); document.getElementById('cartOverlay').style.display='none'; document.body.style.overflow=''; document.documentElement.style.overflow='';">&times;</button>
     </div>
     <div id="cartItems" style="flex: 1; overflow-y: auto;">
       <div style="text-align: center; margin-top: 60px; color: var(--slate);">

@@ -1805,6 +1805,8 @@ function toggleCart(show) {
 
     drawer.classList.toggle("active", show);
     overlay.style.display = show ? "block" : "none";
+    document.body.style.overflow = show ? "hidden" : "";
+    document.documentElement.style.overflow = show ? "hidden" : "";
     if (show) {
         state.cart = loadCart();
         renderCartItems();
