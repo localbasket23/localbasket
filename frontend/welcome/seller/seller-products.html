@@ -151,7 +151,10 @@
       max-height: min(86vh, 820px);
       overflow: auto;
       scrollbar-gutter: stable;
-      margin: auto;
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
     }
     .edit-grid {
       display: grid;
@@ -219,6 +222,12 @@
         border-radius: 18px 18px 0 0;
         max-height: 85vh;
         padding: 20px 16px 18px;
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: auto;
+        bottom: 0;
+        transform: none;
       }
       .modal-actions { flex-direction: column-reverse; }
     }
