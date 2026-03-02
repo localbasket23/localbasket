@@ -4,7 +4,7 @@ const API_BASE = `${window.API_BASE_URL}/api`;
 const seller = JSON.parse(localStorage.getItem("lbSeller"));
 
 if (!seller || !seller.id) {
-    window.location.href = "seller-auth/seller-auth.html";
+    window.location.href = "/welcome/seller/seller-auth/seller-auth.html";
 }
 
 /* ================= CACHE DOM ================= */
@@ -519,7 +519,7 @@ if(els.themeToggle) {
 function logout() {
     if(confirm("Logout from Seller Panel?")) {
         localStorage.removeItem("lbSeller");
-        window.location.href = "seller-auth/seller-auth.html";
+        window.location.href = "/welcome/seller/seller-auth/seller-auth.html";
     }
 }
 

@@ -64,12 +64,12 @@
   
   <nav class="nav-menu">
     <ul>
-      <li><a href="seller-dashboard.html" class="nav-link active"><i class="fas fa-chart-line"></i> <span class="nav-text">Dashboard</span></a></li>
-      <li><a href="seller-pocket.html" class="nav-link"><i class="fas fa-wallet"></i> <span class="nav-text">My Pocket</span></a></li>
-      <li><a href="seller-add-product.html" class="nav-link"><i class="fas fa-plus-circle"></i> <span class="nav-text">Add Product</span></a></li>
-      <li><a href="seller-products.html" class="nav-link"><i class="fas fa-boxes-stacked"></i> <span class="nav-text">My Products</span></a></li>
-      <li><a href="seller-orders.html" class="nav-link"><i class="fas fa-receipt"></i> <span class="nav-text">All Orders</span></a></li>
-      <li><a href="seller-profile.html" class="nav-link"><i class="fas fa-store"></i> <span class="nav-text">Shop Profile</span></a></li>
+      <li><a href="/welcome/seller/seller-dashboard.html" class="nav-link active"><i class="fas fa-chart-line"></i> <span class="nav-text">Dashboard</span></a></li>
+      <li><a href="/welcome/seller/seller-pocket.html" class="nav-link"><i class="fas fa-wallet"></i> <span class="nav-text">My Pocket</span></a></li>
+      <li><a href="/welcome/seller/seller-add-product.html" class="nav-link"><i class="fas fa-plus-circle"></i> <span class="nav-text">Add Product</span></a></li>
+      <li><a href="/welcome/seller/seller-products.html" class="nav-link"><i class="fas fa-boxes-stacked"></i> <span class="nav-text">My Products</span></a></li>
+      <li><a href="/welcome/seller/seller-orders.html" class="nav-link"><i class="fas fa-receipt"></i> <span class="nav-text">All Orders</span></a></li>
+      <li><a href="/welcome/seller/seller-profile.html" class="nav-link"><i class="fas fa-store"></i> <span class="nav-text">Shop Profile</span></a></li>
       <li class="logout-item">
         <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
       </li>
@@ -119,26 +119,26 @@
   </div>
 
   <section class="quick-actions reveal">
-    <button class="qa-btn" onclick="goPage('seller-add-product.html')">
+    <button class="qa-btn" onclick="goPage('/welcome/seller/seller-add-product.html')">
       <i class="fas fa-plus-circle"></i>
       <span>Add Product</span>
     </button>
-    <button class="qa-btn" onclick="goPage('seller-orders.html')">
+    <button class="qa-btn" onclick="goPage('/welcome/seller/seller-orders.html')">
       <i class="fas fa-receipt"></i>
       <span>View Orders</span>
     </button>
-    <button class="qa-btn" onclick="goPage('seller-pocket.html')">
+    <button class="qa-btn" onclick="goPage('/welcome/seller/seller-pocket.html')">
       <i class="fas fa-wallet"></i>
       <span>My Pocket</span>
     </button>
-    <button class="qa-btn" onclick="goPage('seller-profile.html')">
+    <button class="qa-btn" onclick="goPage('/welcome/seller/seller-profile.html')">
       <i class="fas fa-store"></i>
       <span>Store Profile</span>
     </button>
   </section>
 
   <section class="dashboard-boxes">
-    <div class="box card-orders reveal" onclick="goPage('seller-orders.html')" style="cursor: pointer;">
+    <div class="box card-orders reveal" onclick="goPage('/welcome/seller/seller-orders.html')" style="cursor: pointer;">
       <div class="box-icon"><i class="fas fa-shopping-bag"></i></div>
       <div class="box-data">
         <h4>Total Orders</h4>
@@ -147,13 +147,13 @@
       <svg class="sparkline" data-spark="orders" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"></svg>
     </div>
     
-    <div class="box card-products reveal" onclick="goPage('seller-products.html')" style="cursor: pointer; position: relative;">
+    <div class="box card-products reveal" onclick="goPage('/welcome/seller/seller-products.html')" style="cursor: pointer; position: relative;">
       <div class="box-icon"><i class="fas fa-box"></i></div>
       <div class="box-data">
         <h4>Live Products</h4>
         <b id="totalProducts">0</b>
       </div>
-      <button onclick="event.stopPropagation(); goPage('seller-add-product.html')" 
+      <button onclick="event.stopPropagation(); goPage('/welcome/seller/seller-add-product.html')" 
               class="mini-add-btn" 
               title="Add New Product">
         <i class="fas fa-plus"></i>
@@ -161,7 +161,7 @@
       <svg class="sparkline" data-spark="products" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"></svg>
     </div>
     
-    <div class="box card-earnings reveal" onclick="goPage('seller-pocket.html')" style="cursor: pointer;">
+    <div class="box card-earnings reveal" onclick="goPage('/welcome/seller/seller-pocket.html')" style="cursor: pointer;">
       <div class="box-icon"><i class="fas fa-indian-rupee-sign"></i></div>
       <div class="box-data">
         <h4>Net Earnings</h4>

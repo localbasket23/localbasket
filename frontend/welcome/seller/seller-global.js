@@ -1,7 +1,7 @@
 /* ================= AUTH ================= */
 const seller = JSON.parse(localStorage.getItem("lbSeller"));
 if (!seller || !seller.id) {
-  window.location.href = "/welcome/seller-auth/seller-auth.html";
+  window.location.href = "/welcome/seller/seller-auth/seller-auth.html";
 }
 
 /* ================= THEME ================= */
@@ -58,7 +58,7 @@ function bindIfExists(id, value) {
 /* ================= LOGOUT ================= */
 function sellerLogout() {
   localStorage.removeItem("lbSeller");
-  window.location.href = "/welcome/seller-auth/seller-auth.html";
+  window.location.href = "/welcome/seller/seller-auth/seller-auth.html";
 }
 
 loadSellerDashboard();

@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ================= SESSION CHECK ================= */
   const seller = JSON.parse(localStorage.getItem("lbSeller") || "null");
   if (!seller || !seller.id) {
-    location.href = "seller-auth/seller-auth.html";
+    location.href = "/welcome/seller/seller-auth/seller-auth.html";
     return;
   }
 
@@ -502,7 +502,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <h3>No new orders</h3>
           <p>You're all caught up. Add products or refresh later.</p>
           <div class="empty-actions">
-            <button class="btn-solid" onclick="goPage('seller-add-product.html')">Add Product</button>
+            <button class="btn-solid" onclick="goPage('/welcome/seller/seller-add-product.html')">Add Product</button>
             <button class="btn-outline" onclick="location.reload()">Refresh</button>
           </div>
         </div>
@@ -799,7 +799,7 @@ async function logout() {
 
   if (!ok) return;
   localStorage.removeItem("lbSeller");
-  location.href = "seller-auth/seller-auth.html";
+  location.href = "/welcome/seller/seller-auth/seller-auth.html";
 }
 
 function goPage(url) {

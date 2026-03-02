@@ -171,12 +171,12 @@
   </div>
   <nav class="nav-menu">
     <ul>
-      <li><a href="seller-dashboard.html" class="nav-link"><i class="fas fa-chart-line"></i> Dashboard</a></li>
-      <li><a href="seller-pocket.html" class="nav-link"><i class="fas fa-wallet"></i> My Pocket</a></li>
-      <li><a href="seller-add-product.html" class="nav-link"><i class="fas fa-plus-circle"></i> Add Product</a></li>
-      <li><a href="seller-products.html" class="nav-link active"><i class="fas fa-boxes-stacked"></i> My Products</a></li>
-      <li><a href="seller-orders.html" class="nav-link"><i class="fas fa-receipt"></i> All Orders</a></li>
-      <li><a href="seller-profile.html" class="nav-link"><i class="fas fa-store"></i> Shop Profile</a></li>
+      <li><a href="/welcome/seller/seller-dashboard.html" class="nav-link"><i class="fas fa-chart-line"></i> Dashboard</a></li>
+      <li><a href="/welcome/seller/seller-pocket.html" class="nav-link"><i class="fas fa-wallet"></i> My Pocket</a></li>
+      <li><a href="/welcome/seller/seller-add-product.html" class="nav-link"><i class="fas fa-plus-circle"></i> Add Product</a></li>
+      <li><a href="/welcome/seller/seller-products.html" class="nav-link active"><i class="fas fa-boxes-stacked"></i> My Products</a></li>
+      <li><a href="/welcome/seller/seller-orders.html" class="nav-link"><i class="fas fa-receipt"></i> All Orders</a></li>
+      <li><a href="/welcome/seller/seller-profile.html" class="nav-link"><i class="fas fa-store"></i> Shop Profile</a></li>
       <li class="logout-item"><button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Logout</button></li>
     </ul>
   </nav>
@@ -194,7 +194,7 @@
       </div>
     </div>
     <div class="toggles">
-      <button class="btn-accept" onclick="go('seller-add-product.html')" style="padding: 8px 15px; font-size: 13px;">
+      <button class="btn-accept" onclick="go('/welcome/seller/seller-add-product.html')" style="padding: 8px 15px; font-size: 13px;">
         <i class="fas fa-plus"></i> Add New
       </button>
       <div class="toggle-pill theme-toggle">
@@ -294,7 +294,7 @@
 <script>
 /* ================= AUTH ================= */
 const seller = JSON.parse(localStorage.getItem("lbSeller"));
-if (!seller) location.href = "./seller-auth/seller-auth.html";
+if (!seller) location.href = "/welcome/seller/seller-auth/seller-auth.html";
 
 /* ================= STATE ================= */
 const tableBody = document.getElementById("productTable");
@@ -540,7 +540,7 @@ if (localStorage.getItem("theme") === "dark") {
 function go(p) { location.href = p; }
 function logout() {
   localStorage.removeItem("lbSeller");
-  location.href = "./seller-auth/seller-auth.html";
+  location.href = "/welcome/seller/seller-auth/seller-auth.html";
 }
 
 /* ================= INIT ================= */
