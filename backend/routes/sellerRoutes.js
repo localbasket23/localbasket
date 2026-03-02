@@ -72,45 +72,89 @@ router.post(
 // GET /api/seller/products?seller_id=1
 router.get("/products", getMyProducts);
 
-// UPDATE PRODUCT
-router.put("/products/:id", (req, res) => {
-  const productId = Number(req.params.id);
-  const { name, price, stock, mrp } = req.body;
+// UPDATE PRODUCT (supports unit + optional image update)
+const getUploadedFilesByNames = (req, fieldNames = []) => {
+  const names = new Set(fieldNames.map((n) => String(n || "").trim()));
+  if (Array.isArray(req?.files)) {
+    return req.files.filter((f) => names.has(String(f.fieldname || "").trim()));
+  }
+  const out = [];
+  if (req?.files && typeof req.files === "object") {
+    names.forEach((name) => {
+      const arr = req.files[name];
+      if (Array.isArray(arr)) out.push(...arr);
+    });
+  }
+  return out;
+};
 
-  if (!productId || !name || price === undefined || stock === undefined) {
+router.put("/products/:id", upload.array("image", 8), async (req, res) => {
+  const productId = Number(req.params.id);
+  const { name, price, stock, mrp, unit } = req.body;
+
+  if (!productId || !name || price === undefined || stock === undefined || !unit) {
     return res.status(400).json({
       success: false,
       message: "Missing required fields"
     });
   }
 
-  const sql = `
-    UPDATE products
-    SET name = ?, price = ?, mrp = ?, stock = ?
-    WHERE id = ?
-  `;
+  const images = getUploadedFilesByNames(req, ["image", "images", "images[]"])
+    .map((f) => f.filename)
+    .filter(Boolean);
+  const hasImages = images.length > 0;
+  let hasImagesJson = false;
 
-  db.query(sql, [name, price, mrp || null, stock, productId], (err, result) => {
-    if (err) {
-      console.error("❌ UPDATE PRODUCT ERROR:", err.sqlMessage);
-      return res.status(500).json({
-        success: false,
-        message: "Database error"
-      });
+  try {
+    const [cols] = await db.promise().query(
+      `
+      SELECT COLUMN_NAME
+      FROM information_schema.columns
+      WHERE table_schema = DATABASE()
+        AND table_name = 'products'
+        AND column_name = 'images_json'
+      LIMIT 1
+      `
+    );
+    hasImagesJson = Array.isArray(cols) && cols.length > 0;
+  } catch {
+    hasImagesJson = false;
+  }
+
+  const setCols = ["name = ?", "price = ?", "mrp = ?", "stock = ?", "unit = ?"];
+  const params = [name, price, mrp || null, stock, unit];
+
+  if (hasImages) {
+    setCols.push("image = ?");
+    params.push(images[0]);
+    if (hasImagesJson) {
+      setCols.push("images_json = ?");
+      params.push(JSON.stringify(images));
     }
+  }
 
-    if (result.affectedRows === 0) {
+  const sql = `UPDATE products SET ${setCols.join(", ")} WHERE id = ?`;
+  params.push(productId);
+
+  try {
+    const [result] = await db.promise().query(sql, params);
+    if (!result || result.affectedRows === 0) {
       return res.status(404).json({
         success: false,
         message: "Product not found"
       });
     }
-
     res.json({
       success: true,
       message: "Product updated successfully"
     });
-  });
+  } catch (err) {
+    console.error("UPDATE PRODUCT ERROR:", err.sqlMessage || err.message || err);
+    return res.status(500).json({
+      success: false,
+      message: "Database error"
+    });
+  }
 });
 
 // DELETE PRODUCT

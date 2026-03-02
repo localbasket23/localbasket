@@ -74,6 +74,37 @@
     tr:hover { background: rgba(0,0,0,0.01); }
     
     .prod-img { width: 54px; height: 54px; border-radius: 12px; object-fit: cover; border: 1px solid var(--border-color); background: #f1f5f9; }
+    .preview-grid {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
+      gap: 8px;
+    }
+    .preview-thumb {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: #fff;
+    }
+    .preview-item {
+      position: relative;
+    }
+    .preview-remove {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 20px;
+      height: 20px;
+      border: none;
+      border-radius: 999px;
+      background: rgba(17, 24, 39, 0.78);
+      color: #fff;
+      font-size: 12px;
+      line-height: 1;
+      cursor: pointer;
+    }
 
     .price-stack { display: flex; flex-direction: column; gap: 4px; }
     .price-now { font-weight: 700; color: var(--text); }
@@ -267,8 +298,37 @@
         </div>
       </div>
       <div class="form-group" style="margin-top:15px;">
+        <label style="font-size:13px; font-weight:600;">Unit</label>
+        <select id="editUnit" required>
+          <option value="">Select Unit</option>
+          <option value="250g">250 gram packet</option>
+          <option value="500g">500 gram packet</option>
+          <option value="1kg">1 kg</option>
+          <option value="500ml">500 ml bottle</option>
+          <option value="1ltr">1 litre bottle</option>
+          <option value="dozen">Dozen</option>
+          <option value="box">Box</option>
+          <option value="bottle">Bottle</option>
+          <option value="packet">Packet</option>
+          <option value="pcs">Pieces</option>
+          <option value="__custom__">Custom unit...</option>
+        </select>
+        <input id="editUnitCustom" type="text" placeholder="e.g. 250gm pack / 2 ltr bottle" style="margin-top:8px; display:none;">
+        <small class="field-hint" id="editUnitCustomHint" style="display:none;">Enter your own unit label.</small>
+      </div>
+      <div class="form-group" style="margin-top:15px;">
         <label style="font-size:13px; font-weight:600;">Stock</label>
         <input type="number" id="editStock" required>
+      </div>
+      <div class="form-group" style="margin-top:15px;">
+        <label style="font-size:13px; font-weight:600;">Change Images (optional)</label>
+        <div class="file-input-wrapper" onclick="document.getElementById('editImage').click()" style="padding:14px; border-style:dashed;">
+          <i class="fas fa-image" style="display:block; font-size: 20px; color: var(--lav); margin-bottom: 5px;"></i>
+          <span id="editImageLabel" style="font-size: 12px; color: var(--text-light);">Click to upload new images</span>
+          <input id="editImage" type="file" accept="image/*" style="display:none" multiple>
+        </div>
+        <small class="field-hint">If you upload new images, they will replace the current ones.</small>
+        <div id="editPreviewGrid" class="preview-grid"></div>
       </div>
       <div class="modal-actions">
         <button type="button" class="btn-reject" onclick="closeModal('editModal')">Cancel</button>
@@ -301,6 +361,7 @@ const tableBody = document.getElementById("productTable");
 const productCount = document.getElementById("productCount");
 let myProducts = [];
 let deleteId = null;
+let editSelectedImages = [];
 
 /* ================= LOAD PRODUCTS ================= */
 const API_BASE = `${window.API_BASE_URL}/api`;
@@ -318,6 +379,86 @@ const resolveUploadUrl = (rawPath) => {
   else if (path.startsWith("/")) return `${window.location.origin}${path}`;
   return `${IMAGE_BASE}${encodeURI(path.replace(/^\/+/, ""))}`;
 };
+
+const editUnitSelect = document.getElementById("editUnit");
+const editUnitCustomInput = document.getElementById("editUnitCustom");
+const editUnitCustomHint = document.getElementById("editUnitCustomHint");
+const editImageInput = document.getElementById("editImage");
+const editImageLabel = document.getElementById("editImageLabel");
+const editPreviewGrid = document.getElementById("editPreviewGrid");
+
+function toggleEditCustomUnit() {
+  if (!editUnitSelect || !editUnitCustomInput || !editUnitCustomHint) return;
+  const isCustom = editUnitSelect.value === "__custom__";
+  editUnitCustomInput.style.display = isCustom ? "block" : "none";
+  editUnitCustomHint.style.display = isCustom ? "block" : "none";
+  if (!isCustom) editUnitCustomInput.value = "";
+}
+
+function getEditUnitValue() {
+  if (!editUnitSelect) return "";
+  if (editUnitSelect.value === "__custom__") {
+    return String(editUnitCustomInput?.value || "").trim();
+  }
+  return editUnitSelect.value;
+}
+
+function renderEditImagePreview(existing = []) {
+  if (!editPreviewGrid) return;
+  editPreviewGrid.innerHTML = "";
+
+  const renderThumb = (src, removable, idx) => {
+    const wrap = document.createElement("div");
+    wrap.className = "preview-item";
+    wrap.innerHTML = `
+      <img class="preview-thumb" alt="Product image">
+      ${removable ? '<button type="button" class="preview-remove" title="Remove image">&times;</button>' : ""}
+    `;
+    const img = wrap.querySelector("img");
+    if (img) img.src = src;
+    if (removable) {
+      const removeBtn = wrap.querySelector("button");
+      if (removeBtn) {
+        removeBtn.addEventListener("click", () => {
+          editSelectedImages.splice(idx, 1);
+          renderEditImagePreview(existing);
+        });
+      }
+    }
+    editPreviewGrid.appendChild(wrap);
+  };
+
+  if (editSelectedImages.length) {
+    editSelectedImages.forEach((file, idx) => {
+      const reader = new FileReader();
+      reader.onload = () => renderThumb(reader.result, true, idx);
+      reader.readAsDataURL(file);
+    });
+  } else if (existing.length) {
+    existing.forEach((imgPath) => renderThumb(resolveUploadUrl(imgPath), false, -1));
+  }
+}
+
+if (editImageInput) {
+  editImageInput.onchange = () => {
+    const incoming = Array.from(editImageInput.files || []);
+    if (!incoming.length) return;
+    incoming.forEach((file) => {
+      const key = `${file.name}|${file.size}|${file.lastModified}`;
+      const exists = editSelectedImages.some(
+        (f) => `${f.name}|${f.size}|${f.lastModified}` === key
+      );
+      if (!exists && editSelectedImages.length < 8) {
+        editSelectedImages.push(file);
+      }
+    });
+    if (editImageLabel) {
+      editImageLabel.textContent = `${editSelectedImages.length} image${editSelectedImages.length > 1 ? "s" : ""} selected`;
+    }
+    renderEditImagePreview();
+    editImageInput.value = "";
+  };
+}
 
 async function loadMyProducts() {
   try {
@@ -448,6 +589,21 @@ function openEditModal(id) {
   document.getElementById("editPrice").value = p.price;
   document.getElementById("editMrp").value = p._mrp || "";
   document.getElementById("editStock").value = p.stock;
+  if (editUnitSelect) {
+    const unitVal = String(p.unit || "").trim();
+    const option = Array.from(editUnitSelect.options).find(o => o.value === unitVal);
+    if (option) {
+      editUnitSelect.value = unitVal;
+    } else {
+      editUnitSelect.value = "__custom__";
+      if (editUnitCustomInput) editUnitCustomInput.value = unitVal;
+    }
+  }
+  toggleEditCustomUnit();
+  editSelectedImages = [];
+  if (editImageLabel) editImageLabel.textContent = "Click to upload new images";
+  const existingImages = Array.isArray(p.images) && p.images.length ? p.images : (p.image ? [p.image] : []);
+  renderEditImagePreview(existingImages);
 
   document.getElementById("editModal").style.display = "flex";
 }
@@ -455,21 +611,37 @@ function openEditModal(id) {
 document.getElementById("editForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  const unitValue = getEditUnitValue();
+  if (editUnitSelect && editUnitSelect.value === "__custom__" && !unitValue) {
+    alert("Please enter a custom unit");
+    return;
+  }
+
   const payload = {
     id: document.getElementById("editId").value,
     name: document.getElementById("editName").value.trim(),
     price: Number(document.getElementById("editPrice").value),
     stock: document.getElementById("editStock").value,
-    mrp: document.getElementById("editMrp").value
+    mrp: document.getElementById("editMrp").value,
+    unit: unitValue
   };
   if (payload.mrp === "") payload.mrp = null;
   if (payload.mrp !== null) payload.mrp = Number(payload.mrp);
 
+  const fd = new FormData();
+  fd.append("name", payload.name);
+  fd.append("price", payload.price);
+  fd.append("stock", payload.stock);
+  fd.append("unit", payload.unit);
+  if (payload.mrp !== null) fd.append("mrp", payload.mrp);
+  if (editSelectedImages.length) {
+    editSelectedImages.forEach((f) => fd.append("image", f));
+  }
+
   try {
     const res = await fetch(`${PRODUCTS_ENDPOINT}/${payload.id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
+      body: fd
     });
 
     const data = await res.json();
@@ -486,6 +658,10 @@ document.getElementById("editForm").addEventListener("submit", async (e) => {
     alert("Server error while updating product");
   }
 });
+
+if (editUnitSelect) {
+  editUnitSelect.addEventListener("change", toggleEditCustomUnit);
+}
 
 /* ================= DELETE PRODUCT ================= */
 function openDeleteModal(id) {

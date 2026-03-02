@@ -298,7 +298,10 @@
           <option value="bottle">Bottle</option>
           <option value="packet">Packet</option>
           <option value="pcs">Pieces</option>
+          <option value="__custom__">Custom unit...</option>
         </select>
+        <input id="unitCustom" type="text" placeholder="e.g. 250gm pack / 2 ltr bottle" style="margin-top:8px; display:none;">
+        <small class="field-hint" id="unitCustomHint" style="display:none;">Enter your own unit label.</small>
       </div>
       <div class="form-group">
         <label>Stock Quantity *</label>
@@ -372,6 +375,9 @@ const stockInput = document.getElementById("stock");
 const priceInsight = document.getElementById("priceInsight");
 const submitBtn = document.getElementById("submitBtn");
 const clearDraftBtn = document.getElementById("clearDraftBtn");
+const unitSelect = document.getElementById("unit");
+const unitCustomInput = document.getElementById("unitCustom");
+const unitCustomHint = document.getElementById("unitCustomHint");
 const DRAFT_KEY = `lbAddProductDraft:${seller?.id || "guest"}`;
 const lbPopupOverlay = document.getElementById("lbPopupOverlay");
 const lbPopupBox = document.getElementById("lbPopupBox");
@@ -480,12 +486,28 @@ function updatePriceInsight() {
   priceInsight.innerHTML = `Customer saves <strong>Rs. ${saveRs}</strong> (<strong>${discount}% OFF</strong>)`;
 }
 
+function toggleCustomUnit() {
+  if (!unitSelect || !unitCustomInput || !unitCustomHint) return;
+  const isCustom = unitSelect.value === "__custom__";
+  unitCustomInput.style.display = isCustom ? "block" : "none";
+  unitCustomHint.style.display = isCustom ? "block" : "none";
+  if (!isCustom) unitCustomInput.value = "";
+}
+
+function getUnitValue() {
+  if (!unitSelect) return "";
+  if (unitSelect.value === "__custom__") {
+    return String(unitCustomInput?.value || "").trim();
+  }
+  return unitSelect.value;
+}
+
 function getDraft() {
   return {
     pname: document.getElementById("pname").value.trim(),
     category: document.getElementById("category").value,
     subcategory: document.getElementById("subcategory").value.trim(),
-    unit: document.getElementById("unit").value,
+    unit: getUnitValue(),
     price: document.getElementById("price").value,
     mrp: document.getElementById("mrp").value,
     stock: document.getElementById("stock").value
@@ -507,7 +529,16 @@ function restoreDraft() {
     if (d.pname) document.getElementById("pname").value = d.pname;
     if (!document.getElementById("category").disabled && d.category) document.getElementById("category").value = d.category;
     if (d.subcategory) document.getElementById("subcategory").value = d.subcategory;
-    if (d.unit) document.getElementById("unit").value = d.unit;
+    if (d.unit) {
+      const unitOption = Array.from(document.getElementById("unit").options)
+        .find(o => o.value === d.unit);
+      if (unitOption) {
+        document.getElementById("unit").value = d.unit;
+      } else {
+        document.getElementById("unit").value = "__custom__";
+        if (unitCustomInput) unitCustomInput.value = d.unit;
+      }
+    }
     if (d.price) document.getElementById("price").value = d.price;
     if (d.mrp) document.getElementById("mrp").value = d.mrp;
     if (d.stock) document.getElementById("stock").value = d.stock;
@@ -553,7 +584,7 @@ async function addProduct(){
   const pname = document.getElementById("pname").value.trim();
   const category = document.getElementById("category").value;
   const subcategory = document.getElementById("subcategory").value.trim();
-  const unit = document.getElementById("unit").value;
+  const unit = getUnitValue();
   const price = document.getElementById("price").value;
   const mrp = document.getElementById("mrp").value;
   const stock = document.getElementById("stock").value;
@@ -561,6 +592,10 @@ async function addProduct(){
 
   if(!pname || !category || !unit || !price || !stock || !imageFiles.length){
     await showPopup("Please fill all fields", { title: "Validation Error", type: "error" });
+    return;
+  }
+  if (unitSelect && unitSelect.value === "__custom__" && !unit) {
+    await showPopup("Please enter a custom unit", { title: "Validation Error", type: "error" });
     return;
   }
   if (Number(stock) < 0 || !Number.isInteger(Number(stock))) {
@@ -611,7 +646,8 @@ async function addProduct(){
 
 document.getElementById("pname").addEventListener("input", saveDraft);
 document.getElementById("category").addEventListener("change", saveDraft);
-document.getElementById("unit").addEventListener("change", saveDraft);
+document.getElementById("unit").addEventListener("change", () => { toggleCustomUnit(); saveDraft(); });
+if (unitCustomInput) unitCustomInput.addEventListener("input", saveDraft);
 priceInput.addEventListener("input", () => { updatePriceInsight(); saveDraft(); });
 mrpInput.addEventListener("input", () => { updatePriceInsight(); saveDraft(); });
 stockInput.addEventListener("input", saveDraft);
@@ -622,6 +658,7 @@ clearDraftBtn.addEventListener("click", () => {
 
 updateSubcategoryCount();
 updatePriceInsight();
+toggleCustomUnit();
 loadCategories();
 </script>
 
