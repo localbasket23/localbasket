@@ -306,6 +306,18 @@ let deleteId = null;
 const API_BASE = `${window.API_BASE_URL}/api`;
 const PRODUCTS_ENDPOINT = `${API_BASE}/seller/products`;
 const IMAGE_BASE = `${window.API_BASE_URL}/uploads/`;
+const resolveUploadUrl = (rawPath) => {
+  const input = String(rawPath || "").trim();
+  if (!input) return "/welcome/logo2.png";
+  if (/^(https?:)?\/\//i.test(input) || input.startsWith("data:") || input.startsWith("blob:")) {
+    return input;
+  }
+  let path = input.replace(/\\/g, "/").trim();
+  if (path.startsWith("/uploads/")) path = path.slice("/uploads/".length);
+  else if (path.startsWith("uploads/")) path = path.slice("uploads/".length);
+  else if (path.startsWith("/")) return `${window.location.origin}${path}`;
+  return `${IMAGE_BASE}${encodeURI(path.replace(/^\/+/, ""))}`;
+};
 
 async function loadMyProducts() {
   try {
@@ -395,7 +407,7 @@ function renderProducts() {
     <tr>
       <td data-label="Product">
         <div style="display:flex; align-items:center; gap:10px;">
-          <img class="prod-img" src="${p.image ? IMAGE_BASE + p.image : '/welcome/logo2.png'}" alt="${p.name || 'Product'}">
+          <img class="prod-img" src="${p.image ? resolveUploadUrl(p.image) : '/welcome/logo2.png'}" alt="${p.name || 'Product'}">
           <b>${p.name}</b>
         </div>
       </td>

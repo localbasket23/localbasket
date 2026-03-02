@@ -216,6 +216,18 @@ document.addEventListener("DOMContentLoaded", () => {
   /* AUTH CHECK */
   const seller = JSON.parse(localStorage.getItem("lbSeller"));
   if(!seller) { location.href = "/welcome/seller/seller-auth/seller-auth.html"; return; }
+  const resolveUploadUrl = (rawPath) => {
+    const input = String(rawPath || "").trim();
+    if (!input) return "";
+    if (/^(https?:)?\/\//i.test(input) || input.startsWith("data:") || input.startsWith("blob:")) {
+      return input;
+    }
+    let path = input.replace(/\\/g, "/").trim();
+    if (path.startsWith("/uploads/")) path = path.slice("/uploads/".length);
+    else if (path.startsWith("uploads/")) path = path.slice("uploads/".length);
+    else if (path.startsWith("/")) return `${window.location.origin}${path}`;
+    return `${window.API_BASE_URL}/uploads/${encodeURI(path.replace(/^\/+/, ""))}`;
+  };
 
   /* ELEMENTS */
   const previewPic = document.getElementById("previewPic");
@@ -241,7 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("displayOwner").innerText = seller.owner_name || "Owner";
 
   previewPic.src = seller.store_photo 
-    ? `${window.API_BASE_URL}/uploads/` + seller.store_photo 
+    ? resolveUploadUrl(seller.store_photo)
     : "https://cdn-icons-png.flaticon.com/512/9131/9131529.png";
 
   /* IMAGE PREVIEW */

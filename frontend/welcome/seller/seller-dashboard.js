@@ -21,6 +21,18 @@ const getJson = async (url, options) => {
   if (!res.ok) throw new Error(data.message || res.statusText || "Request failed");
   return data;
 };
+const resolveUploadUrl = (rawPath) => {
+  const input = String(rawPath || "").trim();
+  if (!input) return "";
+  if (/^(https?:)?\/\//i.test(input) || input.startsWith("data:") || input.startsWith("blob:")) {
+    return input;
+  }
+  let path = input.replace(/\\/g, "/").trim();
+  if (path.startsWith("/uploads/")) path = path.slice("/uploads/".length);
+  else if (path.startsWith("uploads/")) path = path.slice("uploads/".length);
+  else if (path.startsWith("/")) return `${window.location.origin}${path}`;
+  return `${UPLOADS_BASE}/${encodeURI(path.replace(/^\/+/, ""))}`;
+};
 
 document.addEventListener("DOMContentLoaded", () => {
   /* ================= SESSION CHECK ================= */
@@ -452,7 +464,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (el.storeImg) {
       el.storeImg.src = seller.store_photo
-        ? `${UPLOADS_BASE}/${seller.store_photo}`
+        ? resolveUploadUrl(seller.store_photo)
         : "/assets/images/logo.png";
       el.storeImg.onerror = () => {
         el.storeImg.src = "/assets/images/logo.png";
