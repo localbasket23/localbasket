@@ -119,6 +119,32 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.dataset.lbCartBound = "1";
     });
 
+    const navItems = document.querySelectorAll(".lb-nav-item[data-nav]");
+    if (navItems.length) {
+      navItems.forEach((btn) => {
+        if (btn.dataset.lbNavBound) return;
+        const key = String(btn.getAttribute("data-nav") || "").trim();
+        if (!key) return;
+        btn.addEventListener("click", () => {
+          if (key === "home") window.location.href = "/welcome/customer/index.html";
+          if (key === "browse") window.location.href = "/welcome/customer/category.html";
+          if (key === "cart") openCart();
+          if (key === "profile") window.location.href = "/welcome/customer/profile/profile.html";
+        });
+        btn.dataset.lbNavBound = "1";
+      });
+
+      const currentPath = String(window.location.pathname || "").toLowerCase();
+      let activeKey = "home";
+      if (currentPath.includes("/customer/category")) activeKey = "browse";
+      else if (currentPath.includes("/customer/profile")) activeKey = "profile";
+      else if (currentPath.includes("/customer/checkout")) activeKey = "cart";
+
+      navItems.forEach((btn) => {
+        btn.classList.toggle("active", btn.getAttribute("data-nav") === activeKey);
+      });
+    }
+
     const accountBtn = document.getElementById("accountBtn");
     const userMenu = document.getElementById("userMenu");
     const userAccount = document.getElementById("userAccount");
@@ -202,6 +228,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const html = await res.text();
     footerContainer.innerHTML = html;
     applySharedAssetBindings(footerContainer);
+    reInitializeUI();
   }
   await loadHeader();
   await loadFooter();

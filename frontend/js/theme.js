@@ -27,4 +27,10 @@
     bindToggle('themeToggleBtn');
     bindToggle('lbThemeToggleBtnMobile');
   };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", window.initTheme);
+  } else {
+    window.initTheme();
+  }
 })();
