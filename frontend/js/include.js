@@ -37,6 +37,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function reInitializeUI() {
     const OPEN_LOCATION_FLAG = "lbOpenLocationAfterRedirect";
+    const OPEN_CART_FLAG = "lbOpenCartAfterRedirect";
 
     // Login popup
     if (window.initAuth) {
@@ -93,6 +94,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!btn || btn.dataset.lbLocBound) return;
       btn.addEventListener("click", openLocation);
       btn.dataset.lbLocBound = "1";
+    });
+
+    const openCart = () => {
+      const drawer = document.getElementById("cartDrawer");
+      if (window.toggleCart && drawer) {
+        window.toggleCart(true);
+        return;
+      }
+
+      try {
+        sessionStorage.setItem(OPEN_CART_FLAG, "1");
+      } catch (err) {
+        // ignore storage failures
+      }
+      window.location.href = "/welcome/customer/index.html";
+    };
+
+    ["cartPill"].forEach((id) => {
+      const btn = document.getElementById(id);
+      if (!btn || btn.dataset.lbCartBound) return;
+      btn.style.cursor = "pointer";
+      btn.addEventListener("click", openCart);
+      btn.dataset.lbCartBound = "1";
     });
   }
 
