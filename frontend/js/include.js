@@ -325,6 +325,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       sellerBtn.dataset.lbBound = "1";
     }
 
+    const ADMIN_AUTH_KEY = "lbAdminAuth";
+    const ADMIN_LOGIN_REDIRECT_FLAG = "lbOpenAdminLoginAfterRedirect";
+    const ADMIN_RETURN_PATH_KEY = "lbAdminReturnPath";
     const adminBtn = document.getElementById("lbAdminLoginBtn");
     const adminOverlay = document.getElementById("lbAdminPopupOverlay");
     const adminClose = document.getElementById("lbAdminPopupClose");
@@ -333,9 +336,60 @@ document.addEventListener("DOMContentLoaded", async () => {
     const adminPassInput = document.getElementById("lbAdminPass");
     const adminError = document.getElementById("lbAdminPopupError");
 
+    const getAdminAuth = () => {
+      try {
+        const raw = localStorage.getItem(ADMIN_AUTH_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") return null;
+        const now = Date.now();
+        const expiresAt = Number(parsed.expiresAt || 0);
+        if (expiresAt && now > expiresAt) {
+          localStorage.removeItem(ADMIN_AUTH_KEY);
+          return null;
+        }
+        return parsed;
+      } catch {
+        return null;
+      }
+    };
+
+    const saveAdminAuth = (userId) => {
+      const now = Date.now();
+      const session = {
+        userId: String(userId || "admin").trim() || "admin",
+        loggedInAt: now,
+        expiresAt: now + (12 * 60 * 60 * 1000)
+      };
+      localStorage.setItem(ADMIN_AUTH_KEY, JSON.stringify(session));
+    };
+
+    const goAdminDashboard = () => {
+      let target = welcomePath("admin/admin.html");
+      try {
+        const saved = String(sessionStorage.getItem(ADMIN_RETURN_PATH_KEY) || "").trim();
+        if (saved.startsWith("/welcome/admin/")) {
+          target = saved;
+        }
+        sessionStorage.removeItem(ADMIN_RETURN_PATH_KEY);
+      } catch {
+        // ignore storage errors
+      }
+      window.location.href = target;
+    };
+
     const openAdminPopup = () => {
+      if (getAdminAuth()) {
+        goAdminDashboard();
+        return;
+      }
       if (!adminOverlay) {
-        window.location.href = welcomePath("admin/admin.html");
+        try {
+          sessionStorage.setItem(ADMIN_LOGIN_REDIRECT_FLAG, "1");
+        } catch {
+          // ignore storage errors
+        }
+        window.location.href = welcomePath("customer/index.html");
         return;
       }
       adminOverlay.hidden = false;
@@ -372,8 +426,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         const userId = String(adminUserInput?.value || "").trim();
         const pass = String(adminPassInput?.value || "").trim();
         if (userId === "shubham" && pass === "1234") {
+          saveAdminAuth(userId);
           closeAdminPopup();
-          window.location.href = welcomePath("admin/admin.html");
+          goAdminDashboard();
           return;
         }
         if (adminError) adminError.textContent = "Invalid ID or password.";
@@ -391,6 +446,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       });
       document.body.dataset.lbAdminEscBound = "1";
+    }
+
+    try {
+      if (sessionStorage.getItem(ADMIN_LOGIN_REDIRECT_FLAG) === "1") {
+        sessionStorage.removeItem(ADMIN_LOGIN_REDIRECT_FLAG);
+        openAdminPopup();
+      }
+    } catch {
+      // ignore storage errors
     }
   }
 

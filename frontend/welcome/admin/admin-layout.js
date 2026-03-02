@@ -1,4 +1,47 @@
 (function () {
+  const ADMIN_AUTH_KEY = "lbAdminAuth";
+  const ADMIN_LOGIN_REDIRECT_FLAG = "lbOpenAdminLoginAfterRedirect";
+  const ADMIN_RETURN_PATH_KEY = "lbAdminReturnPath";
+  const isAdminAuthenticated = () => {
+    try {
+      const raw = localStorage.getItem(ADMIN_AUTH_KEY);
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return false;
+      const expiresAt = Number(parsed.expiresAt || 0);
+      if (expiresAt && Date.now() > expiresAt) {
+        localStorage.removeItem(ADMIN_AUTH_KEY);
+        return false;
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const clearAdminAuth = () => {
+    localStorage.removeItem(ADMIN_AUTH_KEY);
+    localStorage.removeItem("admin_token");
+  };
+
+  if (!isAdminAuthenticated()) {
+    clearAdminAuth();
+    try {
+      sessionStorage.setItem(ADMIN_LOGIN_REDIRECT_FLAG, "1");
+      sessionStorage.setItem(ADMIN_RETURN_PATH_KEY, window.location.pathname);
+    } catch {
+      // ignore storage errors
+    }
+    window.location.replace("/welcome/customer/index.html");
+    return;
+  }
+
+  window.logout = () => {
+    if (!window.confirm("Logout from admin panel?")) return;
+    clearAdminAuth();
+    window.location.replace("/welcome/customer/index.html");
+  };
+
   const ADMIN_BASE = "/welcome/admin/";
   const page = (location.pathname.split("/").pop() || "admin.html").toLowerCase();
 
