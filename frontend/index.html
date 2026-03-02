@@ -11,7 +11,7 @@
   <meta name="theme-color" content="#16a34a">
   <title>Local Basket - Online Grocery Store in Mumbai</title>
   <meta name="description" content="Local Basket is an online grocery store offering fresh vegetables, fruits and daily essentials with fast delivery in Mumbai." />
-  <meta http-equiv="refresh" content="0;url=./welcome/customer/index.html" />
+  <meta http-equiv="refresh" content="3;url=./welcome/customer/index.html" />
   <style>
     :root {
       --bg-1: #07133a;
@@ -109,6 +109,11 @@
       font-weight: 800;
       font-size: 14px;
     }
+    .countdown {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
     @keyframes load {
       0% { transform: translateX(-120%); }
       100% { transform: translateX(320%); }
@@ -132,9 +137,26 @@
     <p>Launching your neighborhood marketplace...</p>
     <div class="loader" aria-hidden="true"></div>
     <a class="fallback" href="./welcome/customer/index.html">Enter Now</a>
+    <div class="countdown" id="countdown">Redirecting in 3s...</div>
   </main>
   <script>
-    window.location.replace("./welcome/customer/index.html");
+    const target = "./welcome/customer/index.html";
+    const countdownEl = document.getElementById("countdown");
+    let remaining = 3;
+    const tick = () => {
+      if (!countdownEl) return;
+      countdownEl.textContent = `Redirecting in ${remaining}s...`;
+    };
+    tick();
+    const interval = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(interval);
+        window.location.replace(target);
+        return;
+      }
+      tick();
+    }, 1000);
   </script>
 </body>
 </html>
