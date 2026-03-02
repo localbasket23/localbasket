@@ -366,7 +366,7 @@ function toggleMenu(){
 }
 
 async function loadDashboard() {
-  const API_BASE = `${window.API_BASE_URL}/admin`;
+  const API_BASE = `${window.API_BASE_URL}/api/admin`;
 
   try {
     const res = await fetch(`${API_BASE}/dashboard`);

@@ -1,5 +1,5 @@
-﻿// ================== SELLER AUTH LOGIC ==================
-const API_BASE = `${window.API_BASE_URL}`;
+// ================== SELLER AUTH LOGIC ==================
+const API_BASE = `${window.API_BASE_URL}/api`;
 let isRegister = false;
 let isResubmit = false;
 let resubmitSellerId = null;

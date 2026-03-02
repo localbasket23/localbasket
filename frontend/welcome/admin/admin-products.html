@@ -474,7 +474,7 @@ async function loadProducts() {
 
   try {
    const res = await fetch(
-  `${window.API_BASE_URL}/admin/products/pending`
+  `${window.API_BASE_URL}/api/admin/products/pending`
 );
     const data = await res.json();
 
@@ -509,7 +509,7 @@ async function updateStatus(id, status, isMobile = false) {
 
   try {
     const res = await fetch(
-  `${window.API_BASE_URL}/admin/product/status`,
+  `${window.API_BASE_URL}/api/admin/product/status`,
   {
     method: "POST",
     headers: { "Content-Type": "application/json" },

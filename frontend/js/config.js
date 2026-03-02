@@ -1,1 +1,1 @@
-window.API_BASE_URL = "https://localbasket-egpn.onrender.com/api";
+window.API_BASE_URL = "https://localbasket-egpn.onrender.com";

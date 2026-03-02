@@ -1,8 +1,8 @@
-﻿/* =====================================================
+/* =====================================================
    LOCALBASKET - CUSTOMER PROFILE LOGIC
 ===================================================== */
 
-const API_URL = `${window.API_BASE_URL}`;
+const API_URL = `${window.API_BASE_URL}/api`;
 let currentUser = null;
 
 document.addEventListener("DOMContentLoaded", () => {

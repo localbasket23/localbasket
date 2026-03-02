@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   const faqList = document.getElementById("faqList");
   if (faqList) {
     faqList.addEventListener("click", function (e) {

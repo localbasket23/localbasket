@@ -1,9 +1,9 @@
-﻿/* ==========================================================
+/* ==========================================================
    SELLER DASHBOARD LOGIC
    CLEAN  STABLE  ALL FEATURES
 ========================================================== */
 
-const API_BASE = `${window.API_BASE_URL}`;
+const API_BASE = `${window.API_BASE_URL}/api`;
 const UPLOADS_BASE = "/uploads";
 const REFRESH_MS = 15000;
 const GLOBAL_COMMISSION_STORAGE_KEY = "lbGlobalCommission";
@@ -11,8 +11,8 @@ const SELLER_COMMISSION_MAP_KEY = "lbSellerCommissionMap";
 const SIDEBAR_COLLAPSE_KEY = "lbSellerSidebarCollapsed";
 const SPARK_HISTORY_KEY = "lbSellerSparkHistory";
 const ADMIN_API_BASE_CANDIDATES = [
-  `${window.API_BASE_URL}/admin`,
-  `${window.API_BASE_URL}/admin`
+  `${window.API_BASE_URL}/api/admin`,
+  `${window.API_BASE_URL}/api/admin`
 ];
 
 const getJson = async (url, options) => {

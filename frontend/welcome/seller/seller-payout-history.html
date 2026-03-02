@@ -326,12 +326,12 @@ if (!seller || !seller.id) {
 }
 
 /* ================= CONFIG ================= */
-const API_URL = `${window.API_BASE_URL}/seller/orders/${seller.id}`;
+const API_URL = `${window.API_BASE_URL}/api/seller/orders/${seller.id}`;
 const GLOBAL_COMMISSION_STORAGE_KEY = "lbGlobalCommission";
 const SELLER_COMMISSION_MAP_KEY = "lbSellerCommissionMap";
 const ADMIN_API_BASE_CANDIDATES = [
-  `${window.API_BASE_URL}/admin`,
-  `${window.API_BASE_URL}/admin`
+  `${window.API_BASE_URL}/api/admin`,
+  `${window.API_BASE_URL}/api/admin`
 ];
 
 /* ================= STATE ================= */

@@ -353,9 +353,9 @@
   const isLikelyStaticPreview = ["null", "file:"].includes(String(window.location.origin));
   const API_BASE_CANDIDATES = Array.from(new Set([
     (localStorage.getItem("lbApiAdminBase") || "").trim(),
-    `${window.API_BASE_URL}/admin`,
-    `${window.API_BASE_URL}/admin`,
-    ...(!isLikelyStaticPreview ? [`${window.API_BASE_URL}/admin`] : [])
+    `${window.API_BASE_URL}/api/admin`,
+    `${window.API_BASE_URL}/api/admin`,
+    ...(!isLikelyStaticPreview ? [`${window.API_BASE_URL}/api/admin`] : [])
   ].filter(Boolean)));
 
   async function fetchAdminWithFallback(path, options = {}) {

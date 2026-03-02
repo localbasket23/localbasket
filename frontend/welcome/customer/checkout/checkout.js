@@ -1,5 +1,5 @@
-﻿/*************************************
- * CHECKOUT SCRIPT â€” FINAL (FIXED)
+/*************************************
+ * CHECKOUT SCRIPT — FINAL (FIXED)
  *************************************/
 
 /* ================= AUTH CHECK ================= */
@@ -153,7 +153,7 @@ function renderCart() {
 
     orderItemsBox.innerHTML += `
       <div class="cart-item">
-        <span>${itemName} × ${qty}</span>
+        <span>${itemName} � ${qty}</span>
         <span>Rs. ${sub}</span>
       </div>
     `;
@@ -176,7 +176,7 @@ renderCart();
 /* ================= SAVE ORDER ================= */
 async function saveOrder(orderData) {
   try {
-    const data = await fetchJsonWithFallback(`${window.API_BASE_URL}/orders/create`, {
+    const data = await fetchJsonWithFallback(`${window.API_BASE_URL}/api/orders/create`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(orderData)
@@ -211,8 +211,8 @@ function startRazorpayPayment(orderData) {
     body: JSON.stringify({ amount: orderData.total_amount })
   };
 
-  fetchJsonWithFallback(`${window.API_BASE_URL}/payment/create-order`, payload)
-  .catch(() => fetchJsonWithFallback(`${window.API_BASE_URL}/payment/create`, payload))
+  fetchJsonWithFallback(`${window.API_BASE_URL}/api/payment/create-order`, payload)
+  .catch(() => fetchJsonWithFallback(`${window.API_BASE_URL}/api/payment/create`, payload))
   .then((rpOrder) => {
     if (!rpOrder || rpOrder.success === false) {
       alert(`Payment init failed: ${rpOrder?.message || "Unknown error"}`);
@@ -311,22 +311,22 @@ async function placeOrder() {
   const paymentMethod = document.getElementById("payment").value;
 
   if (!name || !phone || !address || !pincode) {
-    alert("âŒ Fill all required fields");
+    alert("❌ Fill all required fields");
     return;
   }
 
   if (!/^[6-9]\d{9}$/.test(phone)) {
-    alert("âŒ Invalid phone number");
+    alert("❌ Invalid phone number");
     return;
   }
 
   if (!/^\d{6}$/.test(pincode)) {
-    alert("âŒ Invalid pincode");
+    alert("❌ Invalid pincode");
     return;
   }
 
   if (!cart.length) {
-    alert("âŒ Cart is empty");
+    alert("❌ Cart is empty");
     return;
   }
 
@@ -337,10 +337,10 @@ async function placeOrder() {
   try {
     const storeId = Number(cart[0]?.storeId || 0);
     if (storeId) {
-      const data = await fetchJsonWithFallback(`${window.API_BASE_URL}/stores/${storeId}`);
+      const data = await fetchJsonWithFallback(`${window.API_BASE_URL}/api/stores/${storeId}`);
       const minOrder = Number(data?.store?.minimum_order || 100);
       if (itemsTotal < minOrder) {
-        alert(`âŒ Minimum order is Rs. ${minOrder}. Please add more items.`);
+        alert(`❌ Minimum order is Rs. ${minOrder}. Please add more items.`);
         return;
       }
     }

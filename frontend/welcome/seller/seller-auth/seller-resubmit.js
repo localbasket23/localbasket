@@ -1,4 +1,4 @@
-﻿const API_BASE = `${window.API_BASE_URL}`;
+const API_BASE = `${window.API_BASE_URL}/api`;
 
 const form = document.getElementById("resubmitForm");
 const submitBtn = document.getElementById("submitBtn");

@@ -24,19 +24,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  async function load(id, file) {
+  async function load(id, path) {
     const el = document.getElementById(id);
     if (!el) return;
 
-    const res = await fetch(
-      window.location.origin + "/components/" + file
-    );
+    const res = await fetch(path);
 
     el.innerHTML = await res.text();
     applySharedAssetBindings(el);
   }
 
-  await load("header", "header.html");
-  await load("footer", "footer.html");
+  await load("header", "/components/header.html");
+  await load("footer", "/components/footer.html");
 
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  if(window.initAuth) initAuth();
+  if(window.initTheme) initTheme();
 });

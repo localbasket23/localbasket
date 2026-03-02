@@ -302,7 +302,7 @@ function logout(){
 
 /* Commission preview + persistence */
 const COMMISSION_STORAGE_KEY = "lbGlobalCommission";
-const API_BASE = (localStorage.getItem("lbApiAdminBase") || "").trim() || `${window.API_BASE_URL}/admin`;
+const API_BASE = (localStorage.getItem("lbApiAdminBase") || "").trim() || `${window.API_BASE_URL}/api/admin`;
 const slider=document.getElementById("commissionSlider");
 const valueText=document.getElementById("commissionValue");
 const preview=document.getElementById("previewBox");

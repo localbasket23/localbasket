@@ -452,7 +452,7 @@
     // CONFIGURATION
 const API_BASE =
   (localStorage.getItem("lbApiAdminBase") || "").trim() ||
-  `${window.API_BASE_URL}`;
+  `${window.API_BASE_URL}/api`;
     const state = { categories: [], filtered: [] };
     // For demo purposes, we simulate an API delay. Remove setTimeout in production.
 

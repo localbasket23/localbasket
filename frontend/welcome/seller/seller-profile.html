@@ -263,7 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if(storeImageInput.files[0]) fd.append("store_photo", storeImageInput.files[0]);
 
     try {
-      const res = await fetch(`${window.API_BASE_URL}/seller/update-profile`, { method:"POST", body:fd });
+      const res = await fetch(`${window.API_BASE_URL}/api/seller/update-profile`, { method:"POST", body:fd });
       const data = await res.json();
       if(data.success) {
         Object.assign(seller, {
@@ -286,7 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
   removeImageBtn.onclick = async () => {
     if(!confirm("Remove store image?")) return;
     try {
-      const res = await fetch(`${window.API_BASE_URL}/seller/remove-store-image`, {
+      const res = await fetch(`${window.API_BASE_URL}/api/seller/remove-store-image`, {
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({ seller_id:seller.id })
