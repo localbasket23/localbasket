@@ -635,16 +635,23 @@ async function requestCustomerOtp() {
         const endpoint = state.authUseOtp
             ? "/customer/password-reset/request"
             : "/customer/login-otp/request";
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
         const res = await fetch(`${CONFIG.API_BASE}${endpoint}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ identifier })
+            body: JSON.stringify({ identifier }),
+            signal: controller.signal
         });
+        clearTimeout(timeout);
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.message || "OTP send failed");
         alert("OTP sent successfully. Please check your registered email.");
     } catch (err) {
-        alert(`Error: ${err.message}`);
+        const msg = err && err.name === "AbortError"
+            ? "OTP request timed out. Please try again."
+            : (err.message || "OTP send failed");
+        alert(`Error: ${msg}`);
     } finally {
         if (btn) {
             btn.disabled = false;
