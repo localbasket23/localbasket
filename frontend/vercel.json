@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    { "source": "/", "destination": "/welcome/customer/index.html" },
+    { "source": "/index.html", "destination": "/welcome/customer/index.html" },
     { "source": "/favicon.ico", "destination": "/favicon.png" },
     { "source": "/admin.html", "destination": "/welcome/admin/admin.html" },
     { "source": "/admin-:slug.html", "destination": "/welcome/admin/admin-:slug.html" },
