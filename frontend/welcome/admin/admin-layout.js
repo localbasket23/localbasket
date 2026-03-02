@@ -1,4 +1,5 @@
 (function () {
+  const ADMIN_BASE = "/welcome/admin/";
   const page = (location.pathname.split("/").pop() || "admin.html").toLowerCase();
 
   const menu = [
@@ -12,6 +13,30 @@
     { file: "admin-categories.html", icon: "fa-tags", label: "Categories" },
     { file: "admin-settings.html", icon: "fa-cog", label: "Settings" }
   ];
+
+  function toAdminPath(file) {
+    const clean = String(file || "").trim().replace(/^\/+/, "");
+    if (!clean) return ADMIN_BASE + "admin.html";
+    if (/^https?:\/\//i.test(clean) || clean.startsWith("/")) return clean;
+    return ADMIN_BASE + clean;
+  }
+
+  function normalizeAdminLinks() {
+    document.querySelectorAll('a[href]').forEach((a) => {
+      const href = String(a.getAttribute("href") || "").trim();
+      if (!/^admin[-a-z]*\.html$/i.test(href)) return;
+      a.setAttribute("href", toAdminPath(href));
+    });
+
+    document.querySelectorAll("[onclick]").forEach((el) => {
+      const raw = String(el.getAttribute("onclick") || "");
+      if (!raw) return;
+      const updated = raw
+        .replace(/location\.href\s*=\s*'((admin[-a-z]*\.html))'/gi, (_m, p1) => `location.href='${toAdminPath(p1)}'`)
+        .replace(/location\.href\s*=\s*"((admin[-a-z]*\.html))"/gi, (_m, p1) => `location.href=\"${toAdminPath(p1)}\"`);
+      if (updated !== raw) el.setAttribute("onclick", updated);
+    });
+  }
 
   function ensureOverlay() {
     let overlay = document.getElementById("sidebarOverlay");
@@ -99,7 +124,7 @@
 
     sidebar.querySelectorAll("button[data-link]").forEach(btn => {
       btn.addEventListener("click", () => {
-        location.href = btn.getAttribute("data-link");
+        location.href = toAdminPath(btn.getAttribute("data-link"));
       });
     });
 
@@ -110,7 +135,7 @@
           window.logout();
         } else if (confirm("Logout?")) {
           localStorage.clear();
-          location.href = "login.html";
+          location.href = "/welcome/customer/index.html";
         }
       });
     }
@@ -169,6 +194,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    normalizeAdminLinks();
     ensureOverlay();
     renderSidebar();
     ensureMenuToggle();
