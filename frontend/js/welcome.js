@@ -1816,14 +1816,24 @@ function toggleCart(show) {
 function renderCartItems() {
     const box = dom.cartItems();
     const drawer = dom.cartDrawer();
-    const checkoutBtn = drawer ? drawer.querySelector(".btn-auth") : null;
+    const checkoutBtn = drawer ? drawer.querySelector("#cartCheckoutBtn") : null;
     if (!box) return;
     if (!state.cart.length) {
         box.innerHTML = `<div style="text-align:center;color:#64748b;">Your basket is empty.</div>`;
-        if (checkoutBtn) checkoutBtn.style.display = "none";
+        if (checkoutBtn) {
+            checkoutBtn.style.display = "block";
+            checkoutBtn.disabled = true;
+            checkoutBtn.style.opacity = "0.65";
+            checkoutBtn.style.cursor = "not-allowed";
+        }
         return;
     }
-    if (checkoutBtn) checkoutBtn.style.display = "block";
+    if (checkoutBtn) {
+        checkoutBtn.style.display = "block";
+        checkoutBtn.disabled = false;
+        checkoutBtn.style.opacity = "";
+        checkoutBtn.style.cursor = "";
+    }
     box.innerHTML = state.cart.map(i => `
         <div class="cart-row">
             <div>
