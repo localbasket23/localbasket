@@ -143,9 +143,11 @@
       padding: 26px;
       border-radius: 18px;
       width: 100%;
-      max-width: 440px;
+      max-width: 520px;
       box-shadow: var(--shadow-md);
       border: 1px solid var(--border-color);
+      max-height: min(86vh, 820px);
+      overflow: auto;
     }
     .modal-content h3 {
       display: flex;
@@ -172,6 +174,27 @@
     .modal-actions .btn-accept {
       flex: 1;
       padding: 11px 12px;
+    }
+
+    /* Popup polish for laptop */
+    @media (min-width: 901px) {
+      .modal-content {
+        border-radius: 22px;
+        box-shadow: 0 28px 60px -30px rgba(2, 6, 23, 0.6);
+      }
+    }
+
+    /* Mobile: full-width bottom sheet style */
+    @media (max-width: 600px) {
+      .modal { align-items: flex-end; padding: 0; }
+      .modal-content {
+        max-width: none;
+        width: 100%;
+        border-radius: 18px 18px 0 0;
+        max-height: 85vh;
+        padding: 20px 16px 18px;
+      }
+      .modal-actions { flex-direction: column-reverse; }
     }
 
     @media(max-width:900px){
