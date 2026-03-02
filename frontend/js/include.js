@@ -13,6 +13,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   ensureSharedStyles();
 
+  function applySharedAssetBindings(scope) {
+    if (!scope) return;
+    scope.querySelectorAll("[data-lb-href]").forEach((el) => {
+      const target = (el.getAttribute("data-lb-href") || "").trim();
+      if (!target) return;
+      el.setAttribute("href", `/welcome/${target.replace(/^\/+/, "")}`);
+    });
+    scope.querySelectorAll("[data-lb-src]").forEach((el) => {
+      const target = (el.getAttribute("data-lb-src") || "").trim();
+      if (!target) return;
+      el.setAttribute("src", `/welcome/${target.replace(/^\/+/, "")}`);
+    });
+  }
+
   async function load(id, file) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -22,9 +36,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
 
     el.innerHTML = await res.text();
+    applySharedAssetBindings(el);
   }
 
-  load("header","header.html");
-  load("footer","footer.html");
+  await load("header", "header.html");
+  await load("footer", "footer.html");
 
 });
