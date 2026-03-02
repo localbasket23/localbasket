@@ -1,4 +1,15 @@
 document.addEventListener("DOMContentLoaded", async () => {
+  const path = window.location.pathname;
+
+  if (
+    path.includes("seller") ||
+    path.includes("admin") ||
+    path.includes("auth")
+  ) {
+    console.log("Skipping header/footer for auth pages");
+    return;
+  }
+
   function ensureSharedStyles() {
     if (document.querySelector('link[data-lb-shared-style="header-footer"]')) return;
     const link = document.createElement("link");
@@ -34,8 +45,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     applySharedAssetBindings(el);
   }
 
-  await load("header", "/components/header.html");
-  await load("footer", "/components/footer.html");
+  async function loadHeader() {
+    await load("header", "/components/header.html");
+  }
+
+  async function loadFooter() {
+    await load("footer", "/components/footer.html");
+  }
+
+  loadHeader();
+  loadFooter();
 
 });
 
