@@ -737,6 +737,32 @@ html.lb-theme-dark .mobile-loc-row .lb-header-back {
   font-weight: 800;
   cursor: pointer;
 }
+@media (max-width: 768px) {
+  .lb-cart-drawer {
+    top: auto;
+    left: 0;
+    right: 0;
+    bottom: calc(-100dvh - env(safe-area-inset-bottom));
+    width: 100%;
+    max-width: 100%;
+    height: min(82dvh, 680px);
+    border-radius: 22px 22px 0 0;
+    box-shadow: 0 -18px 42px rgba(0,0,0,0.3);
+  }
+  .lb-cart-drawer.active {
+    right: 0;
+    bottom: 0;
+  }
+  .lb-cart-header {
+    padding-top: 16px;
+  }
+  .lb-cart-items {
+    padding-bottom: calc(10px + env(safe-area-inset-bottom));
+  }
+  .lb-cart-footer {
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  }
+}
 
 /* Footer */
 .lb-footer-pro {
