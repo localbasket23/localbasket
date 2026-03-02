@@ -243,12 +243,12 @@
   </div>
 
   <div class="menu">
-    <button class="active" onclick="location.href='admin.html'"><i class="fas fa-chart-pie"></i> Dashboard</button>
-    <button onclick="location.href='admin-sellers.html'"><i class="fas fa-user-check"></i> Seller Verification</button>
-    <button onclick="location.href='admin-products.html'"><i class="fas fa-box-open"></i> Product Approvals</button>
-    <button onclick="location.href='admin-orders.html'"><i class="fas fa-shopping-cart"></i> Orders</button>
-    <button onclick="location.href='admin-payments.html'"><i class="fas fa-wallet"></i> Payments</button>
-    <button onclick="location.href='admin-settings.html'"><i class="fas fa-cog"></i> Settings</button>
+    <button class="active" onclick="location.href='/welcome/admin/admin.html'"><i class="fas fa-chart-pie"></i> Dashboard</button>
+    <button onclick="location.href='/welcome/admin/admin-sellers.html'"><i class="fas fa-user-check"></i> Seller Verification</button>
+    <button onclick="location.href='/welcome/admin/admin-products.html'"><i class="fas fa-box-open"></i> Product Approvals</button>
+    <button onclick="location.href='/welcome/admin/admin-orders.html'"><i class="fas fa-shopping-cart"></i> Orders</button>
+    <button onclick="location.href='/welcome/admin/admin-payments.html'"><i class="fas fa-wallet"></i> Payments</button>
+    <button onclick="location.href='/welcome/admin/admin-settings.html'"><i class="fas fa-cog"></i> Settings</button>
     <button onclick="logout()" style="margin-top: 20px; background: rgba(255,71,87,0.2);"><i class="fas fa-sign-out-alt"></i> Logout</button>
   </div>
 </aside>
@@ -283,32 +283,32 @@
     </div>
 
     <div class="hero-actions">
-      <button class="quick-btn" onclick="location.href='admin-sellers.html'"><i class="fas fa-user-check"></i> Review Seller Requests</button>
-      <button class="quick-btn" onclick="location.href='admin-orders.html'"><i class="fas fa-receipt"></i> Track Live Orders</button>
-      <button class="quick-btn" onclick="location.href='admin-payments.html'"><i class="fas fa-wallet"></i> Check Pending Payouts</button>
+      <button class="quick-btn" onclick="location.href='/welcome/admin/admin-sellers.html'"><i class="fas fa-user-check"></i> Review Seller Requests</button>
+      <button class="quick-btn" onclick="location.href='/welcome/admin/admin-orders.html'"><i class="fas fa-receipt"></i> Track Live Orders</button>
+      <button class="quick-btn" onclick="location.href='/welcome/admin/admin-payments.html'"><i class="fas fa-wallet"></i> Check Pending Payouts</button>
     </div>
   </section>
 
   <div class="cards">
-    <div class="card" onclick="location.href='admin-sellers.html'">
+    <div class="card" onclick="location.href='/welcome/admin/admin-sellers.html'">
       <i class="fas fa-users"></i>
       <h3>Total Sellers</h3>
       <div class="value" id="totalSellers">0</div>
     </div>
 
-    <div class="card" onclick="location.href='admin-seller-verification.html'">
+    <div class="card" onclick="location.href='/welcome/admin/admin-seller-verification.html'">
       <i class="fas fa-clock"></i>
       <h3>Pending Verifications</h3>
       <div class="value" id="pendingVerifications" style="color: #ff9f43;">0</div>
     </div>
 
-    <div class="card" onclick="location.href='admin-orders.html'">
+    <div class="card" onclick="location.href='/welcome/admin/admin-orders.html'">
       <i class="fas fa-receipt"></i>
       <h3>Total Orders</h3>
       <div class="value" id="totalOrders">0</div>
     </div>
 
-    <div class="card" onclick="location.href='admin-reports.html'">
+    <div class="card" onclick="location.href='/welcome/admin/admin-reports.html'">
       <i class="fas fa-coins"></i>
       <h3>Total Revenue</h3>
       <div class="value" id="totalRevenue">Rs. 0</div>
@@ -331,7 +331,7 @@
         <div class="mini-item">Last Updated: <b id="qiLastUpdated">--</b></div>
       </div>
       <div class="reports-wrap" style="margin-top:14px; text-align:left;">
-        <button class="reports-btn" onclick="location.href='admin-reports.html'" style="width:100%;">
+        <button class="reports-btn" onclick="location.href='/welcome/admin/admin-reports.html'" style="width:100%;">
           <i class="fas fa-file-download"></i> Open Full Reports
         </button>
       </div>

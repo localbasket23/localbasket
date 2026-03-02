@@ -1,5 +1,8 @@
 {
   "rewrites": [
+    { "source": "/favicon.ico", "destination": "/favicon.png" },
+    { "source": "/admin.html", "destination": "/welcome/admin/admin.html" },
+    { "source": "/admin-:slug.html", "destination": "/welcome/admin/admin-:slug.html" },
     { "source": "/((?!.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
   ]
 }
