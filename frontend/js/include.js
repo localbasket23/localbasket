@@ -8,9 +8,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.head.appendChild(link);
   }
 
-  const isSplashPage = /\/(?:index(?:\.html)?)?$/i.test(window.location.pathname || "");
-  if (isSplashPage) return;
-
   ensureSharedStyles();
 
   function applySharedAssetBindings(scope) {
