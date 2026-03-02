@@ -31,9 +31,16 @@ router.get("/", (req, res) => {
       c.name AS category_name,
       c.slug AS category_slug,
       s.status,
-      s.is_online,\n      COALESCE(r.avg_rating, 0) AS avg_rating,\n      COALESCE(r.rating_count, 0) AS rating_count
+      s.is_online,
+      COALESCE(r.avg_rating, 0) AS avg_rating,
+      COALESCE(r.rating_count, 0) AS rating_count
     FROM sellers s
-    LEFT JOIN categories c ON c.id = s.category_id\n    LEFT JOIN (\n      SELECT store_id, AVG(rating) AS avg_rating, COUNT(*) AS rating_count\n      FROM store_ratings\n      GROUP BY store_id\n    ) r ON r.store_id = s.id
+    LEFT JOIN categories c ON c.id = s.category_id
+    LEFT JOIN (
+      SELECT store_id, AVG(rating) AS avg_rating, COUNT(*) AS rating_count
+      FROM store_ratings
+      GROUP BY store_id
+    ) r ON r.store_id = s.id
     WHERE s.pincode = ?
       AND s.status = 'APPROVED'
     ORDER BY s.store_name ASC
@@ -84,9 +91,16 @@ router.get("/:id", (req, res) => {
       c.name AS category_name,
       c.slug AS category_slug,
       s.status,
-      s.is_online,\n      COALESCE(r.avg_rating, 0) AS avg_rating,\n      COALESCE(r.rating_count, 0) AS rating_count
+      s.is_online,
+      COALESCE(r.avg_rating, 0) AS avg_rating,
+      COALESCE(r.rating_count, 0) AS rating_count
     FROM sellers s
-    LEFT JOIN categories c ON c.id = s.category_id\n    LEFT JOIN (\n      SELECT store_id, AVG(rating) AS avg_rating, COUNT(*) AS rating_count\n      FROM store_ratings\n      GROUP BY store_id\n    ) r ON r.store_id = s.id
+    LEFT JOIN categories c ON c.id = s.category_id
+    LEFT JOIN (
+      SELECT store_id, AVG(rating) AS avg_rating, COUNT(*) AS rating_count
+      FROM store_ratings
+      GROUP BY store_id
+    ) r ON r.store_id = s.id
     WHERE s.id = ?
       AND s.status = 'APPROVED'
     LIMIT 1
