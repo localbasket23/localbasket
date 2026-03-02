@@ -1,11 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>window.API_BASE_URL = "https://localbasket-egpn.onrender.com/api";</script>
-  <base href="/" />
+  <script src="/js/config.js"></script>
+<base href="/" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Seller Earnings â€” Local Basket</title>
+  <title>Seller Earnings — Local Basket</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -584,7 +584,7 @@ function updateChart() {
       values.push(total);
     }
   } else {
-    /* CURRENT MONTH (1 â†’ today) */
+    /* CURRENT MONTH (1 → today) */
     const year = now.getFullYear();
     const month = now.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -739,7 +739,6 @@ loadWalletData();
 
   <div id="footer"></div>
   <script src="/js/include.js"></script>
-  <script src="/js/config.js"></script>
 </body>
 </html>
 
