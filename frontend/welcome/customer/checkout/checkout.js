@@ -3,26 +3,38 @@
  *************************************/
 
 /* ================= AUTH CHECK ================= */
-const user = JSON.parse(localStorage.getItem("lbUser"));
+function safeParseJson(raw, fallback) {
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+}
+
+const user = safeParseJson(localStorage.getItem("lbUser") || "null", null);
 
 if (!user || !user.id) {
   alert("Please login first");
-  window.location.href = "../index.html";
+  window.location.href = "/welcome/customer/index.html";
 }
 
 /* ================= CART (PER USER) ================= */
 function getCartKey() {
-  try {
-    const u = JSON.parse(localStorage.getItem("lbUser"));
-    const id = u && u.id ? u.id : "guest";
-    return `lbCart_${id}`;
-  } catch {
-    return "lbCart_guest";
-  }
+  const id = user && user.id ? user.id : "guest";
+  return `lbCart_${id}`;
 }
 
 const CART_KEY = getCartKey();
-let cart = JSON.parse(localStorage.getItem(CART_KEY) || "[]");
+function readCartFromStorage() {
+  const keys = [CART_KEY, "lbCart_guest", "lbCart"];
+  for (const key of keys) {
+    const parsed = safeParseJson(localStorage.getItem(key) || "[]", []);
+    if (Array.isArray(parsed) && parsed.length) return parsed;
+  }
+  return [];
+}
+
+let cart = readCartFromStorage();
 
 /* ================= DOM ELEMENTS ================= */
 const orderItemsBox = document.getElementById("orderItems");
@@ -155,6 +167,7 @@ syncCheckoutButtonText();
 
 /* ================= RENDER CART ================= */
 function renderCart() {
+  if (!orderItemsBox || !itemsTotalEl || !deliveryFeeEl || !grandTotalEl) return;
   orderItemsBox.innerHTML = "";
   let itemsTotal = 0;
 
