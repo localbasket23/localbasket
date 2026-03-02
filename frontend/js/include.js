@@ -36,6 +36,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function reInitializeUI() {
+    const OPEN_LOCATION_FLAG = "lbOpenLocationAfterRedirect";
 
     // Login popup
     if (window.initAuth) {
@@ -76,7 +77,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (window.getLocation) {
         window.getLocation();
+        return;
       }
+
+      try {
+        sessionStorage.setItem(OPEN_LOCATION_FLAG, "1");
+      } catch (err) {
+        // ignore storage failures
+      }
+      window.location.href = "/welcome/customer/index.html";
     };
 
     ["locBtn", "mobileLocBtn"].forEach((id) => {

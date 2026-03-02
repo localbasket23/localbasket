@@ -117,6 +117,7 @@ const AUTO_LOCATION_FRESH_MS = 30 * 60 * 1000;
 const LOCATION_CACHE_KEY = "lbLocGeoCacheV1";
 const LOCATION_CACHE_TTL_MS = 12 * 60 * 1000;
 const LOCATION_LOOKUP_TIMEOUT_MS = 7000;
+const OPEN_LOCATION_FLAG = "lbOpenLocationAfterRedirect";
 let locationMap = null;
 let locationMarker = null;
 
@@ -195,6 +196,18 @@ function initApp() {
     hydrateLocationStatus();
     enrichAddressFromSavedCoords().catch(() => {});
     initLocationMap();
+    try {
+        if (sessionStorage.getItem(OPEN_LOCATION_FLAG) === "1") {
+            sessionStorage.removeItem(OPEN_LOCATION_FLAG);
+            const modal = dom.locModal();
+            if (modal) {
+                modal.style.display = "flex";
+                window.dispatchEvent(new Event("lb-location-modal-opened"));
+            }
+        }
+    } catch (err) {
+        // ignore storage failures
+    }
     renderRecentStores();
     loadCategories();
 
