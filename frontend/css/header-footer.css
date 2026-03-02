@@ -1837,6 +1837,13 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
   background: #ff8a1a;
   border-color: transparent;
   color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.2;
+  white-space: nowrap;
+  word-spacing: 1px;
 }
 
 .lb-footer-pro .footer-bottom-actions button:hover,
