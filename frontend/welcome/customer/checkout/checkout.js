@@ -224,7 +224,7 @@ async function saveOrder(orderData) {
     }
 
     localStorage.removeItem(CART_KEY);
-    window.location.href = "./thankyou.html";
+    window.location.href = "/welcome/customer/checkout/thankyou.html";
   } catch (err) {
     alert(`Server error: ${err && err.message ? err.message : "Unknown error"}`);
   }
