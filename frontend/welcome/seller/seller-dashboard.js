@@ -453,9 +453,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (el.storeImg) {
       el.storeImg.src = seller.store_photo
         ? `${UPLOADS_BASE}/${seller.store_photo}`
-        : "assets/default-store.png";
+        : "/assets/images/logo.png";
       el.storeImg.onerror = () => {
-        el.storeImg.src = "assets/default-store.png";
+        el.storeImg.src = "/assets/images/logo.png";
       };
     }
 
