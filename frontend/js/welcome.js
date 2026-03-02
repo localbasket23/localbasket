@@ -640,14 +640,18 @@ async function requestCustomerOtp() {
         for (const endpoint of endpoints) {
             try {
                 const controller = new AbortController();
-                const timeout = setTimeout(() => controller.abort(), 15000);
-                const res = await fetch(`${CONFIG.API_BASE}${endpoint}`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ identifier }),
-                    signal: controller.signal
-                });
-                clearTimeout(timeout);
+                const timeout = setTimeout(() => controller.abort(), 45000);
+                let res;
+                try {
+                    res = await fetch(`${CONFIG.API_BASE}${endpoint}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ identifier }),
+                        signal: controller.signal
+                    });
+                } finally {
+                    clearTimeout(timeout);
+                }
                 const data = await res.json();
                 if (!res.ok || !data.success) throw new Error(data.message || "OTP send failed");
                 alert(data.message || "OTP sent successfully. Please check your registered email.");
