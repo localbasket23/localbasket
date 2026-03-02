@@ -1,6 +1,6 @@
 /* =====================================================
-   LOCALBASKET — CUSTOMER ORDERS SCRIPT
-   CLEAN • SAFE • STABLE • BACKEND-ALIGNED
+   LOCALBASKET â€” CUSTOMER ORDERS SCRIPT
+   CLEAN â€¢ SAFE â€¢ STABLE â€¢ BACKEND-ALIGNED
 ===================================================== */
 
 console.log("customer-orders.js loaded");
@@ -29,13 +29,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const wrapper = document.getElementById("ordersWrapper");
 
   if (!wrapper) {
-    console.error("❌ ordersWrapper not found");
+    console.error("âŒ ordersWrapper not found");
     return;
   }
 
   const user = getCurrentUser();
   if (!user) {
-    console.warn("⚠ User not logged in");
+    console.warn("âš  User not logged in");
     function goHome() {
   window.location.href = "/welcome/customer/index.html";
 }
@@ -56,7 +56,7 @@ function getCurrentUser() {
 
     if (!user) return null;
 
-    // 🔥 HARD CHECK
+    // ðŸ”¥ HARD CHECK
     if (!user.id) {
       console.error("User ID missing in lbUser:", user);
       return null;
@@ -959,7 +959,7 @@ function getTimelineSteps(order, displayStatus, flow = STATUS_FLOW) {
     }
 
     let label = getFlowLabel(step);
-    if (state === "crossed") label = `? ${label}`;
+    if (state === "crossed") label = `X ${label}`;
 
     return { step, state, label };
   });
@@ -995,7 +995,7 @@ ALL_ORDERS = await hydrateOrdersWithStoreInfo(ALL_ORDERS);
     if (ALL_ORDERS.length === 0) {
       wrapper.innerHTML = `
         <div class="empty">
-          <h2>No orders yet ??</h2>
+          <h2>No orders yet</h2>
           <p>Start shopping to see your orders here</p>
         </div>`;
       return;
@@ -1145,7 +1145,7 @@ function renderOrderCard(order) {
   const safeToggleId = JSON.stringify(toggleId);
   const itemCount = cart.reduce((sum, item) => sum + Math.max(0, Number(item?.qty || 0)), 0);
   const firstItem = cart[0]?.name ? String(cart[0].name) : "Items";
-  const summarySubtitle = itemCount > 0 ? `${itemCount} item${itemCount > 1 ? "s" : ""} � ${firstItem}` : "No items";
+  const summarySubtitle = itemCount > 0 ? `${itemCount} item${itemCount > 1 ? "s" : ""} - ${firstItem}` : "No items";
 
   return `
     <div class="order-card ${isCancelled ? "cancelled" : ""} ${isRejected ? "rejected" : ""}">
@@ -1162,21 +1162,21 @@ function renderOrderCard(order) {
             <span class="status ${statusClass}">${displayLabel}</span>
           </div>
           <div class="order-summary-row">
-            <div class="order-date">${formatDate(order.created_at)} � ${escapeHtml(storeName)}</div>
+            <div class="order-date">${formatDate(order.created_at)} - ${escapeHtml(storeName)}</div>
             <div class="order-summary-amount">Rs. ${order.total_amount}</div>
           </div>
           <div class="order-summary-sub">${escapeHtml(summarySubtitle)}</div>
         </div>
-        <span class="order-summary-chevron" aria-hidden="true">?</span>
+        <span class="order-summary-chevron" aria-hidden="true">&gt;</span>
       </button>
 
       <div id="${detailsId}" class="order-details">
 
       <div class="store-info">
-        <div class="store-name">?? ${storeName}</div>
+        <div class="store-name">Store: ${storeName}</div>
         <div class="store-meta">
-          ?? ${storePhone}<br>
-          ?? ${storeAddress}
+          Phone: ${storePhone}<br>
+          Address: ${storeAddress}
         </div>
       </div>
 
@@ -1189,7 +1189,7 @@ function renderOrderCard(order) {
           cart.length
             ? cart.map(i => `
               <div class="item">
-                <span>${i.qty} � ${i.name}</span>
+                <span>${i.qty} × ${i.name}</span>
                 <strong>Rs. ${i.qty * i.price}</strong>
               </div>
             `).join("")
@@ -1200,11 +1200,11 @@ function renderOrderCard(order) {
       <div class="card-footer">
         <div class="footer-meta">
           <div class="payment">
-            ${order.payment_method} � ${order.payment_status}
+            ${order.payment_method} • ${order.payment_status}
           </div>
           ${
             actionReason
-              ? `<div class="payment payment-alert">${actionActor ? `By: ${actionActor} � ` : ""}Reason: ${actionReason}</div>`
+              ? `<div class="payment payment-alert">${actionActor ? `By: ${actionActor} • ` : ""}Reason: ${actionReason}</div>`
               : ""
           }
           <div class="amount-label">Order Total</div>
@@ -1240,7 +1240,7 @@ function renderOrderCard(order) {
             isDelivered
               ? `<button class="btn feedback"
                    onclick='openFeedbackModal(${safeOrderIdLiteral})'>
-                   ${feedback ? "? Edit Feedback" : "? Give Feedback"}
+                   ${feedback ? "Edit Feedback" : "Give Feedback"}
                  </button>`
               : ""
           }
@@ -1605,7 +1605,7 @@ function buildTrackingRows(order, fallbackStatus) {
     const actor = normalizeActorName(getEventActor(evt), "");
     const reason = getEventReason(evt);
     const actorText = actor ? `By ${actor}` : "";
-    const reasonText = reason ? `� ${reason}` : "";
+    const reasonText = reason ? `• ${reason}` : "";
     rows.push({
       when,
       label,
@@ -1712,7 +1712,7 @@ function trackOrder(orderId) {
 
   const summaryTitle = escapeHtml(displayLabel.replace(/_/g, " "));
   const summarySub = isTerminal
-    ? `${summaryTitle}${info.reason ? ` � ${escapeHtml(info.reason)}` : ""}`
+    ? `${summaryTitle}${info.reason ? ` • ${escapeHtml(info.reason)}` : ""}`
     : `Expected delivery: ${escapeHtml(getExpectedDeliveryText(order))}`;
   const summaryNote = isTerminal
     ? `Updated by ${escapeHtml(info.actor || (normalizedStatus === "CANCELLED" ? "CUSTOMER" : "SELLER"))}`
@@ -1722,7 +1722,7 @@ function trackOrder(orderId) {
   const destinationText = escapeHtml(getTrackDestination(order));
   const dotRail = TRACK_FLOW.map((_, i) => {
     if (i < stageIndex) return '<span class="mini done"></span>';
-    if (i === stageIndex) return '<span class="mini current">�</span>';
+    if (i === stageIndex) return '<span class="mini current">›</span>';
     return '<span class="mini"></span>';
   }).join("");
 
