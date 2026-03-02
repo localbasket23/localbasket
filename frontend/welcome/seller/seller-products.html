@@ -143,11 +143,12 @@
       padding: 26px;
       border-radius: 18px;
       width: 100%;
-      max-width: 520px;
+      max-width: 640px;
       box-shadow: var(--shadow-md);
       border: 1px solid var(--border-color);
       max-height: min(86vh, 820px);
       overflow: auto;
+      scrollbar-gutter: stable;
     }
     .modal-content h3 {
       display: flex;
@@ -181,7 +182,11 @@
       .modal-content {
         border-radius: 22px;
         box-shadow: 0 28px 60px -30px rgba(2, 6, 23, 0.6);
+        max-height: 78vh;
+        padding: 28px 30px 24px;
+        margin: 0 auto;
       }
+      .modal { padding: 24px; }
     }
 
     /* Mobile: full-width bottom sheet style */
