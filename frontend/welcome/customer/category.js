@@ -114,7 +114,7 @@ const renderSection = (title, stores) => {
       <h2>${title}</h2>
       <div class="${gridClass}">
         ${stores.map(store => `
-          <div class="store-card" onclick="location.href='./store/store.html?id=${store.id}'">
+          <div class="store-card" onclick="location.href='/welcome/customer/store/store.html?id=${store.id}'">
             <div class="store-img">
               <img src="${store.store_photo ? CONFIG.IMG_BASE + '/' + store.store_photo : CONFIG.DEFAULT_IMG}" onerror="this.src='${CONFIG.DEFAULT_IMG}'">
               <span class="status-pill ${Number(store.is_online) === 1 ? "open" : "closed"}">
