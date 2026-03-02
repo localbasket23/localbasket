@@ -407,7 +407,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     if (adminBtn && !adminBtn.dataset.lbBound) {
-      adminBtn.addEventListener("click", openAdminPopup);
+      adminBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        openAdminPopup();
+      });
       adminBtn.dataset.lbBound = "1";
     }
     if (adminClose && !adminClose.dataset.lbBound) {
