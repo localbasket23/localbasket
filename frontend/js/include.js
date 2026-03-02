@@ -58,6 +58,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const maxSpeed = Number(opts.maxSpeed || 18);
       const speedDivisor = Number(opts.speedDivisor || 22);
 
+      target.dataset.lbTickerApplying = "1";
       target.innerHTML = `<span class="lb-loc-marquee-track"><span class="lb-loc-copy">${safeText}</span></span>`;
       target.classList.remove("is-marquee");
       target.style.removeProperty("--lb-loc-loop");
@@ -78,12 +79,34 @@ document.addEventListener("DOMContentLoaded", async () => {
           target.style.setProperty("--lb-loc-speed", `${speed}s`);
           target.classList.add("is-marquee");
         }
+        target.dataset.lbTickerApplying = "";
       });
     };
     const setMobileLocationTicker = (text) =>
       setLocationTicker("locTextMobile", text, { spacer: 32, minOverflow: 6, minSpeed: 7, maxSpeed: 18, speedDivisor: 22 });
     const setDesktopLocationTicker = (text) =>
       setLocationTicker("locText", text, { spacer: 26, minOverflow: 8, minSpeed: 8, maxSpeed: 20, speedDivisor: 24 });
+    const watchLocationTicker = (elementId, opts = {}) => {
+      const target = document.getElementById(elementId);
+      if (!target || target.dataset.lbTickerWatch === "1") return;
+      target.dataset.lbTickerWatch = "1";
+
+      let rafId = 0;
+      const reapply = () => {
+        cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(() => {
+          const rawText = String(target.textContent || "").replace(/\s+/g, " ").trim() || "Select Location";
+          setLocationTicker(elementId, rawText, opts);
+        });
+      };
+
+      const observer = new MutationObserver(() => {
+        if (target.dataset.lbTickerApplying === "1") return;
+        reapply();
+      });
+      observer.observe(target, { childList: true, characterData: true, subtree: true });
+      reapply();
+    };
     window.lbSetLocMobileText = setMobileLocationTicker;
     window.lbSetLocDesktopText = setDesktopLocationTicker;
 
@@ -163,6 +186,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       setDesktopLocationTicker(savedAddress);
       setMobileLocationTicker(savedAddress);
     }
+    watchLocationTicker("locText", { spacer: 26, minOverflow: 8, minSpeed: 8, maxSpeed: 20, speedDivisor: 24 });
+    watchLocationTicker("locTextMobile", { spacer: 32, minOverflow: 6, minSpeed: 7, maxSpeed: 18, speedDivisor: 22 });
 
     const goBackSafe = () => {
       if (window.history.length > 1) {
