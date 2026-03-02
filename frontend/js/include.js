@@ -302,6 +302,96 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       document.body.dataset.lbAuthSyncBound = "1";
     }
+
+    const welcomePath = (suffix) => `/welcome/${String(suffix || "").replace(/^\/+/, "")}`;
+
+    if (!document.body.dataset.lbHrefDelegateBound) {
+      document.addEventListener("click", (e) => {
+        const el = e.target.closest("[data-lb-href]");
+        if (!el) return;
+        const target = String(el.getAttribute("data-lb-href") || "").trim();
+        if (!target) return;
+        e.preventDefault();
+        window.location.href = welcomePath(target);
+      });
+      document.body.dataset.lbHrefDelegateBound = "1";
+    }
+
+    const sellerBtn = document.getElementById("lbFooterSellerBtn");
+    if (sellerBtn && !sellerBtn.dataset.lbBound) {
+      sellerBtn.addEventListener("click", () => {
+        window.location.href = welcomePath("seller/seller-auth/seller-auth.html");
+      });
+      sellerBtn.dataset.lbBound = "1";
+    }
+
+    const adminBtn = document.getElementById("lbAdminLoginBtn");
+    const adminOverlay = document.getElementById("lbAdminPopupOverlay");
+    const adminClose = document.getElementById("lbAdminPopupClose");
+    const adminForm = document.getElementById("lbAdminPopupForm");
+    const adminUserInput = document.getElementById("lbAdminUser");
+    const adminPassInput = document.getElementById("lbAdminPass");
+    const adminError = document.getElementById("lbAdminPopupError");
+
+    const openAdminPopup = () => {
+      if (!adminOverlay) {
+        window.location.href = welcomePath("admin/admin.html");
+        return;
+      }
+      adminOverlay.hidden = false;
+      document.body.style.overflow = "hidden";
+      if (adminError) adminError.textContent = "";
+      if (adminUserInput) adminUserInput.focus();
+    };
+
+    const closeAdminPopup = () => {
+      if (!adminOverlay) return;
+      adminOverlay.hidden = true;
+      document.body.style.overflow = "";
+      if (adminError) adminError.textContent = "";
+      if (adminForm) adminForm.reset();
+    };
+
+    if (adminBtn && !adminBtn.dataset.lbBound) {
+      adminBtn.addEventListener("click", openAdminPopup);
+      adminBtn.dataset.lbBound = "1";
+    }
+    if (adminClose && !adminClose.dataset.lbBound) {
+      adminClose.addEventListener("click", closeAdminPopup);
+      adminClose.dataset.lbBound = "1";
+    }
+    if (adminOverlay && !adminOverlay.dataset.lbBound) {
+      adminOverlay.addEventListener("click", (e) => {
+        if (e.target === adminOverlay) closeAdminPopup();
+      });
+      adminOverlay.dataset.lbBound = "1";
+    }
+    if (adminForm && !adminForm.dataset.lbBound) {
+      adminForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const userId = String(adminUserInput?.value || "").trim();
+        const pass = String(adminPassInput?.value || "").trim();
+        if (userId === "shubham" && pass === "1234") {
+          closeAdminPopup();
+          window.location.href = welcomePath("admin/admin.html");
+          return;
+        }
+        if (adminError) adminError.textContent = "Invalid ID or password.";
+      });
+      adminForm.dataset.lbBound = "1";
+    }
+    if (!document.body.dataset.lbAdminEscBound) {
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          const overlay = document.getElementById("lbAdminPopupOverlay");
+          if (overlay && !overlay.hidden) {
+            overlay.hidden = true;
+            document.body.style.overflow = "";
+          }
+        }
+      });
+      document.body.dataset.lbAdminEscBound = "1";
+    }
   }
 
   async function loadHeader() {
