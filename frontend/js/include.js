@@ -57,6 +57,34 @@ document.addEventListener("DOMContentLoaded", async () => {
       .forEach(btn => btn.onclick = () =>
         document.getElementById("authModal")?.classList.add("active")
       );
+
+    const savedAddress = String(localStorage.getItem("lbAddr") || "").trim();
+    if (savedAddress) {
+      const desktopLoc = document.getElementById("locText");
+      const mobileLoc = document.getElementById("locTextMobile");
+      if (desktopLoc) desktopLoc.textContent = savedAddress;
+      if (mobileLoc) mobileLoc.textContent = savedAddress;
+    }
+
+    const openLocation = () => {
+      const modal = document.getElementById("locationModal");
+      if (modal) {
+        modal.style.display = "flex";
+        window.dispatchEvent(new Event("lb-location-modal-opened"));
+        return;
+      }
+
+      if (window.getLocation) {
+        window.getLocation();
+      }
+    };
+
+    ["locBtn", "mobileLocBtn"].forEach((id) => {
+      const btn = document.getElementById(id);
+      if (!btn || btn.dataset.lbLocBound) return;
+      btn.addEventListener("click", openLocation);
+      btn.dataset.lbLocBound = "1";
+    });
   }
 
   async function loadHeader() {
