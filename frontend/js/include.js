@@ -1,3 +1,156 @@
+(() => {
+  let dialogReady = false;
+  const ensureDialog = () => {
+    if (dialogReady) return;
+    dialogReady = true;
+    const style = document.createElement("style");
+    style.textContent = `
+      .lb-dialog-backdrop{
+        position: fixed;
+        inset: 0;
+        background: rgba(15,23,42,0.45);
+        backdrop-filter: blur(6px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        padding: 16px;
+      }
+      .lb-dialog{
+        width: min(420px, calc(100vw - 32px));
+        border-radius: 16px;
+        background: #ffffff;
+        color: #0f172a;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 24px 50px -30px rgba(2,6,23,0.45);
+        padding: 18px;
+        display: grid;
+        gap: 14px;
+      }
+      .lb-dialog-title{
+        font-size: 14px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        color: #fb923c;
+      }
+      .lb-dialog-message{
+        font-size: 14px;
+        line-height: 1.4;
+        color: inherit;
+        white-space: pre-wrap;
+      }
+      .lb-dialog-actions{
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+      }
+      .lb-dialog-btn{
+        min-width: 96px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        font-weight: 800;
+        cursor: pointer;
+      }
+      .lb-dialog-btn.primary{
+        background: linear-gradient(135deg, #f97316, #fb923c);
+        color: #1f2937;
+        box-shadow: 0 10px 18px -14px rgba(251,146,60,0.8);
+      }
+      .lb-dialog-btn.ghost{
+        background: #f1f5f9;
+        color: #0f172a;
+        border-color: #e2e8f0;
+      }
+      html.lb-theme-dark .lb-dialog{
+        background: #0f172a;
+        color: #e2e8f0;
+        border-color: rgba(148,163,184,0.2);
+        box-shadow: 0 26px 50px -30px rgba(2,6,23,0.8);
+      }
+      html.lb-theme-dark .lb-dialog-title{ color: #fb923c; }
+      html.lb-theme-dark .lb-dialog-btn.ghost{
+        background: rgba(15,23,42,0.7);
+        color: #e2e8f0;
+        border-color: rgba(148,163,184,0.25);
+      }
+      @media (max-width: 600px){
+        .lb-dialog{ width: min(360px, calc(100vw - 24px)); padding: 16px; }
+        .lb-dialog-actions{ justify-content: stretch; }
+        .lb-dialog-btn{ flex: 1 1 auto; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    const backdrop = document.createElement("div");
+    backdrop.className = "lb-dialog-backdrop";
+    backdrop.innerHTML = `
+      <div class="lb-dialog" role="dialog" aria-modal="true">
+        <div class="lb-dialog-title">Notice</div>
+        <div class="lb-dialog-message"></div>
+        <div class="lb-dialog-actions">
+          <button class="lb-dialog-btn ghost" data-cancel>Cancel</button>
+          <button class="lb-dialog-btn primary" data-ok>OK</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(backdrop);
+
+    const titleEl = backdrop.querySelector(".lb-dialog-title");
+    const msgEl = backdrop.querySelector(".lb-dialog-message");
+    const okBtn = backdrop.querySelector("[data-ok]");
+    const cancelBtn = backdrop.querySelector("[data-cancel]");
+
+    let resolver = null;
+    let isConfirm = false;
+
+    const close = (val) => {
+      backdrop.style.display = "none";
+      document.body.style.overflow = "";
+      if (resolver) resolver(val);
+      resolver = null;
+    };
+
+    okBtn.addEventListener("click", () => close(true));
+    cancelBtn.addEventListener("click", () => close(false));
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop && isConfirm) close(false);
+      if (e.target === backdrop && !isConfirm) close(true);
+    });
+
+    window.lbAlert = (message, title = "Notice") => {
+      titleEl.textContent = title || "Notice";
+      msgEl.textContent = String(message || "");
+      cancelBtn.style.display = "none";
+      isConfirm = false;
+      backdrop.style.display = "flex";
+      document.body.style.overflow = "hidden";
+      return new Promise((resolve) => { resolver = resolve; });
+    };
+
+    window.lbConfirm = (message, title = "Confirm") => {
+      titleEl.textContent = title || "Confirm";
+      msgEl.textContent = String(message || "");
+      cancelBtn.style.display = "inline-flex";
+      isConfirm = true;
+      backdrop.style.display = "flex";
+      document.body.style.overflow = "hidden";
+      return new Promise((resolve) => { resolver = resolve; });
+    };
+
+    // override alert only (confirm is async; update callers to use lbConfirm)
+    window.alert = (msg) => window.lbAlert(msg);
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", ensureDialog);
+  } else {
+    ensureDialog();
+  }
+})();
+
 document.addEventListener("DOMContentLoaded", async () => {
   const path = window.location.pathname;
 

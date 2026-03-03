@@ -458,10 +458,11 @@ function setFallbackData() {
 }
 
 function logout(){
-  if(confirm("Are you sure you want to logout?")){
+  window.lbConfirm("Are you sure you want to logout?").then((ok) => {
+    if (!ok) return;
     localStorage.clear();
     location.href = "login.html";
-  }
+  });
 }
 
 function setHeroMetaDate() {

@@ -505,7 +505,8 @@ async function updateStatus(id, status, isMobile = false) {
     return;
   }
 
-  if (!confirm(`Are you sure you want to ${status.toLowerCase()} this product?`)) return;
+  const ok = await window.lbConfirm(`Are you sure you want to ${status.toLowerCase()} this product?`);
+  if (!ok) return;
 
   try {
     const res = await fetch(
@@ -525,9 +526,9 @@ async function updateStatus(id, status, isMobile = false) {
 }
 
 function logout() {
-  if (confirm("Logout from Admin Panel?")) {
-    window.location.href = "index.html";
-  }
+  window.lbConfirm("Logout from Admin Panel?").then((ok) => {
+    if (ok) window.location.href = "index.html";
+  });
 }
 
 // Start

@@ -700,10 +700,11 @@ function saveBank() {
 function confirmWithdraw() {
   const amt = Number(withdrawInput.value);
   if (amt > 0 && amt <= pocketBalance) {
-    if (confirm(`Confirm withdrawal of Rs. ${amt}?`)) {
+    window.lbConfirm(`Confirm withdrawal of Rs. ${amt}?`).then((ok) => {
+      if (!ok) return;
       stepAmount.style.display = "none";
       stepSuccess.style.display = "block";
-    }
+    });
   } else {
     alert("Invalid amount or insufficient balance");
   }
@@ -725,10 +726,11 @@ closeSidebar.onclick = sidebarOverlay.onclick = () => {
 
 /* ================= LOGOUT ================= */
 function logout() {
-  if (confirm("Logout?")) {
+  window.lbConfirm("Logout?").then((ok) => {
+    if (!ok) return;
     localStorage.removeItem("lbSeller");
     location.href = "/welcome/seller/seller-auth/seller-auth.html";
-  }
+  });
 }
 
 /* ================= INIT ================= */

@@ -704,7 +704,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* REMOVE IMAGE */
   removeImageBtn.onclick = async () => {
-    if(!confirm("Remove store image?")) return;
+    const ok = await window.lbConfirm("Remove store image?");
+    if(!ok) return;
     try {
       const res = await fetch(`${window.API_BASE_URL}/api/seller/remove-store-image`, {
         method:"POST",

@@ -198,17 +198,21 @@ function applyFilters(orders) {
 function showActionModal({ title, message, requireReason = false, confirmText = "Confirm" }) {
     return new Promise(resolve => {
         if (!els.actionModal || !els.actionModalOk || !els.actionModalCancel) {
-            const ok = window.confirm(message || title || "Confirm?");
-            if (!ok) {
-                resolve({ confirmed: false, reason: "" });
-                return;
-            }
-            if (!requireReason) {
-                resolve({ confirmed: true, reason: "" });
-                return;
-            }
-            const fallbackReason = String(window.prompt("Enter reason:") || "").trim();
-            resolve({ confirmed: Boolean(fallbackReason), reason: fallbackReason });
+            const ask = window.lbConfirm
+                ? window.lbConfirm(message || title || "Confirm?")
+                : Promise.resolve(window.confirm(message || title || "Confirm?"));
+            ask.then((ok) => {
+                if (!ok) {
+                    resolve({ confirmed: false, reason: "" });
+                    return;
+                }
+                if (!requireReason) {
+                    resolve({ confirmed: true, reason: "" });
+                    return;
+                }
+                const fallbackReason = String(window.prompt("Enter reason:") || "").trim();
+                resolve({ confirmed: Boolean(fallbackReason), reason: fallbackReason });
+            });
             return;
         }
 
@@ -593,10 +597,11 @@ if(els.themeToggle) {
 }
 
 function logout() {
-    if(confirm("Logout from Seller Panel?")) {
+    window.lbConfirm("Logout from Seller Panel?").then((ok) => {
+        if (!ok) return;
         localStorage.removeItem("lbSeller");
         window.location.href = "/welcome/seller/seller-auth/seller-auth.html";
-    }
+    });
 }
 
 

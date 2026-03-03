@@ -298,7 +298,9 @@ function showOrderConfirm(message) {
   const cancelBtn = document.getElementById("confirmCancel");
 
   if (!overlay || !textEl || !okBtn || !cancelBtn) {
-    return Promise.resolve(confirm(message));
+    return window.lbConfirm
+      ? window.lbConfirm(message)
+      : Promise.resolve(confirm(message));
   }
 
   textEl.textContent = message;

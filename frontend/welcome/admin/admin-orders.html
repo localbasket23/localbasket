@@ -543,7 +543,9 @@ function closeDetail() {
 }
 
 function logout() {
-  if (confirm("Logout from Panel?")) window.location.href = "index.html";
+  window.lbConfirm("Logout from Panel?").then((ok) => {
+    if (ok) window.location.href = "index.html";
+  });
 }
 
 window.onload = () => {

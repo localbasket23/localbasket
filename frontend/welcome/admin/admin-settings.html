@@ -406,10 +406,11 @@ function toggleMenu(){
   overlay.classList.toggle("show");
 }
 function logout(){
-  if(confirm("Logout?")){
+  window.lbConfirm("Logout?").then((ok) => {
+    if (!ok) return;
     localStorage.clear();
     window.location.href="login.html";
-  }
+  });
 }
 
 /* Commission preview + persistence */

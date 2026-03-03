@@ -468,10 +468,11 @@
       overlay.classList.toggle("show");
     }
     function logout() {
-      if (confirm("Logout?")) {
+      window.lbConfirm("Logout?").then((ok) => {
+        if (!ok) return;
         localStorage.clear();
         window.location.href = "login.html";
-      }
+      });
     }
 
     const API = `${window.API_BASE_URL}/api/admin`;
@@ -647,7 +648,8 @@
         alert("Bank details/passbook missing. Cannot release payout.");
         return;
       }
-      if (!confirm("Release payout to seller #" + id + "?")) return;
+      const ok = await window.lbConfirm("Release payout to seller #" + id + "?");
+      if (!ok) return;
       const res = await fetch(API + "/payments/release", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

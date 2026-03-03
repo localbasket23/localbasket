@@ -1055,7 +1055,8 @@
     }
 
     async function toggleBlock(id, targetAccountStatus) {
-      if(!confirm(`Are you sure you want to ${targetAccountStatus === 'BLOCKED' ? 'BLOCK' : 'UNBLOCK'} this seller?`)) return;
+      const ok = await window.lbConfirm(`Are you sure you want to ${targetAccountStatus === 'BLOCKED' ? 'BLOCK' : 'UNBLOCK'} this seller?`);
+      if(!ok) return;
 
       try {
         const response = await fetchJsonWithFallback(
@@ -1273,7 +1274,8 @@
         return showToast("Enter a valid percentage (0-100)", "error");
       }
 
-      if(!confirm(`Apply ${commission}% commission to ALL sellers in the current list?`)) return;
+      const okAll = await window.lbConfirm(`Apply ${commission}% commission to ALL sellers in the current list?`);
+      if(!okAll) return;
 
       try {
         const endpointPaths = [
@@ -1483,11 +1485,12 @@
     }
 
     function logout() {
-        if(confirm("Are you sure you want to logout?")) {
+        window.lbConfirm("Are you sure you want to logout?").then((ok) => {
+            if (!ok) return;
             // Clear tokens if any
             localStorage.removeItem('admin_token'); 
             window.location.href = "login.html";
-        }
+        });
     }
   </script>
 

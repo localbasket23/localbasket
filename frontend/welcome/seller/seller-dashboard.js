@@ -306,7 +306,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const confirmDialog = (message, title = "Confirm") => {
     return new Promise(resolve => {
       if (!el.confirmModal || !el.confirmOk || !el.confirmCancel) {
-        resolve(window.confirm(message));
+        if (window.lbConfirm) {
+          window.lbConfirm(message, title).then(resolve);
+        } else {
+          resolve(window.confirm(message));
+        }
         return;
       }
 
@@ -758,7 +762,11 @@ async function logout() {
 
   const ok = await new Promise(resolve => {
     if (!confirmModal || !confirmOk || !confirmCancel) {
-      resolve(window.confirm("Logout?"));
+      if (window.lbConfirm) {
+        window.lbConfirm("Logout?").then(resolve);
+      } else {
+        resolve(window.confirm("Logout?"));
+      }
       return;
     }
 

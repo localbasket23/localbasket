@@ -177,13 +177,13 @@ async function handleProfileUpdate(e) {
 }
 
 function handleLogout() {
-  if (!confirm("Are you sure you want to logout?")) return;
-
-  const cartKey = currentUser && currentUser.id ? `lbCart_${currentUser.id}` : null;
-  localStorage.removeItem("lbUser");
-  if (cartKey) localStorage.removeItem(cartKey);
-  localStorage.removeItem("lbCart");
-
-  window.location.href = "/welcome/customer/index.html";
+  window.lbConfirm("Are you sure you want to logout?").then((ok) => {
+    if (!ok) return;
+    const cartKey = currentUser && currentUser.id ? `lbCart_${currentUser.id}` : null;
+    localStorage.removeItem("lbUser");
+    if (cartKey) localStorage.removeItem(cartKey);
+    localStorage.removeItem("lbCart");
+    window.location.href = "/welcome/customer/index.html";
+  });
 }
 

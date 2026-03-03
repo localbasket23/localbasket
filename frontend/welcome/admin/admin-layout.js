@@ -36,8 +36,9 @@
     return;
   }
 
-  window.logout = () => {
-    if (!window.confirm("Logout from admin panel?")) return;
+  window.logout = async () => {
+    const ok = await window.lbConfirm("Logout from admin panel?");
+    if (!ok) return;
     clearAdminAuth();
     window.location.replace("/welcome/customer/index.html");
   };
@@ -176,9 +177,12 @@
       logoutBtn.addEventListener("click", () => {
         if (typeof window.logout === "function") {
           window.logout();
-        } else if (confirm("Logout?")) {
-          localStorage.clear();
-          location.href = "/welcome/customer/index.html";
+        } else {
+          window.lbConfirm("Logout?").then((ok) => {
+            if (!ok) return;
+            localStorage.clear();
+            location.href = "/welcome/customer/index.html";
+          });
         }
       });
     }
