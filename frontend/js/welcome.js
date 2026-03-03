@@ -29,6 +29,21 @@ const CONFIG = {
     DEFAULT_IMG: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80"
 };
 
+const resolveHeroImageUrl = (raw) => {
+    const input = String(raw || "").trim();
+    if (!input) return "";
+    if (/^(https?:)?\/\//i.test(input) || input.startsWith("data:") || input.startsWith("blob:")) {
+        return input;
+    }
+    if (input.startsWith("/uploads/")) {
+        return `${String(CONFIG.IMG_BASE || "").replace(/\/+$/, "")}/${input.replace(/^\/+/, "").replace(/^uploads\//, "")}`;
+    }
+    if (input.startsWith("/")) {
+        return `${API_BASE_URL}${input}`;
+    }
+    return `${String(CONFIG.IMG_BASE || "").replace(/\/+$/, "")}/${input.replace(/^\/+/, "")}`;
+};
+
 const WELCOME_BASE = (() => {
     const path = String(window.location.pathname || "").replace(/\\/g, "/");
     return path.includes("/frontend/") ? "/frontend" : "";
@@ -321,9 +336,7 @@ const applyHeroSettings = (settings = {}) => {
     if (heroSubtitleEl && subtitle) heroSubtitleEl.textContent = subtitle;
 
     if (heroSection) {
-        if (image && image.startsWith("/")) {
-            image = `${window.location.origin}${image}`;
-        }
+        image = resolveHeroImageUrl(image);
         if (image) {
             heroSection.classList.add("has-hero-image");
             heroSection.style.setProperty("--hero-image", `url('${image}')`);
@@ -335,8 +348,8 @@ const applyHeroSettings = (settings = {}) => {
 
     const heroVisual = dom.heroVisual();
     if (heroVisual) {
-        if (image && image.startsWith("/")) image = `${window.location.origin}${image}`;
-        sliderImages = sliderImages.map(src => (src.startsWith("/") ? `${window.location.origin}${src}` : src));
+        image = resolveHeroImageUrl(image);
+        sliderImages = sliderImages.map(src => resolveHeroImageUrl(src));
 
         const useSlider = sliderImages.length > 0;
         const pickImage = () => {

@@ -509,9 +509,10 @@ function updateHeroPreview(){
     heroPreviewSubtitle.textContent = String(subtitleRaw || DEFAULT_HERO.subtitle);
   }
   if (imageRaw) {
-    const resolved = imageRaw.startsWith("/")
-      ? `${window.location.origin}${imageRaw}`
-      : imageRaw;
+    const apiRoot = String(API_BASE || "").replace(/\/api\/admin\/?$/, "");
+    const resolved = imageRaw.startsWith("/uploads/")
+      ? `${apiRoot}${imageRaw}`
+      : (imageRaw.startsWith("/") ? `${apiRoot}${imageRaw}` : imageRaw);
     heroPreview.style.setProperty("--hero-preview-image", `url('${resolved}')`);
   } else {
     heroPreview.style.setProperty("--hero-preview-image", "none");
