@@ -347,6 +347,19 @@
       }
     }
 
+    /* Force single column even if other CSS overrides */
+    @media (max-width: 1024px) {
+      body .form-card #storeSection .form-grid,
+      body .form-card #bankSection .form-grid {
+        grid-template-columns: 1fr !important;
+      }
+      body .form-card #storeSection .form-group,
+      body .form-card #bankSection .form-group {
+        grid-column: span 1 !important;
+        width: 100% !important;
+      }
+    }
+
 </style>
 </head>
 <body>
