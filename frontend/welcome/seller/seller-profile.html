@@ -1,24 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="/js/config.js">
-  function initProfileTabs() {
-    const tabs = document.querySelectorAll('.profile-tabs .tab-btn');
-    const store = document.getElementById('storeSection');
-    const bank = document.getElementById('bankSection');
-    if (!tabs.length || !store || !bank) return;
-    const activate = (target) => {
-      tabs.forEach(btn => btn.classList.toggle('active', btn.dataset.target === target));
-      store.classList.toggle('active', target === 'storeSection');
-      bank.classList.toggle('active', target === 'bankSection');
-      store.style.display = target === 'storeSection' ? 'block' : 'none';
-      bank.style.display = target === 'bankSection' ? 'block' : 'none';
-    };
-    tabs.forEach(btn => btn.addEventListener('click', () => activate(btn.dataset.target)));
-    activate('storeSection');
-  }
-  initProfileTabs();
-</script>
+  <script src="/js/config.js"></script>
 <base href="/" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -339,6 +322,10 @@
       #storeSection.active { display: block; }
     }
 
+    /* Store details: one field per row */
+    #storeSection .form-grid { grid-template-columns: 1fr; }
+    #storeSection .full-width { grid-column: span 1; }
+
 </style>
 </head>
 <body>
@@ -495,6 +482,22 @@ document.addEventListener("DOMContentLoaded", () => {
   /* AUTH CHECK */
   const seller = JSON.parse(localStorage.getItem("lbSeller"));
   if(!seller) { location.href = "/welcome/seller/seller-auth/seller-auth.html"; return; }
+  const initProfileTabs = () => {
+    const tabs = document.querySelectorAll(".profile-tabs .tab-btn");
+    const store = document.getElementById("storeSection");
+    const bank = document.getElementById("bankSection");
+    if (!tabs.length || !store || !bank) return;
+    const activate = (target) => {
+      tabs.forEach(btn => btn.classList.toggle("active", btn.dataset.target === target));
+      store.classList.toggle("active", target === "storeSection");
+      bank.classList.toggle("active", target === "bankSection");
+      store.style.display = target === "storeSection" ? "block" : "none";
+      bank.style.display = target === "bankSection" ? "block" : "none";
+    };
+    tabs.forEach(btn => btn.addEventListener("click", () => activate(btn.dataset.target)));
+    activate("storeSection");
+  };
+  initProfileTabs();
   const resolveUploadUrl = (rawPath) => {
     const input = String(rawPath || "").trim();
     if (!input) return "";

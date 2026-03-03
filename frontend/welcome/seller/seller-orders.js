@@ -26,7 +26,12 @@ const els = {
     actionModalReason: document.getElementById("actionModalReason"),
     actionModalError: document.getElementById("actionModalError"),
     actionModalOk: document.getElementById("actionModalOk"),
-    actionModalCancel: document.getElementById("actionModalCancel")
+    actionModalCancel: document.getElementById("actionModalCancel"),
+    orderSearch: document.getElementById("orderSearch"),
+    statusFilter: document.getElementById("statusFilter"),
+    paymentFilter: document.getElementById("paymentFilter"),
+    sortFilter: document.getElementById("sortFilter"),
+    clearFilters: document.getElementById("clearFilters")
 };
 
 let allOrders = [];
@@ -136,6 +141,60 @@ function escapeHtml(value) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
 }
+function getOrderSearchText(order) {
+    let cart = [];
+    try {
+        cart = typeof order.cart === "string" ? JSON.parse(order.cart) : (order.cart || []);
+    } catch { cart = []; }
+    const itemNames = Array.isArray(cart) ? cart.map(i => `${i.qty} ${i.name}`) : [];
+    return [
+        order?.id,
+        order?.customer_name,
+        order?.phone,
+        order?.payment_method,
+        order?.payment_status,
+        order?.status,
+        order?.total_amount,
+        order?.address,
+        ...itemNames
+    ].join(" ").toLowerCase();
+}
+
+function applyFilters(orders) {
+    const query = String(els.orderSearch?.value || "").trim().toLowerCase();
+    const statusFilter = String(els.statusFilter?.value || "ALL").toUpperCase();
+    const paymentFilter = String(els.paymentFilter?.value || "ALL").toUpperCase();
+    const sortFilter = String(els.sortFilter?.value || "NEWEST").toUpperCase();
+
+    let out = Array.isArray(orders) ? [...orders] : [];
+
+    if (query) {
+        out = out.filter(o => getOrderSearchText(o).includes(query));
+    }
+
+    if (statusFilter !== "ALL") {
+        if (statusFilter === "ACTIVE") {
+            const activeStatuses = ["PLACED", "PENDING", "ACCEPTED", "CONFIRMED", "PACKED", "OUT_FOR_DELIVERY"];
+            out = out.filter(o => activeStatuses.includes(String(o?.status || "").toUpperCase()));
+        } else {
+            out = out.filter(o => String(o?.status || "").toUpperCase() === statusFilter);
+        }
+    }
+
+    if (paymentFilter !== "ALL") {
+        out = out.filter(o => String(o?.payment_method || "").toUpperCase() === paymentFilter);
+    }
+
+    const toTime = (o) => new Date(o?.created_at || 0).getTime() || 0;
+    const toAmount = (o) => Number(o?.total_amount || 0);
+    if (sortFilter === "OLDEST") out.sort((a, b) => toTime(a) - toTime(b));
+    if (sortFilter === "NEWEST") out.sort((a, b) => toTime(b) - toTime(a));
+    if (sortFilter === "AMOUNT_HIGH") out.sort((a, b) => toAmount(b) - toAmount(a));
+    if (sortFilter === "AMOUNT_LOW") out.sort((a, b) => toAmount(a) - toAmount(b));
+
+    return out;
+}
+
 function showActionModal({ title, message, requireReason = false, confirmText = "Confirm" }) {
     return new Promise(resolve => {
         if (!els.actionModal || !els.actionModalOk || !els.actionModalCancel) {
@@ -243,6 +302,22 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Auto Refresh every 20 seconds
     setInterval(fetchOrders, 20000);
+
+    // Filters
+    [els.orderSearch, els.statusFilter, els.paymentFilter, els.sortFilter].forEach(el => {
+        if (!el) return;
+        el.addEventListener("input", renderOrders);
+        el.addEventListener("change", renderOrders);
+    });
+    if (els.clearFilters) {
+        els.clearFilters.onclick = () => {
+            if (els.orderSearch) els.orderSearch.value = "";
+            if (els.statusFilter) els.statusFilter.value = "ALL";
+            if (els.paymentFilter) els.paymentFilter.value = "ALL";
+            if (els.sortFilter) els.sortFilter.value = "NEWEST";
+            renderOrders();
+        };
+    }
 });
 
 /* ================= FETCH & SORT ================= */
@@ -271,10 +346,11 @@ function renderOrders() {
     const historyStatuses = ["DELIVERED", "CANCELLED", "REJECTED"];
 
     // Filter Logic
-    const activeOrders = allOrders.filter(o => 
+    const filtered = applyFilters(allOrders);
+    const activeOrders = filtered.filter(o => 
         o.status && activeStatuses.includes(o.status.toUpperCase())
     );
-    const historyOrders = allOrders.filter(o => 
+    const historyOrders = filtered.filter(o => 
         o.status && historyStatuses.includes(o.status.toUpperCase())
     );
 

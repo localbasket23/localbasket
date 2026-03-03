@@ -7,6 +7,62 @@
   padding-bottom: 10px;
 }
 
+/* ================= TOOLBAR ================= */
+.orders-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) repeat(3, minmax(140px, 180px)) auto;
+  gap: 12px;
+  align-items: center;
+  margin: 6px 0 20px;
+}
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: var(--shadow-sm);
+}
+.search-box i { color: var(--text-light); }
+.search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+  font-size: 14px;
+  color: var(--text);
+}
+.filter-select {
+  background: var(--card);
+  border: 1px solid var(--border-color);
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  font-weight: 600;
+}
+.btn-clear {
+  border: 1px solid var(--border-color);
+  background: var(--bg);
+  color: var(--text);
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-clear:hover { border-color: rgba(255,138,26,0.35); color: var(--lav); }
+
+body.dark .search-box,
+body.dark .filter-select {
+  background: var(--card);
+  border-color: var(--border-color);
+  color: var(--text);
+}
+body.dark .search-box input { color: var(--text); }
+body.dark .btn-clear { background: var(--card); color: var(--text); }
+
 .tab-btn {
   background: none;
   border: none;
@@ -120,6 +176,9 @@ tr:hover { background: var(--bg); }
 
 /* ================= MOBILE ADAPTION ================= */
 @media (max-width: 768px) {
+  .orders-toolbar {
+    grid-template-columns: 1fr;
+  }
   /* Turn table into Cards for Mobile */
   thead { display: none; }
   tr { display: block; border: 1px solid var(--border-color); margin-bottom: 15px; border-radius: 12px; padding: 15px; background: var(--card); }
