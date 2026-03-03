@@ -1,7 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="/js/config.js"></script>
+  <script src="/js/config.js">
+  function initProfileTabs() {
+    const tabs = document.querySelectorAll('.profile-tabs .tab-btn');
+    const store = document.getElementById('storeSection');
+    const bank = document.getElementById('bankSection');
+    if (!tabs.length || !store || !bank) return;
+    const activate = (target) => {
+      tabs.forEach(btn => btn.classList.toggle('active', btn.dataset.target === target));
+      store.classList.toggle('active', target === 'storeSection');
+      bank.classList.toggle('active', target === 'bankSection');
+      store.style.display = target === 'storeSection' ? 'block' : 'none';
+      bank.style.display = target === 'bankSection' ? 'block' : 'none';
+    };
+    tabs.forEach(btn => btn.addEventListener('click', () => activate(btn.dataset.target)));
+    activate('storeSection');
+  }
+  initProfileTabs();
+</script>
 <base href="/" />
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -292,6 +309,36 @@
     body.dark .btn-reject { color: #fca5a5; border-color: rgba(248,113,113,0.35); }
     body.dark .quick-pill.subtle { background: rgba(255,255,255,0.08); color: #e5e7eb; }
 
+
+    .profile-tabs {
+      display: none;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: var(--bg);
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: var(--lav-soft);
+      color: var(--lav);
+      border-color: rgba(255, 138, 26, 0.35);
+    }
+    .section-panel { display: block; }
+    .section-panel.hidden { display: none; }
+    @media (max-width: 900px) {
+      .profile-tabs { display: flex; }
+      #bankSection { display: none; }
+      #bankSection.active { display: block; }
+      #storeSection.active { display: block; }
+    }
+
 </style>
 </head>
 <body>
@@ -373,8 +420,12 @@
     </div>
 
     <div class="form-card">
+      <div class="profile-tabs" role="tablist">
+        <button type="button" class="tab-btn active" data-target="storeSection">Store Details</button>
+        <button type="button" class="tab-btn" data-target="bankSection">Bank Details</button>
+      </div>
       <form id="profileForm">
-        <div class="section-card">
+        <div id="storeSection" class="section-card section-panel active">
           <div class="form-section-title">Store Details</div>
           <div class="form-grid">
           <div class="section-divider"></div>
@@ -404,7 +455,7 @@
           </div>
           </div>
         </div>
-        <div class="section-card">
+        <div id="bankSection" class="section-card section-panel">
           <div class="form-section-title">Bank Details</div>
           <div class="form-grid">
           <div class="form-group">
