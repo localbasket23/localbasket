@@ -39,7 +39,8 @@ function resolveImageUrl(rawPath) {
   const idx = lower.lastIndexOf("/uploads/");
   if (idx !== -1) path = path.slice(idx + "/uploads/".length);
   else if (lower.startsWith("uploads/")) path = path.slice("uploads/".length);
-  else if (path.startsWith("/")) return `${window.location.origin}${path}`;
+  else if (path.startsWith("/uploads/")) path = path.slice("/uploads/".length);
+  else if (path.startsWith("/")) return `${API_BASE_URL}${path}`;
 
   return `${base}/${encodeURI(path.replace(/^\/+/, ""))}`;
 }
