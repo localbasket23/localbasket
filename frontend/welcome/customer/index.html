@@ -149,7 +149,7 @@
 
         /* --- HERO SECTION --- */
         .hero { 
-            padding: 86px 20px 64px; 
+            padding: 100px 20px; 
             background:
               radial-gradient(120% 140% at 0% 0%, rgba(14,165,233,0.18), rgba(14,165,233,0) 58%),
               radial-gradient(120% 140% at 100% 0%, rgba(251,146,60,0.2), rgba(251,146,60,0) 55%),
@@ -198,9 +198,8 @@
         .hero-inner {
             max-width: 1280px;
             margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1.1fr 0.9fr;
-            gap: 28px;
+            display: flex;
+            gap: 36px;
             align-items: center;
             position: relative;
             z-index: 1;
@@ -208,23 +207,30 @@
         .hero-left{
             display: grid;
             gap: 18px;
+            flex: 0 0 60%;
+            max-width: 60%;
         }
         .hero-left-top{
             display: grid;
             gap: 14px;
         }
         .hero-visual{
+            flex: 0 0 40%;
+            max-width: 40%;
+        }
+        .hero-visual{
             min-height: 330px;
-            border-radius: 26px;
+            border-radius: 20px;
             border: 1px solid rgba(148,163,184,0.28);
             background: linear-gradient(150deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-            box-shadow: 0 28px 44px -30px rgba(2,6,23,0.6);
+            box-shadow: 0 30px 50px -30px rgba(2,6,23,0.8);
             background-size: cover;
             background-position: center;
             position: relative;
             overflow: hidden;
             display: none;
             align-self: stretch;
+            background-image: url("https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80");
         }
         .hero-visual::after{
             content:"";
@@ -234,24 +240,24 @@
         }
         .hero-visual.show{ display:block; }
         .hero h1 {
-            font-size: clamp(36px, 4.9vw, 60px);
+            font-size: 52px;
             font-weight: 800; 
-            line-height: 1.05;
-            letter-spacing: -1.6px;
+            line-height: 1.2;
+            letter-spacing: -1.2px;
             color: #f8fafc;
-            margin-bottom: 18px;
-            max-width: 920px;
+            margin-bottom: 16px;
+            max-width: 700px;
         }
         .hero h1 span { 
-            background: linear-gradient(135deg, var(--primary), #ffb347);
-            background-clip: text;
-            color: transparent;
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            color: #d97706;
+            background: none;
+            -webkit-text-fill-color: currentColor;
         }
+        html.lb-theme-dark .hero h1 span { color: #fb923c; }
         .hero-sub {
             color: #cbd5f5;
             font-size: 15px;
-            margin-bottom: 26px;
+            margin-bottom: 22px;
         }
         .hero-card {
             background: linear-gradient(160deg, rgba(15,23,42,0.88), rgba(30,41,59,0.8));
@@ -300,8 +306,17 @@
             z-index: 1;
         }
         @media (max-width: 992px){
-            .hero-inner{ grid-template-columns: 1fr; }
+            .hero-inner{ flex-direction: column; }
+            .hero-left, .hero-visual{ max-width: 100%; flex: 1 1 auto; }
             .hero-visual{ min-height: 220px; order: -1; }
+        }
+        @media (max-width: 640px){
+            .hero h1{ font-size: 32px; line-height: 1.2; }
+        }
+
+        .hero-card{
+            max-width: 1280px;
+            margin: 22px auto 0;
         }
         .hero-stats {
             display: grid;
@@ -378,15 +393,16 @@
         
         .search-wrapper {
             max-width: 520px;
-            background: rgba(15,23,42,0.7);
+            background: #ffffff;
             padding: 8px;
-            border-radius: 18px;
+            border-radius: 12px;
             display: flex;
             gap: 10px;
-            box-shadow: 0 16px 28px -24px rgba(2,6,23,0.7); 
-            border: 1px solid rgba(148,163,184,0.3);
+            box-shadow: 0 18px 30px -20px rgba(15, 23, 42, 0.25); 
+            border: 1px solid #e2e8f0;
             align-items: center;
             transition: transform 0.2s;
+            height: 55px;
         }
         .search-wrapper:focus-within { transform: translateY(-2px); border-color: var(--primary-soft); }
         
@@ -395,26 +411,26 @@
             border: none;
             outline: none;
             padding: 0 16px;
-            height: 48px;
+            height: 55px;
             font-size: 15px;
             font-weight: 600;
-            color: #e2e8f0;
+            color: #0f172a;
             background: transparent;
         }
         .btn-find {
             background: linear-gradient(135deg, #f97316, #fb923c);
-            color: #0b1220;
-            padding: 0 24px;
-            height: 48px;
-            border-radius: 14px;
+            color: #1f2937;
+            padding: 0 22px;
+            height: 55px;
+            border-radius: 12px;
             font-weight: 800;
             font-size: 14px;
             border: none;
             cursor: pointer;
             box-shadow: 0 12px 20px -16px rgba(251, 146, 60, 0.9);
-            transition: var(--anim-fast);
+            transition: transform .2s ease, box-shadow .2s ease;
         }
-        .btn-find:hover { background: linear-gradient(135deg, #f97316, #fb923c); }
+        .btn-find:hover { transform: translateY(-1px); box-shadow: 0 16px 26px -18px rgba(251, 146, 60, 0.9); }
 
         .trust-row {
             display: flex;
@@ -426,12 +442,25 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: rgba(15,23,42,0.6);
-            border: 1px solid rgba(148,163,184,0.25);
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
             padding: 8px 12px;
             border-radius: 999px;
             font-size: 12px;
             font-weight: 700;
+            color: #0f172a;
+        }
+        html.lb-theme-dark .search-wrapper{
+            background: rgba(15,23,42,0.7);
+            border-color: rgba(148,163,184,0.3);
+            box-shadow: 0 18px 30px -22px rgba(2,6,23,0.75);
+            backdrop-filter: blur(10px);
+        }
+        html.lb-theme-dark .search-wrapper input{ color:#e2e8f0; }
+        html.lb-theme-dark .search-wrapper input::placeholder{ color:#94a3b8; }
+        html.lb-theme-dark .trust-badge{
+            background: rgba(15,23,42,0.6);
+            border: 1px solid rgba(148,163,184,0.25);
             color: #e2e8f0;
         }
 
@@ -2530,7 +2559,7 @@
     <div class="hero-inner">
       <div class="hero-left">
         <div class="hero-left-top">
-          <h1 id="heroTitle">Freshness from your <span id="heroHighlight">Local Market</span>,<br>to your doorstep.</h1>
+          <h1 id="heroTitle">Fresh Groceries<br>From Your <span id="heroHighlight" class="highlight">Local Market</span><br>Delivered To Your Doorstep</h1>
           <p class="hero-sub" id="heroSubtitle">Discover trusted neighborhood stores and connect directly with local sellers in minutes.</p>
           <div class="search-wrapper">
             <input type="text" id="pinInput" placeholder="Enter Pincode or Area (e.g. 400001)">
@@ -2542,39 +2571,40 @@
             <span class="trust-badge">Local Best Prices</span>
           </div>
         </div>
-        <div class="hero-card">
-        <span class="hero-card-kicker">Local Trust</span>
-        <h3>Why LocalBasket?</h3>
-        <p class="hero-sub" style="margin-bottom: 10px;">Support local shops while enjoying modern convenience.</p>
-        <div class="hero-stats">
-          <div class="stat-pill">
-            <b id="heroAvgValue">--</b>
-            <span id="heroAvgLabel">Avg Rating</span>
-            <small id="heroAvgMeta">Waiting for data</small>
-          </div>
-          <div class="stat-pill">
-            <b id="heroOnlineValue">--</b>
-            <span id="heroOnlineLabel">Sellers Online</span>
-            <small id="heroOnlineMeta">Set pincode first</small>
-          </div>
-          <div class="stat-pill">
-            <b id="heroStoreValue">--</b>
-            <span id="heroStoreLabel">Stores Found</span>
-            <small id="heroStoreMeta">Nearby</small>
-          </div>
-        </div>
-        <div class="hero-highlights">
-          <div class="hero-point"><b>Verified Stores:</b> quality-checked sellers</div>
-          <div class="hero-point"><b>Live Support:</b> quick order help</div>
-        </div>
-        <button class="hero-card-cta" onclick="document.getElementById('categorySection').scrollIntoView({behavior:'smooth'})">
-          Explore Trusted Stores
-        </button>
-      </div>
       </div>
       <div class="hero-visual" id="heroVisual" aria-label="Hero image"></div>
     </div>
   </header>
+
+  <section class="hero-card">
+    <span class="hero-card-kicker">Local Trust</span>
+    <h3>Why LocalBasket?</h3>
+    <p class="hero-sub" style="margin-bottom: 10px;">Support local shops while enjoying modern convenience.</p>
+    <div class="hero-stats">
+      <div class="stat-pill">
+        <b id="heroAvgValue">--</b>
+        <span id="heroAvgLabel">Avg Rating</span>
+        <small id="heroAvgMeta">Waiting for data</small>
+      </div>
+      <div class="stat-pill">
+        <b id="heroOnlineValue">--</b>
+        <span id="heroOnlineLabel">Sellers Online</span>
+        <small id="heroOnlineMeta">Set pincode first</small>
+      </div>
+      <div class="stat-pill">
+        <b id="heroStoreValue">--</b>
+        <span id="heroStoreLabel">Stores Found</span>
+        <small id="heroStoreMeta">Nearby</small>
+      </div>
+    </div>
+    <div class="hero-highlights">
+      <div class="hero-point"><b>Verified Stores:</b> quality-checked sellers</div>
+      <div class="hero-point"><b>Live Support:</b> quick order help</div>
+    </div>
+    <button class="hero-card-cta" onclick="document.getElementById('categorySection').scrollIntoView({behavior:'smooth'})">
+      Explore Trusted Stores
+    </button>
+  </section>
 
   <section class="cta-strip">
     <div>
