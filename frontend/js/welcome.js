@@ -130,6 +130,7 @@ const state = {
     },
     authMode: "login",
     authUseOtp: false,
+    authOtpMode: "none",
     token: localStorage.getItem("lbToken") || null,
     stores: [],
     activeCategory: "all",
@@ -173,7 +174,8 @@ const dom = {
     authPassword: () => getEl("authPassword"),
     authOtp: () => getEl("authOtp"),
     authOtpRow: () => getEl("authOtpRow"),
-    authUseOtpBtn: () => getEl("authUseOtpBtn"),
+    authLoginOtpBtn: () => getEl("authLoginOtpBtn"),
+    authResetOtpBtn: () => getEl("authResetOtpBtn"),
     authRequestOtpBtn: () => getEl("authRequestOtpBtn"),
     cartDrawer: () => getEl("cartDrawer"),
     cartOverlay: () => getEl("cartOverlay"),
@@ -736,6 +738,7 @@ function updateAuthUI() {
 function switchTab(mode) {
     state.authMode = mode;
     state.authUseOtp = false;
+    state.authOtpMode = "none";
     const tabs = document.querySelectorAll(".auth-tab-btn");
     const regFields = dom.registerFields();
 
@@ -763,7 +766,8 @@ function updateOtpAuthUI() {
     const otpRow = dom.authOtpRow();
     const otpInput = dom.authOtp();
     const passInput = dom.authPassword();
-    const otpToggleBtn = dom.authUseOtpBtn();
+    const otpLoginBtn = dom.authLoginOtpBtn();
+    const otpResetBtn = dom.authResetOtpBtn();
     const authInput = dom.authPhone();
 
     if (otpRow) otpRow.classList.toggle("active", isOtp);
@@ -773,18 +777,28 @@ function updateOtpAuthUI() {
     }
     if (passInput) {
         passInput.style.display = "block";
-        passInput.required = state.authMode === "login";
-        passInput.placeholder = isOtp ? "New Password" : "Password";
+        if (state.authMode !== "login") {
+            passInput.required = true;
+            passInput.placeholder = "Password";
+        } else if (state.authOtpMode === "reset") {
+            passInput.required = true;
+            passInput.placeholder = "New Password";
+        } else if (state.authOtpMode === "login") {
+            passInput.required = false;
+            passInput.placeholder = "Password";
+            passInput.style.display = "none";
+        } else {
+            passInput.required = true;
+            passInput.placeholder = "Password";
+        }
     }
-    if (otpToggleBtn) {
-        otpToggleBtn.style.display = state.authMode === "login" ? "block" : "none";
-        otpToggleBtn.textContent = isOtp ? "Back to Password Login" : "Forgot password? Reset with OTP";
-    }
+    if (otpLoginBtn) otpLoginBtn.style.display = state.authMode === "login" ? "inline-flex" : "none";
+    if (otpResetBtn) otpResetBtn.style.display = state.authMode === "login" ? "inline-flex" : "none";
     if (authInput) {
         if (state.authMode === "register") {
             authInput.placeholder = "Phone Number";
             authInput.type = "text";
-        } else if (isOtp) {
+        } else if (state.authOtpMode !== "none") {
             authInput.placeholder = "Registered Email or Phone";
             authInput.type = "text";
         } else {
@@ -794,9 +808,14 @@ function updateOtpAuthUI() {
     }
 }
 
-function toggleOtpLogin() {
+function setOtpMode(mode) {
     if (state.authMode !== "login") return;
-    state.authUseOtp = !state.authUseOtp;
+    if (mode === "login") {
+        state.authOtpMode = state.authOtpMode === "login" ? "none" : "login";
+    } else if (mode === "reset") {
+        state.authOtpMode = state.authOtpMode === "reset" ? "none" : "reset";
+    }
+    state.authUseOtp = state.authOtpMode !== "none";
     updateOtpAuthUI();
 }
 
@@ -804,10 +823,7 @@ async function requestCustomerOtp() {
     if (state.authMode !== "login") return;
     const identifier = String(dom.authPhone()?.value || "").trim();
     if (!identifier) return alert("Enter registered email or phone first");
-    if (!state.authUseOtp) {
-        state.authUseOtp = true;
-        updateOtpAuthUI();
-    }
+    if (!state.authUseOtp) return alert("Select Login with OTP or Forgot Password first");
 
     const btn = dom.authRequestOtpBtn();
     if (btn) {
@@ -815,8 +831,8 @@ async function requestCustomerOtp() {
         btn.textContent = "Sending...";
     }
     try {
-        const endpoints = state.authUseOtp
-            ? ["/customer/password-reset/request", "/customer/login-otp/request"]
+        const endpoints = state.authOtpMode === "reset"
+            ? ["/customer/password-reset/request"]
             : ["/customer/login-otp/request"];
         let lastErr = null;
 
@@ -867,19 +883,19 @@ async function submitAuth() {
     const emailOk = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(value || "").trim().toLowerCase());
 
     if (!phone) return alert("Enter phone/email");
-    if (state.authMode === "login" && !state.authUseOtp && !password) return alert("Enter password");
-    if (state.authMode === "login" && state.authUseOtp && !otp) return alert("Enter OTP");
-    if (state.authMode === "login" && state.authUseOtp && !password) return alert("Enter new password");
+    if (state.authMode === "login" && state.authOtpMode === "none" && !password) return alert("Enter password");
+    if (state.authMode === "login" && state.authOtpMode !== "none" && !otp) return alert("Enter OTP");
+    if (state.authMode === "login" && state.authOtpMode === "reset" && !password) return alert("Enter new password");
     if (state.authMode === "register" && !regName) return alert("Enter full name");
     if (state.authMode === "register" && !regEmail) return alert("Enter email");
     if (state.authMode === "register" && !emailOk(regEmail)) return alert("Enter valid email");
 
     const endpoint = state.authMode === "login"
-        ? (state.authUseOtp ? "/customer/password-reset/verify" : "/customer/login")
+        ? (state.authOtpMode === "reset" ? "/customer/password-reset/verify" : "/customer/login")
         : "/customer/register";
     
     const payload = state.authMode === "login" 
-        ? (state.authUseOtp ? { identifier: phone, otp, newPassword: password } : { identifier: phone, password })
+        ? (state.authOtpMode === "reset" ? { identifier: phone, otp, newPassword: password } : { identifier: phone, password })
         : { 
             name: regName,
             phone,
@@ -894,7 +910,7 @@ async function submitAuth() {
             return { res, data };
         };
 
-        if (state.authMode === "login" && state.authUseOtp) {
+        if (state.authMode === "login" && state.authOtpMode === "reset") {
             const resetTry = await fetchJson(`${CONFIG.API_BASE}/customer/password-reset/verify`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -904,6 +920,7 @@ async function submitAuth() {
             if (resetTry.res.ok && resetTry.data?.success) {
                 alert(resetTry.data.message || "Password reset successful. Please login with new password.");
                 state.authUseOtp = false;
+                state.authOtpMode = "none";
                 updateOtpAuthUI();
                 const otpInput = dom.authOtp();
                 if (otpInput) otpInput.value = "";
@@ -920,6 +937,10 @@ async function submitAuth() {
                 throw new Error(resetMsg || "Password reset failed");
             }
 
+            throw new Error(resetMsg || "Password reset failed");
+        }
+
+        if (state.authMode === "login" && state.authOtpMode === "login") {
             const otpLogin = await fetchJson(`${CONFIG.API_BASE}/customer/login-otp/verify`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -937,30 +958,20 @@ async function submitAuth() {
                 throw new Error("OTP verified but user session missing");
             }
 
-            const updateRes = await fetchJson(`${CONFIG.API_BASE}/customer/profile`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({
-                    id: resolvedUser.id,
-                    name: resolvedUser.name || "User",
-                    email: resolvedUser.email || "",
-                    phone: resolvedUser.phone || "",
-                    password
-                })
-            });
+            state.user = resolvedUser;
+            state.token = token;
+            localStorage.setItem("lbUser", JSON.stringify(resolvedUser));
+            localStorage.setItem("lbToken", token);
 
-            if (!updateRes.res.ok || !updateRes.data?.success) {
-                throw new Error(updateRes.data?.message || "Password update failed");
-            }
-
-            alert("Password reset successful. Please login with new password.");
+            state.cart = loadCart();
             state.authUseOtp = false;
+            state.authOtpMode = "none";
             updateOtpAuthUI();
-            const otpInput = dom.authOtp();
-            if (otpInput) otpInput.value = "";
+            if (dom.authOverlay()) dom.authOverlay().style.display = "none";
+            updateAuthUI();
+            updateCartUI();
+            if (state.location.pincode) loadStores(state.location.pincode);
+            alert(`Welcome, ${resolvedUser.name || "User"}!`);
             return;
         }
 
@@ -2150,7 +2161,7 @@ function updateQty(id, change) {
 
 /* ============ 7. GLOBAL EXPORTS ============ */
 Object.assign(window, {
-    switchTab, submitAuth, openAuth, logoutUser, toggleOtpLogin, requestCustomerOtp,
+    switchTab, submitAuth, openAuth, logoutUser, setOtpMode, requestCustomerOtp,
     searchByPincode, toggleCart, getLocation, openStore, toggleTopPick,
     openCategoryPage: () => window.location.href = welcomePath("customer/category.html"),
     viewProfile: () => window.location.href = welcomePath("customer/profile/profile.html"),

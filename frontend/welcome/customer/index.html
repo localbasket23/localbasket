@@ -1536,6 +1536,12 @@
             margin: 2px 0 6px;
         }
         .auth-link-btn:hover { text-decoration: underline; }
+        .auth-otp-actions{
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
         .auth-otp-row {
             display: none;
             gap: 8px;
@@ -2802,7 +2808,10 @@
           </div>
           <input type="text" id="authPhone" placeholder="Phone Number">
           <input type="password" id="authPassword" placeholder="Password">
-          <button type="button" class="auth-link-btn" id="authUseOtpBtn" onclick="toggleOtpLogin()">Forgot password? Login with OTP</button>
+          <div class="auth-otp-actions">
+            <button type="button" class="auth-link-btn" id="authLoginOtpBtn" onclick="setOtpMode('login')">Login with OTP</button>
+            <button type="button" class="auth-link-btn" id="authResetOtpBtn" onclick="setOtpMode('reset')">Forgot Password</button>
+          </div>
           <div class="auth-otp-row" id="authOtpRow">
             <input type="number" id="authOtp" placeholder="Enter OTP">
             <button type="button" id="authRequestOtpBtn" onclick="requestCustomerOtp()">Send OTP</button>
