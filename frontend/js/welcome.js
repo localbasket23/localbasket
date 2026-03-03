@@ -330,9 +330,15 @@ async function loadHeroSettings() {
         const data = await res.json();
         if (data && data.success && data.global) {
             applyHeroSettings(data.global);
+            try {
+                localStorage.setItem("lbHeroSettings", JSON.stringify(data.global));
+            } catch {}
         }
     } catch {
-        // non-blocking
+        try {
+            const raw = localStorage.getItem("lbHeroSettings");
+            if (raw) applyHeroSettings(safeParse(raw, {}));
+        } catch {}
     }
 }
 

@@ -555,6 +555,7 @@ function saveHeroSettings(){
     body: JSON.stringify(payload)
   }).then(() => {
     updateHeroPreview();
+    try { localStorage.setItem("lbHeroSettings", JSON.stringify(payload)); } catch {}
     alert("Hero banner saved");
   }).catch(() => {
     alert("Failed to save hero banner");
@@ -582,6 +583,15 @@ function uploadHeroImage(){
         if (heroImageFile) heroImageFile.value = "";
         if (heroImageFileName) heroImageFileName.textContent = "No file selected";
         updateHeroPreview();
+        try {
+          const current = {
+            hero_title: heroTitleInput ? heroTitleInput.value.trim() : DEFAULT_HERO.title,
+            hero_highlight: heroHighlightInput ? heroHighlightInput.value.trim() : DEFAULT_HERO.highlight,
+            hero_subtitle: heroSubtitleInput ? heroSubtitleInput.value.trim() : DEFAULT_HERO.subtitle,
+            hero_image: heroImageInput ? heroImageInput.value.trim() : data.hero_image
+          };
+          localStorage.setItem("lbHeroSettings", JSON.stringify(current));
+        } catch {}
         alert("Hero image uploaded");
       } else {
         alert((data && data.message) || "Failed to upload image");
@@ -602,6 +612,15 @@ function removeHeroImage(){
     if (heroImageFile) heroImageFile.value = "";
     if (heroImageFileName) heroImageFileName.textContent = "No file selected";
     updateHeroPreview();
+    try {
+      const current = {
+        hero_title: heroTitleInput ? heroTitleInput.value.trim() : DEFAULT_HERO.title,
+        hero_highlight: heroHighlightInput ? heroHighlightInput.value.trim() : DEFAULT_HERO.highlight,
+        hero_subtitle: heroSubtitleInput ? heroSubtitleInput.value.trim() : DEFAULT_HERO.subtitle,
+        hero_image: ""
+      };
+      localStorage.setItem("lbHeroSettings", JSON.stringify(current));
+    } catch {}
     alert("Hero image removed");
   }).catch(() => {
     alert("Failed to remove image");
