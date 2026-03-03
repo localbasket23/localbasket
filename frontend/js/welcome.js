@@ -193,6 +193,7 @@ const dom = {
     heroTitle: () => getEl("heroTitle"),
     heroHighlight: () => getEl("heroHighlight"),
     heroSubtitle: () => getEl("heroSubtitle"),
+    heroVisual: () => getEl("heroVisual"),
     heroSection: () => document.querySelector(".hero"),
     storeResultsCount: () => getEl("storeResultsCount"),
     storeResultsHint: () => getEl("storeResultsHint"),
@@ -320,6 +321,17 @@ const applyHeroSettings = (settings = {}) => {
         } else {
             heroSection.classList.remove("has-hero-image");
             heroSection.style.setProperty("--hero-image", "none");
+        }
+    }
+
+    const heroVisual = dom.heroVisual();
+    if (heroVisual) {
+        if (image) {
+            heroVisual.style.backgroundImage = `url('${image}')`;
+            heroVisual.classList.add("show");
+        } else {
+            heroVisual.style.backgroundImage = "none";
+            heroVisual.classList.remove("show");
         }
     }
 };
