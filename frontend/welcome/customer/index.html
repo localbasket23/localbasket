@@ -205,6 +205,14 @@
             position: relative;
             z-index: 1;
         }
+        .hero-left{
+            display: grid;
+            gap: 18px;
+        }
+        .hero-left-top{
+            display: grid;
+            gap: 14px;
+        }
         .hero-visual{
             min-height: 330px;
             border-radius: 26px;
@@ -216,6 +224,7 @@
             position: relative;
             overflow: hidden;
             display: none;
+            align-self: stretch;
         }
         .hero-visual::after{
             content:"";
@@ -292,7 +301,7 @@
         }
         @media (max-width: 992px){
             .hero-inner{ grid-template-columns: 1fr; }
-            .hero-visual{ min-height: 220px; }
+            .hero-visual{ min-height: 220px; order: -1; }
         }
         .hero-stats {
             display: grid;
@@ -2519,21 +2528,21 @@
 
   <header class="hero">
     <div class="hero-inner">
-      <div>
-        <h1 id="heroTitle">Freshness from your <span id="heroHighlight">Local Market</span>,<br>to your doorstep.</h1>
-        <p class="hero-sub" id="heroSubtitle">Discover trusted neighborhood stores and connect directly with local sellers in minutes.</p>
-        <div class="search-wrapper">
-          <input type="text" id="pinInput" placeholder="Enter Pincode or Area (e.g. 400001)">
-          <button class="btn-find" onclick="searchByPincode()">Find Stores</button>
+      <div class="hero-left">
+        <div class="hero-left-top">
+          <h1 id="heroTitle">Freshness from your <span id="heroHighlight">Local Market</span>,<br>to your doorstep.</h1>
+          <p class="hero-sub" id="heroSubtitle">Discover trusted neighborhood stores and connect directly with local sellers in minutes.</p>
+          <div class="search-wrapper">
+            <input type="text" id="pinInput" placeholder="Enter Pincode or Area (e.g. 400001)">
+            <button class="btn-find" onclick="searchByPincode()">Find Stores</button>
+          </div>
+          <div class="trust-row">
+            <span class="trust-badge">Direct Seller Connect</span>
+            <span class="trust-badge">Verified Stores</span>
+            <span class="trust-badge">Local Best Prices</span>
+          </div>
         </div>
-        <div class="trust-row">
-          <span class="trust-badge">Direct Seller Connect</span>
-          <span class="trust-badge">Verified Stores</span>
-          <span class="trust-badge">Local Best Prices</span>
-        </div>
-      </div>
-      <div class="hero-visual" id="heroVisual" aria-label="Hero image"></div>
-      <div class="hero-card">
+        <div class="hero-card">
         <span class="hero-card-kicker">Local Trust</span>
         <h3>Why LocalBasket?</h3>
         <p class="hero-sub" style="margin-bottom: 10px;">Support local shops while enjoying modern convenience.</p>
@@ -2562,6 +2571,8 @@
           Explore Trusted Stores
         </button>
       </div>
+      </div>
+      <div class="hero-visual" id="heroVisual" aria-label="Hero image"></div>
     </div>
   </header>
 
