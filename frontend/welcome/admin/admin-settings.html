@@ -163,6 +163,33 @@ input:focus{border-color:var(--lav)}
   border-radius:10px;margin-top:10px;
   font-size:14px;color:var(--text)
 }
+.hero-preview{
+  margin-top:12px;
+  border-radius:12px;
+  padding:16px;
+  border:1px solid var(--border);
+  background:linear-gradient(140deg, rgba(15,23,42,0.92), rgba(15,23,42,0.92)), var(--hero-preview-image);
+  background-size:cover;
+  background-position:center;
+  color:#f8fafc;
+}
+.hero-preview h3{
+  font-size:16px;
+  margin-bottom:6px;
+  line-height:1.2;
+}
+.hero-preview h3 span{
+  color: var(--lav-light);
+}
+.hero-preview p{
+  font-size:12px;
+  color:#cbd5f5;
+}
+.helper-note{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:8px;
+}
 ul{list-style:none;padding-left:0;margin-top:10px}
 li{padding:6px 0;font-size:14px}
 .remove-btn{
@@ -183,6 +210,7 @@ li{padding:6px 0;font-size:14px}
   .settings-card{padding:16px}
   .hero-card{padding:16px}
   .stat-panel{grid-template-columns:1fr 1fr}
+  .hero-preview{padding:12px}
 }
 </style>
 
@@ -282,6 +310,25 @@ li{padding:6px 0;font-size:14px}
       <button class="save-btn" onclick="saveSystemSettings()">Update System</button>
     </div>
 
+    <div class="settings-card">
+      <h2><i class="fas fa-image"></i> Hero Banner</h2>
+      <label>Title Text (use {{highlight}} for highlight)</label>
+      <input type="text" id="heroTitleInput" placeholder="Freshness from your {{highlight}}, to your doorstep.">
+      <label>Highlight Word/Phrase</label>
+      <input type="text" id="heroHighlightInput" placeholder="Local Market">
+      <label>Subtitle</label>
+      <input type="text" id="heroSubtitleInput" placeholder="Discover trusted neighborhood stores and connect directly with local sellers in minutes.">
+      <label>Background Image URL</label>
+      <input type="text" id="heroImageInput" placeholder="https://...">
+      <div class="hero-preview" id="heroPreview" style="--hero-preview-image: none;">
+        <h3 id="heroPreviewTitle">Freshness from your <span>Local Market</span>, to your doorstep.</h3>
+        <p id="heroPreviewSubtitle">Discover trusted neighborhood stores and connect directly with local sellers in minutes.</p>
+      </div>
+      <div class="helper-note">Leave image empty to use default gradient background.</div>
+      <button class="save-btn" onclick="saveHeroSettings()">Save Hero Banner</button>
+      <button class="save-btn" style="margin-top:10px;background:#ef4444" onclick="clearHeroImage()">Remove Image</button>
+    </div>
+
   </div>
 </main>
 
@@ -310,6 +357,13 @@ const commissionToggle=document.getElementById("commissionToggle");
 const payoutCycle=document.getElementById("payoutCycle");
 const minPayout=document.getElementById("minPayout");
 const sysStatus=document.getElementById("sysStatus");
+const heroTitleInput=document.getElementById("heroTitleInput");
+const heroHighlightInput=document.getElementById("heroHighlightInput");
+const heroSubtitleInput=document.getElementById("heroSubtitleInput");
+const heroImageInput=document.getElementById("heroImageInput");
+const heroPreview=document.getElementById("heroPreview");
+const heroPreviewTitle=document.getElementById("heroPreviewTitle");
+const heroPreviewSubtitle=document.getElementById("heroPreviewSubtitle");
 
 const clampPercent=(v)=>Math.min(100,Math.max(0,Number(v)||0));
 
@@ -344,6 +398,53 @@ function updatePreview(){
   preview.innerHTML=`Example Rs. 1000 -> Platform Rs. ${fee.toFixed(2)} -> Seller Rs. ${sellerAmount.toFixed(2)}`;
 }
 
+const DEFAULT_HERO = {
+  title: "Freshness from your {{highlight}}, to your doorstep.",
+  highlight: "Local Market",
+  subtitle: "Discover trusted neighborhood stores and connect directly with local sellers in minutes."
+};
+
+function buildHeroTitleText(title, highlight){
+  const safeTitle = String(title || "").trim() || DEFAULT_HERO.title;
+  const safeHighlight = String(highlight || "").trim() || DEFAULT_HERO.highlight;
+  if (safeTitle.includes("{{highlight}}")) {
+    return safeTitle.replace("{{highlight}}", safeHighlight);
+  }
+  if (safeHighlight && safeTitle.toLowerCase().includes(safeHighlight.toLowerCase())) {
+    return safeTitle;
+  }
+  return `${safeTitle} ${safeHighlight}`.trim();
+}
+
+function updateHeroPreview(){
+  if (!heroPreview) return;
+  const titleRaw = heroTitleInput ? heroTitleInput.value : "";
+  const highlightRaw = heroHighlightInput ? heroHighlightInput.value : "";
+  const subtitleRaw = heroSubtitleInput ? heroSubtitleInput.value : "";
+  const imageRaw = heroImageInput ? heroImageInput.value.trim() : "";
+  const titleText = buildHeroTitleText(titleRaw, highlightRaw);
+
+  if (heroPreviewTitle) {
+    const highlight = String(highlightRaw || DEFAULT_HERO.highlight).trim();
+    if (highlight && titleText.toLowerCase().includes(highlight.toLowerCase())) {
+      const idx = titleText.toLowerCase().indexOf(highlight.toLowerCase());
+      const before = titleText.slice(0, idx);
+      const after = titleText.slice(idx + highlight.length);
+      heroPreviewTitle.innerHTML = `${before}<span>${highlight}</span>${after}`;
+    } else {
+      heroPreviewTitle.textContent = titleText;
+    }
+  }
+  if (heroPreviewSubtitle) {
+    heroPreviewSubtitle.textContent = String(subtitleRaw || DEFAULT_HERO.subtitle);
+  }
+  if (imageRaw) {
+    heroPreview.style.setProperty("--hero-preview-image", `url('${imageRaw}')`);
+  } else {
+    heroPreview.style.setProperty("--hero-preview-image", "none");
+  }
+}
+
 function applyCommissionConfig(config){
   const safe=config || { enabled:true, percent:clampPercent(slider.value) };
   commissionToggle.checked=safe.enabled !== false;
@@ -354,6 +455,11 @@ function applyCommissionConfig(config){
 slider.addEventListener("input", updatePreview);
 commissionToggle.addEventListener("change", updatePreview);
 applyCommissionConfig(getSavedCommissionConfig());
+
+heroTitleInput?.addEventListener("input", updateHeroPreview);
+heroHighlightInput?.addEventListener("input", updateHeroPreview);
+heroSubtitleInput?.addEventListener("input", updateHeroPreview);
+heroImageInput?.addEventListener("input", updateHeroPreview);
 
 function saveGlobalCommission(){
   const config=getCurrentCommissionConfig();
@@ -388,6 +494,31 @@ function saveSystemSettings(){
   }).catch(() => {
     alert("Failed to update system");
   });
+}
+
+function saveHeroSettings(){
+  const payload = {
+    hero_title: heroTitleInput ? heroTitleInput.value.trim() : DEFAULT_HERO.title,
+    hero_highlight: heroHighlightInput ? heroHighlightInput.value.trim() : DEFAULT_HERO.highlight,
+    hero_subtitle: heroSubtitleInput ? heroSubtitleInput.value.trim() : DEFAULT_HERO.subtitle,
+    hero_image: heroImageInput ? heroImageInput.value.trim() : ""
+  };
+  fetch(`${API_BASE}/settings/hero`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  }).then(() => {
+    updateHeroPreview();
+    alert("Hero banner saved");
+  }).catch(() => {
+    alert("Failed to save hero banner");
+  });
+}
+
+function clearHeroImage(){
+  if (heroImageInput) heroImageInput.value = "";
+  updateHeroPreview();
+  saveHeroSettings();
 }
 
 payoutCycle.addEventListener("change", updateHeroStats);
@@ -425,11 +556,16 @@ async function loadSettings() {
       if (payoutCycle && data.global.payout_cycle) payoutCycle.value = data.global.payout_cycle;
       if (minPayout && data.global.min_payout != null) minPayout.value = data.global.min_payout;
       if (sysStatus && data.global.system_mode) sysStatus.value = data.global.system_mode;
+      if (heroTitleInput) heroTitleInput.value = data.global.hero_title || DEFAULT_HERO.title;
+      if (heroHighlightInput) heroHighlightInput.value = data.global.hero_highlight || DEFAULT_HERO.highlight;
+      if (heroSubtitleInput) heroSubtitleInput.value = data.global.hero_subtitle || DEFAULT_HERO.subtitle;
+      if (heroImageInput) heroImageInput.value = data.global.hero_image || "";
     }
   } catch (e) {
     // fallback to local storage
   } finally {
     updateHeroStats();
+    updateHeroPreview();
   }
 }
 

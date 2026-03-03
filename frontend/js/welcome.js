@@ -190,6 +190,10 @@ const dom = {
     heroStoreValue: () => getEl("heroStoreValue"),
     heroStoreLabel: () => getEl("heroStoreLabel"),
     heroStoreMeta: () => getEl("heroStoreMeta"),
+    heroTitle: () => getEl("heroTitle"),
+    heroHighlight: () => getEl("heroHighlight"),
+    heroSubtitle: () => getEl("heroSubtitle"),
+    heroSection: () => document.querySelector(".hero"),
     storeResultsCount: () => getEl("storeResultsCount"),
     storeResultsHint: () => getEl("storeResultsHint"),
     activeFilters: () => getEl("activeFilters"),
@@ -209,6 +213,7 @@ function initApp() {
     updateLocationUI();
     applyViewMode(state.viewMode);
     updateMobileSortButtons();
+    loadHeroSettings();
     updateHeroInsights();
     updateStoreMeta(0, "Enter your pincode to start browsing");
     hydrateLocationStatus();
@@ -239,6 +244,93 @@ function initApp() {
     setTimeout(() => {
         autoDetectLocationOnLoad().catch(() => {});
     }, 260);
+}
+
+const HERO_DEFAULTS = {
+    title: "Freshness from your {{highlight}}, to your doorstep.",
+    highlight: "Local Market",
+    subtitle: "Discover trusted neighborhood stores and connect directly with local sellers in minutes."
+};
+
+const appendTextWithBreaks = (parent, text) => {
+    const parts = String(text || "").split(/\n/);
+    parts.forEach((part, idx) => {
+        if (part) parent.appendChild(document.createTextNode(part));
+        if (idx < parts.length - 1) parent.appendChild(document.createElement("br"));
+    });
+};
+
+const applyHeroTitle = (title, highlight) => {
+    const heroTitleEl = dom.heroTitle();
+    if (!heroTitleEl) return;
+    const safeTitle = String(title || "").trim() || HERO_DEFAULTS.title;
+    const safeHighlight = String(highlight || "").trim() || HERO_DEFAULTS.highlight;
+    const normalizedTitle = safeTitle.replace(/\\n/g, "\n");
+    heroTitleEl.innerHTML = "";
+
+    if (safeHighlight && normalizedTitle.includes("{{highlight}}")) {
+        const parts = normalizedTitle.split("{{highlight}}");
+        appendTextWithBreaks(heroTitleEl, parts[0]);
+        const span = document.createElement("span");
+        span.textContent = safeHighlight;
+        heroTitleEl.appendChild(span);
+        appendTextWithBreaks(heroTitleEl, parts.slice(1).join("{{highlight}}"));
+        return;
+    }
+
+    if (safeHighlight && normalizedTitle.toLowerCase().includes(safeHighlight.toLowerCase())) {
+        const idx = normalizedTitle.toLowerCase().indexOf(safeHighlight.toLowerCase());
+        const before = normalizedTitle.slice(0, idx);
+        const after = normalizedTitle.slice(idx + safeHighlight.length);
+        appendTextWithBreaks(heroTitleEl, before);
+        const span = document.createElement("span");
+        span.textContent = safeHighlight;
+        heroTitleEl.appendChild(span);
+        appendTextWithBreaks(heroTitleEl, after);
+        return;
+    }
+
+    appendTextWithBreaks(heroTitleEl, normalizedTitle.trim());
+    if (safeHighlight) {
+        heroTitleEl.appendChild(document.createTextNode(" "));
+        const span = document.createElement("span");
+        span.textContent = safeHighlight;
+        heroTitleEl.appendChild(span);
+    }
+};
+
+const applyHeroSettings = (settings = {}) => {
+    const heroSection = dom.heroSection();
+    const title = settings.hero_title || HERO_DEFAULTS.title;
+    const highlight = settings.hero_highlight || HERO_DEFAULTS.highlight;
+    const subtitle = settings.hero_subtitle || HERO_DEFAULTS.subtitle;
+    const image = String(settings.hero_image || "").trim();
+
+    applyHeroTitle(title, highlight);
+    const heroSubtitleEl = dom.heroSubtitle();
+    if (heroSubtitleEl && subtitle) heroSubtitleEl.textContent = subtitle;
+
+    if (heroSection) {
+        if (image) {
+            heroSection.classList.add("has-hero-image");
+            heroSection.style.setProperty("--hero-image", `url('${image}')`);
+        } else {
+            heroSection.classList.remove("has-hero-image");
+            heroSection.style.setProperty("--hero-image", "none");
+        }
+    }
+};
+
+async function loadHeroSettings() {
+    try {
+        const res = await fetch(`${API_BASE_URL}/api/admin/settings`);
+        const data = await res.json();
+        if (data && data.success && data.global) {
+            applyHeroSettings(data.global);
+        }
+    } catch {
+        // non-blocking
+    }
 }
 
 function isLocationModalVisible() {

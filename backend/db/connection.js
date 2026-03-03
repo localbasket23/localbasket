@@ -144,6 +144,10 @@ function initCoreTables(done) {
       payout_cycle VARCHAR(20) DEFAULT 'Weekly',
       min_payout DECIMAL(10,2) DEFAULT 0,
       system_mode VARCHAR(20) DEFAULT 'active',
+      hero_title VARCHAR(200) DEFAULT 'Freshness from your {{highlight}}, to your doorstep.',
+      hero_highlight VARCHAR(120) DEFAULT 'Local Market',
+      hero_subtitle VARCHAR(260) DEFAULT 'Discover trusted neighborhood stores and connect directly with local sellers in minutes.',
+      hero_image VARCHAR(255) DEFAULT NULL,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )
     `,
@@ -155,8 +159,17 @@ function initCoreTables(done) {
     )
     `,
     `
-    INSERT INTO settings (id, global_commission_enabled, global_commission_percent, payout_cycle, min_payout, system_mode)
-    VALUES (1, 1, 10, 'Weekly', 0, 'active')
+    INSERT INTO settings (
+      id, global_commission_enabled, global_commission_percent,
+      payout_cycle, min_payout, system_mode,
+      hero_title, hero_highlight, hero_subtitle, hero_image
+    )
+    VALUES (1, 1, 10, 'Weekly', 0, 'active',
+      'Freshness from your {{highlight}}, to your doorstep.',
+      'Local Market',
+      'Discover trusted neighborhood stores and connect directly with local sellers in minutes.',
+      NULL
+    )
     ON DUPLICATE KEY UPDATE id = id
     `,
     `

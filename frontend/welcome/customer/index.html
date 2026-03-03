@@ -154,6 +154,30 @@
             border-bottom: 1px solid #e2e8f0;
             position: relative;
             overflow: visible;
+            --hero-image: none;
+        }
+        .hero.has-hero-image{
+            background:
+              linear-gradient(120deg, rgba(2,6,23,0.78), rgba(2,6,23,0.78)),
+              var(--hero-image);
+            background-size: cover;
+            background-position: center;
+            border-bottom: 1px solid rgba(148,163,184,0.2);
+        }
+        .hero.has-hero-image h1{ color:#f8fafc; }
+        .hero.has-hero-image .hero-sub{ color:#cbd5e1; }
+        .hero.has-hero-image .trust-badge{
+            background: rgba(15,23,42,0.6);
+            color:#e2e8f0;
+            border-color: rgba(148,163,184,0.25);
+        }
+        .hero.has-hero-image .search-wrapper input{
+            background: rgba(15,23,42,0.8);
+            color:#e2e8f0;
+            border-color: rgba(148,163,184,0.3);
+        }
+        .hero.has-hero-image .search-wrapper input::placeholder{
+            color:#94a3b8;
         }
         .hero::before,
         .hero::after {
@@ -2445,8 +2469,8 @@
   <header class="hero">
     <div class="hero-inner">
       <div>
-        <h1>Freshness from your <span>Local Market</span>,<br>to your doorstep.</h1>
-        <p class="hero-sub">Discover trusted neighborhood stores and connect directly with local sellers in minutes.</p>
+        <h1 id="heroTitle">Freshness from your <span id="heroHighlight">Local Market</span>,<br>to your doorstep.</h1>
+        <p class="hero-sub" id="heroSubtitle">Discover trusted neighborhood stores and connect directly with local sellers in minutes.</p>
         <div class="search-wrapper">
           <input type="text" id="pinInput" placeholder="Enter Pincode or Area (e.g. 400001)">
           <button class="btn-find" onclick="searchByPincode()">Find Stores</button>

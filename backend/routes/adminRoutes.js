@@ -24,6 +24,7 @@ const {
   saveGlobalCommission,
   savePayoutSettings,
   saveSystemSettings,
+  saveHeroSettings,
   getAllSettings,
   getSellerAuditLogs,
   // ✅ CATEGORY
@@ -109,6 +110,8 @@ router.post("/settings/commission", saveGlobalCommission);
 router.post("/settings/payout", savePayoutSettings);
 // POST /api/admin/settings/system
 router.post("/settings/system", saveSystemSettings);
+// POST /api/admin/settings/hero
+router.post("/settings/hero", saveHeroSettings);
 
 // GET /api/admin/settings
 router.get("/settings", getAllSettings);

@@ -123,7 +123,11 @@ async function ensureSettingsColumns() {
   const columns = [
     { name: "payout_cycle", sql: "ALTER TABLE settings ADD COLUMN payout_cycle VARCHAR(20) DEFAULT 'Weekly'" },
     { name: "min_payout", sql: "ALTER TABLE settings ADD COLUMN min_payout DECIMAL(10,2) DEFAULT 0" },
-    { name: "system_mode", sql: "ALTER TABLE settings ADD COLUMN system_mode VARCHAR(20) DEFAULT 'active'" }
+    { name: "system_mode", sql: "ALTER TABLE settings ADD COLUMN system_mode VARCHAR(20) DEFAULT 'active'" },
+    { name: "hero_title", sql: "ALTER TABLE settings ADD COLUMN hero_title VARCHAR(200) DEFAULT 'Freshness from your {{highlight}}, to your doorstep.'" },
+    { name: "hero_highlight", sql: "ALTER TABLE settings ADD COLUMN hero_highlight VARCHAR(120) DEFAULT 'Local Market'" },
+    { name: "hero_subtitle", sql: "ALTER TABLE settings ADD COLUMN hero_subtitle VARCHAR(260) DEFAULT 'Discover trusted neighborhood stores and connect directly with local sellers in minutes.'" },
+    { name: "hero_image", sql: "ALTER TABLE settings ADD COLUMN hero_image VARCHAR(255) DEFAULT NULL" }
   ];
 
   for (const col of columns) {
@@ -137,7 +141,7 @@ async function ensureSettingsColumns() {
 async function ensureSettingsRow() {
   try {
     await query(
-      "INSERT INTO settings (id, global_commission_enabled, global_commission_percent, payout_cycle, min_payout, system_mode) VALUES (1, 1, 10, 'Weekly', 0, 'active') ON DUPLICATE KEY UPDATE id=id"
+      "INSERT INTO settings (id, global_commission_enabled, global_commission_percent, payout_cycle, min_payout, system_mode, hero_title, hero_highlight, hero_subtitle, hero_image) VALUES (1, 1, 10, 'Weekly', 0, 'active', 'Freshness from your {{highlight}}, to your doorstep.', 'Local Market', 'Discover trusted neighborhood stores and connect directly with local sellers in minutes.', NULL) ON DUPLICATE KEY UPDATE id=id"
     );
   } catch (e) {
     // ignore if schema differs
@@ -1019,6 +1023,36 @@ exports.saveSystemSettings = async (req, res) => {
   } catch (err) {
     console.error("SYSTEM SETTINGS ERROR:", err);
     res.status(500).json({ success: false, message: "Failed to save system settings" });
+  }
+};
+
+/* =====================================================
+   SAVE HERO SETTINGS
+   POST /api/admin/settings/hero
+===================================================== */
+exports.saveHeroSettings = async (req, res) => {
+  try {
+    await ensureSettingsColumns();
+    await ensureSettingsRow();
+    const {
+      hero_title,
+      hero_highlight,
+      hero_subtitle,
+      hero_image
+    } = req.body || {};
+    await query(
+      "UPDATE settings SET hero_title=?, hero_highlight=?, hero_subtitle=?, hero_image=? WHERE id=1",
+      [
+        hero_title || "Freshness from your {{highlight}}, to your doorstep.",
+        hero_highlight || "Local Market",
+        hero_subtitle || "Discover trusted neighborhood stores and connect directly with local sellers in minutes.",
+        hero_image || null
+      ]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error("HERO SETTINGS ERROR:", err);
+    res.status(500).json({ success: false, message: "Failed to save hero settings" });
   }
 };
 
