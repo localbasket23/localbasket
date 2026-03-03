@@ -349,38 +349,50 @@ const applyHeroSettings = (settings = {}) => {
     const heroVisual = dom.heroVisual();
     if (heroVisual) {
         image = resolveHeroImageUrl(image);
-        sliderImages = sliderImages.map(src => resolveHeroImageUrl(src));
+        sliderImages = sliderImages.map(src => resolveHeroImageUrl(src)).filter(Boolean);
+        const images = sliderImages.length ? sliderImages : (image ? [image] : []);
 
-        const useSlider = sliderImages.length > 0;
-        const pickImage = () => {
-            if (!useSlider) return image;
-            if (heroSliderIndex >= sliderImages.length) heroSliderIndex = 0;
-            return sliderImages[heroSliderIndex];
-        };
-
-        const setImage = (src) => {
-            if (src) {
-                heroVisual.style.backgroundImage = `url('${src}')`;
-                heroVisual.classList.add("show");
-            } else {
-                heroVisual.style.backgroundImage = "none";
-                heroVisual.classList.remove("show");
+        heroVisual.innerHTML = "";
+        if (!images.length) {
+            heroVisual.classList.remove("show");
+            heroVisual.style.backgroundImage = "none";
+            if (heroSliderTimer) {
+                clearInterval(heroSliderTimer);
+                heroSliderTimer = null;
             }
-        };
+            return;
+        }
+
+        images.forEach((src, i) => {
+            const slide = document.createElement("div");
+            slide.className = `hero-slide${i === 0 ? " active" : ""}`;
+            slide.style.backgroundImage = `url('${src}')`;
+            heroVisual.appendChild(slide);
+        });
+        const dots = document.createElement("div");
+        dots.className = "hero-dots";
+        dots.setAttribute("aria-hidden", "true");
+        images.forEach((_, i) => {
+            const dot = document.createElement("span");
+            dot.className = `hero-dot${i === 0 ? " active" : ""}`;
+            dots.appendChild(dot);
+        });
+        heroVisual.appendChild(dots);
+        heroVisual.classList.add("show");
 
         if (heroSliderTimer) {
             clearInterval(heroSliderTimer);
             heroSliderTimer = null;
         }
-
-        const first = pickImage();
-        setImage(first);
-
-        if (useSlider) {
+        if (images.length > 1) {
+            heroSliderIndex = 0;
             heroSliderTimer = setInterval(() => {
-                heroSliderIndex = (heroSliderIndex + 1) % sliderImages.length;
-                setImage(sliderImages[heroSliderIndex]);
-            }, 4000);
+                const slideEls = heroVisual.querySelectorAll(".hero-slide");
+                const dotEls = heroVisual.querySelectorAll(".hero-dot");
+                heroSliderIndex = (heroSliderIndex + 1) % images.length;
+                slideEls.forEach((s, n) => s.classList.toggle("active", n === heroSliderIndex));
+                dotEls.forEach((d, n) => d.classList.toggle("active", n === heroSliderIndex));
+            }, 4500);
         }
     }
 };
