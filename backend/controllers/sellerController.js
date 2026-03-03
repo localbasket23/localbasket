@@ -30,17 +30,27 @@ const pickColumns = (columns, data) => {
   return out;
 };
 
+const normalizeUploadedFile = (file) => {
+  if (!file) return null;
+  const out = { ...file };
+  if (out.path && (!out.filename || !String(out.filename).startsWith("http"))) {
+    out.filename = out.path;
+  }
+  return out;
+};
+
 const getUploadedFile = (req, fieldName) => {
   if (!req) return null;
   if (Array.isArray(req.files)) {
-    return req.files.find((f) => String(f.fieldname || "").trim() === String(fieldName || "").trim()) || null;
+    const f = req.files.find((f) => String(f.fieldname || "").trim() === String(fieldName || "").trim()) || null;
+    return normalizeUploadedFile(f);
   }
   if (req.files && Array.isArray(req.files[fieldName])) {
-    return req.files[fieldName][0] || null;
+    return normalizeUploadedFile(req.files[fieldName][0] || null);
   }
   if (req.file) {
-    if (!fieldName) return req.file;
-    if (String(req.file.fieldname || "").trim() === String(fieldName).trim()) return req.file;
+    if (!fieldName) return normalizeUploadedFile(req.file);
+    if (String(req.file.fieldname || "").trim() === String(fieldName).trim()) return normalizeUploadedFile(req.file);
   }
   return null;
 };
@@ -48,13 +58,16 @@ const getUploadedFile = (req, fieldName) => {
 const getUploadedFilesByNames = (req, fieldNames = []) => {
   const names = new Set(fieldNames.map((n) => String(n || "").trim()));
   if (Array.isArray(req?.files)) {
-    return req.files.filter((f) => names.has(String(f.fieldname || "").trim()));
+    return req.files
+      .filter((f) => names.has(String(f.fieldname || "").trim()))
+      .map(normalizeUploadedFile)
+      .filter(Boolean);
   }
   const out = [];
   if (req?.files && typeof req.files === "object") {
     names.forEach((name) => {
       const arr = req.files[name];
-      if (Array.isArray(arr)) out.push(...arr);
+      if (Array.isArray(arr)) out.push(...arr.map(normalizeUploadedFile).filter(Boolean));
     });
   }
   return out;

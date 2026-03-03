@@ -1066,10 +1066,11 @@ exports.saveHeroImage = async (req, res) => {
     await ensureSettingsColumns();
     await ensureSettingsRow();
     const file = req.file;
-    if (!file || !file.filename) {
+    const stored = file?.path || file?.filename || "";
+    if (!file || !stored) {
       return res.status(400).json({ success: false, message: "Image file required" });
     }
-    const heroImagePath = `/uploads/${file.filename}`;
+    const heroImagePath = stored.startsWith("http") ? stored : `/uploads/${file.filename}`;
     await query(
       "UPDATE settings SET hero_image=? WHERE id=1",
       [heroImagePath]
@@ -1094,8 +1095,9 @@ exports.saveHeroImages = async (req, res) => {
       return res.status(400).json({ success: false, message: "Image files required" });
     }
     const paths = files
-      .filter(f => f && f.filename)
-      .map(f => `/uploads/${f.filename}`);
+      .map(f => f?.path || f?.filename || "")
+      .filter(Boolean)
+      .map(p => (p.startsWith("http") ? p : `/uploads/${p}`));
     if (!paths.length) {
       return res.status(400).json({ success: false, message: "No valid images" });
     }
