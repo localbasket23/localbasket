@@ -322,44 +322,6 @@
       #storeSection.active { display: block; }
     }
 
-    /* Store details: one field per row (force, incl. dark mode) */
-    #storeSection .form-grid { grid-template-columns: 1fr !important; }
-    #storeSection .full-width { grid-column: span 1 !important; }
-    #storeSection .form-group { grid-column: span 1 !important; }
-    .single-col { grid-template-columns: 1fr !important; }
-    .single-col .form-group { grid-column: span 1 !important; }
-
-    /* Mobile: force single column for better readability */
-    @media (max-width: 900px) {
-      #storeSection .form-grid,
-      #bankSection .form-grid {
-        grid-template-columns: 1fr !important;
-      }
-      #storeSection .form-group,
-      #bankSection .form-group {
-        width: 100%;
-      }
-      #storeSection input,
-      #storeSection textarea,
-      #bankSection input,
-      #bankSection textarea {
-        width: 100%;
-      }
-    }
-
-    /* Force single column even if other CSS overrides */
-    @media (max-width: 1024px) {
-      body .form-card #storeSection .form-grid,
-      body .form-card #bankSection .form-grid {
-        grid-template-columns: 1fr !important;
-      }
-      body .form-card #storeSection .form-group,
-      body .form-card #bankSection .form-group {
-        grid-column: span 1 !important;
-        width: 100% !important;
-      }
-    }
-
     /* Mobile: label + value same row, one detail per row */
     @media (max-width: 1024px) {
       #storeSection .form-group,
@@ -533,7 +495,7 @@
       <form id="profileForm">
         <div id="storeSection" class="section-card section-panel active">
           <div class="form-section-title">Store Details</div>
-          <div class="form-grid single-col">
+          <div class="form-grid">
           <div class="section-divider"></div>
           <div class="form-group">
             <label><i class="fas fa-user"></i> Owner Full Name</label>
