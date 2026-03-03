@@ -241,6 +241,46 @@ input:focus{border-color:var(--lav)}
   cursor:pointer;
   font-weight:700;
 }
+.hero-image-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  padding:8px 10px;
+  border-radius:12px;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  font-size:12px;
+}
+.hero-image-row input{
+  flex:1 1 220px;
+  min-width:160px;
+}
+.hero-image-thumb{
+  width:36px;
+  height:36px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background-size:cover;
+  background-position:center;
+}
+.hero-image-row .hero-row-btn{
+  padding:8px 10px;
+  border-radius:10px;
+  border:none;
+  background:var(--lav);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+}
+.hero-image-row .hero-row-btn.secondary{
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--text);
+}
+.hero-image-row .hero-row-btn.danger{
+  background:#ef4444;
+}
 ul{list-style:none;padding-left:0;margin-top:10px}
 li{padding:6px 0;font-size:14px}
 .remove-btn{
@@ -384,6 +424,14 @@ li{padding:6px 0;font-size:14px}
         <button class="hero-upload-btn" type="button" onclick="uploadHeroImages()">Upload Multiple</button>
       </div>
       <div class="hero-image-list" id="heroImageList"></div>
+      <div class="helper-note">Mobile slider images (optional)</div>
+      <div class="hero-upload-row">
+        <input type="file" id="heroImagesMobileFile" accept="image/*" multiple style="display:none">
+        <button class="hero-upload-btn" type="button" onclick="openHeroMobileFilesPicker()">Choose Mobile Images</button>
+        <span class="file-name" id="heroImagesMobileFileName">No files selected</span>
+        <button class="hero-upload-btn" type="button" onclick="uploadHeroImagesMobile()">Upload Mobile</button>
+      </div>
+      <div class="hero-image-list" id="heroImageListMobile"></div>
       <div class="hero-preview" id="heroPreview" style="--hero-preview-image: none;">
         <h3 id="heroPreviewTitle">Freshness from your <span>Local Market</span>, to your doorstep.</h3>
         <p id="heroPreviewSubtitle">Discover trusted neighborhood stores and connect directly with local sellers in minutes.</p>
@@ -392,6 +440,7 @@ li{padding:6px 0;font-size:14px}
       <button class="save-btn" onclick="saveHeroSettings()">Save Hero Banner</button>
       <button class="save-btn" style="margin-top:10px;background:#ef4444" onclick="removeHeroImage()">Remove Image</button>
       <button class="save-btn" style="margin-top:10px;background:#ef4444" onclick="clearHeroImages()">Remove All Slider Images</button>
+      <button class="save-btn" style="margin-top:10px;background:#ef4444" onclick="clearHeroImages('mobile')">Remove All Mobile Slider Images</button>
     </div>
 
   </div>
@@ -432,6 +481,9 @@ const heroImageFileName=document.getElementById("heroImageFileName");
 const heroImagesFile=document.getElementById("heroImagesFile");
 const heroImagesFileName=document.getElementById("heroImagesFileName");
 const heroImageList=document.getElementById("heroImageList");
+const heroImagesMobileFile=document.getElementById("heroImagesMobileFile");
+const heroImagesMobileFileName=document.getElementById("heroImagesMobileFileName");
+const heroImageListMobile=document.getElementById("heroImageListMobile");
 const heroPreview=document.getElementById("heroPreview");
 const heroPreviewTitle=document.getElementById("heroPreviewTitle");
 const heroPreviewSubtitle=document.getElementById("heroPreviewSubtitle");
@@ -473,6 +525,22 @@ const DEFAULT_HERO = {
   title: "Freshness from your {{highlight}}, to your doorstep.",
   highlight: "Local Market",
   subtitle: "Discover trusted neighborhood stores and connect directly with local sellers in minutes."
+};
+let heroImagesDesktop = [];
+let heroImagesMobile = [];
+
+const normalizeHeroImageList = (list = []) => {
+  if (!Array.isArray(list)) return [];
+  return list.map(item => {
+    if (!item) return null;
+    if (typeof item === "string") return { src: item, link: "" };
+    if (typeof item === "object") {
+      const src = item.src || item.url || item.image || "";
+      if (!src) return null;
+      return { src, link: item.link || "" };
+    }
+    return null;
+  }).filter(Boolean);
 };
 
 function buildHeroTitleText(title, highlight){
@@ -520,21 +588,55 @@ function updateHeroPreview(){
   }
 }
 
-function renderHeroImagesList(list = []){
-  if (!heroImageList) return;
-  heroImageList.innerHTML = "";
-  list.forEach((img, idx) => {
-    const chip = document.createElement("div");
-    chip.className = "hero-image-chip";
+function renderHeroImagesList(list = [], target = "desktop"){
+  const normalized = normalizeHeroImageList(list);
+  if (target === "mobile") heroImagesMobile = normalized;
+  else heroImagesDesktop = normalized;
+  const container = target === "mobile" ? heroImageListMobile : heroImageList;
+  if (!container) return;
+  container.innerHTML = "";
+  normalized.forEach((img, idx) => {
+    const row = document.createElement("div");
+    row.className = "hero-image-row";
+
+    const thumb = document.createElement("div");
+    thumb.className = "hero-image-thumb";
+    const apiRoot = String(API_BASE || "").replace(/\/api\/admin\/?$/, "");
+    const resolved = img.src && img.src.startsWith("/uploads/")
+      ? `${apiRoot}${img.src}`
+      : (img.src?.startsWith("/") ? `${apiRoot}${img.src}` : img.src);
+    if (resolved) thumb.style.backgroundImage = `url('${resolved}')`;
+
     const label = document.createElement("span");
     label.textContent = `Image ${idx + 1}`;
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.textContent = "Remove";
-    btn.onclick = () => removeHeroImageItem(idx);
-    chip.appendChild(label);
-    chip.appendChild(btn);
-    heroImageList.appendChild(chip);
+
+    const linkInput = document.createElement("input");
+    linkInput.type = "text";
+    linkInput.placeholder = "Link URL (optional)";
+    linkInput.value = img.link || "";
+    linkInput.addEventListener("input", () => {
+      const listRef = target === "mobile" ? heroImagesMobile : heroImagesDesktop;
+      if (listRef[idx]) listRef[idx].link = linkInput.value.trim();
+    });
+
+    const saveBtn = document.createElement("button");
+    saveBtn.type = "button";
+    saveBtn.className = "hero-row-btn";
+    saveBtn.textContent = "Save Link";
+    saveBtn.onclick = () => saveHeroImagesMeta(target);
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "hero-row-btn danger";
+    removeBtn.textContent = "Remove";
+    removeBtn.onclick = () => removeHeroImageItem(idx, target);
+
+    row.appendChild(thumb);
+    row.appendChild(label);
+    row.appendChild(linkInput);
+    row.appendChild(saveBtn);
+    row.appendChild(removeBtn);
+    container.appendChild(row);
   });
 }
 
@@ -564,6 +666,13 @@ heroImagesFile?.addEventListener("change", () => {
   if (heroImagesFileName) {
     heroImagesFileName.textContent = heroImagesFile.files && heroImagesFile.files.length
       ? `${heroImagesFile.files.length} files selected`
+      : "No files selected";
+  }
+});
+heroImagesMobileFile?.addEventListener("change", () => {
+  if (heroImagesMobileFileName) {
+    heroImagesMobileFileName.textContent = heroImagesMobileFile.files && heroImagesMobileFile.files.length
+      ? `${heroImagesMobileFile.files.length} files selected`
       : "No files selected";
   }
 });
@@ -631,6 +740,10 @@ function openHeroFilesPicker(){
   if (heroImagesFile) heroImagesFile.click();
 }
 
+function openHeroMobileFilesPicker(){
+  if (heroImagesMobileFile) heroImagesMobileFile.click();
+}
+
 function uploadHeroImage(){
   if (!heroImageFile || !heroImageFile.files || !heroImageFile.files[0]) {
     alert("Select an image first");
@@ -674,6 +787,7 @@ function uploadHeroImages(){
   }
   const fd = new FormData();
   Array.from(heroImagesFile.files).forEach(f => fd.append("hero_images", f));
+  fd.append("target", "desktop");
   fetch(`${API_BASE}/settings/hero-images`, {
     method: "POST",
     body: fd
@@ -682,14 +796,15 @@ function uploadHeroImages(){
       if (data && data.success) {
         if (heroImagesFile) heroImagesFile.value = "";
         if (heroImagesFileName) heroImagesFileName.textContent = "No files selected";
-        renderHeroImagesList(data.hero_images || []);
+        renderHeroImagesList(data.hero_images || [], "desktop");
         try {
           const current = {
             hero_title: heroTitleInput ? heroTitleInput.value.trim() : DEFAULT_HERO.title,
             hero_highlight: heroHighlightInput ? heroHighlightInput.value.trim() : DEFAULT_HERO.highlight,
             hero_subtitle: heroSubtitleInput ? heroSubtitleInput.value.trim() : DEFAULT_HERO.subtitle,
             hero_image: heroImageInput ? heroImageInput.value.trim() : "",
-            hero_images_json: JSON.stringify(data.hero_images || [])
+            hero_images_json: JSON.stringify(heroImagesDesktop),
+            hero_images_mobile_json: JSON.stringify(heroImagesMobile)
           };
           localStorage.setItem("lbHeroSettings", JSON.stringify(current));
         } catch {}
@@ -703,22 +818,89 @@ function uploadHeroImages(){
     });
 }
 
-function removeHeroImageItem(index){
-  fetch(`${API_BASE}/settings/hero-images/remove`, {
+function uploadHeroImagesMobile(){
+  if (!heroImagesMobileFile || !heroImagesMobileFile.files || !heroImagesMobileFile.files.length) {
+    alert("Select images first");
+    return;
+  }
+  const fd = new FormData();
+  Array.from(heroImagesMobileFile.files).forEach(f => fd.append("hero_images", f));
+  fd.append("target", "mobile");
+  fetch(`${API_BASE}/settings/hero-images`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ index })
+    body: fd
   }).then(res => res.json())
     .then(data => {
       if (data && data.success) {
-        renderHeroImagesList(data.hero_images || []);
+        if (heroImagesMobileFile) heroImagesMobileFile.value = "";
+        if (heroImagesMobileFileName) heroImagesMobileFileName.textContent = "No files selected";
+        renderHeroImagesList(data.hero_images || [], "mobile");
         try {
           const current = {
             hero_title: heroTitleInput ? heroTitleInput.value.trim() : DEFAULT_HERO.title,
             hero_highlight: heroHighlightInput ? heroHighlightInput.value.trim() : DEFAULT_HERO.highlight,
             hero_subtitle: heroSubtitleInput ? heroSubtitleInput.value.trim() : DEFAULT_HERO.subtitle,
             hero_image: heroImageInput ? heroImageInput.value.trim() : "",
-            hero_images_json: JSON.stringify(data.hero_images || [])
+            hero_images_json: JSON.stringify(heroImagesDesktop),
+            hero_images_mobile_json: JSON.stringify(heroImagesMobile)
+          };
+          localStorage.setItem("lbHeroSettings", JSON.stringify(current));
+        } catch {}
+        alert("Mobile slider images uploaded");
+      } else {
+        alert((data && data.message) || "Failed to upload images");
+      }
+    })
+    .catch(() => {
+      alert("Failed to upload images");
+    });
+}
+
+function saveHeroImagesMeta(target = "desktop"){
+  const images = target === "mobile" ? heroImagesMobile : heroImagesDesktop;
+  fetch(`${API_BASE}/settings/hero-images/meta`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ target, images })
+  }).then(res => res.json())
+    .then(data => {
+      if (data && data.success) {
+        renderHeroImagesList(data.hero_images || [], target);
+        try {
+          const current = {
+            hero_title: heroTitleInput ? heroTitleInput.value.trim() : DEFAULT_HERO.title,
+            hero_highlight: heroHighlightInput ? heroHighlightInput.value.trim() : DEFAULT_HERO.highlight,
+            hero_subtitle: heroSubtitleInput ? heroSubtitleInput.value.trim() : DEFAULT_HERO.subtitle,
+            hero_image: heroImageInput ? heroImageInput.value.trim() : "",
+            hero_images_json: JSON.stringify(heroImagesDesktop),
+            hero_images_mobile_json: JSON.stringify(heroImagesMobile)
+          };
+          localStorage.setItem("lbHeroSettings", JSON.stringify(current));
+        } catch {}
+        alert("Links saved");
+      } else {
+        alert((data && data.message) || "Failed to save links");
+      }
+    }).catch(() => alert("Failed to save links"));
+}
+
+function removeHeroImageItem(index, target = "desktop"){
+  fetch(`${API_BASE}/settings/hero-images/remove`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ index, target })
+  }).then(res => res.json())
+    .then(data => {
+      if (data && data.success) {
+        renderHeroImagesList(data.hero_images || [], target);
+        try {
+          const current = {
+            hero_title: heroTitleInput ? heroTitleInput.value.trim() : DEFAULT_HERO.title,
+            hero_highlight: heroHighlightInput ? heroHighlightInput.value.trim() : DEFAULT_HERO.highlight,
+            hero_subtitle: heroSubtitleInput ? heroSubtitleInput.value.trim() : DEFAULT_HERO.subtitle,
+            hero_image: heroImageInput ? heroImageInput.value.trim() : "",
+            hero_images_json: JSON.stringify(target === "mobile" ? heroImagesDesktop : (data.hero_images || [])),
+            hero_images_mobile_json: JSON.stringify(target === "mobile" ? (data.hero_images || []) : heroImagesMobile)
           };
           localStorage.setItem("lbHeroSettings", JSON.stringify(current));
         } catch {}
@@ -729,26 +911,27 @@ function removeHeroImageItem(index){
     .catch(() => alert("Failed to remove image"));
 }
 
-function clearHeroImages(){
+function clearHeroImages(target = "desktop"){
   fetch(`${API_BASE}/settings/hero-images/clear`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({})
+    body: JSON.stringify({ target })
   }).then(res => res.json())
     .then(data => {
       if (data && data.success) {
-        renderHeroImagesList([]);
+        renderHeroImagesList([], target);
         try {
           const current = {
             hero_title: heroTitleInput ? heroTitleInput.value.trim() : DEFAULT_HERO.title,
             hero_highlight: heroHighlightInput ? heroHighlightInput.value.trim() : DEFAULT_HERO.highlight,
             hero_subtitle: heroSubtitleInput ? heroSubtitleInput.value.trim() : DEFAULT_HERO.subtitle,
             hero_image: heroImageInput ? heroImageInput.value.trim() : "",
-            hero_images_json: "[]"
+            hero_images_json: JSON.stringify(target === "mobile" ? heroImagesDesktop : []),
+            hero_images_mobile_json: JSON.stringify(target === "mobile" ? [] : heroImagesMobile)
           };
           localStorage.setItem("lbHeroSettings", JSON.stringify(current));
         } catch {}
-        alert("Slider images cleared");
+        alert(target === "mobile" ? "Mobile slider images cleared" : "Slider images cleared");
       }
     })
     .catch(() => alert("Failed to clear images"));
@@ -806,6 +989,8 @@ async function loadSettings() {
     const res = await fetch(`${API_BASE}/settings`);
     const data = await res.json();
     if (data && data.success && data.global) {
+      let desktopLoaded = false;
+      let mobileLoaded = false;
       const enabled = Number(data.global.global_commission_enabled) === 1;
       const percent = clampPercent(data.global.global_commission_percent);
       applyCommissionConfig({ enabled, percent });
@@ -820,9 +1005,23 @@ async function loadSettings() {
       if (data.global.hero_images_json) {
         try {
           const list = JSON.parse(data.global.hero_images_json);
-          if (Array.isArray(list)) renderHeroImagesList(list);
+          if (Array.isArray(list)) {
+            renderHeroImagesList(list, "desktop");
+            desktopLoaded = true;
+          }
         } catch {}
       }
+      if (data.global.hero_images_mobile_json) {
+        try {
+          const list = JSON.parse(data.global.hero_images_mobile_json);
+          if (Array.isArray(list)) {
+            renderHeroImagesList(list, "mobile");
+            mobileLoaded = true;
+          }
+        } catch {}
+      }
+      if (!desktopLoaded) renderHeroImagesList([], "desktop");
+      if (!mobileLoaded) renderHeroImagesList([], "mobile");
     }
   } catch (e) {
     // fallback to local storage

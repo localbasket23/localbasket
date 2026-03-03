@@ -271,6 +271,25 @@ const HERO_DEFAULTS = {
 };
 let heroSliderTimer = null;
 let heroSliderIndex = 0;
+let heroSliderData = [];
+let heroSettingsCache = null;
+let heroSliderIsMobile = null;
+
+const normalizeHeroImageList = (list = []) => {
+    if (!Array.isArray(list)) return [];
+    return list.map(item => {
+        if (!item) return null;
+        if (typeof item === "string") return { src: item, link: "" };
+        if (typeof item === "object") {
+            const src = item.src || item.url || item.image || "";
+            if (!src) return null;
+            return { src, link: item.link || "" };
+        }
+        return null;
+    }).filter(Boolean);
+};
+
+const isHeroMobileView = () => window.innerWidth <= 768;
 
 const appendTextWithBreaks = (parent, text) => {
     const parts = String(text || "").split(/\n/);
@@ -320,16 +339,24 @@ const applyHeroTitle = (title, highlight) => {
 };
 
 const applyHeroSettings = (settings = {}) => {
+    heroSettingsCache = settings;
     const heroSection = dom.heroSection();
     const title = settings.hero_title || HERO_DEFAULTS.title;
     const highlight = settings.hero_highlight || HERO_DEFAULTS.highlight;
     const subtitle = settings.hero_subtitle || HERO_DEFAULTS.subtitle;
     let image = String(settings.hero_image || "").trim();
     let sliderImages = [];
+    let sliderImagesMobile = [];
     if (settings.hero_images_json) {
         try {
             const parsed = JSON.parse(settings.hero_images_json);
-            if (Array.isArray(parsed)) sliderImages = parsed.filter(Boolean);
+            sliderImages = normalizeHeroImageList(parsed);
+        } catch {}
+    }
+    if (settings.hero_images_mobile_json) {
+        try {
+            const parsed = JSON.parse(settings.hero_images_mobile_json);
+            sliderImagesMobile = normalizeHeroImageList(parsed);
         } catch {}
     }
 
@@ -351,13 +378,25 @@ const applyHeroSettings = (settings = {}) => {
     const heroVisual = dom.heroVisual();
     if (heroVisual) {
         image = resolveHeroImageUrl(image);
-        sliderImages = sliderImages.map(src => resolveHeroImageUrl(src)).filter(Boolean);
-        const images = sliderImages.length ? sliderImages : (image ? [image] : []);
+        const normalizedDesktop = sliderImages
+            .map(item => ({ ...item, src: resolveHeroImageUrl(item.src) }))
+            .filter(item => item.src);
+        const normalizedMobile = sliderImagesMobile
+            .map(item => ({ ...item, src: resolveHeroImageUrl(item.src) }))
+            .filter(item => item.src);
+        const isMobile = isHeroMobileView();
+        heroSliderIsMobile = isMobile;
+        const pickedList = isMobile && normalizedMobile.length ? normalizedMobile : normalizedDesktop;
+        const images = pickedList.length
+            ? pickedList
+            : (image ? [{ src: image, link: "" }] : []);
 
         heroVisual.innerHTML = "";
         if (!images.length) {
             heroVisual.classList.remove("show");
             heroVisual.style.backgroundImage = "none";
+            heroVisual.classList.remove("has-link");
+            heroVisual.removeAttribute("data-hero-link");
             if (heroSliderTimer) {
                 clearInterval(heroSliderTimer);
                 heroSliderTimer = null;
@@ -365,10 +404,12 @@ const applyHeroSettings = (settings = {}) => {
             return;
         }
 
+        heroSliderData = images;
         images.forEach((src, i) => {
             const slide = document.createElement("div");
             slide.className = `hero-slide${i === 0 ? " active" : ""}`;
-            slide.style.backgroundImage = `url('${src}')`;
+            slide.style.backgroundImage = `url('${src.src}')`;
+            if (src.link) slide.setAttribute("data-link", src.link);
             heroVisual.appendChild(slide);
         });
         const dots = document.createElement("div");
@@ -382,19 +423,46 @@ const applyHeroSettings = (settings = {}) => {
         heroVisual.appendChild(dots);
         heroVisual.classList.add("show");
 
+        const applyHeroLink = () => {
+            const current = heroSliderData[heroSliderIndex] || {};
+            const link = String(current.link || "").trim();
+            if (link) {
+                heroVisual.classList.add("has-link");
+                heroVisual.setAttribute("data-hero-link", link);
+            } else {
+                heroVisual.classList.remove("has-link");
+                heroVisual.removeAttribute("data-hero-link");
+            }
+        };
+
         if (heroSliderTimer) {
             clearInterval(heroSliderTimer);
             heroSliderTimer = null;
         }
         if (images.length > 1) {
             heroSliderIndex = 0;
+            applyHeroLink();
             heroSliderTimer = setInterval(() => {
                 const slideEls = heroVisual.querySelectorAll(".hero-slide");
                 const dotEls = heroVisual.querySelectorAll(".hero-dot");
                 heroSliderIndex = (heroSliderIndex + 1) % images.length;
                 slideEls.forEach((s, n) => s.classList.toggle("active", n === heroSliderIndex));
                 dotEls.forEach((d, n) => d.classList.toggle("active", n === heroSliderIndex));
+                applyHeroLink();
             }, 4500);
+        } else {
+            heroSliderIndex = 0;
+            applyHeroLink();
+        }
+
+        if (!heroVisual.__lbHeroLinkBound) {
+            heroVisual.__lbHeroLinkBound = true;
+            heroVisual.addEventListener("click", (e) => {
+                if (e.target.closest(".hero-dot")) return;
+                const link = heroVisual.getAttribute("data-hero-link");
+                if (!link) return;
+                window.open(link, "_blank");
+            });
         }
     }
 };
@@ -416,6 +484,18 @@ async function loadHeroSettings() {
         } catch {}
     }
 }
+
+let heroResizeTimer = null;
+window.addEventListener("resize", () => {
+    if (heroResizeTimer) clearTimeout(heroResizeTimer);
+    heroResizeTimer = setTimeout(() => {
+        if (!heroSettingsCache) return;
+        const isMobile = isHeroMobileView();
+        if (heroSliderIsMobile === null || heroSliderIsMobile !== isMobile) {
+            applyHeroSettings(heroSettingsCache);
+        }
+    }, 180);
+});
 
 function isLocationModalVisible() {
     const modal = dom.locModal();

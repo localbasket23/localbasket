@@ -28,6 +28,7 @@ const {
   saveHeroSettings,
   saveHeroImage,
   saveHeroImages,
+  saveHeroImagesMeta,
   removeHeroImageItem,
   clearHeroImages,
   removeHeroImage,
@@ -124,6 +125,8 @@ router.post("/settings/hero-image", upload.single("hero_image"), saveHeroImage);
 router.post("/settings/hero-image/remove", removeHeroImage);
 // POST /api/admin/settings/hero-images
 router.post("/settings/hero-images", upload.array("hero_images", 8), saveHeroImages);
+// POST /api/admin/settings/hero-images/meta
+router.post("/settings/hero-images/meta", saveHeroImagesMeta);
 // POST /api/admin/settings/hero-images/remove
 router.post("/settings/hero-images/remove", removeHeroImageItem);
 // POST /api/admin/settings/hero-images/clear

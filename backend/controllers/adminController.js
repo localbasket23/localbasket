@@ -128,7 +128,8 @@ async function ensureSettingsColumns() {
     { name: "hero_highlight", sql: "ALTER TABLE settings ADD COLUMN hero_highlight VARCHAR(120) DEFAULT 'Local Market'" },
     { name: "hero_subtitle", sql: "ALTER TABLE settings ADD COLUMN hero_subtitle VARCHAR(260) DEFAULT 'Discover trusted neighborhood stores and connect directly with local sellers in minutes.'" },
     { name: "hero_image", sql: "ALTER TABLE settings ADD COLUMN hero_image VARCHAR(255) DEFAULT NULL" },
-    { name: "hero_images_json", sql: "ALTER TABLE settings ADD COLUMN hero_images_json TEXT NULL" }
+    { name: "hero_images_json", sql: "ALTER TABLE settings ADD COLUMN hero_images_json TEXT NULL" },
+    { name: "hero_images_mobile_json", sql: "ALTER TABLE settings ADD COLUMN hero_images_mobile_json TEXT NULL" }
   ];
 
   for (const col of columns) {
@@ -1090,6 +1091,8 @@ exports.saveHeroImages = async (req, res) => {
   try {
     await ensureSettingsColumns();
     await ensureSettingsRow();
+    const target = String(req.body?.target || "desktop").toLowerCase();
+    const column = target === "mobile" ? "hero_images_mobile_json" : "hero_images_json";
     const files = Array.isArray(req.files) ? req.files : [];
     if (!files.length) {
       return res.status(400).json({ success: false, message: "Image files required" });
@@ -1102,23 +1105,66 @@ exports.saveHeroImages = async (req, res) => {
       return res.status(400).json({ success: false, message: "No valid images" });
     }
 
-    const [row] = await query("SELECT hero_images_json FROM settings WHERE id=1");
+    const [row] = await query(`SELECT ${column} FROM settings WHERE id=1`);
     let current = [];
     try {
-      current = row && row.hero_images_json ? JSON.parse(row.hero_images_json) : [];
+      current = row && row[column] ? JSON.parse(row[column]) : [];
       if (!Array.isArray(current)) current = [];
     } catch {
       current = [];
     }
-    const next = current.concat(paths);
+    const normalizeItem = (item) => {
+      if (!item) return null;
+      if (typeof item === "string") return { src: item, link: "" };
+      if (typeof item === "object") {
+        const src = item.src || item.url || item.image || "";
+        if (!src) return null;
+        return { src, link: item.link || "" };
+      }
+      return null;
+    };
+    const normalizedCurrent = current.map(normalizeItem).filter(Boolean);
+    const next = normalizedCurrent.concat(paths.map(p => ({ src: p, link: "" })));
     await query(
-      "UPDATE settings SET hero_images_json=? WHERE id=1",
+      `UPDATE settings SET ${column}=? WHERE id=1`,
       [JSON.stringify(next)]
     );
     res.json({ success: true, hero_images: next });
   } catch (err) {
     console.error("HERO IMAGES ERROR:", err);
     res.status(500).json({ success: false, message: "Failed to save hero images" });
+  }
+};
+
+/* =====================================================
+   SAVE HERO IMAGE META (LINKS)
+   POST /api/admin/settings/hero-images/meta
+===================================================== */
+exports.saveHeroImagesMeta = async (req, res) => {
+  try {
+    await ensureSettingsColumns();
+    await ensureSettingsRow();
+    const { target, images } = req.body || {};
+    const column = String(target || "desktop").toLowerCase() === "mobile"
+      ? "hero_images_mobile_json"
+      : "hero_images_json";
+    const list = Array.isArray(images) ? images : [];
+    const normalized = list.map((item) => {
+      if (!item) return null;
+      if (typeof item === "string") return { src: item, link: "" };
+      const src = item.src || item.url || item.image || "";
+      if (!src) return null;
+      const link = item.link || "";
+      return { src, link };
+    }).filter(Boolean);
+    await query(
+      `UPDATE settings SET ${column}=? WHERE id=1`,
+      [JSON.stringify(normalized)]
+    );
+    res.json({ success: true, hero_images: normalized });
+  } catch (err) {
+    console.error("HERO IMAGES META ERROR:", err);
+    res.status(500).json({ success: false, message: "Failed to save hero image links" });
   }
 };
 
@@ -1130,11 +1176,14 @@ exports.removeHeroImageItem = async (req, res) => {
   try {
     await ensureSettingsColumns();
     await ensureSettingsRow();
-    const { index } = req.body || {};
-    const [row] = await query("SELECT hero_images_json FROM settings WHERE id=1");
+    const { index, target } = req.body || {};
+    const column = String(target || "desktop").toLowerCase() === "mobile"
+      ? "hero_images_mobile_json"
+      : "hero_images_json";
+    const [row] = await query(`SELECT ${column} FROM settings WHERE id=1`);
     let current = [];
     try {
-      current = row && row.hero_images_json ? JSON.parse(row.hero_images_json) : [];
+      current = row && row[column] ? JSON.parse(row[column]) : [];
       if (!Array.isArray(current)) current = [];
     } catch {
       current = [];
@@ -1145,7 +1194,7 @@ exports.removeHeroImageItem = async (req, res) => {
     }
     current.splice(idx, 1);
     await query(
-      "UPDATE settings SET hero_images_json=? WHERE id=1",
+      `UPDATE settings SET ${column}=? WHERE id=1`,
       [JSON.stringify(current)]
     );
     res.json({ success: true, hero_images: current });
@@ -1163,7 +1212,9 @@ exports.clearHeroImages = async (req, res) => {
   try {
     await ensureSettingsColumns();
     await ensureSettingsRow();
-    await query("UPDATE settings SET hero_images_json=NULL WHERE id=1");
+    const target = String(req.body?.target || "desktop").toLowerCase();
+    const column = target === "mobile" ? "hero_images_mobile_json" : "hero_images_json";
+    await query(`UPDATE settings SET ${column}=NULL WHERE id=1`);
     res.json({ success: true, hero_images: [] });
   } catch (err) {
     console.error("HERO IMAGES CLEAR ERROR:", err);

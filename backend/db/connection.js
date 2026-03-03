@@ -149,6 +149,7 @@ function initCoreTables(done) {
       hero_subtitle VARCHAR(260) DEFAULT 'Discover trusted neighborhood stores and connect directly with local sellers in minutes.',
       hero_image VARCHAR(255) DEFAULT NULL,
       hero_images_json TEXT NULL,
+      hero_images_mobile_json TEXT NULL,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )
     `,
