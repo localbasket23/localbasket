@@ -152,7 +152,7 @@
         <i class="fas fa-times"></i>
       </button>
       <div class="brand">
-        <img src="/welcome/logo2.png" alt="Logo">
+        <img src="/welcome/logo2.png?v=20260303" alt="Logo">
         <h2>Admin Panel</h2>
         <p class="brand-sub">Control Center</p>
       </div>
@@ -250,3 +250,4 @@
     bindMobileButtons();
   });
 })();
+

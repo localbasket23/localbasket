@@ -1,5 +1,5 @@
-﻿/*************************************
- * CHECKOUT SCRIPT â€” FINAL (FIXED)
+/*************************************
+ * CHECKOUT SCRIPT — FINAL (FIXED)
  *************************************/
 
 /* ================= AUTH CHECK ================= */
@@ -189,7 +189,7 @@ function renderCart() {
 
     orderItemsBox.innerHTML += `
       <div class="cart-item">
-        <span>${itemName} × ${qty}</span>
+        <span>${itemName} � ${qty}</span>
         <span>Rs. ${sub}</span>
       </div>
     `;
@@ -232,7 +232,7 @@ async function saveOrder(orderData) {
 
 /* ================= RAZORPAY PAYMENT ================= */
 function startRazorpayPayment(orderData) {
-  const DEFAULT_PUBLIC_LOGO = "https://localbasket.co.in/welcome/logo2.png";
+  const DEFAULT_PUBLIC_LOGO = "https://localbasket.co.in/welcome/logo2.png?v=20260303";
   const brandLogo = (() => {
     const configured =
       (typeof window !== "undefined" && window.LB_BRAND_LOGO_URL) ||
@@ -349,22 +349,22 @@ async function placeOrder() {
   const paymentMethod = document.getElementById("payment").value;
 
   if (!name || !phone || !address || !pincode) {
-    alert("âŒ Fill all required fields");
+    alert("❌ Fill all required fields");
     return;
   }
 
   if (!/^[6-9]\d{9}$/.test(phone)) {
-    alert("âŒ Invalid phone number");
+    alert("❌ Invalid phone number");
     return;
   }
 
   if (!/^\d{6}$/.test(pincode)) {
-    alert("âŒ Invalid pincode");
+    alert("❌ Invalid pincode");
     return;
   }
 
   if (!cart.length) {
-    alert("âŒ Cart is empty");
+    alert("❌ Cart is empty");
     return;
   }
 
@@ -378,7 +378,7 @@ async function placeOrder() {
       const data = await fetchJsonWithFallback(`${window.API_BASE_URL}/api/stores/${storeId}`);
       const minOrder = Number(data?.store?.minimum_order || 100);
       if (itemsTotal < minOrder) {
-        alert(`âŒ Minimum order is Rs. ${minOrder}. Please add more items.`);
+        alert(`❌ Minimum order is Rs. ${minOrder}. Please add more items.`);
         return;
       }
     }
@@ -413,6 +413,7 @@ async function placeOrder() {
     saveOrder(orderData);
   }
 }
+
 
 
 

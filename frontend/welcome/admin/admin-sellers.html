@@ -530,7 +530,7 @@
 
   <aside class="sidebar" id="sidebar">
     <div class="brand">
-      <img src="https://mylocalbasket.com/Images/mylocalbasketlogo.png" onerror="this.src='/welcome/logo2.png'" alt="Logo">
+      <img src="/welcome/logo2.png?v=20260303" onerror="this.src='/welcome/logo2.png?v=20260303'" alt="Logo">
       <h2>Local Basket</h2>
     </div>
     <nav class="menu">
@@ -760,7 +760,7 @@
         }
       } catch {}
       imgEl.onerror = null;
-      imgEl.src = "/welcome/logo2.png";
+      imgEl.src = "/welcome/logo2.png?v=20260303";
     }
 
     async function fetchJsonWithFallback(paths, options = {}) {
@@ -1502,6 +1502,8 @@
   <script src="/js/theme.js"></script>
 </body>
 </html>
+
+
 
 
 

@@ -7,11 +7,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Product Approval — Local Basket Admin</title>
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="./welcome/logo2.png?v=99">
-  <link rel="icon" type="image/png" sizes="32x32" href="./welcome/logo2.png?v=200">
-<link rel="icon" type="image/png" sizes="48x48" href="./welcome/logo2.png?v=200">
-<link rel="icon" type="image/png" sizes="96x96" href="./welcome/logo2.png?v=200">
-<link rel="apple-touch-icon" sizes="180x180" href="./welcome/logo2.png?v=200">
+  <link rel="icon" type="image/png" href="./welcome/logo2.png?v=20260303">
+  <link rel="icon" type="image/png" sizes="32x32" href="./welcome/logo2.png?v=20260303">
+<link rel="icon" type="image/png" sizes="48x48" href="./welcome/logo2.png?v=20260303">
+<link rel="icon" type="image/png" sizes="96x96" href="./welcome/logo2.png?v=20260303">
+<link rel="apple-touch-icon" sizes="180x180" href="./welcome/logo2.png?v=20260303">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -296,7 +296,7 @@
 <aside class="sidebar">
   <div class="close-sidebar" onclick="toggleMenu()"><i class="fas fa-times"></i></div>
   <div class="brand">
-    <img src="https://mylocalbasket.com/Images/mylocalbasketlogo.png" alt="Logo">
+    <img src="/welcome/logo2.png?v=20260303" alt="Logo">
     <h2>Admin Panel</h2>
   </div>
 
@@ -407,7 +407,7 @@ function renderProducts(list) {
       <td>
        <img class="product-img" 
      src="${window.API_BASE_URL}/uploads/${p.image}" 
-     onerror="this.src='/welcome/logo2.png'">
+     onerror="this.src='/welcome/logo2.png?v=20260303'">
       </td>
       <td style="font-weight:700;">${p.name}</td>
       <td style="color:var(--lav); font-weight:500;">${p.seller_name}</td>
@@ -431,7 +431,7 @@ function renderProducts(list) {
       <div class="product-card">
         <div class="product-head">
          <img src="${window.API_BASE_URL}/uploads/${p.image}" 
-     onerror="this.src='/welcome/logo2.png'">
+     onerror="this.src='/welcome/logo2.png?v=20260303'">
           <div>
             <div class="product-title">${p.name}</div>
             <div class="product-meta">${p.seller_name}</div>
@@ -544,6 +544,8 @@ loadProducts();
   <script src="/js/theme.js"></script>
 </body>
 </html>
+
+
 
 
 

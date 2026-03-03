@@ -10,11 +10,11 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/welcome/seller/seller-dashboard.css">
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="./welcome/logo2.png?v=99">
-  <link rel="icon" type="image/png" sizes="32x32" href="./welcome/logo2.png?v=200">
-<link rel="icon" type="image/png" sizes="48x48" href="./welcome/logo2.png?v=200">
-<link rel="icon" type="image/png" sizes="96x96" href="./welcome/logo2.png?v=200">
-<link rel="apple-touch-icon" sizes="180x180" href="./welcome/logo2.png?v=200">
+  <link rel="icon" type="image/png" href="./welcome/logo2.png?v=20260303">
+  <link rel="icon" type="image/png" sizes="32x32" href="./welcome/logo2.png?v=20260303">
+<link rel="icon" type="image/png" sizes="48x48" href="./welcome/logo2.png?v=20260303">
+<link rel="icon" type="image/png" sizes="96x96" href="./welcome/logo2.png?v=20260303">
+<link rel="apple-touch-icon" sizes="180x180" href="./welcome/logo2.png?v=20260303">
 
    <style>
     /* Page-specific layout */
@@ -445,7 +445,7 @@
 
 <aside class="sidebar" id="sidebar">
   <div class="brand">
-    <img src="./welcome/logo2.png">
+    <img src="./welcome/logo2.png?v=20260303">
     <h3>Local Basket</h3>
     <p>Admin Dashboard</p>
   </div>
@@ -636,7 +636,7 @@ const PRODUCTS_ENDPOINT = `${API_BASE}/seller/products`;
 const IMAGE_BASE = `${window.API_BASE_URL}/uploads/`;
 const resolveUploadUrl = (rawPath) => {
   const input = String(rawPath || "").trim();
-  if (!input) return "/welcome/logo2.png";
+  if (!input) return "/welcome/logo2.png?v=20260303";
   if (/^(https?:)?\/\//i.test(input) || input.startsWith("data:") || input.startsWith("blob:")) {
     return input;
   }
@@ -815,7 +815,7 @@ function renderProducts() {
     <tr>
       <td data-label="Product">
         <div style="display:flex; align-items:center; gap:10px;">
-          <img class="prod-img" src="${p.image ? resolveUploadUrl(p.image) : '/welcome/logo2.png'}" alt="${p.name || 'Product'}">
+          <img class="prod-img" src="${p.image ? resolveUploadUrl(p.image) : '/welcome/logo2.png?v=20260303'}" alt="${p.name || 'Product'}">
           <b>${p.name}</b>
         </div>
       </td>
@@ -1070,6 +1070,7 @@ loadMyProducts();
   <script src="/js/theme.js"></script>
 </body>
 </html>
+
 
 
 
