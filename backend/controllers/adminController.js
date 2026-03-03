@@ -127,7 +127,8 @@ async function ensureSettingsColumns() {
     { name: "hero_title", sql: "ALTER TABLE settings ADD COLUMN hero_title VARCHAR(200) DEFAULT 'Freshness from your {{highlight}}, to your doorstep.'" },
     { name: "hero_highlight", sql: "ALTER TABLE settings ADD COLUMN hero_highlight VARCHAR(120) DEFAULT 'Local Market'" },
     { name: "hero_subtitle", sql: "ALTER TABLE settings ADD COLUMN hero_subtitle VARCHAR(260) DEFAULT 'Discover trusted neighborhood stores and connect directly with local sellers in minutes.'" },
-    { name: "hero_image", sql: "ALTER TABLE settings ADD COLUMN hero_image VARCHAR(255) DEFAULT NULL" }
+    { name: "hero_image", sql: "ALTER TABLE settings ADD COLUMN hero_image VARCHAR(255) DEFAULT NULL" },
+    { name: "hero_images_json", sql: "ALTER TABLE settings ADD COLUMN hero_images_json TEXT NULL" }
   ];
 
   for (const col of columns) {
@@ -1077,6 +1078,94 @@ exports.saveHeroImage = async (req, res) => {
   } catch (err) {
     console.error("HERO IMAGE ERROR:", err);
     res.status(500).json({ success: false, message: "Failed to save hero image" });
+  }
+};
+
+/* =====================================================
+   SAVE HERO IMAGES (MULTI)
+   POST /api/admin/settings/hero-images
+===================================================== */
+exports.saveHeroImages = async (req, res) => {
+  try {
+    await ensureSettingsColumns();
+    await ensureSettingsRow();
+    const files = Array.isArray(req.files) ? req.files : [];
+    if (!files.length) {
+      return res.status(400).json({ success: false, message: "Image files required" });
+    }
+    const paths = files
+      .filter(f => f && f.filename)
+      .map(f => `/uploads/${f.filename}`);
+    if (!paths.length) {
+      return res.status(400).json({ success: false, message: "No valid images" });
+    }
+
+    const [row] = await query("SELECT hero_images_json FROM settings WHERE id=1");
+    let current = [];
+    try {
+      current = row && row.hero_images_json ? JSON.parse(row.hero_images_json) : [];
+      if (!Array.isArray(current)) current = [];
+    } catch {
+      current = [];
+    }
+    const next = current.concat(paths);
+    await query(
+      "UPDATE settings SET hero_images_json=? WHERE id=1",
+      [JSON.stringify(next)]
+    );
+    res.json({ success: true, hero_images: next });
+  } catch (err) {
+    console.error("HERO IMAGES ERROR:", err);
+    res.status(500).json({ success: false, message: "Failed to save hero images" });
+  }
+};
+
+/* =====================================================
+   REMOVE HERO IMAGE (MULTI)
+   POST /api/admin/settings/hero-images/remove
+===================================================== */
+exports.removeHeroImageItem = async (req, res) => {
+  try {
+    await ensureSettingsColumns();
+    await ensureSettingsRow();
+    const { index } = req.body || {};
+    const [row] = await query("SELECT hero_images_json FROM settings WHERE id=1");
+    let current = [];
+    try {
+      current = row && row.hero_images_json ? JSON.parse(row.hero_images_json) : [];
+      if (!Array.isArray(current)) current = [];
+    } catch {
+      current = [];
+    }
+    const idx = Number(index);
+    if (Number.isNaN(idx) || idx < 0 || idx >= current.length) {
+      return res.status(400).json({ success: false, message: "Invalid index" });
+    }
+    current.splice(idx, 1);
+    await query(
+      "UPDATE settings SET hero_images_json=? WHERE id=1",
+      [JSON.stringify(current)]
+    );
+    res.json({ success: true, hero_images: current });
+  } catch (err) {
+    console.error("HERO IMAGE REMOVE ERROR:", err);
+    res.status(500).json({ success: false, message: "Failed to remove hero image" });
+  }
+};
+
+/* =====================================================
+   CLEAR HERO IMAGES (MULTI)
+   POST /api/admin/settings/hero-images/clear
+===================================================== */
+exports.clearHeroImages = async (req, res) => {
+  try {
+    await ensureSettingsColumns();
+    await ensureSettingsRow();
+    await query("UPDATE settings SET hero_images_json=NULL WHERE id=1");
+    res.json({ success: true, hero_images: [] });
+  } catch (err) {
+    console.error("HERO IMAGES CLEAR ERROR:", err);
+    res.status(500).json({ success: false, message: "Failed to clear hero images" });
   }
 };
 

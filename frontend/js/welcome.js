@@ -252,6 +252,8 @@ const HERO_DEFAULTS = {
     highlight: "Local Market",
     subtitle: "Discover trusted neighborhood stores and connect directly with local sellers in minutes."
 };
+let heroSliderTimer = null;
+let heroSliderIndex = 0;
 
 const appendTextWithBreaks = (parent, text) => {
     const parts = String(text || "").split(/\n/);
@@ -306,6 +308,13 @@ const applyHeroSettings = (settings = {}) => {
     const highlight = settings.hero_highlight || HERO_DEFAULTS.highlight;
     const subtitle = settings.hero_subtitle || HERO_DEFAULTS.subtitle;
     let image = String(settings.hero_image || "").trim();
+    let sliderImages = [];
+    if (settings.hero_images_json) {
+        try {
+            const parsed = JSON.parse(settings.hero_images_json);
+            if (Array.isArray(parsed)) sliderImages = parsed.filter(Boolean);
+        } catch {}
+    }
 
     applyHeroTitle(title, highlight);
     const heroSubtitleEl = dom.heroSubtitle();
@@ -326,12 +335,39 @@ const applyHeroSettings = (settings = {}) => {
 
     const heroVisual = dom.heroVisual();
     if (heroVisual) {
-        if (image) {
-            heroVisual.style.backgroundImage = `url('${image}')`;
-            heroVisual.classList.add("show");
-        } else {
-            heroVisual.style.backgroundImage = "none";
-            heroVisual.classList.remove("show");
+        if (image && image.startsWith("/")) image = `${window.location.origin}${image}`;
+        sliderImages = sliderImages.map(src => (src.startsWith("/") ? `${window.location.origin}${src}` : src));
+
+        const useSlider = sliderImages.length > 0;
+        const pickImage = () => {
+            if (!useSlider) return image;
+            if (heroSliderIndex >= sliderImages.length) heroSliderIndex = 0;
+            return sliderImages[heroSliderIndex];
+        };
+
+        const setImage = (src) => {
+            if (src) {
+                heroVisual.style.backgroundImage = `url('${src}')`;
+                heroVisual.classList.add("show");
+            } else {
+                heroVisual.style.backgroundImage = "none";
+                heroVisual.classList.remove("show");
+            }
+        };
+
+        if (heroSliderTimer) {
+            clearInterval(heroSliderTimer);
+            heroSliderTimer = null;
+        }
+
+        const first = pickImage();
+        setImage(first);
+
+        if (useSlider) {
+            heroSliderTimer = setInterval(() => {
+                heroSliderIndex = (heroSliderIndex + 1) % sliderImages.length;
+                setImage(sliderImages[heroSliderIndex]);
+            }, 4000);
         }
     }
 };

@@ -218,6 +218,29 @@ input:focus{border-color:var(--lav)}
   display:inline-flex;
   align-items:center;
 }
+.hero-image-list{
+  margin-top:10px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.hero-image-chip{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  font-size:12px;
+}
+.hero-image-chip button{
+  border:none;
+  background:transparent;
+  color:#ef4444;
+  cursor:pointer;
+  font-weight:700;
+}
 ul{list-style:none;padding-left:0;margin-top:10px}
 li{padding:6px 0;font-size:14px}
 .remove-btn{
@@ -354,6 +377,13 @@ li{padding:6px 0;font-size:14px}
         <span class="file-name" id="heroImageFileName">No file selected</span>
         <button class="hero-upload-btn" type="button" onclick="uploadHeroImage()">Upload Image</button>
       </div>
+      <div class="hero-upload-row">
+        <input type="file" id="heroImagesFile" accept="image/*" multiple style="display:none">
+        <button class="hero-upload-btn" type="button" onclick="openHeroFilesPicker()">Choose Multiple</button>
+        <span class="file-name" id="heroImagesFileName">No files selected</span>
+        <button class="hero-upload-btn" type="button" onclick="uploadHeroImages()">Upload Multiple</button>
+      </div>
+      <div class="hero-image-list" id="heroImageList"></div>
       <div class="hero-preview" id="heroPreview" style="--hero-preview-image: none;">
         <h3 id="heroPreviewTitle">Freshness from your <span>Local Market</span>, to your doorstep.</h3>
         <p id="heroPreviewSubtitle">Discover trusted neighborhood stores and connect directly with local sellers in minutes.</p>
@@ -361,6 +391,7 @@ li{padding:6px 0;font-size:14px}
       <div class="helper-note">Leave image empty to use default gradient background.</div>
       <button class="save-btn" onclick="saveHeroSettings()">Save Hero Banner</button>
       <button class="save-btn" style="margin-top:10px;background:#ef4444" onclick="removeHeroImage()">Remove Image</button>
+      <button class="save-btn" style="margin-top:10px;background:#ef4444" onclick="clearHeroImages()">Remove All Slider Images</button>
     </div>
 
   </div>
@@ -397,6 +428,9 @@ const heroSubtitleInput=document.getElementById("heroSubtitleInput");
 const heroImageInput=document.getElementById("heroImageInput");
 const heroImageFile=document.getElementById("heroImageFile");
 const heroImageFileName=document.getElementById("heroImageFileName");
+const heroImagesFile=document.getElementById("heroImagesFile");
+const heroImagesFileName=document.getElementById("heroImagesFileName");
+const heroImageList=document.getElementById("heroImageList");
 const heroPreview=document.getElementById("heroPreview");
 const heroPreviewTitle=document.getElementById("heroPreviewTitle");
 const heroPreviewSubtitle=document.getElementById("heroPreviewSubtitle");
@@ -484,6 +518,24 @@ function updateHeroPreview(){
   }
 }
 
+function renderHeroImagesList(list = []){
+  if (!heroImageList) return;
+  heroImageList.innerHTML = "";
+  list.forEach((img, idx) => {
+    const chip = document.createElement("div");
+    chip.className = "hero-image-chip";
+    const label = document.createElement("span");
+    label.textContent = `Image ${idx + 1}`;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.textContent = "Remove";
+    btn.onclick = () => removeHeroImageItem(idx);
+    chip.appendChild(label);
+    chip.appendChild(btn);
+    heroImageList.appendChild(chip);
+  });
+}
+
 function applyCommissionConfig(config){
   const safe=config || { enabled:true, percent:clampPercent(slider.value) };
   commissionToggle.checked=safe.enabled !== false;
@@ -504,6 +556,13 @@ heroImageFile?.addEventListener("change", () => {
     heroImageFileName.textContent = heroImageFile.files && heroImageFile.files[0]
       ? heroImageFile.files[0].name
       : "No file selected";
+  }
+});
+heroImagesFile?.addEventListener("change", () => {
+  if (heroImagesFileName) {
+    heroImagesFileName.textContent = heroImagesFile.files && heroImagesFile.files.length
+      ? `${heroImagesFile.files.length} files selected`
+      : "No files selected";
   }
 });
 
@@ -566,6 +625,10 @@ function openHeroFilePicker(){
   if (heroImageFile) heroImageFile.click();
 }
 
+function openHeroFilesPicker(){
+  if (heroImagesFile) heroImagesFile.click();
+}
+
 function uploadHeroImage(){
   if (!heroImageFile || !heroImageFile.files || !heroImageFile.files[0]) {
     alert("Select an image first");
@@ -602,6 +665,92 @@ function uploadHeroImage(){
     });
 }
 
+function uploadHeroImages(){
+  if (!heroImagesFile || !heroImagesFile.files || !heroImagesFile.files.length) {
+    alert("Select images first");
+    return;
+  }
+  const fd = new FormData();
+  Array.from(heroImagesFile.files).forEach(f => fd.append("hero_images", f));
+  fetch(`${API_BASE}/settings/hero-images`, {
+    method: "POST",
+    body: fd
+  }).then(res => res.json())
+    .then(data => {
+      if (data && data.success) {
+        if (heroImagesFile) heroImagesFile.value = "";
+        if (heroImagesFileName) heroImagesFileName.textContent = "No files selected";
+        renderHeroImagesList(data.hero_images || []);
+        try {
+          const current = {
+            hero_title: heroTitleInput ? heroTitleInput.value.trim() : DEFAULT_HERO.title,
+            hero_highlight: heroHighlightInput ? heroHighlightInput.value.trim() : DEFAULT_HERO.highlight,
+            hero_subtitle: heroSubtitleInput ? heroSubtitleInput.value.trim() : DEFAULT_HERO.subtitle,
+            hero_image: heroImageInput ? heroImageInput.value.trim() : "",
+            hero_images_json: JSON.stringify(data.hero_images || [])
+          };
+          localStorage.setItem("lbHeroSettings", JSON.stringify(current));
+        } catch {}
+        alert("Slider images uploaded");
+      } else {
+        alert((data && data.message) || "Failed to upload images");
+      }
+    })
+    .catch(() => {
+      alert("Failed to upload images");
+    });
+}
+
+function removeHeroImageItem(index){
+  fetch(`${API_BASE}/settings/hero-images/remove`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ index })
+  }).then(res => res.json())
+    .then(data => {
+      if (data && data.success) {
+        renderHeroImagesList(data.hero_images || []);
+        try {
+          const current = {
+            hero_title: heroTitleInput ? heroTitleInput.value.trim() : DEFAULT_HERO.title,
+            hero_highlight: heroHighlightInput ? heroHighlightInput.value.trim() : DEFAULT_HERO.highlight,
+            hero_subtitle: heroSubtitleInput ? heroSubtitleInput.value.trim() : DEFAULT_HERO.subtitle,
+            hero_image: heroImageInput ? heroImageInput.value.trim() : "",
+            hero_images_json: JSON.stringify(data.hero_images || [])
+          };
+          localStorage.setItem("lbHeroSettings", JSON.stringify(current));
+        } catch {}
+      } else {
+        alert((data && data.message) || "Failed to remove image");
+      }
+    })
+    .catch(() => alert("Failed to remove image"));
+}
+
+function clearHeroImages(){
+  fetch(`${API_BASE}/settings/hero-images/clear`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({})
+  }).then(res => res.json())
+    .then(data => {
+      if (data && data.success) {
+        renderHeroImagesList([]);
+        try {
+          const current = {
+            hero_title: heroTitleInput ? heroTitleInput.value.trim() : DEFAULT_HERO.title,
+            hero_highlight: heroHighlightInput ? heroHighlightInput.value.trim() : DEFAULT_HERO.highlight,
+            hero_subtitle: heroSubtitleInput ? heroSubtitleInput.value.trim() : DEFAULT_HERO.subtitle,
+            hero_image: heroImageInput ? heroImageInput.value.trim() : "",
+            hero_images_json: "[]"
+          };
+          localStorage.setItem("lbHeroSettings", JSON.stringify(current));
+        } catch {}
+        alert("Slider images cleared");
+      }
+    })
+    .catch(() => alert("Failed to clear images"));
+}
 function removeHeroImage(){
   fetch(`${API_BASE}/settings/hero-image/remove`, {
     method: "POST",
@@ -666,6 +815,12 @@ async function loadSettings() {
       if (heroHighlightInput) heroHighlightInput.value = data.global.hero_highlight || DEFAULT_HERO.highlight;
       if (heroSubtitleInput) heroSubtitleInput.value = data.global.hero_subtitle || DEFAULT_HERO.subtitle;
       if (heroImageInput) heroImageInput.value = data.global.hero_image || "";
+      if (data.global.hero_images_json) {
+        try {
+          const list = JSON.parse(data.global.hero_images_json);
+          if (Array.isArray(list)) renderHeroImagesList(list);
+        } catch {}
+      }
     }
   } catch (e) {
     // fallback to local storage
