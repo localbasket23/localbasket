@@ -360,6 +360,35 @@
       }
     }
 
+    /* Mobile: label + value same row, one detail per row */
+    @media (max-width: 1024px) {
+      #storeSection .form-group,
+      #bankSection .form-group {
+        display: grid;
+        grid-template-columns: minmax(120px, 40%) 1fr;
+        gap: 10px;
+        align-items: center;
+      }
+      #storeSection .form-group label,
+      #bankSection .form-group label {
+        margin: 0;
+        font-size: 12px;
+        color: var(--text-light);
+      }
+      #storeSection .form-group input,
+      #bankSection .form-group input {
+        margin: 0;
+      }
+      #storeSection .form-group.full-width,
+      #bankSection .form-group.full-width {
+        grid-template-columns: 1fr;
+      }
+      #storeSection .form-group.full-width label,
+      #bankSection .form-group.full-width label {
+        margin-bottom: 6px;
+      }
+    }
+
 </style>
 </head>
 <body>
