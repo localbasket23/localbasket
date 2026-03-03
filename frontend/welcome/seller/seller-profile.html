@@ -222,6 +222,27 @@
       }
     }
 
+
+    .section-card {
+      background: var(--bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .section-card:last-child { margin-bottom: 0; }
+    .form-section-title {
+      margin: 0 0 10px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-light);
+      font-weight: 700;
+    }
+    @media (max-width: 900px) {
+      .section-card { padding: 14px; }
+    }
+
 </style>
 </head>
 <body>
@@ -304,7 +325,9 @@
 
     <div class="form-card">
       <form id="profileForm">
-        <div class="form-grid">
+        <div class="section-card">
+          <div class="form-section-title">Store Details</div>
+          <div class="form-grid">
           <div class="form-section-title">Store Details</div>
           <div class="section-divider"></div>
           <div class="form-group">
@@ -331,7 +354,11 @@
             <label><i class="fas fa-map-marker-alt"></i> Store Address</label>
             <textarea id="address" rows="3" placeholder="Complete address..."></textarea>
           </div>
+          </div>
+        </div>
+        <div class="section-card">
           <div class="form-section-title">Bank Details</div>
+          <div class="form-grid">
           <div class="section-divider"></div>
           <div class="form-group">
             <label><i class="fas fa-user"></i> Account Holder Name</label>
@@ -354,7 +381,8 @@
             <input id="bankBranch" type="text" placeholder="Branch name">
           </div>
         </div>
-        
+        </div>
+
         <button id="saveProfileBtn" type="submit" class="btn-accept save-btn">
           <i class="fas fa-save"></i> Save Profile Changes
         </button>
