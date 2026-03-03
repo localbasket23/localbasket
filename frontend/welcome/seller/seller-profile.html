@@ -329,6 +329,24 @@
     .single-col { grid-template-columns: 1fr !important; }
     .single-col .form-group { grid-column: span 1 !important; }
 
+    /* Mobile: force single column for better readability */
+    @media (max-width: 900px) {
+      #storeSection .form-grid,
+      #bankSection .form-grid {
+        grid-template-columns: 1fr !important;
+      }
+      #storeSection .form-group,
+      #bankSection .form-group {
+        width: 100%;
+      }
+      #storeSection input,
+      #storeSection textarea,
+      #bankSection input,
+      #bankSection textarea {
+        width: 100%;
+      }
+    }
+
 </style>
 </head>
 <body>
