@@ -330,6 +330,46 @@
     .modal-actions .btn-reject {
       background: #fff;
     }
+
+    /* Dark mode fixes */
+    body.dark .modal-content {
+      background: #151728;
+      border-color: rgba(255,255,255,0.08);
+    }
+    body.dark .modal-head {
+      background: linear-gradient(180deg, #161a2b 0%, rgba(22,26,43,0.96) 100%);
+      border-bottom-color: rgba(255,255,255,0.08);
+    }
+    body.dark .modal-body {
+      background:
+        radial-gradient(120% 80% at 100% 0%, rgba(255, 138, 26, 0.08), transparent 60%),
+        radial-gradient(100% 80% at 0% 100%, rgba(59, 130, 246, 0.08), transparent 60%);
+    }
+    body.dark .form-group label { color: #e5e7eb; }
+    body.dark .form-group input,
+    body.dark .form-group select {
+      background: #0f1220;
+      color: #e5e7eb;
+      border-color: rgba(255,255,255,0.08);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+    }
+    body.dark .file-input-wrapper {
+      background: linear-gradient(180deg, rgba(18,23,39,0.9) 0%, rgba(18,23,39,0.6) 100%);
+      border-color: rgba(255, 138, 26, 0.35);
+    }
+    body.dark .modal-actions {
+      border-top-color: rgba(255,255,255,0.08);
+    }
+    body.dark .modal-actions .btn-reject {
+      background: transparent;
+      color: #fca5a5;
+      border-color: rgba(248,113,113,0.35);
+    }
+    body.dark .modal-close {
+      background: #0f1220;
+      color: #cbd5f5;
+      border-color: rgba(255,255,255,0.08);
+    }
     .modal-actions .btn-reject,
     .modal-actions .btn-accept {
       flex: 1;

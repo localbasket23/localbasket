@@ -243,6 +243,55 @@
       .section-card { padding: 14px; }
     }
 
+
+    .section-card {
+      background: var(--bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .section-card:last-child { margin-bottom: 0; }
+
+
+    @media (max-width: 900px) {
+      .section-card .form-grid { grid-template-columns: 1fr !important; }
+      .section-card .full-width { grid-column: span 1 !important; }
+    }
+
+
+    /* Dark mode fixes for profile */
+    body.dark .profile-header-card {
+      background: #151728;
+      border-color: rgba(255,255,255,0.08);
+      box-shadow: 0 18px 40px -30px rgba(0,0,0,0.6);
+    }
+    body.dark .profile-header-card::before {
+      background: linear-gradient(120deg, rgba(255,138,26,0.9), rgba(255,179,71,0.7));
+    }
+    body.dark .profile-title { color: #f8fafc; }
+    body.dark .profile-subtitle { color: #cbd5e1; }
+    body.dark .form-card {
+      background: #151728;
+      border-color: rgba(255,255,255,0.08);
+      box-shadow: 0 18px 40px -30px rgba(0,0,0,0.6);
+    }
+    body.dark .section-card {
+      background: #0f1220;
+      border-color: rgba(255,255,255,0.06);
+    }
+    body.dark .form-section-title { color: #cbd5e1; }
+    body.dark .form-group label { color: #e5e7eb; }
+    body.dark input, body.dark textarea {
+      background: #0b0f1a;
+      color: #e5e7eb;
+      border-color: rgba(255,255,255,0.08);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+    }
+    body.dark input::placeholder, body.dark textarea::placeholder { color: #94a3b8; }
+    body.dark .btn-reject { color: #fca5a5; border-color: rgba(248,113,113,0.35); }
+    body.dark .quick-pill.subtle { background: rgba(255,255,255,0.08); color: #e5e7eb; }
+
 </style>
 </head>
 <body>
@@ -328,7 +377,6 @@
         <div class="section-card">
           <div class="form-section-title">Store Details</div>
           <div class="form-grid">
-          <div class="form-section-title">Store Details</div>
           <div class="section-divider"></div>
           <div class="form-group">
             <label><i class="fas fa-user"></i> Owner Full Name</label>
@@ -359,7 +407,6 @@
         <div class="section-card">
           <div class="form-section-title">Bank Details</div>
           <div class="form-grid">
-          <div class="section-divider"></div>
           <div class="form-group">
             <label><i class="fas fa-user"></i> Account Holder Name</label>
             <input id="bankHolder" type="text" placeholder="Account holder name">
