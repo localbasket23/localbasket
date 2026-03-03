@@ -357,6 +357,13 @@
               linear-gradient(180deg, #ffffff 0%, #f7f9fc 62%, #f1f5f9 100%);
             border-bottom: 1px solid #e2e8f0;
         }
+        html:not(.lb-theme-dark) .hero.has-hero-image h1,
+        html:not(.lb-theme-dark) .hero.has-hero-image .hero-sub {
+            color: #0f172a;
+        }
+        html:not(.lb-theme-dark) .hero.has-hero-image .hero-sub {
+            color: #475569;
+        }
         html:not(.lb-theme-dark) .hero.has-hero-image{
             background:
               linear-gradient(120deg, rgba(255,255,255,0.72), rgba(241,245,249,0.9)),
@@ -370,6 +377,9 @@
             background: #f8fafc;
             border-color: #e2e8f0;
             color: #0f172a;
+        }
+        html:not(.lb-theme-dark) .hero-visual::after{
+            background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(241,245,249,0.35));
         }
         .hero-stats {
             display: grid;
