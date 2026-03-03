@@ -197,12 +197,6 @@ input:focus{border-color:var(--lav)}
   align-items:center;
   margin-top:8px;
 }
-.hero-upload-row input[type="file"]{
-  padding:8px;
-  background:var(--surface);
-  border:1px dashed var(--border);
-  border-radius:10px;
-}
 .hero-upload-btn{
   padding:10px 14px;
   border-radius:10px;
@@ -213,6 +207,17 @@ input:focus{border-color:var(--lav)}
   cursor:pointer;
 }
 .hero-upload-btn:hover{background:var(--lav-light)}
+.file-name{
+  font-size:12px;
+  color:var(--text-light);
+  padding:6px 10px;
+  border:1px dashed var(--border);
+  border-radius:10px;
+  background:var(--surface);
+  min-height:34px;
+  display:inline-flex;
+  align-items:center;
+}
 ul{list-style:none;padding-left:0;margin-top:10px}
 li{padding:6px 0;font-size:14px}
 .remove-btn{
@@ -344,7 +349,9 @@ li{padding:6px 0;font-size:14px}
       <label>Background Image URL</label>
       <input type="text" id="heroImageInput" placeholder="https://...">
       <div class="hero-upload-row">
-        <input type="file" id="heroImageFile" accept="image/*">
+        <input type="file" id="heroImageFile" accept="image/*" style="display:none">
+        <button class="hero-upload-btn" type="button" onclick="openHeroFilePicker()">Choose Image</button>
+        <span class="file-name" id="heroImageFileName">No file selected</span>
         <button class="hero-upload-btn" type="button" onclick="uploadHeroImage()">Upload Image</button>
       </div>
       <div class="hero-preview" id="heroPreview" style="--hero-preview-image: none;">
@@ -389,6 +396,7 @@ const heroHighlightInput=document.getElementById("heroHighlightInput");
 const heroSubtitleInput=document.getElementById("heroSubtitleInput");
 const heroImageInput=document.getElementById("heroImageInput");
 const heroImageFile=document.getElementById("heroImageFile");
+const heroImageFileName=document.getElementById("heroImageFileName");
 const heroPreview=document.getElementById("heroPreview");
 const heroPreviewTitle=document.getElementById("heroPreviewTitle");
 const heroPreviewSubtitle=document.getElementById("heroPreviewSubtitle");
@@ -491,6 +499,13 @@ heroTitleInput?.addEventListener("input", updateHeroPreview);
 heroHighlightInput?.addEventListener("input", updateHeroPreview);
 heroSubtitleInput?.addEventListener("input", updateHeroPreview);
 heroImageInput?.addEventListener("input", updateHeroPreview);
+heroImageFile?.addEventListener("change", () => {
+  if (heroImageFileName) {
+    heroImageFileName.textContent = heroImageFile.files && heroImageFile.files[0]
+      ? heroImageFile.files[0].name
+      : "No file selected";
+  }
+});
 
 function saveGlobalCommission(){
   const config=getCurrentCommissionConfig();
@@ -546,6 +561,10 @@ function saveHeroSettings(){
   });
 }
 
+function openHeroFilePicker(){
+  if (heroImageFile) heroImageFile.click();
+}
+
 function uploadHeroImage(){
   if (!heroImageFile || !heroImageFile.files || !heroImageFile.files[0]) {
     alert("Select an image first");
@@ -561,6 +580,7 @@ function uploadHeroImage(){
       if (data && data.success) {
         if (heroImageInput) heroImageInput.value = data.hero_image || "";
         if (heroImageFile) heroImageFile.value = "";
+        if (heroImageFileName) heroImageFileName.textContent = "No file selected";
         updateHeroPreview();
         alert("Hero image uploaded");
       } else {
@@ -580,6 +600,7 @@ function removeHeroImage(){
   }).then(() => {
     if (heroImageInput) heroImageInput.value = "";
     if (heroImageFile) heroImageFile.value = "";
+    if (heroImageFileName) heroImageFileName.textContent = "No file selected";
     updateHeroPreview();
     alert("Hero image removed");
   }).catch(() => {
