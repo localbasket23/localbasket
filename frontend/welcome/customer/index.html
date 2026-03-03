@@ -219,7 +219,7 @@
             max-width: 40%;
         }
         .hero-visual{
-            min-height: 330px;
+            height: 450px;
             border-radius: 20px;
             border: 1px solid rgba(148,163,184,0.28);
             background: linear-gradient(150deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
@@ -239,6 +239,36 @@
             background: linear-gradient(180deg, rgba(2,6,23,0.08), rgba(2,6,23,0.55));
         }
         .hero-visual.show{ display:block; }
+        .hero-slider{ display:block; }
+        .hero-slide{
+            position:absolute;
+            inset:0;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            transition: opacity 1.2s ease;
+        }
+        .hero-slide.active{ opacity: 1; }
+        .hero-dots{
+            position:absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 2;
+        }
+        .hero-dot{
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(148,163,184,0.5);
+            border: 1px solid rgba(15,23,42,0.5);
+        }
+        .hero-dot.active{
+            background: #fb923c;
+            border-color: rgba(251,146,60,0.8);
+        }
         .hero h1 {
             font-size: 52px;
             font-weight: 800; 
@@ -308,7 +338,7 @@
         @media (max-width: 992px){
             .hero-inner{ flex-direction: column; }
             .hero-left, .hero-visual{ max-width: 100%; flex: 1 1 auto; }
-            .hero-visual{ min-height: 220px; order: -1; }
+            .hero-visual{ height: 250px; order: -1; }
         }
         @media (max-width: 640px){
             .hero h1{ font-size: 32px; line-height: 1.2; }
@@ -2572,7 +2602,18 @@
           </div>
         </div>
       </div>
-      <div class="hero-visual" id="heroVisual" aria-label="Hero image"></div>
+      <div class="hero-visual hero-slider" id="heroVisual" aria-label="Hero image slider">
+        <div class="hero-slide active" style="background-image:url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1400&q=80')"></div>
+        <div class="hero-slide" style="background-image:url('https://images.unsplash.com/photo-1606787366850-de6330128bfc?auto=format&fit=crop&w=1400&q=80')"></div>
+        <div class="hero-slide" style="background-image:url('https://images.unsplash.com/photo-1580915411954-282cb1c3d3f5?auto=format&fit=crop&w=1400&q=80')"></div>
+        <div class="hero-slide" style="background-image:url('https://images.unsplash.com/photo-1506806732259-39c2d0268443?auto=format&fit=crop&w=1400&q=80')"></div>
+        <div class="hero-dots" aria-hidden="true">
+          <span class="hero-dot active"></span>
+          <span class="hero-dot"></span>
+          <span class="hero-dot"></span>
+          <span class="hero-dot"></span>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -2753,6 +2794,23 @@
   <script src="/js/auth.js"></script>
   <script src="/js/cart.js"></script>
   <script src="/js/theme.js"></script>
+  <script>
+    (function() {
+      const slides = Array.from(document.querySelectorAll(".hero-slide"));
+      const dots = Array.from(document.querySelectorAll(".hero-dot"));
+      if (!slides.length) return;
+      let idx = 0;
+      const show = (i) => {
+        slides.forEach((s, n) => s.classList.toggle("active", n === i));
+        dots.forEach((d, n) => d.classList.toggle("active", n === i));
+      };
+      show(idx);
+      setInterval(() => {
+        idx = (idx + 1) % slides.length;
+        show(idx);
+      }, 4500);
+    })();
+  </script>
 </body>
 </html>
 
