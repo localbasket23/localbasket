@@ -304,13 +304,16 @@ const applyHeroSettings = (settings = {}) => {
     const title = settings.hero_title || HERO_DEFAULTS.title;
     const highlight = settings.hero_highlight || HERO_DEFAULTS.highlight;
     const subtitle = settings.hero_subtitle || HERO_DEFAULTS.subtitle;
-    const image = String(settings.hero_image || "").trim();
+    let image = String(settings.hero_image || "").trim();
 
     applyHeroTitle(title, highlight);
     const heroSubtitleEl = dom.heroSubtitle();
     if (heroSubtitleEl && subtitle) heroSubtitleEl.textContent = subtitle;
 
     if (heroSection) {
+        if (image && image.startsWith("/")) {
+            image = `${window.location.origin}${image}`;
+        }
         if (image) {
             heroSection.classList.add("has-hero-image");
             heroSection.style.setProperty("--hero-image", `url('${image}')`);

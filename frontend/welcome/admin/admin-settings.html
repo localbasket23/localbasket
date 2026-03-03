@@ -190,6 +190,29 @@ input:focus{border-color:var(--lav)}
   color:var(--muted);
   margin-top:8px;
 }
+.hero-upload-row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  margin-top:8px;
+}
+.hero-upload-row input[type="file"]{
+  padding:8px;
+  background:var(--surface);
+  border:1px dashed var(--border);
+  border-radius:10px;
+}
+.hero-upload-btn{
+  padding:10px 14px;
+  border-radius:10px;
+  border:none;
+  background:var(--lav);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+}
+.hero-upload-btn:hover{background:var(--lav-light)}
 ul{list-style:none;padding-left:0;margin-top:10px}
 li{padding:6px 0;font-size:14px}
 .remove-btn{
@@ -320,13 +343,17 @@ li{padding:6px 0;font-size:14px}
       <input type="text" id="heroSubtitleInput" placeholder="Discover trusted neighborhood stores and connect directly with local sellers in minutes.">
       <label>Background Image URL</label>
       <input type="text" id="heroImageInput" placeholder="https://...">
+      <div class="hero-upload-row">
+        <input type="file" id="heroImageFile" accept="image/*">
+        <button class="hero-upload-btn" type="button" onclick="uploadHeroImage()">Upload Image</button>
+      </div>
       <div class="hero-preview" id="heroPreview" style="--hero-preview-image: none;">
         <h3 id="heroPreviewTitle">Freshness from your <span>Local Market</span>, to your doorstep.</h3>
         <p id="heroPreviewSubtitle">Discover trusted neighborhood stores and connect directly with local sellers in minutes.</p>
       </div>
       <div class="helper-note">Leave image empty to use default gradient background.</div>
       <button class="save-btn" onclick="saveHeroSettings()">Save Hero Banner</button>
-      <button class="save-btn" style="margin-top:10px;background:#ef4444" onclick="clearHeroImage()">Remove Image</button>
+      <button class="save-btn" style="margin-top:10px;background:#ef4444" onclick="removeHeroImage()">Remove Image</button>
     </div>
 
   </div>
@@ -361,6 +388,7 @@ const heroTitleInput=document.getElementById("heroTitleInput");
 const heroHighlightInput=document.getElementById("heroHighlightInput");
 const heroSubtitleInput=document.getElementById("heroSubtitleInput");
 const heroImageInput=document.getElementById("heroImageInput");
+const heroImageFile=document.getElementById("heroImageFile");
 const heroPreview=document.getElementById("heroPreview");
 const heroPreviewTitle=document.getElementById("heroPreviewTitle");
 const heroPreviewSubtitle=document.getElementById("heroPreviewSubtitle");
@@ -439,7 +467,10 @@ function updateHeroPreview(){
     heroPreviewSubtitle.textContent = String(subtitleRaw || DEFAULT_HERO.subtitle);
   }
   if (imageRaw) {
-    heroPreview.style.setProperty("--hero-preview-image", `url('${imageRaw}')`);
+    const resolved = imageRaw.startsWith("/")
+      ? `${window.location.origin}${imageRaw}`
+      : imageRaw;
+    heroPreview.style.setProperty("--hero-preview-image", `url('${resolved}')`);
   } else {
     heroPreview.style.setProperty("--hero-preview-image", "none");
   }
@@ -515,10 +546,45 @@ function saveHeroSettings(){
   });
 }
 
-function clearHeroImage(){
-  if (heroImageInput) heroImageInput.value = "";
-  updateHeroPreview();
-  saveHeroSettings();
+function uploadHeroImage(){
+  if (!heroImageFile || !heroImageFile.files || !heroImageFile.files[0]) {
+    alert("Select an image first");
+    return;
+  }
+  const fd = new FormData();
+  fd.append("hero_image", heroImageFile.files[0]);
+  fetch(`${API_BASE}/settings/hero-image`, {
+    method: "POST",
+    body: fd
+  }).then(res => res.json())
+    .then(data => {
+      if (data && data.success) {
+        if (heroImageInput) heroImageInput.value = data.hero_image || "";
+        if (heroImageFile) heroImageFile.value = "";
+        updateHeroPreview();
+        alert("Hero image uploaded");
+      } else {
+        alert((data && data.message) || "Failed to upload image");
+      }
+    })
+    .catch(() => {
+      alert("Failed to upload image");
+    });
+}
+
+function removeHeroImage(){
+  fetch(`${API_BASE}/settings/hero-image/remove`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({})
+  }).then(() => {
+    if (heroImageInput) heroImageInput.value = "";
+    if (heroImageFile) heroImageFile.value = "";
+    updateHeroPreview();
+    alert("Hero image removed");
+  }).catch(() => {
+    alert("Failed to remove image");
+  });
 }
 
 payoutCycle.addEventListener("change", updateHeroStats);

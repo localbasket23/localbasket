@@ -5,6 +5,7 @@ console.log("🔥 Admin Routes Loaded");
 
 /* ================= CONTROLLER ================= */
 const adminController = require("../controllers/adminController");
+const upload = require("../middlewares/upload");
 
 const {
   getDashboardStats,
@@ -25,6 +26,8 @@ const {
   savePayoutSettings,
   saveSystemSettings,
   saveHeroSettings,
+  saveHeroImage,
+  removeHeroImage,
   getAllSettings,
   getSellerAuditLogs,
   // ✅ CATEGORY
@@ -112,6 +115,10 @@ router.post("/settings/payout", savePayoutSettings);
 router.post("/settings/system", saveSystemSettings);
 // POST /api/admin/settings/hero
 router.post("/settings/hero", saveHeroSettings);
+// POST /api/admin/settings/hero-image
+router.post("/settings/hero-image", upload.single("hero_image"), saveHeroImage);
+// POST /api/admin/settings/hero-image/remove
+router.post("/settings/hero-image/remove", removeHeroImage);
 
 // GET /api/admin/settings
 router.get("/settings", getAllSettings);

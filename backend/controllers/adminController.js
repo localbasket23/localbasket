@@ -1056,6 +1056,46 @@ exports.saveHeroSettings = async (req, res) => {
   }
 };
 
+/* =====================================================
+   SAVE HERO IMAGE
+   POST /api/admin/settings/hero-image
+===================================================== */
+exports.saveHeroImage = async (req, res) => {
+  try {
+    await ensureSettingsColumns();
+    await ensureSettingsRow();
+    const file = req.file;
+    if (!file || !file.filename) {
+      return res.status(400).json({ success: false, message: "Image file required" });
+    }
+    const heroImagePath = `/uploads/${file.filename}`;
+    await query(
+      "UPDATE settings SET hero_image=? WHERE id=1",
+      [heroImagePath]
+    );
+    res.json({ success: true, hero_image: heroImagePath });
+  } catch (err) {
+    console.error("HERO IMAGE ERROR:", err);
+    res.status(500).json({ success: false, message: "Failed to save hero image" });
+  }
+};
+
+/* =====================================================
+   REMOVE HERO IMAGE
+   POST /api/admin/settings/hero-image/remove
+===================================================== */
+exports.removeHeroImage = async (req, res) => {
+  try {
+    await ensureSettingsColumns();
+    await ensureSettingsRow();
+    await query("UPDATE settings SET hero_image=NULL WHERE id=1");
+    res.json({ success: true });
+  } catch (err) {
+    console.error("HERO IMAGE REMOVE ERROR:", err);
+    res.status(500).json({ success: false, message: "Failed to remove hero image" });
+  }
+};
+
 
 
 
