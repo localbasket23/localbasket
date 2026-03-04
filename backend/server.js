@@ -17,9 +17,13 @@ const authRoutes = require("./routes/authRoutes");
 
 const app = express();
 
-// Allow all origins for cloud deployments behind different frontends.
+// CORS: allow configured frontend origins, fallback to all.
+const allowedOrigins = String(process.env.FRONTEND_ORIGIN || "")
+  .split(",")
+  .map(s => s.trim())
+  .filter(Boolean);
 app.use(cors({
-  origin: "*",
+  origin: allowedOrigins.length ? allowedOrigins : "*",
   credentials: true
 }));
 app.use(express.json({ limit: "10mb" }));
@@ -104,26 +108,5 @@ app.use((err, req, res, next) => {
     message: err.message || "Internal Server Error"
   });
 });
-
-if (require.main === module) {
-  const PORT = process.env.PORT || 5000;
-  const publicApiUrl = process.env.PUBLIC_API_URL || `http://0.0.0.0:${PORT}`;
-
-  const server = app.listen(PORT, "0.0.0.0", () => {
-    console.log("Server is running");
-    console.log(`API URL: ${publicApiUrl}`);
-    console.log("Health Check: /api/health");
-  });
-
-  process.on("unhandledRejection", (err) => {
-    console.error("Unhandled Promise Rejection:", err);
-    server.close(() => process.exit(1));
-  });
-
-  process.on("uncaughtException", (err) => {
-    console.error("Uncaught Exception:", err);
-    server.close(() => process.exit(1));
-  });
-}
 
 module.exports = app;
