@@ -50,6 +50,22 @@ function getSellerStatusRank(status) {
     return order.indexOf(normalizeSellerStatus(status));
 }
 
+function getPaymentClass(order) {
+    const paymentStatus = String(order?.payment_status || "").toUpperCase();
+    const paymentMethod = String(order?.payment_method || "").toUpperCase();
+    if (paymentStatus === "PAID" || paymentStatus === "SUCCESS") return "pay-paid";
+    if (paymentMethod === "COD" && (!paymentStatus || paymentStatus === "PENDING")) return "pay-cod-pending";
+    return "pay-pending";
+}
+
+function extractArea(address, fallback = "") {
+    const raw = String(address || "").trim();
+    if (!raw) return String(fallback || "").trim();
+    const parts = raw.split(",").map(p => p.trim()).filter(Boolean);
+    if (parts.length) return parts[0];
+    return raw;
+}
+
 function showNewOrderNotice(count) {
     if (!els.newOrderNotice || !count) return;
 
@@ -392,13 +408,21 @@ function createActiveRow(order) {
     const status = order.status ? normalizeSellerStatus(order.status) : "ACCEPTED";
     const currentRank = getSellerStatusRank(status);
     const isIncoming = status === "PLACED" || status === "PENDING";
+    const isAccepted = getSellerStatusRank(status) >= 0;
+    const areaName = extractArea(order.address, order.pincode || "N/A");
+    const paymentClass = getPaymentClass(order);
 
     return `
     <tr>
         <td data-label="Order ID"><b>#${order.id}</b></td>
         <td data-label="Customer">
             ${order.customer_name}<br>
-            <small style="color:var(--text-light)">${order.phone}</small>
+            ${
+              isAccepted
+                ? `<small style="color:var(--text-light)">${order.phone || "N/A"}</small><br>
+                   <small style="color:var(--text-light)">${order.address || "Address not available"}</small>`
+                : `<small style="color:var(--text-light)">Area: ${areaName || "N/A"}</small>`
+            }
         </td>
         <td data-label="Items">
             <div class="item-preview" title="${itemText}">
@@ -407,7 +431,7 @@ function createActiveRow(order) {
             <button class="badge view-all-btn" onclick='showItems(${JSON.stringify(cart)})'>+ View All</button>
         </td>
         <td data-label="Amount"><b>Rs. ${order.total_amount}</b></td>
-        <td data-label="Payment"><span class="badge">${order.payment_method}</span></td>
+        <td data-label="Payment"><span class="pay-badge ${paymentClass}">${order.payment_method} - ${order.payment_status || "PENDING"}</span></td>
         <td data-label="Current Status">
             ${isIncoming
                 ? `<span class="badge new-order-badge">New Order</span>`
@@ -437,14 +461,26 @@ function createHistoryRow(order) {
     const statusLabel = getOrderActionLabel(order);
     const color = status === "DELIVERED" ? "#00b894" : "#ff7675";
     const reason = (status === "REJECTED" || status === "CANCELLED") ? getOrderReason(order) : "";
+    const normalized = normalizeSellerStatus(status);
+    const isAccepted = getSellerStatusRank(normalized) >= 0;
+    const areaName = extractArea(order.address, order.pincode || "N/A");
+    const paymentClass = getPaymentClass(order);
 
     return `
     <tr>
         <td data-label="Order ID">#${order.id}</td>
         <td data-label="Date">${date}</td>
-        <td data-label="Customer">${order.customer_name}</td>
+        <td data-label="Customer">
+          ${order.customer_name || "Customer"}<br>
+          ${
+            isAccepted
+              ? `<small style="color:var(--text-light)">${order.phone || "N/A"}</small><br>
+                 <small style="color:var(--text-light)">${order.address || "Address not available"}</small>`
+              : `<small style="color:var(--text-light)">Area: ${areaName || "N/A"}</small>`
+          }
+        </td>
         <td data-label="Total"><b>Rs. ${order.total_amount}</b></td>
-        <td data-label="Payment">${order.payment_method}</td>
+        <td data-label="Payment"><span class="pay-badge ${paymentClass}">${order.payment_method} - ${order.payment_status || "PENDING"}</span></td>
         <td data-label="Final Status">
             <span style="color:${color}; font-weight:700;">${statusLabel}</span>
             ${reason ? `<div style="margin-top:6px; color:#b91c1c; font-size:12px;">Reason: ${escapeHtml(reason)}</div>` : ""}

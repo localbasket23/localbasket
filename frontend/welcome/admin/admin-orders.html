@@ -208,6 +208,33 @@
     .st-REJECTED { background: #ffebee; color: #e74c3c; }
     .st-CANCELLED { background: #fde2e2; color: #c0392b; }
     .st-OUT_FOR_DELIVERY { background: #ede9fe; color: #6d28d9; }
+    .pay-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      font-size: 11px;
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .pay-paid {
+      background: #dcfce7;
+      border-color: #86efac;
+      color: #166534;
+    }
+    .pay-cod-pending {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      color: #c2410c;
+    }
+    .pay-pending {
+      background: #e0f2fe;
+      border-color: #bae6fd;
+      color: #0369a1;
+    }
 
     .btn-view {
       background: var(--lav-soft); color: var(--lav); border: none;
@@ -451,13 +478,20 @@ function render(orders) {
     const oid = o.id || o.order_id;
     const status = String(o.status || "PLACED").toUpperCase();
     const method = resolvePaymentMethod(o);
+    const paymentStatus = String(o.payment_status || "").toUpperCase();
+    let payClass = "pay-pending";
+    if (paymentStatus === "PAID" || paymentStatus === "SUCCESS") {
+      payClass = "pay-paid";
+    } else if (method === "COD" && (!paymentStatus || paymentStatus === "PENDING")) {
+      payClass = "pay-cod-pending";
+    }
     tbody.innerHTML += `
       <tr>
         <td style="font-weight:700; color:var(--lav)">#${oid}</td>
         <td>${o.customer_name || "N/A"}</td>
         <td>${o.store_name || "N/A"}</td>
         <td style="font-weight:700">Rs. ${o.total_amount || 0}</td>
-        <td><small>${method}</small></td>
+        <td><span class="pay-badge ${payClass}">${method} - ${paymentStatus || "PENDING"}</span></td>
         <td><span class="status st-${status}">${status}</span></td>
         <td><button class="btn-view" onclick="openDetail(${oid})">View</button></td>
       </tr>
@@ -472,7 +506,7 @@ function render(orders) {
         <div style="font-size:15px; font-weight:600;">${o.customer_name || "N/A"}</div>
         <div class="order-meta">
           <span>Store: ${o.store_name || "N/A"}</span>
-          <span>Pay: ${method}</span>
+          <span>Pay: <span class="pay-badge ${payClass}">${method} - ${paymentStatus || "PENDING"}</span></span>
         </div>
         <div class="order-row">
           <span>Total</span>
@@ -511,6 +545,13 @@ async function openDetail(id) {
   const data = await res.json();
   const o = data.order || {};
   const method = resolvePaymentMethod(o);
+  const paymentStatus = String(o.payment_status || "").toUpperCase();
+  let payClass = "pay-pending";
+  if (paymentStatus === "PAID" || paymentStatus === "SUCCESS") {
+    payClass = "pay-paid";
+  } else if (method === "COD" && (!paymentStatus || paymentStatus === "PENDING")) {
+    payClass = "pay-cod-pending";
+  }
   const customerPhone = o.customer_phone || o.phone || "N/A";
   const customerAddress = o.customer_address || o.address || "N/A";
   const sellerPhone = o.seller_phone || o.store_phone || "N/A";
@@ -519,7 +560,7 @@ async function openDetail(id) {
   const html = `
     <div class="detail-row"><span>Order ID</span><span>#${orderId}</span></div>
     <div class="detail-row"><span>Customer</span><span>${o.customer_name || "N/A"}</span></div>
-    <div class="detail-row"><span>Payment</span><span>${method}</span></div>
+    <div class="detail-row"><span>Payment</span><span class="pay-badge ${payClass}">${method} - ${paymentStatus || "PENDING"}</span></div>
     <div class="detail-row"><span>Phone</span><span>${customerPhone}</span></div>
     <div class="detail-row"><span>Address</span><span>${customerAddress}</span></div>
     <div style="margin:15px 0; border-top: 1px solid var(--border);"></div>
