@@ -1104,6 +1104,14 @@ function renderOrderCard(order) {
   const isPrepaid =
     order.payment_method !== "COD" ||
     order.payment_status === "PAID";
+  const paymentStatus = String(order?.payment_status || "").toUpperCase();
+  const paymentMethod = String(order?.payment_method || "").toUpperCase();
+  let paymentClass = "pending";
+  if (paymentStatus === "PAID" || paymentStatus === "SUCCESS") {
+    paymentClass = "paid";
+  } else if (paymentMethod === "COD" && (!paymentStatus || paymentStatus === "PENDING")) {
+    paymentClass = "cod-pending";
+  }
 
   const storeName = pickFirstNonEmpty(
     order.store?.name,
@@ -1200,7 +1208,7 @@ function renderOrderCard(order) {
       <div class="card-footer">
         <div class="footer-meta">
           <div class="payment">
-            ${order.payment_method} - ${order.payment_status}
+            <span class="payment badge ${paymentClass}">${order.payment_method} - ${order.payment_status || "PENDING"}</span>
           </div>
           ${
             actionReason

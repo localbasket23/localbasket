@@ -367,6 +367,33 @@
       color: #334155;
       letter-spacing: 0.2px;
     }
+    .payment.badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      font-size: 11px;
+      font-weight: 800;
+      width: fit-content;
+    }
+    .payment.paid {
+      background: #dcfce7;
+      border-color: #86efac;
+      color: #166534;
+    }
+    .payment.cod-pending {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      color: #c2410c;
+    }
+    .payment.pending {
+      background: #e0f2fe;
+      border-color: #bae6fd;
+      color: #0369a1;
+    }
     .payment-alert {
       color: #b91c1c;
       font-weight: 800;
@@ -548,6 +575,26 @@
     }
     html.lb-theme-dark .payment {
       color: #dbe7fb;
+    }
+    html.lb-theme-dark .payment.badge {
+      background: rgba(15, 23, 42, 0.8);
+      border-color: rgba(148, 163, 184, 0.35);
+      color: #e2e8f0;
+    }
+    html.lb-theme-dark .payment.paid {
+      background: rgba(34, 197, 94, 0.2);
+      border-color: rgba(34, 197, 94, 0.45);
+      color: #bbf7d0;
+    }
+    html.lb-theme-dark .payment.cod-pending {
+      background: rgba(251, 146, 60, 0.2);
+      border-color: rgba(251, 146, 60, 0.5);
+      color: #fdba74;
+    }
+    html.lb-theme-dark .payment.pending {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: rgba(59, 130, 246, 0.45);
+      color: #bfdbfe;
     }
     html.lb-theme-dark .payment-alert {
       color: #fca5a5;
