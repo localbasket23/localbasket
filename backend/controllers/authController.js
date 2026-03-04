@@ -129,9 +129,9 @@ const sendEmailOtp = async ({ email, otp }) => {
     port,
     secure,
     auth: { user, pass },
-    connectionTimeout: 15000,
+    connectionTimeout: 10000,
     greetingTimeout: 10000,
-    socketTimeout: 20000
+    socketTimeout: 10000
   });
 
   try {
