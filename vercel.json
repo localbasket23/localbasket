@@ -1,14 +1,7 @@
 {
-  "version": 2,
   "functions": {
     "api/**/*.js": {
-      "runtime": "nodejs18.x"
+      "runtime": "@vercel/node"
     }
-  },
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "handle": "filesystem" },
-    { "src": "/", "dest": "/frontend/index.html" },
-    { "src": "/(.*)", "dest": "/frontend/$1" }
-  ]
+  }
 }
