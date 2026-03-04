@@ -129,21 +129,30 @@ const sendWhatsappOtp = async ({ phone, otp }) => {
 const sendEmailOtp = async ({ email, otp }) => {
   const user = String(process.env.EMAIL_USER || "localbasket.helpdesk@gmail.com").trim();
   const pass = String(process.env.EMAIL_PASS || "").trim();
+  const host = String(process.env.EMAIL_HOST || "smtp.gmail.com").trim();
+  const port = Number(process.env.EMAIL_PORT || 465);
+  const secure = String(process.env.EMAIL_SECURE || "").trim()
+    ? String(process.env.EMAIL_SECURE).toLowerCase() === "true"
+    : port === 465;
+  const from = String(process.env.EMAIL_FROM || `"LocalBasket" <${user}>`).trim();
 
   if (!user || !pass) {
     return { success: false, message: "Email SMTP config missing" };
   }
 
   const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
-    auth: { user, pass }
+    host,
+    port,
+    secure,
+    auth: { user, pass },
+    connectionTimeout: 15000,
+    greetingTimeout: 10000,
+    socketTimeout: 20000
   });
 
   try {
     await transporter.sendMail({
-      from: `"LocalBasket" <${user}>`,
+      from,
       to: email,
       subject: "LocalBasket OTP Verification",
       text: `Your LocalBasket OTP is ${otp}. Do not share it.`
