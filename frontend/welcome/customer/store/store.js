@@ -49,8 +49,8 @@ function resolveImageUrl(rawPath) {
 function getApiCandidates() {
   const candidates = [
     CONFIG.API_URL,
-    `${window.location.origin}/api`,
-    `${hostedBackend}/api`
+    `${hostedBackend}/api`,
+    ...(isVercelHost ? [] : [`${window.location.origin}/api`])
   ]
     .map((value) => String(value || "").trim().replace(/\/+$/, ""))
     .filter(Boolean);
@@ -78,6 +78,7 @@ async function fetchJsonOrThrow(pathname, options) {
       }
       return data;
     } catch (err) {
+      console.warn("API candidate failed:", url, err?.message || err);
       lastError = err;
     }
   }
