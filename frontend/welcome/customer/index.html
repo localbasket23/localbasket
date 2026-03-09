@@ -2225,7 +2225,15 @@
     gap: 10px;
   }
   .hero-visual {
-    display: none !important;
+    display: block !important;
+    width: 100%;
+    max-width: 100%;
+    flex: 1 1 auto;
+    order: -1;
+    height: 200px;
+    min-height: 200px;
+    border-radius: 18px;
+    margin-bottom: 2px;
   }
   .hero-card-kicker {
     font-size: 9px;
@@ -2537,6 +2545,11 @@
 
   .hero h1 {
     font-size: 24px;
+  }
+  .hero-visual {
+    height: 170px;
+    min-height: 170px;
+    border-radius: 16px;
   }
   .hero-card {
     padding: 14px 12px;
