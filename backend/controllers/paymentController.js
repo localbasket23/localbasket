@@ -1,12 +1,12 @@
 /*************************************
- * PAYMENT CONTROLLER — RAZORPAY
+ * PAYMENT CONTROLLER - RAZORPAY
  *************************************/
 
-const razorpay = require("../config/razorpay");
+const getRazorpay = require("../config/razorpay");
 
 exports.paymentStatus = (req, res) => {
-  const keyId = process.env.RAZORPAY_KEY_ID || "";
-  const keySecret = process.env.RAZORPAY_KEY_SECRET || "";
+  const keyId = String(process.env.RAZORPAY_KEY_ID || "").trim();
+  const keySecret = String(process.env.RAZORPAY_KEY_SECRET || "").trim();
   const mode = keyId.startsWith("rzp_live_")
     ? "live"
     : keyId.startsWith("rzp_test_")
@@ -22,38 +22,41 @@ exports.paymentStatus = (req, res) => {
   });
 };
 
-/**
- * CREATE RAZORPAY ORDER
- * POST /api/payment/create
- */
 exports.createPaymentOrder = async (req, res) => {
   try {
-    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    const keyId = String(process.env.RAZORPAY_KEY_ID || "").trim();
+    const keySecret = String(process.env.RAZORPAY_KEY_SECRET || "").trim();
+
+    if (!keyId || !keySecret) {
       return res.status(500).json({
         success: false,
         message: "Razorpay keys are not configured on server"
       });
     }
 
-    const { amount } = req.body;
-
-    // ✅ Validation
-    if (!amount || isNaN(amount) || amount <= 0) {
+    const { amount } = req.body || {};
+    if (!amount || Number.isNaN(Number(amount)) || Number(amount) <= 0) {
       return res.status(400).json({
         success: false,
         message: "Invalid amount"
       });
     }
 
-    // ✅ Razorpay order options
+    const razorpay = getRazorpay();
+    if (!razorpay) {
+      return res.status(500).json({
+        success: false,
+        message: "Razorpay client initialization failed"
+      });
+    }
+
     const options = {
-      amount: Math.round(amount * 100), // convert ₹ to paise
+      amount: Math.round(Number(amount) * 100),
       currency: "INR",
-      receipt: "lb_" + Date.now(),
+      receipt: `lb_${Date.now()}`,
       payment_capture: 1
     };
 
-    // ✅ Create order
     const order = await razorpay.orders.create(options);
 
     return res.status(200).json({
@@ -61,9 +64,8 @@ exports.createPaymentOrder = async (req, res) => {
       id: order.id,
       amount: order.amount,
       currency: order.currency,
-      key_id: process.env.RAZORPAY_KEY_ID || ""
+      key_id: keyId
     });
-
   } catch (error) {
     console.error("Razorpay Order Error:", error);
 
