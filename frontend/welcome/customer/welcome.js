@@ -30,6 +30,46 @@ const CONFIG = {
     DEFAULT_IMG: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80"
 };
 
+function getApiCandidates() {
+    const candidates = [
+        CONFIG.API_BASE,
+        `${hostedBackend}/api`,
+        ...(isVercelHost ? [] : [`${window.location.origin}/api`])
+    ]
+        .map((value) => String(value || "").trim().replace(/\/+$/, ""))
+        .filter(Boolean);
+
+    return [...new Set(candidates)];
+}
+
+async function fetchApiJson(pathname, options) {
+    const path = `/${String(pathname || "").replace(/^\/+/, "")}`;
+    let lastError = null;
+
+    for (const base of getApiCandidates()) {
+        const url = `${base}${path}`;
+        try {
+            const res = await fetch(url, options);
+            const text = await res.text();
+            let data = null;
+            try {
+                data = text ? JSON.parse(text) : {};
+            } catch {
+                throw new Error(`API returned non-JSON response (${res.status}) for ${url}`);
+            }
+            if (!res.ok) {
+                throw new Error(data?.message || `Request failed (${res.status}) for ${url}`);
+            }
+            return data;
+        } catch (err) {
+            console.warn("API candidate failed:", url, err?.message || err);
+            lastError = err;
+        }
+    }
+
+    throw lastError || new Error("Unable to reach API");
+}
+
 const WELCOME_BASE = (() => {
     const path = String(window.location.pathname || "").replace(/\\/g, "/");
     return path.includes("/frontend/") ? "/frontend" : "";
@@ -499,8 +539,7 @@ async function loadCategories() {
     if (!bar) return;
     bar.innerHTML = `<button class="cat-btn" data-category="all">All</button>`;
     try {
-        const res = await fetch(`${CONFIG.API_BASE}/admin/categories`);
-        const data = await res.json();
+        const data = await fetchApiJson("/admin/categories");
         const cats = Array.isArray(data.categories) ? data.categories : [];
         state.categories = cats.filter(c => c && (c.is_active === 1 || c.is_active === true));
         renderCategories();
@@ -957,13 +996,12 @@ async function fetchNearbyStoresByCoords(lat, lon) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), LOCATION_LOOKUP_TIMEOUT_MS);
     try {
-        const res = await fetch(`${CONFIG.API_BASE}/location/nearby-stores`, {
+        return await fetchApiJson("/location/nearby-stores", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ latitude: lat, longitude: lon }),
             signal: controller.signal
         });
-        return await res.json().catch(() => ({}));
     } finally {
         clearTimeout(timeoutId);
     }
@@ -1342,11 +1380,11 @@ async function loadStores(query, isPin = true) {
     updateStoreMeta(0, loadingLabel);
 
     try {
-        const url = hasPinFilter
-            ? `${CONFIG.API_BASE}/stores?pincode=${encodeURIComponent(normalizedQuery)}`
-            : `${CONFIG.API_BASE}/stores`;
-        const res = await fetch(url);
-        const data = await res.json();
+        const data = await fetchApiJson(
+            hasPinFilter
+                ? `/stores?pincode=${encodeURIComponent(normalizedQuery)}`
+                : "/stores"
+        );
         const rawStores = Array.isArray(data.stores) ? data.stores : (Array.isArray(data) ? data : []);
         const stores = rawStores.map(normalizeStorePayload).filter(Boolean);
 
@@ -1595,8 +1633,7 @@ async function fetchProductsForStoreCached(storeId) {
     if (!sid) return [];
     if (Array.isArray(state.storeProductsCache[sid])) return state.storeProductsCache[sid];
     try {
-        const res = await fetch(`${CONFIG.API_BASE}/products?storeId=${encodeURIComponent(sid)}`);
-        const data = await res.json();
+        const data = await fetchApiJson(`/products?storeId=${encodeURIComponent(sid)}`);
         const products = Array.isArray(data?.products) ? data.products : [];
         state.storeProductsCache[sid] = products;
         return products;
