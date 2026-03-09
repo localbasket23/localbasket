@@ -1,5 +1,6 @@
 const db = require("../db/connection");
 const util = require("util");
+const path = require("path");
 let PDFDocument = null;
 try {
   PDFDocument = require("pdfkit");
@@ -10,6 +11,16 @@ try {
 // promisify db.query
 const query = util.promisify(db.query).bind(db);
 let sellerColumnsCache = null;
+
+const getStoredFileRef = (file) => {
+  if (!file) return "";
+  const pathValue = String(file.path || "").trim();
+  if (/^https?:\/\//i.test(pathValue)) return pathValue;
+  const filenameValue = String(file.filename || "").trim();
+  if (filenameValue) return `/uploads/${filenameValue}`;
+  if (pathValue) return `/uploads/${path.basename(pathValue)}`;
+  return "";
+};
 
 const getSellerColumns = async () => {
   if (sellerColumnsCache) return sellerColumnsCache;
@@ -1067,16 +1078,15 @@ exports.saveHeroImage = async (req, res) => {
     await ensureSettingsColumns();
     await ensureSettingsRow();
     const file = req.file;
-    const stored = file?.path || file?.filename || "";
+    const stored = getStoredFileRef(file);
     if (!file || !stored) {
       return res.status(400).json({ success: false, message: "Image file required" });
     }
-    const heroImagePath = stored.startsWith("http") ? stored : `/uploads/${file.filename}`;
     await query(
       "UPDATE settings SET hero_image=? WHERE id=1",
-      [heroImagePath]
+      [stored]
     );
-    res.json({ success: true, hero_image: heroImagePath });
+    res.json({ success: true, hero_image: stored });
   } catch (err) {
     console.error("HERO IMAGE ERROR:", err);
     res.status(500).json({ success: false, message: "Failed to save hero image" });
@@ -1098,9 +1108,8 @@ exports.saveHeroImages = async (req, res) => {
       return res.status(400).json({ success: false, message: "Image files required" });
     }
     const paths = files
-      .map(f => f?.path || f?.filename || "")
-      .filter(Boolean)
-      .map(p => (p.startsWith("http") ? p : `/uploads/${p}`));
+      .map(getStoredFileRef)
+      .filter(Boolean);
     if (!paths.length) {
       return res.status(400).json({ success: false, message: "No valid images" });
     }

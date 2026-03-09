@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const path = require("path");
 
 const upload = require("../middlewares/upload");
 const db = require("../db/connection");
@@ -88,6 +89,16 @@ const getUploadedFilesByNames = (req, fieldNames = []) => {
   return out;
 };
 
+const getStoredFileRef = (file) => {
+  if (!file) return "";
+  const pathValue = String(file.path || "").trim();
+  if (/^https?:\/\//i.test(pathValue)) return pathValue;
+  const filenameValue = String(file.filename || "").trim();
+  if (filenameValue) return filenameValue;
+  if (pathValue) return path.basename(pathValue);
+  return "";
+};
+
 router.put("/products/:id", upload.array("image", 8), async (req, res) => {
   const productId = Number(req.params.id);
   const { name, price, stock, mrp, unit } = req.body;
@@ -100,7 +111,7 @@ router.put("/products/:id", upload.array("image", 8), async (req, res) => {
   }
 
   const images = getUploadedFilesByNames(req, ["image", "images", "images[]"])
-    .map((f) => f.filename)
+    .map((f) => getStoredFileRef(f))
     .filter(Boolean);
   const hasImages = images.length > 0;
   let hasImagesJson = false;

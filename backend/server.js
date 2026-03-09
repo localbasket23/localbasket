@@ -109,4 +109,11 @@ app.use((err, req, res, next) => {
   });
 });
 
+if (require.main === module) {
+  const port = Number(process.env.PORT || 5000);
+  app.listen(port, () => {
+    console.log(`LocalBasket backend listening on port ${port}`);
+  });
+}
+
 module.exports = app;

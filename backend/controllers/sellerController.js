@@ -33,9 +33,14 @@ const pickColumns = (columns, data) => {
 const normalizeUploadedFile = (file) => {
   if (!file) return null;
   const out = { ...file };
-  if (out.path && (!out.filename || !String(out.filename).startsWith("http"))) {
-    out.filename = out.path;
-  }
+  out.storedRef = (() => {
+    const pathValue = String(out.path || "").trim();
+    if (/^https?:\/\//i.test(pathValue)) return pathValue;
+    const filenameValue = String(out.filename || "").trim();
+    if (filenameValue) return filenameValue;
+    if (pathValue) return path.basename(pathValue);
+    return "";
+  })();
   return out;
 };
 
@@ -289,7 +294,7 @@ exports.register = async (req, res) => {
         message: "Bank details required"
       });
     }
-    if (!getUploadedFile(req, "bank_passbook")?.filename) {
+    if (!getUploadedFile(req, "bank_passbook")?.storedRef) {
       return res.status(400).json({
         success: false,
         message: "Bank passbook/cheque required"
@@ -340,10 +345,10 @@ exports.register = async (req, res) => {
       });
     }
 
-    const owner_id_doc = getUploadedFile(req, "owner_id_doc")?.filename || null;
-    const license_doc  = getUploadedFile(req, "license_doc")?.filename || null;
-    const bank_passbook = getUploadedFile(req, "bank_passbook")?.filename || null;
-    const store_photo  = getUploadedFile(req, "store_photo")?.filename || null;
+    const owner_id_doc = getUploadedFile(req, "owner_id_doc")?.storedRef || null;
+    const license_doc  = getUploadedFile(req, "license_doc")?.storedRef || null;
+    const bank_passbook = getUploadedFile(req, "bank_passbook")?.storedRef || null;
+    const store_photo  = getUploadedFile(req, "store_photo")?.storedRef || null;
 
     // Owner ID optional; admin will verify later
 
@@ -577,10 +582,10 @@ exports.resubmit = async (req, res) => {
       });
     }
 
-    const owner_id_doc = getUploadedFile(req, "owner_id_doc")?.filename || null;
-    const license_doc  = getUploadedFile(req, "license_doc")?.filename || null;
-    const bank_passbook = getUploadedFile(req, "bank_passbook")?.filename || null;
-    const store_photo  = getUploadedFile(req, "store_photo")?.filename || null;
+    const owner_id_doc = getUploadedFile(req, "owner_id_doc")?.storedRef || null;
+    const license_doc  = getUploadedFile(req, "license_doc")?.storedRef || null;
+    const bank_passbook = getUploadedFile(req, "bank_passbook")?.storedRef || null;
+    const store_photo  = getUploadedFile(req, "store_photo")?.storedRef || null;
 
     if (address && !isFullAddress(address)) {
       return res.status(400).json({
@@ -710,9 +715,10 @@ exports.addProduct = async (req, res) => {
 
   try {
     const columns = await ensureProductsImagesColumn();
-    const singleImage = getUploadedFile(req, "image")?.filename || null;
+    const singleImage = getUploadedFile(req, "image")?.storedRef || null;
     const multiImages = getUploadedFilesByNames(req, ["image", "images", "images[]"])
-      .map((f) => f.filename);
+      .map((f) => f.storedRef)
+      .filter(Boolean);
     const allImages = [...new Set([singleImage, ...multiImages].filter(Boolean))];
     const primaryImage = allImages[0] || null;
     const subCategory = String(req.body.sub_category || "").trim();
@@ -906,7 +912,7 @@ exports.updateProfile = async (req, res) => {
       });
     }
 
-    const storePhoto = getUploadedFile(req, "store_photo")?.filename || null;
+    const storePhoto = getUploadedFile(req, "store_photo")?.storedRef || null;
     const columns = await getSellerColumns();
     const data = pickColumns(columns, {
       owner_name: owner_name || null,
