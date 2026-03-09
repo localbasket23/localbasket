@@ -46,19 +46,43 @@ function resolveImageUrl(rawPath) {
   return `${base}/${encodeURI(path.replace(/^\/+/, ""))}`;
 }
 
-async function fetchJsonOrThrow(url, options) {
-  const res = await fetch(url, options);
-  const text = await res.text();
-  let data = null;
-  try {
-    data = text ? JSON.parse(text) : {};
-  } catch {
-    throw new Error(`API returned non-JSON response (${res.status}) for ${url}`);
+function getApiCandidates() {
+  const candidates = [
+    CONFIG.API_URL,
+    `${window.location.origin}/api`,
+    `${hostedBackend}/api`
+  ]
+    .map((value) => String(value || "").trim().replace(/\/+$/, ""))
+    .filter(Boolean);
+
+  return [...new Set(candidates)];
+}
+
+async function fetchJsonOrThrow(pathname, options) {
+  const path = `/${String(pathname || "").replace(/^\/+/, "")}`;
+  let lastError = null;
+
+  for (const base of getApiCandidates()) {
+    const url = `${base}${path}`;
+    try {
+      const res = await fetch(url, options);
+      const text = await res.text();
+      let data = null;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        throw new Error(`API returned non-JSON response (${res.status}) for ${url}`);
+      }
+      if (!res.ok) {
+        throw new Error(data?.message || `Request failed (${res.status}) for ${url}`);
+      }
+      return data;
+    } catch (err) {
+      lastError = err;
+    }
   }
-  if (!res.ok) {
-    throw new Error(data?.message || `Request failed (${res.status})`);
-  }
-  return data;
+
+  throw lastError || new Error("Unable to reach API");
 }
 
 const params = new URLSearchParams(window.location.search);
@@ -390,7 +414,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 ===================================================== */
 async function loadStore() {
   try {
-    const data = await fetchJsonOrThrow(`${CONFIG.API_URL}/stores/${storeId}`);
+    const data = await fetchJsonOrThrow(`/stores/${storeId}`);
 
     if (!data.success || !data.store) throw new Error(data.message || "Store not found");
 
@@ -489,7 +513,7 @@ async function loadProducts() {
   list.innerHTML = `<div class="empty-state">Loading products...</div>`;
 
   try {
-    const data = await fetchJsonOrThrow(`${CONFIG.API_URL}/products?storeId=${storeId}`);
+    const data = await fetchJsonOrThrow(`/products?storeId=${storeId}`);
 
     if (!data.success || !Array.isArray(data.products) || !data.products.length) {
       list.innerHTML = `<div class="empty-state">No products available</div>`;
@@ -910,7 +934,7 @@ async function submitProductReview() {
   const resolvedStoreId = product?.seller_id || Number(storeId) || null;
 
   try {
-    const data = await fetchJsonOrThrow(`${CONFIG.API_URL}/products/${state.activeProductId}/reviews`, {
+    const data = await fetchJsonOrThrow(`/products/${state.activeProductId}/reviews`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -931,7 +955,7 @@ async function submitProductReview() {
 
 async function fetchProductReviews(productId) {
   try {
-    const data = await fetchJsonOrThrow(`${CONFIG.API_URL}/products/${productId}/reviews`);
+    const data = await fetchJsonOrThrow(`/products/${productId}/reviews`);
     if (!data || !data.success) throw new Error(data?.message || "Failed");
 
     const reviews = Array.isArray(data.reviews) ? data.reviews : [];
