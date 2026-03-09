@@ -6,7 +6,6 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
-const db = require("./db/connection");
 
 const customerRoutes = require("./routes/customerRoutes");
 const sellerRoutes = require("./routes/sellerRoutes");
@@ -38,25 +37,8 @@ if (!fs.existsSync(uploadDir)) {
 }
 app.use("/uploads", express.static(uploadDir));
 
-app.get("/api/health", async (req, res) => {
-  try {
-    await db.promise().query("SELECT 1 AS ok");
-    res.json({
-      status: "ok",
-      env: !!process.env.DATABASE_URL
-    });
-  } catch (err) {
-    console.error("HEALTH CHECK DB ERROR:", {
-      message: err.message || String(err),
-      code: err.code || null,
-      errno: err.errno || null
-    });
-    res.status(500).json({
-      status: "error",
-      env: !!process.env.DATABASE_URL,
-      message: err.message || "Database connection failed"
-    });
-  }
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok" });
 });
 
 app.use("/api/customer", customerRoutes);
