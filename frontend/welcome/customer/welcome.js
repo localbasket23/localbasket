@@ -1342,7 +1342,8 @@ async function loadStores(query, isPin = true) {
             : `${CONFIG.API_BASE}/stores?area=${encodeURIComponent(query)}`;
         const res = await fetch(url);
         const data = await res.json();
-        const stores = Array.isArray(data.stores) ? data.stores : (Array.isArray(data) ? data : []);
+        const rawStores = Array.isArray(data.stores) ? data.stores : (Array.isArray(data) ? data : []);
+        const stores = rawStores.map(normalizeStorePayload).filter(Boolean);
 
         if (stores.length > 0) {
             state.stores = stores;
@@ -1370,6 +1371,42 @@ async function loadStores(query, isPin = true) {
         renderTopRatedStores([]);
         renderTopProducts([]);
     }
+}
+
+function normalizeStorePayload(store) {
+    if (!store || typeof store !== "object") return null;
+    const normalized = { ...store };
+    normalized.id = Number(store.id || store.store_id || 0) || String(store.id || store.store_id || "").trim();
+    normalized.store_name = store.store_name || store.storeName || store.name || "Store";
+    normalized.store_photo = store.store_photo || store.storePhoto || store.image || store.photo || "";
+    normalized.pincode = store.pincode || store.pin || "";
+    normalized.business_type =
+        store.business_type ||
+        store.category_name ||
+        store.category ||
+        store.category_slug ||
+        "General Store";
+    normalized.category_name = store.category_name || store.category || normalized.business_type;
+    normalized.category_slug = store.category_slug || slugify(normalized.category_name);
+    normalized.is_online = Number(
+        store.is_online ??
+        store.isOnline ??
+        store.online ??
+        0
+    ) ? 1 : 0;
+    normalized.avg_rating = Number(
+        store.avg_rating ??
+        store.rating ??
+        normalized.avg_rating ??
+        0
+    ) || 0;
+    normalized.rating_count = Number(
+        store.rating_count ??
+        store.reviews_count ??
+        store.reviewCount ??
+        0
+    ) || 0;
+    return normalized;
 }
 
 function showPincodeRequired() {
