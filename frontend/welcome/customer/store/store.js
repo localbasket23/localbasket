@@ -53,7 +53,7 @@ async function fetchJsonOrThrow(url, options) {
   try {
     data = text ? JSON.parse(text) : {};
   } catch {
-    throw new Error(`API returned non-JSON response (${res.status})`);
+    throw new Error(`API returned non-JSON response (${res.status}) for ${url}`);
   }
   if (!res.ok) {
     throw new Error(data?.message || `Request failed (${res.status})`);
