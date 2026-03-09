@@ -2,15 +2,11 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db/connection");
 
-/* =====================================================
-   GET STORES BY PINCODE (HOME PAGE)
-   URL: /api/stores?pincode=401101
-===================================================== */
 router.get("/", (req, res) => {
-  const { pincode } = req.query;
+  const pincode = String(req.query?.pincode || "").trim();
+  const hasPinFilter = /^[0-9]{6}$/.test(pincode);
 
-  /* 🔒 Validation */
-  if (!pincode || !/^\d{6}$/.test(String(pincode))) {
+  if (pincode && !hasPinFilter) {
     return res.status(400).json({
       success: false,
       stores: [],
@@ -22,7 +18,9 @@ router.get("/", (req, res) => {
     SELECT
       s.id AS id,
       s.store_name,
+      s.owner_name,
       s.store_photo,
+      s.store_photo AS image,
       s.phone,
       s.address,
       s.pincode,
@@ -41,14 +39,14 @@ router.get("/", (req, res) => {
       FROM store_ratings
       GROUP BY store_id
     ) r ON r.store_id = s.id
-    WHERE s.pincode = ?
-      AND s.status = 'APPROVED'
+    WHERE s.status = 'APPROVED'
+      ${hasPinFilter ? "AND s.pincode = ?" : ""}
     ORDER BY s.store_name ASC
   `;
 
-  db.query(sql, [pincode], (err, rows) => {
+  db.query(sql, hasPinFilter ? [pincode] : [], (err, rows) => {
     if (err) {
-      console.error("❌ STORE LIST ERROR:", err.sqlMessage);
+      console.error("STORE LIST ERROR:", err.sqlMessage || err.message || err);
       return res.status(500).json({
         success: false,
         stores: [],
@@ -56,22 +54,16 @@ router.get("/", (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       stores: rows || []
     });
   });
 });
 
-/* =====================================================
-   GET SINGLE STORE BY ID (STORE PAGE)
-   URL: /api/stores/:id
-===================================================== */
 router.get("/:id", (req, res) => {
-  const storeId = parseInt(req.params.id, 10);
-
-  /* 🔒 Validation */
-  if (isNaN(storeId) || storeId <= 0) {
+  const storeId = Number(req.params.id);
+  if (!storeId) {
     return res.status(400).json({
       success: false,
       message: "Invalid store id"
@@ -82,7 +74,9 @@ router.get("/:id", (req, res) => {
     SELECT
       s.id AS id,
       s.store_name,
+      s.owner_name,
       s.store_photo,
+      s.store_photo AS image,
       s.phone,
       s.address,
       s.pincode,
@@ -108,7 +102,7 @@ router.get("/:id", (req, res) => {
 
   db.query(sql, [storeId], (err, rows) => {
     if (err) {
-      console.error("❌ SINGLE STORE ERROR:", err.sqlMessage);
+      console.error("SINGLE STORE ERROR:", err.sqlMessage || err.message || err);
       return res.status(500).json({
         success: false,
         message: "Database error"
@@ -122,7 +116,7 @@ router.get("/:id", (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       store: rows[0]
     });
@@ -130,4 +124,3 @@ router.get("/:id", (req, res) => {
 });
 
 module.exports = router;
-

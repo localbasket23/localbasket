@@ -5,18 +5,19 @@
 const host = String(window.location.hostname || "").trim();
 const isPrivateLanHost = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(host);
 const isVercelHost = host.endsWith(".vercel.app");
+const hostedBackend = "https://localbasket-egpn.onrender.com";
 const IS_LOCAL_HOST =
     ["localhost", "127.0.0.1"].includes(host) ||
     isPrivateLanHost ||
     window.location.protocol === "file:";
 const localApiOrigin = window.location.protocol === "file:" ? "http://localhost:5000" : `${window.location.protocol}//${host}:5000`;
-const hostedOrigin = window.location.origin;
 const API_BASE_URL = (() => {
     const stored = (typeof localStorage !== "undefined" && localStorage.getItem("lbApiBase")) || "";
-    const byWindow = window.API_BASE_URL || window.LB_API_BASE || stored;
+    const byWindow = window.API_BASE_URL || window.LB_API_BASE || "";
     const byOrigin = window.location.protocol === "file:" ? localApiOrigin : window.location.origin;
-    const clean = String(byWindow || byOrigin || "").trim().replace(/\/+$/, "");
-    if (clean) window.API_BASE_URL = window.API_BASE_URL || clean;
+    const preferred = isVercelHost ? hostedBackend : (byWindow || stored || byOrigin);
+    const clean = String(preferred || hostedBackend).trim().replace(/\/+$/, "");
+    window.API_BASE_URL = clean;
     return clean;
 })();
 const CONFIG = {
@@ -256,7 +257,7 @@ function initApp() {
         if (state.location.pincode) {
             loadStores(state.location.pincode, true);
         } else {
-            showPincodeRequired();
+            loadStores("", false);
         }
     }
     setTimeout(() => {
@@ -1593,18 +1594,22 @@ async function loadStores(query, isPin = true) {
     const grid = dom.storeGrid();
     if (!grid) return;
 
-    if (!isPin || !/^[0-9]{6}$/.test(String(query || ""))) {
+    const normalizedQuery = String(query || "").trim();
+    const hasPinFilter = isPin && /^[0-9]{6}$/.test(normalizedQuery);
+
+    if (isPin && normalizedQuery && !hasPinFilter) {
         showPincodeRequired();
         return;
     }
 
-    grid.innerHTML = `<div class="loader">Searching stores in ${query}...</div>`;
-    updateStoreMeta(0, `Searching stores in ${query}...`);
+    const loadingLabel = hasPinFilter ? `Searching stores in ${normalizedQuery}...` : "Loading stores...";
+    grid.innerHTML = `<div class="loader">${loadingLabel}</div>`;
+    updateStoreMeta(0, loadingLabel);
 
     try {
-        const url = isPin
-            ? `${CONFIG.API_BASE}/stores?pincode=${encodeURIComponent(query)}`
-            : `${CONFIG.API_BASE}/stores?area=${encodeURIComponent(query)}`;
+        const url = hasPinFilter
+            ? `${CONFIG.API_BASE}/stores?pincode=${encodeURIComponent(normalizedQuery)}`
+            : `${CONFIG.API_BASE}/stores`;
         const res = await fetch(url);
         const data = await res.json();
         const stores = Array.isArray(data.stores) ? data.stores : (Array.isArray(data) ? data : []);
@@ -1621,8 +1626,9 @@ async function loadStores(query, isPin = true) {
             state.stores = [];
             updateHeroInsights();
             renderCategories();
-            grid.innerHTML = `<div class="empty-state">No stores found in ${query}</div>`;
-            updateStoreMeta(0, `No stores found in ${query}`);
+            const emptyText = hasPinFilter ? `No stores found in ${normalizedQuery}` : "No approved stores found";
+            grid.innerHTML = `<div class="empty-state">${emptyText}</div>`;
+            updateStoreMeta(0, emptyText);
             renderTopRatedStores([]);
             renderTopProducts([]);
         }

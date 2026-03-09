@@ -1,28 +1,19 @@
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const { cloudinary, hasCloudinary } = require("../config/cloudinary");
 
 let storage = null;
 
-const hasCloudinary =
-  !!process.env.CLOUDINARY_CLOUD_NAME &&
-  !!process.env.CLOUDINARY_API_KEY &&
-  !!process.env.CLOUDINARY_API_SECRET;
-
 if (hasCloudinary) {
-  const cloudinary = require("cloudinary").v2;
   const { CloudinaryStorage } = require("multer-storage-cloudinary");
-  cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-  });
   storage = new CloudinaryStorage({
     cloudinary,
-    params: {
+    params: (req, file) => ({
       folder: "localbasket",
-      resource_type: "auto"
-    }
+      resource_type: "auto",
+      public_id: `${Date.now()}-${path.parse(file.originalname || "upload").name}`
+    })
   });
 } else {
   const uploadDir = path.join(__dirname, "..", "uploads");
