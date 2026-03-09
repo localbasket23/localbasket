@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
+const db = require("./db/connection");
 
 const customerRoutes = require("./routes/customerRoutes");
 const sellerRoutes = require("./routes/sellerRoutes");
@@ -35,13 +36,35 @@ if (!fs.existsSync(uploadDir)) {
 }
 app.use("/uploads", express.static(uploadDir));
 
-app.get("/api/health", (req, res) => {
-  res.json({
-    success: true,
-    status: "OK",
-    message: "LocalBasket API running",
-    timestamp: new Date().toISOString()
-  });
+app.get("/api/health", async (req, res) => {
+  try {
+    const [rows] = await db.promise().query("SELECT 1 AS ok");
+    res.json({
+      success: true,
+      status: "OK",
+      message: "LocalBasket API running",
+      database: {
+        connected: true,
+        ok: Number(rows?.[0]?.ok || 0) === 1
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    console.error("HEALTH CHECK DB ERROR:", {
+      message: err.message || String(err),
+      code: err.code || null,
+      errno: err.errno || null
+    });
+    res.status(500).json({
+      success: false,
+      status: "ERROR",
+      message: "API running but database connection failed",
+      database: {
+        connected: false
+      },
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 app.use("/api/customer", customerRoutes);

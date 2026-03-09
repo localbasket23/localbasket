@@ -1,6 +1,7 @@
 const mysql = require("mysql2");
 
 const connectionUri = String(process.env.DATABASE_URL || "").trim();
+let parsedConnectionMeta = null;
 
 if (!connectionUri) {
   console.error("DATABASE_URL is not configured");
@@ -16,6 +17,12 @@ const buildPoolConfig = () => {
 
   try {
     const parsed = new URL(connectionUri);
+    parsedConnectionMeta = {
+      host: parsed.hostname,
+      port: Number(parsed.port || 3306),
+      user: decodeURIComponent(parsed.username || ""),
+      database: String(parsed.pathname || "").replace(/^\/+/, "")
+    };
     return {
       host: parsed.hostname,
       port: Number(parsed.port || 3306),
@@ -38,6 +45,24 @@ const buildPoolConfig = () => {
 };
 
 const pool = mysql.createPool(buildPoolConfig());
+
+pool.on("connection", () => {
+  if (parsedConnectionMeta) {
+    console.log(
+      `MySQL pool connected to ${parsedConnectionMeta.host}:${parsedConnectionMeta.port}/${parsedConnectionMeta.database}`
+    );
+  }
+});
+
+pool.on("error", (err) => {
+  console.error("MySQL pool error", {
+    message: err.message || String(err),
+    code: err.code || null,
+    errno: err.errno || null,
+    address: err.address || parsedConnectionMeta?.host || null,
+    port: err.port || parsedConnectionMeta?.port || null
+  });
+});
 
 let initStarted = false;
 
@@ -240,7 +265,15 @@ async function initDb() {
 
   pool.getConnection(async (err, connection) => {
     if (err) {
-      console.error("Database connection failed", err.message || err);
+      console.error("Database connection failed", {
+        message: err.message || String(err),
+        code: err.code || null,
+        errno: err.errno || null,
+        address: err.address || parsedConnectionMeta?.host || null,
+        port: err.port || parsedConnectionMeta?.port || null,
+        database: parsedConnectionMeta?.database || null,
+        user: parsedConnectionMeta?.user || null
+      });
       return;
     }
 
