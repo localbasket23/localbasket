@@ -6,14 +6,15 @@ const host = String(window.location.hostname || "").trim();
 const isPrivateLanHost = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(host);
 const isLocalHost = ["localhost", "127.0.0.1"].includes(host) || isPrivateLanHost || window.location.protocol === "file:";
 const isVercelHost = host.endsWith(".vercel.app");
+const hostedBackend = "https://localbasket-egpn.onrender.com";
 const localOrigin = window.location.protocol === "file:" ? "http://localhost:5000" : `${window.location.protocol}//${host}:5000`;
-const hostedOrigin = window.location.origin;
 const API_BASE_URL = (() => {
   const stored = (typeof localStorage !== "undefined" && localStorage.getItem("lbApiBase")) || "";
-  const byWindow = window.API_BASE_URL || window.LB_API_BASE || stored;
+  const byWindow = window.API_BASE_URL || window.LB_API_BASE || "";
   const byOrigin = window.location.protocol === "file:" ? localOrigin : window.location.origin;
-  const clean = String(byWindow || byOrigin || "").trim().replace(/\/+$/, "");
-  if (clean) window.API_BASE_URL = window.API_BASE_URL || clean;
+  const preferred = isVercelHost ? hostedBackend : (byWindow || stored || byOrigin);
+  const clean = String(preferred || hostedBackend).trim().replace(/\/+$/, "");
+  window.API_BASE_URL = clean;
   return clean;
 })();
 const CONFIG = {
@@ -43,6 +44,21 @@ function resolveImageUrl(rawPath) {
   else if (path.startsWith("/")) return `${API_BASE_URL}${path}`;
 
   return `${base}/${encodeURI(path.replace(/^\/+/, ""))}`;
+}
+
+async function fetchJsonOrThrow(url, options) {
+  const res = await fetch(url, options);
+  const text = await res.text();
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    throw new Error(`API returned non-JSON response (${res.status})`);
+  }
+  if (!res.ok) {
+    throw new Error(data?.message || `Request failed (${res.status})`);
+  }
+  return data;
 }
 
 const params = new URLSearchParams(window.location.search);
@@ -374,8 +390,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 ===================================================== */
 async function loadStore() {
   try {
-    const res = await fetch(`${CONFIG.API_URL}/stores/${storeId}`);
-    const data = await res.json();
+    const data = await fetchJsonOrThrow(`${CONFIG.API_URL}/stores/${storeId}`);
 
     if (!data.success || !data.store) throw new Error(data.message || "Store not found");
 
@@ -474,8 +489,7 @@ async function loadProducts() {
   list.innerHTML = `<div class="empty-state">Loading products...</div>`;
 
   try {
-    const res = await fetch(`${CONFIG.API_URL}/products?storeId=${storeId}`);
-    const data = await res.json();
+    const data = await fetchJsonOrThrow(`${CONFIG.API_URL}/products?storeId=${storeId}`);
 
     if (!data.success || !Array.isArray(data.products) || !data.products.length) {
       list.innerHTML = `<div class="empty-state">No products available</div>`;
@@ -896,7 +910,7 @@ async function submitProductReview() {
   const resolvedStoreId = product?.seller_id || Number(storeId) || null;
 
   try {
-    const res = await fetch(`${CONFIG.API_URL}/products/${state.activeProductId}/reviews`, {
+    const data = await fetchJsonOrThrow(`${CONFIG.API_URL}/products/${state.activeProductId}/reviews`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -907,7 +921,6 @@ async function submitProductReview() {
         store_id: resolvedStoreId
       })
     });
-    const data = await res.json();
     if (!data.success) throw new Error(data.message || "Failed");
     resetReviewForm();
     fetchProductReviews(state.activeProductId);
@@ -918,8 +931,7 @@ async function submitProductReview() {
 
 async function fetchProductReviews(productId) {
   try {
-    const res = await fetch(`${CONFIG.API_URL}/products/${productId}/reviews`);
-    const data = await res.json();
+    const data = await fetchJsonOrThrow(`${CONFIG.API_URL}/products/${productId}/reviews`);
     if (!data || !data.success) throw new Error(data?.message || "Failed");
 
     const reviews = Array.isArray(data.reviews) ? data.reviews : [];
