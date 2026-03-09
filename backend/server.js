@@ -40,16 +40,10 @@ app.use("/uploads", express.static(uploadDir));
 
 app.get("/api/health", async (req, res) => {
   try {
-    const [rows] = await db.promise().query("SELECT 1 AS ok");
+    await db.promise().query("SELECT 1 AS ok");
     res.json({
-      success: true,
-      status: "OK",
-      message: "LocalBasket API running",
-      database: {
-        connected: true,
-        ok: Number(rows?.[0]?.ok || 0) === 1
-      },
-      timestamp: new Date().toISOString()
+      status: "ok",
+      env: !!process.env.DATABASE_URL
     });
   } catch (err) {
     console.error("HEALTH CHECK DB ERROR:", {
@@ -58,13 +52,9 @@ app.get("/api/health", async (req, res) => {
       errno: err.errno || null
     });
     res.status(500).json({
-      success: false,
-      status: "ERROR",
-      message: "API running but database connection failed",
-      database: {
-        connected: false
-      },
-      timestamp: new Date().toISOString()
+      status: "error",
+      env: !!process.env.DATABASE_URL,
+      message: err.message || "Database connection failed"
     });
   }
 });
