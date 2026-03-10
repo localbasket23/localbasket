@@ -826,7 +826,7 @@ html.lb-theme-dark .lb-cart-checkout:disabled {
   position: relative;
 }
 .footer-glass { max-width: 1280px; margin: auto; }
-.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 26px; margin-bottom: 28px; }
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 22px; margin-bottom: 26px; }
 .footer-brand,
 .footer-col,
 .footer-news {
@@ -982,7 +982,7 @@ html.lb-theme-dark .lb-cart-checkout:disabled {
 /* Desktop: remove duplicate seller CTA from the bottom bar (seller card already has Start Selling). */
 @media (min-width: 769px) {
   .lb-footer-pro .footer-bottom-actions {
-    display: none;
+    display: none !important;
   }
   .lb-footer-pro .footer-bottom-row {
     justify-content: center;
@@ -992,6 +992,16 @@ html.lb-theme-dark .lb-cart-checkout:disabled {
     opacity: 0.85;
     font-size: 12px;
     text-decoration: none;
+  }
+}
+
+/* If the viewport is not wide enough for 5 columns, wrap gracefully. */
+@media (max-width: 1180px) {
+  .footer-grid {
+    grid-template-columns: 1.4fr 1fr 1fr;
+  }
+  .footer-brand {
+    grid-column: 1 / -1;
   }
 }
 
@@ -2336,9 +2346,30 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
   }
   html:not(.lb-theme-dark) .footer-social a,
   html:not(.lb-theme-dark) .footer-help-actions a {
-    background: rgba(255,255,255,0.9);
+    background: rgba(255,255,255,0.92) !important;
     border: 1px solid rgba(15, 23, 42, 0.10);
     color: #334155;
+  }
+  /* Remove colorful social tiles in light theme, keep minimal. */
+  html:not(.lb-theme-dark) .lb-footer-pro .footer-brand .footer-social a:nth-child(1),
+  html:not(.lb-theme-dark) .lb-footer-pro .footer-brand .footer-social a:nth-child(2),
+  html:not(.lb-theme-dark) .lb-footer-pro .footer-brand .footer-social a:nth-child(3),
+  html:not(.lb-theme-dark) .lb-footer-pro .footer-brand .footer-social a:nth-child(4) {
+    background: rgba(255,255,255,0.92) !important;
+  }
+  html:not(.lb-theme-dark) .lb-footer-pro .footer-seller .seller-kicker {
+    color: #f97316;
+  }
+  html:not(.lb-theme-dark) .lb-footer-pro .footer-seller .seller-copy {
+    color: #475569;
+  }
+  html:not(.lb-theme-dark) .lb-footer-pro .footer-seller .seller-points span {
+    background: rgba(255, 138, 26, 0.10);
+    border: 1px solid rgba(249, 115, 22, 0.16);
+    color: #0f172a;
+  }
+  html:not(.lb-theme-dark) .lb-footer-pro .footer-seller .seller-cta.primary {
+    box-shadow: 0 14px 26px -22px rgba(249, 115, 22, 0.55);
   }
   html:not(.lb-theme-dark) .news-box {
     background: rgba(255,255,255,0.9);
