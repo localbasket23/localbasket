@@ -820,26 +820,53 @@
 
       .chip-row::after {
         content: "";
-        width: 6px;
+        width: 10px;
         flex: 0 0 auto;
       }
 
       .chip-row {
-        gap: 8px;
+        gap: 10px;
         margin: 0 0 16px;
-        padding: 0 0 6px;
+        padding: 2px 2px 8px;
         flex-wrap: nowrap;
+        align-items: center;
       }
 
       .chip {
         min-height: 34px;
         font-size: 11px;
-        padding: 0 13px;
-        background: rgba(255, 255, 255, 0.9);
-        border-color: #eadbcb;
-        box-shadow: 0 12px 22px -20px rgba(124, 58, 25, 0.22);
+        padding: 0 16px;
+        background: rgba(255, 255, 255, 0.96);
+        border-color: #eadcca;
+        box-shadow: 0 10px 18px -18px rgba(124, 58, 25, 0.16);
         display: inline-flex;
         align-items: center;
+        justify-content: center;
+        color: #1e293b;
+        font-weight: 800;
+        letter-spacing: -0.1px;
+        transform: none;
+      }
+
+      .chip:hover {
+        transform: translateY(-1px);
+        border-color: #f2c896;
+        box-shadow: 0 12px 18px -18px rgba(255, 138, 0, 0.34);
+      }
+
+      .chip.active {
+        background: linear-gradient(135deg, #ff8a00, #ffab3d);
+        border-color: #ff8a00;
+        color: #ffffff;
+        box-shadow: 0 14px 22px -18px rgba(255, 138, 0, 0.54);
+      }
+
+      .chip.disabled {
+        opacity: 1;
+        color: #c4b8ab;
+        background: rgba(255, 255, 255, 0.62);
+        border-color: #eee3d7;
+        box-shadow: none;
       }
 
       .fav-btn {
