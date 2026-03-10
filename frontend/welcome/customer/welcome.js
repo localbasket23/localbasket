@@ -660,20 +660,16 @@ function updateAuthUI() {
 function updateMobileHomeShell() {
     const greetingEl = dom.mobileGreetingName();
     const addressEl = dom.mobileAddressLabel();
-    const avatarEl = dom.mobileUserAvatar();
     const authBtn = dom.mobileAuthBtn();
     const pinInput = dom.mobilePinInput();
-    const firstName = String(state.user?.name || "").trim().split(" ").filter(Boolean)[0] || "Shubham";
-    const initials = firstName.slice(0, 2).toUpperCase() || "LB";
+    const fullName = String(state.user?.name || "").trim() || "Customer";
+    const locationText =
+        state.location?.address && state.location.address !== "Select Location"
+            ? state.location.address
+            : (state.location?.pincode ? `Pincode: ${state.location.pincode}` : "Select your location");
 
-    if (greetingEl) greetingEl.textContent = `Morning, ${firstName}`;
-    if (addressEl) {
-        addressEl.textContent =
-            state.location?.address && state.location.address !== "Select Location"
-                ? state.location.address
-                : "What would you like to order?";
-    }
-    if (avatarEl) avatarEl.textContent = initials;
+    if (greetingEl) greetingEl.textContent = fullName;
+    if (addressEl) addressEl.textContent = locationText;
     if (pinInput && !pinInput.value) pinInput.value = String(state.location?.pincode || "").trim();
     if (authBtn) {
         if (state.user) {

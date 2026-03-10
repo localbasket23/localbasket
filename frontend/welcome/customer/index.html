@@ -2753,13 +2753,17 @@
     height: 44px;
     border-radius: 16px;
     background: linear-gradient(135deg, #ff8a1a, #ffd15d);
-    color: #fff;
     display: grid;
     place-items: center;
-    font-size: 14px;
-    font-weight: 800;
+    overflow: hidden;
     box-shadow: 0 16px 24px -18px rgba(255, 138, 26, 0.9);
     flex: 0 0 auto;
+  }
+
+  .mobile-user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .mobile-user-copy {
@@ -3090,11 +3094,13 @@
   <section class="mobile-home-shell" aria-label="Mobile home">
     <div class="mobile-home-topbar">
       <div class="mobile-user">
-        <div class="mobile-user-avatar" id="mobileUserAvatar">LB</div>
+        <div class="mobile-user-avatar" id="mobileUserAvatar">
+          <img src="/welcome/logo2.png?v=20260303" alt="LocalBasket logo">
+        </div>
         <div class="mobile-user-copy">
           <p class="mobile-eyebrow">Morning</p>
-          <h2 id="mobileGreetingName">Shop local today</h2>
-          <span id="mobileAddressLabel">What would you like to order?</span>
+          <h2 id="mobileGreetingName">Customer Name</h2>
+          <span id="mobileAddressLabel">Location</span>
         </div>
       </div>
       <button class="mobile-auth-btn" id="mobileAuthBtn" type="button" onclick="openAuth()" aria-label="Login">
