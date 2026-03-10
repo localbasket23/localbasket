@@ -618,6 +618,12 @@ html.lb-theme-dark .user-menu button[data-action="logout"] {
   font-size: 13px;
   color: #0f172a;
 }
+
+#locTextMobile::before {
+  content: "\1F4CD";
+  margin-right: 6px;
+  font-size: 11px;
+}
 #locText .lb-loc-marquee-track,
 #locTextMobile .lb-loc-marquee-track {
   display: inline-flex;
