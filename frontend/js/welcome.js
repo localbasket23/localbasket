@@ -2184,14 +2184,20 @@ function renderRecentStores() {
             </div>
             <div class="store-body">
                 <h3>${store.store_name}</h3>
-                <div class="store-cat">${store.business_type || "General Store"}</div>
-                <div class="meta-row">
-                    <span class="meta-pill">Pin: ${store.pincode || "-"}</span>
-                    ${store.rating > 0 ? `<span class="meta-pill">Rating: ${store.rating.toFixed(1)}</span>` : `<span class="meta-pill">Rating: New</span>`}
+                <div class="store-meta">
+                    <strong>${formatRecentStoreRating(store)}</strong>
+                    <span>&bull;</span>
+                    <span>${store.business_type || "General Store"}</span>
                 </div>
             </div>
         </div>
     `).join("");
+}
+
+function formatRecentStoreRating(store) {
+    const rating = getStoreRating(store);
+    if (!rating || rating.label === "New") return "\u2B50 New";
+    return `\u2B50 ${rating.value.toFixed(1)}`;
 }
 
 function renderRatingChip(store) {

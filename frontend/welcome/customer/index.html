@@ -958,13 +958,13 @@
         .recent-wrap {
             margin-top: 24px;
             margin-bottom: 10px;
-            border: 1px solid #cfd9eb;
-            border-radius: 20px;
+            border: 1px solid #f3dcc6;
+            border-radius: 24px;
             padding: 16px 16px 14px;
             background:
-                radial-gradient(circle at 88% -20%, rgba(255, 138, 26, 0.18), transparent 40%),
-                linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-            box-shadow: 0 18px 32px -24px rgba(30, 41, 59, 0.45);
+                radial-gradient(circle at 88% -20%, rgba(255, 138, 26, 0.14), transparent 42%),
+                linear-gradient(180deg, #fffdfb 0%, #fff6ee 100%);
+            box-shadow: 0 18px 30px -26px rgba(30, 41, 59, 0.26);
             position: relative;
             overflow: hidden;
         }
@@ -974,22 +974,24 @@
             left: 0;
             top: 0;
             bottom: 0;
-            width: 5px;
+            width: 4px;
             background: linear-gradient(180deg, #ff8a1a, #f97316);
         }
         .recent-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
             position: relative;
             z-index: 1;
             padding-left: 2px;
+            gap: 12px;
         }
         .recent-head h3 {
-            font-size: 19px;
+            margin: 0;
+            font-size: 18px;
             font-weight: 800;
-            letter-spacing: -0.35px;
+            letter-spacing: -0.4px;
             display: inline-flex;
             align-items: center;
             gap: 10px;
@@ -1007,15 +1009,16 @@
             padding: 5px 9px;
         }
         .recent-clear {
-            border: 1px solid #fdba74;
-            background: #fff7ed;
+            border: 1px solid #f7c89b;
+            background: rgba(255, 255, 255, 0.88);
             color: #c2410c;
             border-radius: 999px;
-            padding: 8px 14px;
+            padding: 8px 16px;
             font-size: 12px;
             font-weight: 800;
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+            flex: 0 0 auto;
         }
         .recent-clear:hover {
             transform: translateY(-1px);
@@ -1025,52 +1028,67 @@
         .recent-grid {
             display: grid;
             grid-auto-flow: column;
-            grid-auto-columns: minmax(250px, 280px);
-            gap: 14px;
+            grid-auto-columns: 168px;
+            gap: 12px;
             overflow-x: auto;
             overflow-y: hidden;
             padding: 2px 2px 10px;
             scroll-snap-type: x mandatory;
-            scrollbar-width: thin;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .recent-grid::-webkit-scrollbar {
+            display: none;
         }
         .recent-grid .store-card {
             min-width: 0;
-            max-width: 280px;
-            border-color: #dbe4f2;
-            background: linear-gradient(180deg, #ffffff 0%, #f9fbff 100%);
-            box-shadow: 0 18px 24px -20px rgba(30, 41, 59, 0.55);
+            max-width: 168px;
+            border-color: #efdccd;
+            background: #ffffff;
+            box-shadow: 0 16px 24px -24px rgba(30, 41, 59, 0.3);
             scroll-snap-align: start;
             transform-origin: center;
+            border-radius: 18px;
+            overflow: hidden;
         }
         .recent-grid .store-card:hover {
-            border-color: #93c5fd;
-            box-shadow: 0 22px 30px -20px rgba(37, 99, 235, 0.4);
+            border-color: #ffcf9f;
+            box-shadow: 0 18px 24px -22px rgba(255, 138, 0, 0.32);
         }
         .recent-grid .store-img-wrap {
-            height: 148px;
+            height: 106px;
         }
         .recent-grid .store-body {
-            padding: 14px;
+            padding: 10px 11px 12px;
         }
         .recent-grid .store-body h3 {
-            font-size: 17px;
-            margin-bottom: 10px;
-            line-height: 1.22;
+            font-size: 14px;
+            margin-bottom: 6px;
+            line-height: 1.28;
             display: -webkit-box;
             -webkit-box-orient: vertical;
             -webkit-line-clamp: 2;
             overflow: hidden;
-            min-height: 48px;
+            min-height: 36px;
         }
-        .recent-grid .store-cat {
-            background: #eff6ff;
-            border-color: #bfdbfe;
-            color: #1e3a8a;
+        .recent-grid .store-meta {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .recent-grid .meta-pill {
-            background: #f1f5f9;
-            border-color: #dbe7f5;
-            color: #475569;
+        .recent-grid .store-meta strong {
+            color: #f59e0b;
+            font-weight: 800;
+        }
+        .recent-grid .store-meta span:last-child {
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .insight-section {
             margin: 0;
@@ -2523,7 +2541,25 @@
   .top-rated-grid { grid-template-columns: 1fr; }
   .top-products-row { grid-auto-columns: minmax(220px, 82vw); }
   .tp-img { height: 98px; }
-  .recent-grid { grid-auto-columns: minmax(240px, 86vw); }
+  .recent-grid { grid-auto-columns: 166px; }
+  .recent-grid .store-card {
+    max-width: 166px;
+    border-radius: 18px;
+  }
+  .recent-grid .store-img-wrap {
+    height: 104px;
+  }
+  .recent-grid .store-body {
+    padding: 10px 11px 12px;
+  }
+  .recent-grid .store-body h3 {
+    font-size: 13px;
+    min-height: 34px;
+    margin-bottom: 5px;
+  }
+  .recent-grid .store-meta {
+    font-size: 10px;
+  }
   .store-card {
     border-radius: 14px;
   }
@@ -2690,7 +2726,24 @@
     grid-template-columns: 1fr;
     gap: 10px;
   }
-  .recent-grid { grid-auto-columns: minmax(220px, 88vw); }
+  .recent-grid { grid-auto-columns: 152px; }
+  .recent-grid .store-card {
+    max-width: 152px;
+  }
+  .recent-grid .store-img-wrap {
+    height: 96px;
+  }
+  .recent-grid .store-body {
+    padding: 9px 10px 11px;
+  }
+  .recent-grid .store-body h3 {
+    font-size: 12.5px;
+    min-height: 32px;
+  }
+  .recent-grid .store-meta {
+    font-size: 9.5px;
+    gap: 4px;
+  }
   .store-card {
     max-width: none;
   }
