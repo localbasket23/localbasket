@@ -223,6 +223,7 @@ const dom = {
     storeGrid: () => getEl("storeGrid"),
     storeSearchInput: () => getEl("storeSearchInput"),
     mobilePinInput: () => getEl("mobilePinInput"),
+    mobileGreetingEyebrow: () => getEl("mobileGreetingEyebrow"),
     mobileGreetingName: () => getEl("mobileGreetingName"),
     mobileAddressLabel: () => getEl("mobileAddressLabel"),
     mobileLocationSummary: () => getEl("mobileLocationSummary"),
@@ -318,11 +319,24 @@ function initApp() {
 }
 
 function updateMobileHomeShell() {
+    const mobileEyebrow = dom.mobileGreetingEyebrow();
     const mobileName = dom.mobileGreetingName();
     const mobileAddress = dom.mobileAddressLabel();
     const mobileAuthBtn = dom.mobileAuthBtn();
     const mobileAvatar = dom.mobileUserAvatar();
     const user = normalizeUser(safeParse(localStorage.getItem("lbUser"), null));
+    const hour = new Date().getHours();
+    const greeting = hour < 12
+        ? "Good Morning"
+        : hour < 17
+            ? "Good Afternoon"
+            : hour < 21
+                ? "Good Evening"
+                : "Good Night";
+
+    if (mobileEyebrow) {
+        mobileEyebrow.textContent = greeting;
+    }
 
     if (mobileName) {
         mobileName.textContent = String(user?.name || "Customer").trim() || "Customer";
