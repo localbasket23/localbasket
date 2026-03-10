@@ -600,6 +600,15 @@
             max-width: 100%;
         }
 
+        /* Hide mobile-only chrome on laptop/desktop (it is enabled inside the mobile media queries). */
+        .mobile-section-head,
+        .mobile-category-bar,
+        .mobile-section-filter,
+        .mobile-filter-panel,
+        .mobile-sort-row {
+            display: none;
+        }
+
         .category-bar {
             display: flex;
             flex-wrap: nowrap;
@@ -661,6 +670,15 @@
             box-shadow: none;
         }
         .cat-btn.disabled::before { opacity: 0; }
+
+        /* Laptop/desktop: show categories without horizontal scrolling when possible. */
+        @media (min-width: 1024px) {
+            .category-bar {
+                flex-wrap: wrap;
+                overflow-x: visible;
+                row-gap: 12px;
+            }
+        }
 
         .cta-strip {
             margin: 22px auto 30px; max-width: 1080px; padding: 18px 20px; border-radius: 18px;
