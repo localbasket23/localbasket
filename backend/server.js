@@ -33,8 +33,15 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // Serve frontend locally from `frontend/` so UI changes reflect without redeploy.
+// Disable caching to avoid stale HTML/JS during development and debugging.
 // API routes are mounted under `/api/*`, so static assets won't clash.
-app.use(express.static(path.join(__dirname, "..", "frontend")));
+app.use(express.static(path.join(__dirname, "..", "frontend"), {
+  etag: false,
+  lastModified: false,
+  setHeaders: (res) => {
+    res.setHeader("Cache-Control", "no-store");
+  }
+}));
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });

@@ -153,7 +153,7 @@
 
 document.addEventListener("DOMContentLoaded", async () => {
   const path = window.location.pathname;
-  const LB_COMPONENTS_VERSION = "20260310a";
+  const LB_COMPONENTS_VERSION = "20260310b";
 
   if (
     path.includes("seller") ||
@@ -246,14 +246,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const target = document.getElementById("mobileHeaderAddress");
       if (target) target.textContent = String(text || "Select Location");
     };
-    const getDefaultTimeZone = () => {
-      try {
-        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        return String(tz || "").trim() || "Asia/Kolkata";
-      } catch {
-        return "Asia/Kolkata";
-      }
-    };
+    const getDefaultTimeZone = () => "Asia/Kolkata";
     const isValidTimeZone = (timeZone) => {
       try {
         new Intl.DateTimeFormat("en-US", { timeZone: String(timeZone || "") }).format(new Date(0));

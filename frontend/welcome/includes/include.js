@@ -364,14 +364,7 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
   window.lbSetLocMobileText = setMobileLocationTicker;
   window.lbSetLocDesktopText = setDesktopLocationTicker;
 
-  const getDefaultTimeZone = () => {
-    try {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      return String(tz || "").trim() || "Asia/Kolkata";
-    } catch {
-      return "Asia/Kolkata";
-    }
-  };
+  const getDefaultTimeZone = () => "Asia/Kolkata";
   const isValidTimeZone = (timeZone) => {
     try {
       new Intl.DateTimeFormat("en-US", { timeZone: String(timeZone || "") }).format(new Date(0));

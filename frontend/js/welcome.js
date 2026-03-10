@@ -327,10 +327,7 @@ function updateMobileHomeShell() {
     const user = normalizeUser(safeParse(localStorage.getItem("lbUser"), null));
     const hour = (() => {
         try {
-            const fallbackTz = (() => {
-                try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata"; } catch { return "Asia/Kolkata"; }
-            })();
-            const tz = String(fallbackTz || "").trim() || "Asia/Kolkata";
+            const tz = "Asia/Kolkata";
             const parts = new Intl.DateTimeFormat("en-US", { hour: "2-digit", hour12: false, timeZone: tz }).formatToParts(new Date());
             const hourPart = parts.find((p) => p.type === "hour")?.value;
             const value = Number(hourPart);
