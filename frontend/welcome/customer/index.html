@@ -2424,6 +2424,10 @@
     font-size: 12px;
     font-weight: 700;
   }
+  .mobile-filter-trigger,
+  .mobile-filter-panel {
+    display: none;
+  }
   .tool-search::before {
     left: 11px;
     width: 9px;
@@ -3151,6 +3155,22 @@
     display: none;
   }
 
+  .mobile-section-filter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 84px;
+    min-height: 38px;
+    padding: 0 14px;
+    border: 1px solid #c7d2e3;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 800;
+    box-shadow: 0 8px 18px -18px rgba(15, 23, 42, 0.35);
+  }
+
   .mobile-sort-row,
   .open-now-toggle {
     display: none !important;
@@ -3167,17 +3187,6 @@
 
   .mobile-filter-trigger {
     display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 84px;
-    min-height: 38px;
-    border: 1px solid #c7d2e3;
-    border-radius: 10px;
-    background: #ffffff;
-    color: #334155;
-    font-size: 11px;
-    font-weight: 800;
-    box-shadow: 0 8px 18px -18px rgba(15, 23, 42, 0.35);
   }
 
   .mobile-filter-panel {
@@ -3375,12 +3384,12 @@
 
     <div class="section-head" id="storesSection">
       <h2 class="section-title">Top Stores Near You</h2>
+      <button type="button" class="mobile-filter-trigger mobile-section-filter" id="mobileFilterTrigger" aria-expanded="false" aria-controls="mobileFilterPanel">Filter</button>
     </div>
       <div class="store-tools">
         <label class="tool-search">
           <input type="search" id="storeSearchInput" name="store_query" placeholder="Search store name or category" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false">
         </label>
-      <button type="button" class="mobile-filter-trigger" id="mobileFilterTrigger" aria-expanded="false" aria-controls="mobileFilterPanel">Filter</button>
       <select class="tool-select" id="storeSortSelect">
         <option value="relevance">Sort: Relevance</option>
         <option value="rating">Sort: Rating</option>
