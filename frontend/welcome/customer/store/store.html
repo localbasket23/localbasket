@@ -972,7 +972,7 @@
         border: none;
       }
       .pv-media { min-height: 180px; padding: 16px; }
-      .pv-body { padding: 14px; gap: 10px; }
+      .pv-body { padding: 14px 14px 120px; gap: 10px; }
       .pv-title { font-size: 18px; }
       .pv-desc { font-size: 13px; }
       .pv-review-form textarea { min-height: 58px; }
@@ -1243,30 +1243,46 @@
         top: auto !important;
         width: 90%;
         max-width: 420px;
+        min-height: 56px;
         margin: 0 auto;
         justify-content: space-between;
         align-items: center;
         background: linear-gradient(135deg, #ff8a00, #ff9f2f);
-        border-radius: 16px;
-        padding: 12px 14px;
+        border-radius: 18px;
+        padding: 0 18px;
         box-shadow: 0 18px 24px -18px rgba(249, 115, 22, 0.45);
         z-index: 4000;
         touch-action: auto;
       }
       .mobile-float-bar #mInfo {
         display: block;
+        min-width: 0;
       }
       .mobile-float-bar #mItemCount,
       .mobile-float-bar #mTotalAmount {
         color: #ffffff;
       }
+      .mobile-float-bar #mItemCount {
+        font-size: 18px;
+        line-height: 1;
+      }
+      .mobile-float-bar #mTotalAmount {
+        margin-top: 2px;
+        font-size: 13px;
+        font-weight: 700;
+        opacity: 0.95;
+      }
       .mobile-float-bar > button {
         padding: 0;
         font-size: 13px;
-        min-height: 0;
+        min-height: 56px;
         background: transparent;
         box-shadow: none;
         border-radius: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+        white-space: nowrap;
       }
       .floating-checkout { display: none !important; }
       .price-main {

@@ -794,8 +794,6 @@ function openProductView(id) {
 
   updateProductViewQty();
   resetReviewForm();
-  const mobileBar = document.getElementById("mobileBar");
-  if (mobileBar) mobileBar.classList.remove("is-visible");
   document.getElementById("productViewOverlay").style.display = "flex";
   document.body.style.overflow = "hidden";
   fetchProductReviews(product.id);
