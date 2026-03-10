@@ -12,6 +12,7 @@ if (hasCloudinary) {
     cloudinary,
     params: (req, file) => ({
       folder: "localbasket",
+      allowed_formats: ["jpg", "jpeg", "png", "webp", "avif"],
       resource_type: "auto",
       public_id: `${Date.now()}-${path.parse(file.originalname || "upload").name}`
     })
