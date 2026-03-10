@@ -563,6 +563,7 @@ async function loadCategories() {
     const bar = document.getElementById("categoryBar");
     if (!bar) return;
     bar.innerHTML = `<button class="cat-btn" data-category="all">All</button>`;
+    renderMobileCategories();
     try {
         const data = await fetchApiJson("/admin/categories");
         const cats = Array.isArray(data.categories) ? data.categories : [];
@@ -570,6 +571,7 @@ async function loadCategories() {
         renderCategories();
     } catch (e) {
         console.error("Category load failed", e);
+        renderMobileCategories();
     }
 }
 
