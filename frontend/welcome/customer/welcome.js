@@ -1669,8 +1669,8 @@ function renderTopProductsLoading() {
     const section = dom.topProductsSection();
     const row = dom.topProductsRow();
     if (!section || !row) return;
-    section.style.display = "";
-    row.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Finding top products near you...</div>`;
+    section.style.display = "none";
+    row.innerHTML = "";
     updateDiscoveryZoneVisibility();
 }
 
@@ -1678,35 +1678,8 @@ function renderTopProducts(list = null) {
     const section = dom.topProductsSection();
     const row = dom.topProductsRow();
     if (!section || !row) return;
-    const items = Array.isArray(list) ? list : (state.topProducts || []);
-    if (!items.length) {
-        section.style.display = "none";
-        row.innerHTML = "";
-        updateDiscoveryZoneVisibility();
-        return;
-    }
-    section.style.display = "";
-    row.innerHTML = items.map((item) => {
-        const pickKey = getTopPickKey(item);
-        const saved = isTopPickSaved(pickKey);
-        return `
-      <div class="tp-card" onclick="openStore(${item.store_id})">
-        <button class="tp-save ${saved ? "saved" : ""}" type="button" data-pick-key="${pickKey}" aria-pressed="${saved ? "true" : "false"}" onclick="toggleTopPick(event, '${pickKey}')">${saved ? "Saved" : "Save"}</button>
-        <div class="tp-img">
-          <img src="${pickProductImage(item)}" onerror="this.src='${CONFIG.DEFAULT_IMG}'" alt="${item.name}">
-        </div>
-        <div class="tp-body">
-          <div class="tp-name">${item.name || "Product"}</div>
-          <div class="tp-store">${item.store_name || "Store"}</div>
-          <div class="tp-row">
-            <div class="tp-price">Rs. ${Number(item.price || 0)}</div>
-            <span class="tp-chip">${item.avg_rating > 0 ? `&#9733; ${Number(item.avg_rating).toFixed(1)}` : "New"}</span>
-          </div>
-          <button class="tp-cta" type="button" onclick="event.stopPropagation();openStore(${item.store_id})">Visit Store</button>
-        </div>
-      </div>
-    `;
-    }).join("");
+    section.style.display = "none";
+    row.innerHTML = "";
     updateDiscoveryZoneVisibility();
 }
 
