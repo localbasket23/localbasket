@@ -1,10 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const path = require("path");
 
 const upload = require("../middlewares/upload");
 const db = require("../db/connection");
-const isProductionLike = process.env.NODE_ENV === "production" || !!process.env.VERCEL;
 const { uploadToCloudinary, hasCloudinary } = require("../config/cloudinary");
 
 /* ================= CONTROLLER ================= */
@@ -97,10 +95,6 @@ const getStoredFileRef = (file) => {
   if (/^https?:\/\//i.test(secureValue)) return secureValue;
   const pathValue = String(file.path || "").trim();
   if (/^https?:\/\//i.test(pathValue)) return pathValue;
-  if (isProductionLike) return "";
-  const filenameValue = String(file.filename || "").trim();
-  if (filenameValue) return filenameValue;
-  if (pathValue) return path.basename(pathValue);
   return "";
 };
 

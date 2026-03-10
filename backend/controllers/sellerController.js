@@ -1,13 +1,11 @@
 const db = require("../db/connection");
 const bcrypt = require("bcrypt");
-const path = require("path");
 const { uploadToCloudinary, hasCloudinary } = require("../config/cloudinary");
 const { sendOtpSms } = require("../utils/otpSender");
 const dbp = db.promise();
 const query = dbp.query.bind(dbp);
 let sellerColumnsCache = null;
 let productColumnsCache = null;
-const isProductionLike = process.env.NODE_ENV === "production" || !!process.env.VERCEL;
 const OTP_EXPIRY_MS = 5 * 60 * 1000;
 const sellerOtpStore = new Map();
 
@@ -41,10 +39,6 @@ const normalizeUploadedFile = (file) => {
     if (/^https?:\/\//i.test(secureValue)) return secureValue;
     const pathValue = String(out.path || "").trim();
     if (/^https?:\/\//i.test(pathValue)) return pathValue;
-    if (isProductionLike) return "";
-    const filenameValue = String(out.filename || "").trim();
-    if (filenameValue) return filenameValue;
-    if (pathValue) return path.basename(pathValue);
     return "";
   })();
   return out;
