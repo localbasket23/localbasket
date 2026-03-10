@@ -42,6 +42,18 @@
       font-family: "Plus Jakarta Sans", sans-serif;
     }
 
+    .empty-state {
+      padding: 28px 20px;
+      border-radius: 24px;
+      border: 1px solid #eadbcb;
+      background: linear-gradient(180deg, #fffaf6, #fff2e8);
+      color: #7c5a43;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 18px 32px -28px rgba(124, 58, 25, 0.35);
+    }
+
     .page-shell {
       max-width: 1280px;
       margin: 0 auto;
@@ -630,33 +642,37 @@
     }
 
     @media (max-width: 768px) {
+      body.lb-category-page {
+        background:
+          radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 55%),
+          linear-gradient(180deg, #f4ede7 0%, #f6efe8 100%);
+      }
+
       .page-shell {
-        padding: 10px 12px calc(128px + env(safe-area-inset-bottom));
+        max-width: 430px;
+        padding: 10px 14px calc(128px + env(safe-area-inset-bottom));
       }
 
       .intro {
-        margin-bottom: 14px;
+        margin-bottom: 12px;
+        text-align: center;
       }
 
       .intro h1 {
-        font-size: clamp(22px, 7.5vw, 34px);
-        margin-bottom: 4px;
-        letter-spacing: -0.3px;
+        font-size: clamp(20px, 6vw, 28px);
+        margin-bottom: 6px;
+        letter-spacing: -0.5px;
       }
 
       .intro p {
-        font-size: 13px;
-        line-height: 1.45;
+        font-size: 12px;
+        line-height: 1.35;
+        max-width: 250px;
+        margin: 0 auto;
       }
 
       .intro-badges {
-        gap: 8px;
-        margin-top: 8px;
-      }
-
-      .intro-badge {
-        padding: 5px 11px;
-        font-size: 11px;
+        display: none;
       }
 
       .store-grid {
@@ -665,75 +681,175 @@
       }
       
       .pin-panel {
-        display: grid;
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr auto;
+        align-items: center;
         gap: 8px;
-        padding: 8px;
-        border-radius: 14px;
+        padding: 7px;
+        border-radius: 18px;
         margin-bottom: 14px;
+        background: rgba(255, 255, 255, 0.78);
+        border-color: #eadbcb;
+        box-shadow: 0 20px 30px -26px rgba(124, 58, 25, 0.28);
       }
 
       .pin-panel input,
       .pin-panel button {
-        height: 44px;
+        height: 42px;
       }
       
       .pin-panel button {
-        width: 100%;
+        width: auto;
+        padding: 0 16px;
+        border-radius: 14px;
       }
 
       .chip-row {
-        gap: 8px;
-        margin: 0 -2px 14px;
-        padding: 2px 2px 8px;
+        gap: 9px;
+        margin: 0 0 16px;
+        padding: 0 0 6px;
       }
 
       .chip {
-        font-size: 12px;
-        padding: 7px 13px;
+        font-size: 11px;
+        padding: 9px 14px;
+        background: rgba(255, 255, 255, 0.9);
+        border-color: #eadbcb;
+        box-shadow: 0 12px 22px -20px rgba(124, 58, 25, 0.22);
       }
 
       .fav-btn {
-        width: 30px;
-        height: 30px;
-        font-size: 14px;
+        top: 10px;
+        right: 10px;
+        left: auto;
+        width: 28px;
+        height: 28px;
+        font-size: 13px;
+        box-shadow: none;
       }
 
       .section {
-        margin-bottom: 24px;
+        margin-bottom: 22px;
       }
 
       .section h2 {
-        font-size: 18px;
-        margin-bottom: 10px;
+        font-size: 15px;
+        margin-bottom: 12px;
+        padding-left: 6px;
       }
 
       .store-card {
-        border-radius: 12px;
+        border-radius: 22px;
+        padding: 10px 10px 12px;
+        background: linear-gradient(180deg, #fffaf8, #fff1ea);
+        border-color: #f0dfcf;
+        box-shadow: 0 18px 28px -24px rgba(124, 58, 25, 0.24);
       }
 
       .store-body {
-        padding: 9px;
+        order: 1;
+        padding: 0 2px 8px;
+        min-width: 0;
+      }
+
+      .store-img {
+        order: 2;
+        aspect-ratio: 1 / 0.96;
+        background: transparent;
+        padding: 8px 8px 0;
+      }
+
+      .store-img img {
+        object-fit: contain;
+      }
+
+      .img-overlay,
+      .store-cta {
+        display: none !important;
+      }
+
+      .status-pill {
+        top: auto;
+        right: 10px;
+        bottom: 10px;
+        width: 18px;
+        height: 18px;
+        padding: 0;
+        border-radius: 999px;
+        border: 3px solid #ffffff;
+        font-size: 0;
+        line-height: 0;
+        box-shadow: 0 8px 16px -12px rgba(15, 23, 42, 0.4);
+      }
+
+      .status-pill.open {
+        background: #86efac;
+      }
+
+      .status-pill.closed {
+        background: #cbd5e1;
+      }
+
+      .store-body h3 {
+        min-height: auto;
+        margin-bottom: 6px;
+        font-size: 12.5px;
+        line-height: 1.2;
+      }
+
+      .store-cat {
+        margin-bottom: 8px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.74);
+        border-color: #efe0d0;
+        font-size: 10px;
+      }
+
+      .store-meta-row {
+        justify-content: space-between;
+        gap: 6px;
+      }
+
+      .meta-pill,
+      .rating-chip {
+        font-size: 9px;
+        padding: 4px 7px;
+      }
+
+      .store-grid .store-card:nth-child(4n + 1) {
+        background: linear-gradient(180deg, #fff8f6, #fff2ee);
+      }
+
+      .store-grid .store-card:nth-child(4n + 2) {
+        background: linear-gradient(180deg, #fffaf4, #fff5eb);
+      }
+
+      .store-grid .store-card:nth-child(4n + 3) {
+        background: linear-gradient(180deg, #f9fbf4, #eef9e7);
+      }
+
+      .store-grid .store-card:nth-child(4n + 4) {
+        background: linear-gradient(180deg, #f7fbff, #eef7ff);
       }
     }
 
     @media (max-width: 480px) {
       .page-shell {
-        padding: 8px 10px calc(124px + env(safe-area-inset-bottom)); /* Reduced side padding for more space */
+        padding: 8px 14px calc(124px + env(safe-area-inset-bottom));
       }
 
       .store-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)); /* Force 2 Columns */
-        gap: 10px; /* Tighter gap */
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
       }
 
       .store-body {
-        padding: 8px;
+        padding: 0 2px 8px;
       }
 
       .store-body h3 {
         font-size: 12.5px;
-        min-height: 30px;
+        min-height: auto;
       }
       
       .store-body p {
@@ -804,7 +920,7 @@
     }
   </style>
 </head>
-<body>
+<body class="lb-category-page">
 
   <div id="header"></div>
   <div id="siteHeader"></div>

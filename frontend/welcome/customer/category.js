@@ -151,7 +151,7 @@ const renderSection = (title, stores) => {
                 type="button"
                 onclick="toggleFavoriteStore(event, ${store.id})"
                 aria-label="${isFavoriteStore(store.id) ? "Remove from favorites" : "Add to favorites"}"
-              >♥</button>
+              >${isFavoriteStore(store.id) ? "&#10084;" : "&#9825;"}</button>
               <img src="${resolveImageUrl(store.store_photo)}" onerror="this.src='${CONFIG.DEFAULT_IMG}'">
               <span class="status-pill ${Number(store.is_online) === 1 ? "open" : "closed"}">
                 ${Number(store.is_online) === 1 ? "OPEN" : "CLOSED"}
@@ -245,7 +245,7 @@ const renderAll = () => {
       const filtered = state.stores.filter(s => isFavoriteStore(s.id));
       sections.innerHTML = filtered.length
         ? renderSection("My Favorite Stores", filtered)
-        : `<div class="empty-state">No favorite stores yet. Tap ♥ on any store card.</div>`;
+        : `<div class="empty-state">No favorite stores yet. Tap &#10084; on any store card.</div>`;
       return;
     }
     const filtered = state.stores.filter(s => mapStoreCategory(s) === state.active);
