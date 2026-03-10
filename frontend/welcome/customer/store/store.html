@@ -62,6 +62,10 @@
     }
 
     .header-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+    .store-title-wrap { min-width: 0; }
+    .store-header-meta,
+    .store-meta-compact,
+    .store-phone-compact { display: none; }
     .icon-btn{
       width: 36px; height: 36px; border-radius: 10px;
       background: #ffffff; border: 1px solid #d7eeea;
@@ -1026,29 +1030,138 @@
     }
 
     @media (max-width: 768px) {
-      body { padding-bottom: 96px; }
-      .store-header-inner { padding: 10px 12px; }
-      .cart-btn { padding: 9px 12px; border-radius: 12px; font-size: 13px; }
-      .store-hero { margin-top: 14px; padding: 16px 14px; border-radius: 18px; }
-      #storeImg { width: 112px; height: 112px; border-radius: 24px; }
-      .store-meta h2 { font-size: 24px; }
-      .pill { font-size: 11px; padding: 5px 10px; }
-      .store-info { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-      .info-item { min-height: 68px; padding: 10px 12px; }
-      #storeAddress { font-size: 12.5px; }
+      body { padding-bottom: 150px; background: linear-gradient(180deg, #fffaf5 0%, #fff3ea 100%); }
+      .store-header-inner {
+        padding: 10px 12px;
+        align-items: flex-start;
+      }
+      .store-title-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+      .store-header-meta {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-mute);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cart-btn {
+        padding: 9px 12px;
+        border-radius: 12px;
+        font-size: 12px;
+        min-height: 40px;
+        box-shadow: 0 12px 20px -18px rgba(249, 115, 22, 0.55);
+      }
+      .store-hero {
+        margin-top: 10px;
+        padding: 12px;
+        border-radius: 18px;
+        grid-template-columns: 84px minmax(0, 1fr);
+        gap: 12px;
+        align-items: center;
+        background: #ffffff;
+        border-color: #f1dfd0;
+        box-shadow: 0 18px 24px -22px rgba(124, 58, 25, 0.18);
+      }
+      .store-media {
+        justify-content: flex-start;
+      }
+      #storeImg {
+        width: 84px;
+        height: 84px;
+        border-radius: 20px;
+        border-width: 3px;
+      }
+      .online-tag,
+      .store-info,
+      .pill#storeCategory,
+      .pill#storeRating {
+        display: none !important;
+      }
+      .store-meta {
+        min-width: 0;
+      }
+      .store-meta h2 {
+        font-size: 18px;
+        line-height: 1.12;
+      }
+      .store-meta-compact {
+        display: block;
+        margin-top: 4px;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-mute);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .store-phone-compact {
+        display: block;
+        margin-top: 5px;
+        font-size: 12px;
+        font-weight: 700;
+        color: #475569;
+      }
+      .store-sub {
+        margin-top: 0;
+        gap: 0;
+      }
       .search-wrap, .product-grid { padding-left: 12px; padding-right: 12px; }
-      .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-      .product-card { border-radius: 16px; padding: 12px; }
-      .product-img-box { height: 110px; margin-bottom: 8px; }
+      .search-wrap {
+        margin: 14px auto 12px;
+      }
+      .search-box {
+        position: relative;
+      }
+      .search-box::before {
+        content: "\1F50D";
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 14px;
+        color: #94a3b8;
+        pointer-events: none;
+      }
+      .search-box input {
+        height: 44px;
+        padding: 0 14px 0 38px;
+        border-radius: 14px;
+        font-size: 14px;
+        background: #ffffff;
+      }
+      .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+      .product-card {
+        border-radius: 16px;
+        padding: 10px;
+        box-shadow: 0 14px 20px -22px rgba(124, 58, 25, 0.22);
+      }
+      .product-img-box { height: 100px; margin-bottom: 8px; border-radius: 12px; }
       .product-img-box img { padding: 6px; }
       .discount-tag {
-        width: 38px;
-        height: 38px;
-        font-size: 9px;
-        top: 6px;
-        left: 6px;
+        width: 34px;
+        height: 34px;
+        font-size: 8px;
+        top: 5px;
+        left: 5px;
       }
-      .product-name { font-size: 14px; height: 38px; }
+      .product-name { font-size: 13px; height: 34px; }
+      .product-unit { display: none; }
+      .product-rating {
+        margin-top: 4px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: #64748b;
+        font-size: 11px;
+      }
+      .product-rating .stars {
+        font-size: 11px;
+      }
       .cart-sidebar {
         height: 100dvh;
         max-height: 100dvh;
@@ -1109,15 +1222,72 @@
       }
       .mobile-float-bar.is-visible { display: flex; }
       .mobile-float-bar {
+        left: 12px !important;
+        right: 12px !important;
+        bottom: calc(74px + env(safe-area-inset-bottom)) !important;
+        top: auto !important;
         width: auto;
-        max-width: calc(100vw - 12px);
-        right: 8px;
-        bottom: 14px;
-        padding: 0;
+        max-width: none;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(135deg, #ff8a00, #ff9f2f);
+        border-radius: 16px;
+        padding: 12px 14px;
+        box-shadow: 0 18px 24px -18px rgba(249, 115, 22, 0.45);
         z-index: 4000;
+        touch-action: auto;
       }
-      .mobile-float-bar > button { padding: 8px 12px; font-size: 11px; min-height: 36px; }
+      .mobile-float-bar #mInfo {
+        display: block;
+      }
+      .mobile-float-bar #mItemCount,
+      .mobile-float-bar #mTotalAmount {
+        color: #ffffff;
+      }
+      .mobile-float-bar > button {
+        padding: 0;
+        font-size: 13px;
+        min-height: 0;
+        background: transparent;
+        box-shadow: none;
+        border-radius: 0;
+      }
       .floating-checkout { display: none !important; }
+      .price-main {
+        font-size: 16px;
+      }
+      .price-sub,
+      .mrp,
+      .discount-badge {
+        display: none !important;
+      }
+      .product-footer {
+        align-items: center;
+        margin-top: 8px;
+      }
+      .add-btn {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border-radius: 10px;
+        font-size: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .add-btn::before {
+        content: "+";
+        font-size: 20px;
+        line-height: 1;
+      }
+      .add-btn:disabled::before {
+        content: "×";
+        font-size: 18px;
+      }
+      .qty-controls {
+        gap: 8px;
+        padding: 4px 8px;
+      }
     }
 
     @media (max-width: 560px) {
@@ -1135,6 +1305,13 @@
 
     @media (max-width: 440px) {
       .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .store-hero {
+        grid-template-columns: 74px minmax(0, 1fr);
+      }
+      #storeImg {
+        width: 74px;
+        height: 74px;
+      }
     }
   </style>
 </head>
@@ -1148,6 +1325,7 @@
       <div class="header-left" style="min-width:0;">
         <div class="store-title-wrap">
           <h1 id="headerStoreName" style="font-size: 15px; font-weight: 800;">LocalBasket</h1>
+          <span class="store-header-meta" id="headerStoreMeta">Rating -- • Closed</span>
         </div>
       </div>
       <button class="cart-btn" onclick="toggleCart(true)">
@@ -1167,6 +1345,8 @@
         <span class="pill" id="storeCategory">Category: ---</span>
         <span class="pill" id="storeRating">Rating: --</span>
       </div>
+      <div class="store-meta-compact" id="storeMetaCompact">⭐ -- • General</div>
+      <div class="store-phone-compact" id="storePhoneCompact">📞 ---</div>
       <div class="store-info">
         <div class="info-item">
           <b>Phone</b>
@@ -1190,7 +1370,7 @@
 
   <section class="search-wrap">
     <div class="search-box">
-      <input type="text" id="searchInput" placeholder="Search items in this store..." oninput="filterProducts()">
+      <input type="text" id="searchInput" placeholder="Search items in store" oninput="filterProducts()">
     </div>
   </section>
 

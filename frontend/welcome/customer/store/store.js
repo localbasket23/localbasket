@@ -307,6 +307,7 @@ function initFloatingCheckoutDrag() {
 
 function initMobileBarDrag() {
   if (mobileBarDragBound) return;
+  if (window.matchMedia("(max-width: 768px)").matches) return;
   const bar = getMobileBarEl();
   if (!bar) return;
   mobileBarDragBound = true;
@@ -435,12 +436,13 @@ async function loadStore() {
       tag.style.background = state.isStoreOnline ? "#10b981" : "#ef4444";
     }
 
+    const categoryName = store.category_name || store.category || store.business_type || "General";
     const cat = document.getElementById("storeCategory");
     if (cat) {
-      const name = store.category_name || store.category || store.business_type || "General";
-      cat.innerText = `Category: ${name}`;
+      cat.innerText = `Category: ${categoryName}`;
     }
 
+    let resolvedRatingText = "New";
     const ratingEl = document.getElementById("storeRating");
     if (ratingEl) {
       const candidates = [
@@ -460,20 +462,28 @@ async function loadStore() {
         store?.reviewCount
       ];
       const count = Number(countCandidates.find(v => v !== null && v !== undefined && v !== "") || 0);
-      let ratingText = "New";
       for (const v of candidates) {
         if (v === null || v === undefined || v === "") continue;
         const n = Number(v);
         if (Number.isFinite(n)) {
-          ratingText = (n === 0 && count === 0) ? "New" : (count > 0 ? `${n.toFixed(1)} (${count})` : n.toFixed(1));
+          resolvedRatingText = (n === 0 && count === 0) ? "New" : (count > 0 ? `${n.toFixed(1)} (${count})` : n.toFixed(1));
           break;
         }
       }
-      ratingEl.innerText = `Rating: ${ratingText}`;
+      ratingEl.innerText = `Rating: ${resolvedRatingText}`;
     }
 
+    const compactMetaEl = document.getElementById("storeMetaCompact");
+    if (compactMetaEl) compactMetaEl.innerText = `⭐ ${resolvedRatingText} • ${categoryName}`;
+
+    const headerMetaEl = document.getElementById("headerStoreMeta");
+    if (headerMetaEl) headerMetaEl.innerText = `⭐ ${resolvedRatingText} • ${state.isStoreOnline ? "Open" : "Closed"}`;
+
+    const phoneText = store.phone || store.store_phone || "Not available";
     const phoneEl = document.getElementById("storePhone");
-    if (phoneEl) phoneEl.innerText = store.phone || store.store_phone || "Not available";
+    if (phoneEl) phoneEl.innerText = phoneText;
+    const compactPhoneEl = document.getElementById("storePhoneCompact");
+    if (compactPhoneEl) compactPhoneEl.innerText = `📞 ${phoneText}`;
 
     const areaEl = document.getElementById("storeArea");
     if (areaEl) {
@@ -554,8 +564,7 @@ function renderProducts(items) {
     const discountPct = hasDiscount ? Math.round(((mrp - price) / mrp) * 100) : 0;
     const ratingVal = Number(p.avg_rating || p.rating || 0);
     const ratingCount = Number(p.rating_count || p.reviews_count || 0);
-    const ratingText = ratingCount ? `${ratingVal.toFixed(1)} (${ratingCount})` : "New";
-    const ratingStars = renderStars(ratingVal);
+    const ratingText = ratingCount || ratingVal > 0 ? ratingVal.toFixed(1) : "New";
     return `
       <div class="product-card" data-id="${p.id}" onclick="openProductView(${p.id})" ${!state.isStoreOnline ? 'style="opacity:.6"' : ""}>
         <div class="product-img-box">
@@ -569,7 +578,7 @@ function renderProducts(items) {
         <div class="product-name">${p.name}</div>
         <div class="product-unit">${p.unit || ""}</div>
         <div class="product-rating">
-          <span class="stars">${ratingStars}</span>
+          <span class="stars">&#11088;</span>
           <span>${ratingText}</span>
         </div>
 
@@ -1008,12 +1017,22 @@ function updateCartUI() {
 
   document.getElementById("cartCountLabel").innerText = `Basket (${count})`;
   document.getElementById("cartTotal").innerText = totalText;
-  document.getElementById("mItemCount").innerText = `${count} Items`;
+  document.getElementById("mItemCount").innerText = `Basket (${count})`;
   document.getElementById("mTotalAmount").innerText = totalText;
+  const mobileBarBtn = document.getElementById("mobileBarBtn");
+  if (mobileBarBtn) mobileBarBtn.innerText = `View Basket • ${count} item${count === 1 ? "" : "s"}`;
   const mobileBar = document.getElementById("mobileBar");
   if (mobileBar) {
     mobileBar.classList.toggle("is-visible", count > 0 && !isCartOpen);
-    if (count > 0 && !isCartOpen) applyMobileBarSavedPosition(mobileBar);
+    if (count > 0 && !isCartOpen) {
+      if (window.matchMedia("(max-width: 768px)").matches) {
+        mobileBar.style.left = "12px";
+        mobileBar.style.right = "12px";
+        mobileBar.style.top = "auto";
+      } else {
+        applyMobileBarSavedPosition(mobileBar);
+      }
+    }
   }
   const floatingCheckoutBtn = document.getElementById("floatingCheckoutBtn");
   if (floatingCheckoutBtn) {
@@ -1130,10 +1149,16 @@ function updateFooterSafeOffsets() {
     }
   }
   if (mobileBar && mobileBar.classList.contains("is-visible")) {
-    const hasCustom = !!readMobileBarPos();
-    if (!hasCustom) {
-      const mobileBase = isMobile ? Math.max(14, navHeight + 10) : 20;
-      mobileBar.style.bottom = `${mobileBase + overlap}px`;
+    if (isMobile) {
+      mobileBar.style.bottom = `${Math.max(74, navHeight + 12) + overlap}px`;
+      mobileBar.style.left = "12px";
+      mobileBar.style.right = "12px";
+      mobileBar.style.top = "auto";
+    } else {
+      const hasCustom = !!readMobileBarPos();
+      if (!hasCustom) {
+        mobileBar.style.bottom = `${20 + overlap}px`;
+      }
     }
   }
 }
