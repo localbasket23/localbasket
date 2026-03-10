@@ -2604,6 +2604,15 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
   color: #9CA3AF !important;
 }
 
+@media (max-width: 768px) {
+  .lb-footer-pro .footer-glass {
+    padding-bottom: calc(108px + env(safe-area-inset-bottom)) !important;
+  }
+  .lb-footer-pro .footer-bottom-actions {
+    margin-bottom: 14px !important;
+  }
+}
+
 
 
 
