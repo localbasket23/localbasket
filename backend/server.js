@@ -3,6 +3,7 @@ if (process.env.NODE_ENV !== "production") {
   require("dotenv").config({ path: path.join(__dirname, ".env") });
 }
 
+const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const { hasCloudinary } = require("./config/cloudinary");
@@ -30,6 +31,10 @@ app.use(cors({
 }));
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+// Serve frontend locally from `frontend/` so UI changes reflect without redeploy.
+// API routes are mounted under `/api/*`, so static assets won't clash.
+app.use(express.static(path.join(__dirname, "..", "frontend")));
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });

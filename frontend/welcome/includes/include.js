@@ -473,6 +473,7 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
     const userInitials = document.getElementById("userInitials");
     const userFullName = document.getElementById("userFullName");
     const mobileHeaderKicker = document.getElementById("mobileHeaderKicker");
+    const mobileGreetingEyebrow = document.getElementById("mobileGreetingEyebrow");
     const displayNameRaw = user && (
       user.name ||
       user.fullName ||
@@ -488,7 +489,9 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
       (user && (user.id || user._id || user.email || user.phone || user.mobile || displayName))
     );
 
-    if (mobileHeaderKicker) mobileHeaderKicker.textContent = getTimeGreeting();
+    const timeGreeting = getTimeGreeting();
+    if (mobileHeaderKicker) mobileHeaderKicker.textContent = timeGreeting;
+    if (mobileGreetingEyebrow) mobileGreetingEyebrow.textContent = timeGreeting;
 
     if (hasSession) {
       if (loginBtn) loginBtn.style.display = "none";
@@ -516,7 +519,10 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
   if (!document.body.dataset.lbGreetingClockBound) {
     window.setInterval(() => {
       const mobileHeaderKicker = document.getElementById("mobileHeaderKicker");
-      if (mobileHeaderKicker) mobileHeaderKicker.textContent = getTimeGreeting();
+      const mobileGreetingEyebrow = document.getElementById("mobileGreetingEyebrow");
+      const timeGreeting = getTimeGreeting();
+      if (mobileHeaderKicker) mobileHeaderKicker.textContent = timeGreeting;
+      if (mobileGreetingEyebrow) mobileGreetingEyebrow.textContent = timeGreeting;
     }, 60000);
     document.body.dataset.lbGreetingClockBound = "1";
   }

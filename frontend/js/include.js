@@ -153,6 +153,7 @@
 
 document.addEventListener("DOMContentLoaded", async () => {
   const path = window.location.pathname;
+  const LB_COMPONENTS_VERSION = "20260310a";
 
   if (
     path.includes("seller") ||
@@ -319,6 +320,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const userInitials = document.getElementById("userInitials");
       const userFullName = document.getElementById("userFullName");
       const mobileHeaderKicker = document.getElementById("mobileHeaderKicker");
+      const mobileGreetingEyebrow = document.getElementById("mobileGreetingEyebrow");
       const mobileHeaderName = document.getElementById("mobileHeaderName");
       const mobileHeaderAction = document.getElementById("mobileHeaderAction");
       const currentPath = String(window.location.pathname || "").toLowerCase();
@@ -342,7 +344,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (loginBtn) loginBtn.style.display = hasUser ? "none" : "inline-flex";
       if (userAccount) userAccount.style.display = hasUser ? "flex" : "none";
-      if (mobileHeaderKicker) mobileHeaderKicker.textContent = getTimeGreeting();
+      const timeGreeting = getTimeGreeting();
+      if (mobileHeaderKicker) mobileHeaderKicker.textContent = timeGreeting;
+      if (mobileGreetingEyebrow) mobileGreetingEyebrow.textContent = timeGreeting;
 
       if (hasUser) {
         const fullName = String(user.name || user.full_name || user.phone || user.email || "User").trim();
@@ -387,7 +391,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!document.body.dataset.lbGreetingClockBound) {
       window.setInterval(() => {
         const mobileHeaderKicker = document.getElementById("mobileHeaderKicker");
-        if (mobileHeaderKicker) mobileHeaderKicker.textContent = getTimeGreeting();
+        const mobileGreetingEyebrow = document.getElementById("mobileGreetingEyebrow");
+        const timeGreeting = getTimeGreeting();
+        if (mobileHeaderKicker) mobileHeaderKicker.textContent = timeGreeting;
+        if (mobileGreetingEyebrow) mobileGreetingEyebrow.textContent = timeGreeting;
       }, 60000);
       document.body.dataset.lbGreetingClockBound = "1";
     }
@@ -781,7 +788,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const headerContainer = document.getElementById("header");
     if (!headerContainer) return;
 
-    const res = await fetch("/components/header.html");
+    const res = await fetch(`/components/header.html?v=${LB_COMPONENTS_VERSION}`, { cache: "no-store" });
     const html = await res.text();
     headerContainer.innerHTML = html;
     reInitializeUI();
@@ -792,7 +799,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const footerContainer = document.getElementById("footer");
     if (!footerContainer) return;
 
-    const res = await fetch("/components/footer.html");
+    const res = await fetch(`/components/footer.html?v=${LB_COMPONENTS_VERSION}`, { cache: "no-store" });
     const html = await res.text();
     footerContainer.innerHTML = html;
     applySharedAssetBindings(footerContainer);

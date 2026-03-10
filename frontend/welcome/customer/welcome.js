@@ -839,16 +839,27 @@ function updateAuthUI() {
 }
 
 function updateMobileHomeShell() {
+    const eyebrowEl = dom.mobileGreetingEyebrow ? dom.mobileGreetingEyebrow() : getEl("mobileGreetingEyebrow");
     const greetingEl = dom.mobileGreetingName();
     const addressEl = dom.mobileAddressLabel();
     const authBtn = dom.mobileAuthBtn();
     const pinInput = dom.mobilePinInput();
+    const hour = new Date().getHours();
+    const greeting =
+        hour < 12
+            ? "Good morning"
+            : hour < 17
+                ? "Good afternoon"
+                : hour < 21
+                    ? "Good evening"
+                    : "Good night";
     const fullName = String(state.user?.name || "").trim() || "Customer";
     const locationText =
         state.location?.address && state.location.address !== "Select Location"
             ? state.location.address
             : (state.location?.pincode ? `Pincode: ${state.location.pincode}` : "Select your location");
 
+    if (eyebrowEl) eyebrowEl.textContent = greeting;
     if (greetingEl) greetingEl.textContent = fullName;
     if (addressEl) addressEl.textContent = locationText;
     if (pinInput && !pinInput.value) pinInput.value = String(state.location?.pincode || "").trim();
