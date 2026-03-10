@@ -43,28 +43,27 @@ const getStoredUser = () => {
   }
 };
 
-const getTimeGreeting = () => {
-  const hour = new Date().getHours();
-  if (hour < 12) return "MORNING";
-  if (hour < 17) return "AFTERNOON";
-  return "EVENING";
-};
-
 const updateMobileTopbar = () => {
   const nameEl = document.getElementById("categoryMobileName");
-  const kickerEl = document.getElementById("categoryMobileKicker");
   const addrEl = document.getElementById("categoryMobileAddress");
   const actionBtn = document.getElementById("categoryMobileAction");
   const summaryBtn = document.getElementById("categoryMobileSummary");
+  const backBtn = document.getElementById("categoryMobileBack");
   const user = getStoredUser();
-  const fullName = String(user?.name || user?.full_name || user?.phone || "Customer").trim();
   const address =
     String(localStorage.getItem("lbAddr") || "").trim() ||
     (String(localStorage.getItem("lbPin") || "").trim() ? `Pincode: ${String(localStorage.getItem("lbPin") || "").trim()}` : "Select Location");
 
-  if (kickerEl) kickerEl.textContent = getTimeGreeting();
-  if (nameEl) nameEl.textContent = fullName || "Customer";
+  if (nameEl) nameEl.textContent = "Explore Categories";
   if (addrEl) addrEl.textContent = address;
+
+  if (backBtn && !backBtn.dataset.bound) {
+    backBtn.addEventListener("click", () => {
+      if (window.history.length > 1) window.history.back();
+      else window.location.href = "/welcome/customer/index.html";
+    });
+    backBtn.dataset.bound = "1";
+  }
 
   if (summaryBtn && !summaryBtn.dataset.bound) {
     summaryBtn.addEventListener("click", () => {

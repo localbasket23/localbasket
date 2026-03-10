@@ -658,37 +658,32 @@
       }
 
       .category-mobile-topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 10px;
-      }
-
-      .category-mobile-user {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-width: 0;
-        flex: 1;
-      }
-
-      .category-mobile-avatar {
-        width: 44px;
-        height: 44px;
-        border-radius: 16px;
-        background: linear-gradient(135deg, #ff8a1a, #ffd15d);
         display: grid;
-        place-items: center;
-        overflow: hidden;
-        box-shadow: 0 16px 24px -18px rgba(255, 138, 26, 0.9);
-        flex: 0 0 auto;
+        gap: 10px;
+        margin-bottom: 14px;
+        padding: 12px;
+        border-radius: 22px;
+        background: #FFFFFF;
+        border: 1px solid rgba(255, 138, 0, 0.14);
+        box-shadow: 0 18px 26px -24px rgba(255, 138, 0, 0.22);
       }
 
-      .category-mobile-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+      .category-mobile-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .category-mobile-back {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        border: 1px solid #edd8c8;
+        background: #fff7f0;
+        color: #1E293B;
+        font-size: 18px;
+        font-weight: 800;
+        flex: 0 0 auto;
       }
 
       .category-mobile-summary {
@@ -698,64 +693,74 @@
         text-align: left;
         font: inherit;
         min-width: 0;
-        cursor: pointer;
         flex: 1;
-      }
-
-      .category-mobile-summary:focus-visible,
-      .category-mobile-action:focus-visible {
-        outline: 2px solid rgba(255, 138, 26, 0.45);
-        outline-offset: 3px;
-        border-radius: 12px;
+        cursor: default;
       }
 
       .category-mobile-kicker {
-        display: block;
-        margin: 0 0 1px;
-        font-size: 11px;
-        font-weight: 800;
-        color: #94a3b8;
-        text-transform: uppercase;
-        letter-spacing: 0.6px;
+        display: none;
       }
 
       .category-mobile-name {
         display: block;
-        font-size: 18px;
-        line-height: 1.02;
+        font-size: 20px;
+        line-height: 1.1;
         font-weight: 800;
-        color: #111827;
+        color: #1E293B;
         letter-spacing: -0.4px;
+      }
+
+      .category-mobile-action {
+        min-width: 84px;
+        min-height: 42px;
+        padding: 0 16px;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 138, 0, 0.18);
+        background: #fff7f0;
+        color: #FF8A00;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .category-mobile-location {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 42px;
+        padding: 0 12px;
+        border-radius: 14px;
+        border: 1px solid #e7dacc;
+        background: #fffaf5;
+      }
+
+      .category-mobile-location-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 72px;
+        height: 24px;
+        padding: 0 10px;
+        border-radius: 999px;
+        background: rgba(255, 138, 0, 0.12);
+        color: #FF8A00;
+        font-size: 10px;
+        font-weight: 800;
       }
 
       .category-mobile-address {
         display: block;
-        margin-top: 5px;
         font-size: 11px;
         color: #71829a;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: min(54vw, 250px);
+        flex: 1;
+        max-width: none;
       }
 
       .category-mobile-address::before {
-        content: "\1F4CD";
-        margin-right: 7px;
-        font-size: 10px;
-      }
-
-      .category-mobile-action {
-        min-width: 90px;
-        min-height: 44px;
-        padding: 0 18px;
-        border-radius: 17px;
-        border: 1px solid #edd9cb;
-        background: rgba(255,255,255,0.96);
-        color: #f97316;
-        font-size: 13px;
-        font-weight: 800;
-        box-shadow: 0 8px 16px -18px rgba(15, 23, 42, 0.22);
+        content: "";
+        margin: 0;
       }
 
       .page-shell {
@@ -1037,17 +1042,19 @@
 
   <main class="page-shell">
     <section class="category-mobile-topbar" aria-label="Category page header">
-      <div class="category-mobile-user">
-        <div class="category-mobile-avatar">
-          <img src="/welcome/logo2.png?v=20260303" alt="LocalBasket logo">
-        </div>
-        <button class="category-mobile-summary" id="categoryMobileSummary" type="button" aria-label="Change location">
-          <span class="category-mobile-kicker" id="categoryMobileKicker">MORNING</span>
-          <span class="category-mobile-name" id="categoryMobileName">Customer</span>
-          <span class="category-mobile-address" id="categoryMobileAddress">Select Location</span>
+      <div class="category-mobile-head">
+        <button class="category-mobile-back" id="categoryMobileBack" type="button" aria-label="Go back">
+          <span>&larr;</span>
         </button>
+        <div class="category-mobile-summary">
+          <span class="category-mobile-name" id="categoryMobileName">Customer</span>
+        </div>
+        <button class="category-mobile-action" id="categoryMobileAction" type="button">Login</button>
       </div>
-      <button class="category-mobile-action" id="categoryMobileAction" type="button">Login</button>
+      <button class="category-mobile-location" id="categoryMobileSummary" type="button" aria-label="Change location">
+        <span class="category-mobile-location-pill">Location</span>
+        <span class="category-mobile-address" id="categoryMobileAddress">Select Location</span>
+      </button>
     </section>
 
     <section class="intro">
