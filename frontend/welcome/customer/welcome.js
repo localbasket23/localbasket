@@ -598,14 +598,27 @@ function renderCategories() {
 function renderMobileCategories() {
     const bar = dom.mobileCategoryBar();
     if (!bar) return;
+    const getMobileCategoryMeta = (slug, name) => {
+        const key = `${slug} ${name}`.toLowerCase();
+        if (key.includes("fruit")) return { icon: "🍎", tone: "fruit" };
+        if (key.includes("vegetable")) return { icon: "🥦", tone: "veg" };
+        if (key.includes("snack")) return { icon: "🍪", tone: "snack" };
+        if (key.includes("oil")) return { icon: "🫒", tone: "oil" };
+        if (key.includes("dairy") || key.includes("milk")) return { icon: "🥛", tone: "dairy" };
+        if (key.includes("bakery")) return { icon: "🥐", tone: "bakery" };
+        if (key.includes("drink") || key.includes("beverage")) return { icon: "🥤", tone: "drink" };
+        if (key.includes("masala") || key.includes("spice")) return { icon: "🌶️", tone: "spice" };
+        return { icon: "🛒", tone: "all" };
+    };
     const chips = [
-        `<button class="mobile-chip ${state.activeCategory === "all" ? "active" : ""}" type="button" data-category="all">All</button>`
+        `<button class="mobile-chip ${state.activeCategory === "all" ? "active" : ""}" type="button" data-category="all"><span class="mobile-chip-icon tone-all" aria-hidden="true">🛒</span><span class="mobile-chip-text">All</span></button>`
     ];
     state.categories.slice(0, 8).forEach((c) => {
         const slug = c.slug || slugify(c.name || "category");
         const name = c.name || slug;
+        const meta = getMobileCategoryMeta(slug, name);
         chips.push(
-            `<button class="mobile-chip ${state.activeCategory === slug ? "active" : ""}" type="button" data-category="${slug}">${name}</button>`
+            `<button class="mobile-chip ${state.activeCategory === slug ? "active" : ""}" type="button" data-category="${slug}"><span class="mobile-chip-icon tone-${meta.tone}" aria-hidden="true">${meta.icon}</span><span class="mobile-chip-text">${name}</span></button>`
         );
     });
     bar.innerHTML = chips.join("");

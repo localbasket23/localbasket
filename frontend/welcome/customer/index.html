@@ -2944,8 +2944,8 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    min-height: 40px;
-    padding: 0 14px;
+    min-height: 42px;
+    padding: 0 12px 0 8px;
     border-radius: 999px;
     background: rgba(255,255,255,0.92);
     border: 1px solid #f3e7d7;
@@ -2960,6 +2960,40 @@
     color: #fff;
     border-color: #ff8a1a;
   }
+
+  .mobile-chip-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff7ed;
+    color: #ea580c;
+    font-size: 15px;
+    box-shadow: inset 0 0 0 1px rgba(251, 146, 60, 0.12);
+    flex: 0 0 auto;
+  }
+
+  .mobile-chip-text {
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  .mobile-chip.active .mobile-chip-icon {
+    background: rgba(255,255,255,0.22);
+    color: #ffffff;
+    box-shadow: none;
+  }
+
+  .mobile-chip-icon.tone-fruit { background: #fff1f2; color: #e11d48; }
+  .mobile-chip-icon.tone-veg { background: #ecfdf5; color: #15803d; }
+  .mobile-chip-icon.tone-snack { background: #fff7ed; color: #c2410c; }
+  .mobile-chip-icon.tone-oil { background: #fffbeb; color: #ca8a04; }
+  .mobile-chip-icon.tone-dairy { background: #eff6ff; color: #2563eb; }
+  .mobile-chip-icon.tone-bakery { background: #fff7ed; color: #d97706; }
+  .mobile-chip-icon.tone-drink { background: #ecfeff; color: #0f766e; }
+  .mobile-chip-icon.tone-spice { background: #fff1f2; color: #dc2626; }
 
   .hero {
     padding: 0 16px 6px !important;
