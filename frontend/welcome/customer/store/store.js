@@ -794,6 +794,8 @@ function openProductView(id) {
 
   updateProductViewQty();
   resetReviewForm();
+  const mobileBar = document.getElementById("mobileBar");
+  if (mobileBar) mobileBar.classList.remove("is-visible");
   document.getElementById("productViewOverlay").style.display = "flex";
   document.body.style.overflow = "hidden";
   fetchProductReviews(product.id);
@@ -806,6 +808,7 @@ function closeProductView() {
   state.activeProductId = null;
   state.activeRating = 0;
   state.activeImageIndex = 0;
+  updateCartUI();
 }
 
 function renderProductImageSlider(product) {
