@@ -30,8 +30,6 @@ const state = {
   requirePin: false,
   favoriteStoreIds: JSON.parse(localStorage.getItem("lbFavoriteStoreIds") || "[]")
 };
-const OPEN_LOCATION_FLAG = "lbOpenLocationAfterRedirect";
-
 const chipBar = document.getElementById("chipBar");
 const sections = document.getElementById("categorySections");
 
@@ -45,17 +43,11 @@ const getStoredUser = () => {
 
 const updateMobileTopbar = () => {
   const nameEl = document.getElementById("categoryMobileName");
-  const addrEl = document.getElementById("categoryMobileAddress");
   const actionBtn = document.getElementById("categoryMobileAction");
-  const summaryBtn = document.getElementById("categoryMobileSummary");
   const backBtn = document.getElementById("categoryMobileBack");
   const user = getStoredUser();
-  const address =
-    String(localStorage.getItem("lbAddr") || "").trim() ||
-    (String(localStorage.getItem("lbPin") || "").trim() ? `Pincode: ${String(localStorage.getItem("lbPin") || "").trim()}` : "Select Location");
 
   if (nameEl) nameEl.textContent = "Explore Categories";
-  if (addrEl) addrEl.textContent = address;
 
   if (backBtn && !backBtn.dataset.bound) {
     backBtn.addEventListener("click", () => {
@@ -63,16 +55,6 @@ const updateMobileTopbar = () => {
       else window.location.href = "/welcome/customer/index.html";
     });
     backBtn.dataset.bound = "1";
-  }
-
-  if (summaryBtn && !summaryBtn.dataset.bound) {
-    summaryBtn.addEventListener("click", () => {
-      try {
-        sessionStorage.setItem(OPEN_LOCATION_FLAG, "1");
-      } catch {}
-      window.location.href = "/welcome/customer/index.html";
-    });
-    summaryBtn.dataset.bound = "1";
   }
 
   if (actionBtn) {
