@@ -277,6 +277,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (window.initTheme) {
       window.initTheme();
     }
+    const mobileThemeSlot = document.getElementById("lbMobileThemeSlot");
+    const mobileThemeToggle = document.getElementById("lbThemeToggleBtnMobile");
+    if (mobileThemeSlot && mobileThemeToggle) {
+      mobileThemeSlot.classList.add("has-toggle");
+    }
 
     const syncHeaderAuth = () => {
       let user = null;

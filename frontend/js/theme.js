@@ -4,6 +4,14 @@
     var key = 'lbTheme';
     var saved = localStorage.getItem(key);
     var isDark = saved === 'dark';
+    var toggleIds = ['themeToggleBtn', 'lbThemeToggleBtnMobile'];
+
+    var syncToggles = function () {
+      toggleIds.forEach(function (id) {
+        var toggle = document.getElementById(id);
+        if (toggle) toggle.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+      });
+    };
 
     if (isDark) {
       root.classList.add('lb-theme-dark');
@@ -19,13 +27,13 @@
         isDark = !root.classList.contains('lb-theme-dark');
         root.classList.toggle('lb-theme-dark', isDark);
         localStorage.setItem(key, isDark ? 'dark' : 'light');
-        btn.setAttribute('aria-pressed', isDark ? 'true' : 'false');
+        syncToggles();
       });
       btn.dataset.lbThemeBound = '1';
     };
 
-    bindToggle('themeToggleBtn');
-    bindToggle('lbThemeToggleBtnMobile');
+    toggleIds.forEach(bindToggle);
+    syncToggles();
   };
 
   if (document.readyState === "loading") {
