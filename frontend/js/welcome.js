@@ -224,6 +224,7 @@ const dom = {
     mobilePinInput: () => getEl("mobilePinInput"),
     mobileGreetingName: () => getEl("mobileGreetingName"),
     mobileAddressLabel: () => getEl("mobileAddressLabel"),
+    mobileLocationSummary: () => getEl("mobileLocationSummary"),
     mobileUserAvatar: () => getEl("mobileUserAvatar"),
     mobileAuthBtn: () => getEl("mobileAuthBtn"),
     mobileCategoryBar: () => getEl("mobileCategoryBar"),
@@ -735,6 +736,18 @@ function setupEventListeners() {
             syncLocationMapSize();
         });
     });
+    const mobileLocationSummary = dom.mobileLocationSummary();
+    if (mobileLocationSummary) {
+        mobileLocationSummary.addEventListener("click", () => {
+            const modal = dom.locModal();
+            if (modal) {
+                modal.style.display = "flex";
+                window.dispatchEvent(new Event("lb-location-modal-opened"));
+                return;
+            }
+            getLocation();
+        });
+    }
     window.addEventListener("lb-location-modal-opened", syncLocationMapSize);
     window.addEventListener("resize", () => {
         if (isLocationModalVisible()) syncLocationMapSize();

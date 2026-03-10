@@ -2784,6 +2784,21 @@
     min-width: 0;
   }
 
+  .mobile-location-trigger {
+    border: 0;
+    background: transparent;
+    padding: 0;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .mobile-location-trigger:focus-visible {
+    outline: 2px solid rgba(255, 138, 26, 0.45);
+    outline-offset: 4px;
+    border-radius: 12px;
+  }
+
   .mobile-eyebrow {
     margin: 0 0 2px;
     font-size: 11px;
@@ -3281,11 +3296,11 @@
         <div class="mobile-user-avatar" id="mobileUserAvatar">
           <img src="/welcome/logo2.png?v=20260303" alt="LocalBasket logo">
         </div>
-        <div class="mobile-user-copy">
+        <button class="mobile-user-copy mobile-location-trigger" id="mobileLocationSummary" type="button" aria-label="Change location">
           <p class="mobile-eyebrow">Morning</p>
           <h2 id="mobileGreetingName">Customer Name</h2>
           <span id="mobileAddressLabel">Location</span>
-        </div>
+        </button>
       </div>
       <button class="mobile-auth-btn" id="mobileAuthBtn" type="button" onclick="openAuth()" aria-label="Login">
         Login
