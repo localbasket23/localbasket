@@ -210,6 +210,7 @@ const dom = {
     mobileUserAvatar: () => getEl("mobileUserAvatar"),
     mobileAuthBtn: () => getEl("mobileAuthBtn"),
     mobileCategoryBar: () => getEl("mobileCategoryBar"),
+    mobilePromoArt: () => document.querySelector(".mobile-promo-art"),
     mobileFilterTrigger: () => getEl("mobileFilterTrigger"),
     mobileFilterPanel: () => getEl("mobileFilterPanel"),
     mobileSortSelect: () => getEl("mobileSortSelect"),
@@ -257,6 +258,7 @@ function initApp() {
     updateCartUI();
     updateLocationUI();
     updateMobileHomeShell();
+    loadMobilePromoArt();
     applyViewMode(state.viewMode);
     updateMobileSortButtons();
     updateHeroInsights();
@@ -331,6 +333,55 @@ function updateMobileSortButtons() {
     if (mobileSortSelect) mobileSortSelect.value = state.storeSort || "relevance";
     const mobileAvailabilitySelect = dom.mobileAvailabilitySelect();
     if (mobileAvailabilitySelect) mobileAvailabilitySelect.value = state.openNowOnly ? "open" : "all";
+}
+
+function normalizePromoImageList(list = []) {
+    if (!Array.isArray(list)) return [];
+    return list
+        .map((item) => {
+            if (!item) return null;
+            if (typeof item === "string") return item.trim();
+            if (typeof item === "object") {
+                return String(item.src || item.url || item.image || "").trim();
+            }
+            return null;
+        })
+        .filter(Boolean);
+}
+
+function renderMobilePromoArt(rawPath) {
+    const box = dom.mobilePromoArt();
+    if (!box) return;
+    const image = String(rawPath || "").trim();
+    if (!image) {
+        box.innerHTML = "🥕";
+        return;
+    }
+    const safeSrc = resolveImageUrl(image);
+    box.innerHTML = "";
+    const img = document.createElement("img");
+    img.src = safeSrc;
+    img.alt = "Promo";
+    img.addEventListener("error", () => {
+        box.innerHTML = "🥕";
+    }, { once: true });
+    box.appendChild(img);
+}
+
+async function loadMobilePromoArt() {
+    try {
+        const data = await fetchApiJson("/admin/settings");
+        const settings = data?.global || {};
+        const mobileImages = normalizePromoImageList(
+            safeParse(settings.hero_images_mobile_json, [])
+        );
+        const desktopImages = normalizePromoImageList(
+            safeParse(settings.hero_images_json, [])
+        );
+        renderMobilePromoArt(mobileImages[0] || settings.hero_image || desktopImages[0] || "");
+    } catch (err) {
+        renderMobilePromoArt("");
+    }
 }
 
 function setMobileFilterPanel(open) {
