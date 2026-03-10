@@ -210,6 +210,8 @@ const dom = {
     mobileUserAvatar: () => getEl("mobileUserAvatar"),
     mobileAuthBtn: () => getEl("mobileAuthBtn"),
     mobileCategoryBar: () => getEl("mobileCategoryBar"),
+    mobileSortSelect: () => getEl("mobileSortSelect"),
+    mobileAvailabilitySelect: () => getEl("mobileAvailabilitySelect"),
     openNowOnlyToggle: () => getEl("openNowOnlyToggle"),
     storeSortSelect: () => getEl("storeSortSelect"),
     heroPinInput: () => getEl("pinInput"),
@@ -318,10 +320,15 @@ function syncLocationMapSize() {
 
 function updateMobileSortButtons() {
     const row = getEl("mobileSortRow");
-    if (!row) return;
-    row.querySelectorAll(".mobile-sort-btn").forEach((btn) => {
-        btn.classList.toggle("active", btn.getAttribute("data-sort") === state.storeSort);
-    });
+    if (row) {
+        row.querySelectorAll(".mobile-sort-btn").forEach((btn) => {
+            btn.classList.toggle("active", btn.getAttribute("data-sort") === state.storeSort);
+        });
+    }
+    const mobileSortSelect = dom.mobileSortSelect();
+    if (mobileSortSelect) mobileSortSelect.value = state.storeSort || "relevance";
+    const mobileAvailabilitySelect = dom.mobileAvailabilitySelect();
+    if (mobileAvailabilitySelect) mobileAvailabilitySelect.value = state.openNowOnly ? "open" : "all";
 }
 
 function setupEventListeners() {
@@ -448,6 +455,25 @@ function setupEventListeners() {
             applyCategoryFilter();
         });
     }
+    const mobileSortSelect = dom.mobileSortSelect();
+    if (mobileSortSelect) {
+        mobileSortSelect.addEventListener("change", () => {
+            state.storeSort = mobileSortSelect.value || "relevance";
+            if (storeSortSelect) storeSortSelect.value = state.storeSort;
+            updateMobileSortButtons();
+            applyCategoryFilter();
+        });
+    }
+    const mobileAvailabilitySelect = dom.mobileAvailabilitySelect();
+    if (mobileAvailabilitySelect) {
+        mobileAvailabilitySelect.addEventListener("change", () => {
+            state.openNowOnly = mobileAvailabilitySelect.value === "open";
+            const toggle = dom.openNowOnlyToggle();
+            if (toggle) toggle.checked = state.openNowOnly;
+            updateMobileSortButtons();
+            applyCategoryFilter();
+        });
+    }
     const mobileSortRow = getEl("mobileSortRow");
     if (mobileSortRow) {
         mobileSortRow.addEventListener("click", (e) => {
@@ -482,12 +508,16 @@ function setupEventListeners() {
                 state.openNowOnly = false;
                 const toggle = dom.openNowOnlyToggle();
                 if (toggle) toggle.checked = false;
+                const mobileAvailability = dom.mobileAvailabilitySelect();
+                if (mobileAvailability) mobileAvailability.value = "all";
             } else if (kind === "category") {
                 state.activeCategory = "all";
             } else if (kind === "sort") {
                 state.storeSort = "relevance";
                 const sel = dom.storeSortSelect();
                 if (sel) sel.value = "relevance";
+                const mobileSort = dom.mobileSortSelect();
+                if (mobileSort) mobileSort.value = "relevance";
                 updateMobileSortButtons();
             } else if (kind === "clear-all") {
                 state.storeSearch = "";
@@ -497,9 +527,13 @@ function setupEventListeners() {
                 const input = dom.storeSearchInput();
                 const toggle = dom.openNowOnlyToggle();
                 const sel = dom.storeSortSelect();
+                const mobileSort = dom.mobileSortSelect();
+                const mobileAvailability = dom.mobileAvailabilitySelect();
                 if (input) input.value = "";
                 if (toggle) toggle.checked = false;
                 if (sel) sel.value = "relevance";
+                if (mobileSort) mobileSort.value = "relevance";
+                if (mobileAvailability) mobileAvailability.value = "all";
                 updateMobileSortButtons();
             }
             setActiveCategory(state.activeCategory);
