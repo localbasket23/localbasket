@@ -27,7 +27,8 @@ const state = {
   stores: [],
   active: "all",
   categories: [],
-  requirePin: false
+  requirePin: false,
+  favoriteStoreIds: JSON.parse(localStorage.getItem("lbFavoriteStoreIds") || "[]")
 };
 
 const chipBar = document.getElementById("chipBar");
@@ -97,12 +98,17 @@ const renderChips = () => {
     hasStores: state.stores.some(s => mapStoreCategory(s) === c.slug)
   }));
 
-  if (state.active !== "all" && !categoriesWithState.some(c => c.slug === state.active && c.hasStores)) {
+  if (
+    state.active !== "all" &&
+    state.active !== "favorites" &&
+    !categoriesWithState.some(c => c.slug === state.active && c.hasStores)
+  ) {
     state.active = "all";
   }
 
   const chips = [
-    `<button class="chip ${state.active === "all" ? "active" : ""}" data-key="all">All</button>`
+    `<button class="chip ${state.active === "all" ? "active" : ""}" data-key="all">All</button>`,
+    `<button class="chip ${state.active === "favorites" ? "active" : ""}" data-key="favorites">Favorites</button>`
   ];
   categoriesWithState.forEach(c => {
     chips.push(
@@ -140,6 +146,12 @@ const renderSection = (title, stores) => {
         ${stores.map(store => `
           <div class="store-card" onclick="location.href='/welcome/customer/store/store.html?id=${store.id}'">
             <div class="store-img">
+              <button
+                class="fav-btn ${isFavoriteStore(store.id) ? "active" : ""}"
+                type="button"
+                onclick="toggleFavoriteStore(event, ${store.id})"
+                aria-label="${isFavoriteStore(store.id) ? "Remove from favorites" : "Add to favorites"}"
+              >♥</button>
               <img src="${resolveImageUrl(store.store_photo)}" onerror="this.src='${CONFIG.DEFAULT_IMG}'">
               <span class="status-pill ${Number(store.is_online) === 1 ? "open" : "closed"}">
                 ${Number(store.is_online) === 1 ? "OPEN" : "CLOSED"}
@@ -229,6 +241,13 @@ const renderAll = () => {
   }
 
   if (state.active !== "all") {
+    if (state.active === "favorites") {
+      const filtered = state.stores.filter(s => isFavoriteStore(s.id));
+      sections.innerHTML = filtered.length
+        ? renderSection("My Favorite Stores", filtered)
+        : `<div class="empty-state">No favorite stores yet. Tap ♥ on any store card.</div>`;
+      return;
+    }
     const filtered = state.stores.filter(s => mapStoreCategory(s) === state.active);
     if (!filtered.length) {
       state.active = "all";
@@ -300,5 +319,32 @@ async function loadCategories() {
     state.categories = [];
   }
 }
+
+function isFavoriteStore(storeId) {
+  return Array.isArray(state.favoriteStoreIds) && state.favoriteStoreIds.includes(Number(storeId));
+}
+
+function persistFavoriteStores() {
+  localStorage.setItem("lbFavoriteStoreIds", JSON.stringify((state.favoriteStoreIds || []).slice(0, 100)));
+}
+
+function toggleFavoriteStore(event, storeId) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  const id = Number(storeId);
+  if (!id) return;
+  const list = Array.isArray(state.favoriteStoreIds) ? [...state.favoriteStoreIds] : [];
+  const idx = list.indexOf(id);
+  if (idx >= 0) list.splice(idx, 1);
+  else list.unshift(id);
+  state.favoriteStoreIds = list;
+  persistFavoriteStores();
+  renderChips();
+  renderAll();
+}
+
+window.toggleFavoriteStore = toggleFavoriteStore;
 
 
