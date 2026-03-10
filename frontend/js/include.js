@@ -247,9 +247,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
     const getTimeGreeting = () => {
       const hour = new Date().getHours();
-      if (hour < 12) return "Morning";
-      if (hour < 17) return "Afternoon";
-      return "Evening";
+      if (hour < 12) return "Good Morning";
+      if (hour < 17) return "Good Afternoon";
+      if (hour < 21) return "Good Evening";
+      return "Good Night";
     };
     const getMobilePageTitle = (path) => {
       const value = String(path || "").toLowerCase();
@@ -383,6 +384,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     syncHeaderAuth();
+    if (!document.body.dataset.lbGreetingClockBound) {
+      window.setInterval(() => {
+        const mobileHeaderKicker = document.getElementById("mobileHeaderKicker");
+        if (mobileHeaderKicker) mobileHeaderKicker.textContent = getTimeGreeting().toUpperCase();
+      }, 60000);
+      document.body.dataset.lbGreetingClockBound = "1";
+    }
 
     // Navbar buttons
     document.querySelectorAll("[data-login]")

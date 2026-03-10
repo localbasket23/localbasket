@@ -364,6 +364,14 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
   window.lbSetLocMobileText = setMobileLocationTicker;
   window.lbSetLocDesktopText = setDesktopLocationTicker;
 
+  const getTimeGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    if (hour < 21) return "Good Evening";
+    return "Good Night";
+  };
+
   const syncHeaderLocation = () => {
     const loc = localStorage.getItem("lbAddr") || "Select Location";
     setDesktopLocationTicker(loc);
@@ -464,6 +472,7 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
     const userAccount = document.getElementById("userAccount");
     const userInitials = document.getElementById("userInitials");
     const userFullName = document.getElementById("userFullName");
+    const mobileHeaderKicker = document.getElementById("mobileHeaderKicker");
     const displayNameRaw = user && (
       user.name ||
       user.fullName ||
@@ -478,6 +487,8 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
       token ||
       (user && (user.id || user._id || user.email || user.phone || user.mobile || displayName))
     );
+
+    if (mobileHeaderKicker) mobileHeaderKicker.textContent = getTimeGreeting().toUpperCase();
 
     if (hasSession) {
       if (loginBtn) loginBtn.style.display = "none";
@@ -501,6 +512,14 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
       if (userAccount) userAccount.style.display = "none";
     }
   };
+
+  if (!document.body.dataset.lbGreetingClockBound) {
+    window.setInterval(() => {
+      const mobileHeaderKicker = document.getElementById("mobileHeaderKicker");
+      if (mobileHeaderKicker) mobileHeaderKicker.textContent = getTimeGreeting().toUpperCase();
+    }, 60000);
+    document.body.dataset.lbGreetingClockBound = "1";
+  }
 
   const ensureGlobalUtilityStyles = () => {
     if (document.getElementById("lbGlobalUtilityStyles")) return;
@@ -1246,5 +1265,3 @@ if (document.readyState === "loading") {
 } else {
   initIncludes();
 }
-
-

@@ -367,7 +367,7 @@ function initMobileBarDrag() {
     btn.addEventListener("click", (e) => {
       if (moved) return;
       e.preventDefault();
-      toggleCart(true);
+      checkout();
     });
   }
 
@@ -1024,7 +1024,7 @@ function updateCartUI() {
 
   const mobileBarBtn = document.getElementById("mobileBarBtn");
   if (mobileBarBtn) {
-    mobileBarBtn.innerText = `View Basket - ${count} item${count === 1 ? "" : "s"}`;
+    mobileBarBtn.innerText = "Checkout";
   }
 
   const mobileBar = document.getElementById("mobileBar");
