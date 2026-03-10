@@ -2372,10 +2372,20 @@
     gap: 6px;
     margin-bottom: 12px;
   }
+  #storesSection.section-head {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
   .section-title {
     font-size: 19px;
     letter-spacing: -0.3px;
     line-height: 1.15;
+  }
+  #storesSection .section-title {
+    flex: 1 1 auto;
+    min-width: 0;
   }
   .section-title::after {
     width: 30px;
@@ -3169,6 +3179,8 @@
     font-size: 11px;
     font-weight: 800;
     box-shadow: 0 8px 18px -18px rgba(15, 23, 42, 0.35);
+    flex: 0 0 auto;
+    margin-left: auto;
   }
 
   .mobile-sort-row,
