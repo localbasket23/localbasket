@@ -662,7 +662,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 12px;
-        margin-bottom: 14px;
+        margin-bottom: 10px;
       }
 
       .category-mobile-user {
@@ -699,6 +699,7 @@
         font: inherit;
         min-width: 0;
         cursor: pointer;
+        flex: 1;
       }
 
       .category-mobile-summary:focus-visible,
@@ -710,59 +711,60 @@
 
       .category-mobile-kicker {
         display: block;
-        margin: 0 0 2px;
+        margin: 0 0 1px;
         font-size: 11px;
         font-weight: 800;
         color: #94a3b8;
         text-transform: uppercase;
-        letter-spacing: 0.3px;
+        letter-spacing: 0.6px;
       }
 
       .category-mobile-name {
         display: block;
-        font-size: 19px;
-        line-height: 1.05;
+        font-size: 18px;
+        line-height: 1.02;
         font-weight: 800;
         color: #111827;
+        letter-spacing: -0.4px;
       }
 
       .category-mobile-address {
         display: block;
-        margin-top: 4px;
-        font-size: 12px;
-        color: #64748b;
+        margin-top: 5px;
+        font-size: 11px;
+        color: #71829a;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        max-width: min(50vw, 240px);
+        max-width: min(54vw, 250px);
       }
 
       .category-mobile-address::before {
         content: "\1F4CD";
-        margin-right: 6px;
-        font-size: 11px;
+        margin-right: 7px;
+        font-size: 10px;
       }
 
       .category-mobile-action {
-        min-width: 92px;
-        min-height: 46px;
+        min-width: 90px;
+        min-height: 44px;
         padding: 0 18px;
-        border-radius: 18px;
-        border: 1px solid #efddcf;
+        border-radius: 17px;
+        border: 1px solid #edd9cb;
         background: rgba(255,255,255,0.96);
         color: #f97316;
         font-size: 13px;
         font-weight: 800;
-        box-shadow: 0 10px 18px -18px rgba(15, 23, 42, 0.35);
+        box-shadow: 0 8px 16px -18px rgba(15, 23, 42, 0.22);
       }
 
       .page-shell {
         max-width: 430px;
-        padding: 10px 14px calc(128px + env(safe-area-inset-bottom));
+        padding: 12px 14px calc(128px + env(safe-area-inset-bottom));
       }
 
       .intro {
-        margin-bottom: 12px;
+        margin-bottom: 14px;
         text-align: center;
       }
 
