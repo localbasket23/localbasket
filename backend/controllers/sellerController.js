@@ -1,5 +1,6 @@
 const db = require("../db/connection");
 const bcrypt = require("bcrypt");
+const path = require("path");
 const { sendOtpSms } = require("../utils/otpSender");
 const dbp = db.promise();
 const query = dbp.query.bind(dbp);
@@ -34,6 +35,8 @@ const normalizeUploadedFile = (file) => {
   if (!file) return null;
   const out = { ...file };
   out.storedRef = (() => {
+    const secureValue = String(out.secure_url || out.url || "").trim();
+    if (/^https?:\/\//i.test(secureValue)) return secureValue;
     const pathValue = String(out.path || "").trim();
     if (/^https?:\/\//i.test(pathValue)) return pathValue;
     const filenameValue = String(out.filename || "").trim();

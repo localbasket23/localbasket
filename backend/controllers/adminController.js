@@ -11,14 +11,17 @@ try {
 // promisify db.query
 const query = util.promisify(db.query).bind(db);
 let sellerColumnsCache = null;
+const isProductionLike = process.env.NODE_ENV === "production" || !!process.env.VERCEL;
 
 const getStoredFileRef = (file) => {
   if (!file) return "";
+  const secureValue = String(file.secure_url || file.url || "").trim();
+  if (/^https?:\/\//i.test(secureValue)) return secureValue;
   const pathValue = String(file.path || "").trim();
   if (/^https?:\/\//i.test(pathValue)) return pathValue;
   const filenameValue = String(file.filename || "").trim();
-  if (filenameValue) return `/uploads/${filenameValue}`;
-  if (pathValue) return `/uploads/${path.basename(pathValue)}`;
+  if (!isProductionLike && filenameValue) return `/uploads/${filenameValue}`;
+  if (!isProductionLike && pathValue) return `/uploads/${path.basename(pathValue)}`;
   return "";
 };
 

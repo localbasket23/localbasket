@@ -2,6 +2,7 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const { cloudinary, hasCloudinary } = require("../config/cloudinary");
+const mustUseCloudinary = process.env.NODE_ENV === "production" || !!process.env.VERCEL;
 
 let storage = null;
 
@@ -15,7 +16,7 @@ if (hasCloudinary) {
       public_id: `${Date.now()}-${path.parse(file.originalname || "upload").name}`
     })
   });
-} else {
+} else if (!mustUseCloudinary) {
   const uploadDir = path.join(__dirname, "..", "uploads");
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
@@ -29,6 +30,8 @@ if (hasCloudinary) {
       cb(null, uniqueName);
     }
   });
+} else {
+  storage = multer.memoryStorage();
 }
 
 const fileFilter = (req, file, cb) => {
@@ -42,9 +45,23 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const upload = multer({
+const multerInstance = multer({
   storage,
   fileFilter
 });
 
-module.exports = upload;
+const withUploadGuard = (handler) => (req, res, next) => {
+  if (mustUseCloudinary && !hasCloudinary) {
+    const err = new Error("Cloudinary is not configured on this deployment");
+    err.statusCode = 500;
+    return next(err);
+  }
+  return handler(req, res, next);
+};
+
+module.exports = {
+  single: (field) => withUploadGuard(multerInstance.single(field)),
+  array: (field, maxCount) => withUploadGuard(multerInstance.array(field, maxCount)),
+  any: () => withUploadGuard(multerInstance.any()),
+  fields: (fields) => withUploadGuard(multerInstance.fields(fields))
+};
