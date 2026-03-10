@@ -625,13 +625,19 @@ function setupEventListeners() {
 /* ============ CATEGORIES (FROM DB) ============ */
 async function loadCategories() {
     const bar = document.getElementById("categoryBar");
-    if (!bar) return;
-    bar.innerHTML = `<button class="cat-btn" data-category="all">All</button>`;
+    if (bar) {
+        bar.innerHTML = `<button class="cat-btn" data-category="all">All</button>`;
+    }
     renderMobileCategories();
     try {
         const data = await fetchApiJson("/admin/categories");
         const cats = Array.isArray(data.categories) ? data.categories : [];
-        state.categories = cats.filter(c => c && (c.is_active === 1 || c.is_active === true));
+        state.categories = cats.filter((c) => {
+            if (!c) return false;
+            if (c.is_active === undefined || c.is_active === null || c.is_active === "") return true;
+            const activeValue = String(c.is_active).toLowerCase();
+            return activeValue === "1" || activeValue === "true";
+        });
         renderCategories();
     } catch (e) {
         console.error("Category load failed", e);
@@ -641,7 +647,6 @@ async function loadCategories() {
 
 function renderCategories() {
     const bar = document.getElementById("categoryBar");
-    if (!bar) return;
     const buttons = [
         `<button class="cat-btn" data-category="all">All</button>`
     ];
@@ -653,7 +658,9 @@ function renderCategories() {
             `<button class="cat-btn ${hasStores ? "" : "disabled"}" data-category="${slug}" ${hasStores ? "" : "disabled"}>${name}</button>`
         );
     });
-    bar.innerHTML = buttons.join("");
+    if (bar) {
+        bar.innerHTML = buttons.join("");
+    }
     renderMobileCategories();
     if (state.activeCategory !== "all" && !state.stores.some(s => mapStoreCategory(s) === state.activeCategory)) {
         state.activeCategory = "all";
