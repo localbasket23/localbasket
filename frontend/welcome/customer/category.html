@@ -459,6 +459,12 @@
       margin-top: auto;
     }
 
+    .store-meta-compact,
+    .store-pin-line,
+    .store-open-line {
+      display: none;
+    }
+
     .meta-pill {
       font-size: 10px;
       font-weight: 700;
@@ -661,12 +667,13 @@
         display: flex;
         align-items: center;
         gap: 12px;
-        margin-bottom: 14px;
-        padding: 12px 14px;
-        border-radius: 24px;
+        min-height: 60px;
+        margin-bottom: 12px;
+        padding: 8px 10px;
+        border-radius: 20px;
         background: #FFFFFF;
         border: 1px solid rgba(255, 138, 0, 0.14);
-        box-shadow: 0 18px 26px -24px rgba(255, 138, 0, 0.22);
+        box-shadow: 0 16px 24px -24px rgba(255, 138, 0, 0.2);
       }
 
       .category-mobile-head {
@@ -678,13 +685,13 @@
       }
 
       .category-mobile-back {
-        width: 42px;
-        height: 42px;
-        border-radius: 14px;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
         border: 1px solid #edd8c8;
         background: #fff7f0;
         color: #1E293B;
-        font-size: 18px;
+        font-size: 17px;
         font-weight: 800;
         flex: 0 0 auto;
       }
@@ -708,25 +715,25 @@
 
       .category-mobile-name {
         display: block;
-        font-size: 20px;
+        font-size: 17px;
         line-height: 1.1;
         font-weight: 800;
         color: #1E293B;
-        letter-spacing: -0.4px;
+        letter-spacing: -0.3px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
       }
 
       .category-mobile-action {
-        min-width: 84px;
-        min-height: 42px;
-        padding: 0 16px;
-        border-radius: 14px;
+        min-width: 80px;
+        min-height: 40px;
+        padding: 0 14px;
+        border-radius: 12px;
         border: 1px solid rgba(255, 138, 0, 0.18);
         background: #fff7f0;
         color: #FF8A00;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 800;
       }
 
@@ -762,6 +769,7 @@
       }
       
       .pin-panel {
+        position: relative;
         grid-template-columns: 1fr auto;
         align-items: center;
         gap: 8px;
@@ -775,27 +783,63 @@
 
       .pin-panel input,
       .pin-panel button {
-        height: 42px;
+        height: 44px;
+      }
+
+      .pin-panel::before {
+        content: "\01F4CD";
+        position: absolute;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 14px;
+        color: #ff8a00;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .pin-panel input {
+        padding-left: 38px;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 700;
       }
       
       .pin-panel button {
         width: auto;
-        padding: 0 16px;
+        min-width: 78px;
+        padding: 0 14px;
         border-radius: 14px;
+        font-size: 0;
+      }
+
+      .pin-panel button::before {
+        content: "Find";
+        font-size: 13px;
+      }
+
+      .chip-row::after {
+        content: "";
+        width: 6px;
+        flex: 0 0 auto;
       }
 
       .chip-row {
-        gap: 9px;
+        gap: 8px;
         margin: 0 0 16px;
         padding: 0 0 6px;
+        flex-wrap: nowrap;
       }
 
       .chip {
+        min-height: 34px;
         font-size: 11px;
-        padding: 9px 14px;
+        padding: 0 13px;
         background: rgba(255, 255, 255, 0.9);
         border-color: #eadbcb;
         box-shadow: 0 12px 22px -20px rgba(124, 58, 25, 0.22);
+        display: inline-flex;
+        align-items: center;
       }
 
       .fav-btn {
@@ -819,28 +863,29 @@
       }
 
       .store-card {
-        border-radius: 22px;
-        padding: 10px 10px 12px;
-        background: linear-gradient(180deg, #fffaf8, #fff1ea);
+        border-radius: 18px;
+        padding: 0;
+        background: #ffffff;
         border-color: #f0dfcf;
-        box-shadow: 0 18px 28px -24px rgba(124, 58, 25, 0.24);
+        box-shadow: 0 16px 24px -22px rgba(124, 58, 25, 0.2);
       }
 
       .store-body {
-        order: 1;
-        padding: 0 2px 8px;
+        order: 2;
+        padding: 10px 10px 11px;
         min-width: 0;
       }
 
       .store-img {
-        order: 2;
-        aspect-ratio: 1 / 0.96;
-        background: transparent;
-        padding: 8px 8px 0;
+        order: 1;
+        aspect-ratio: auto;
+        height: 120px;
+        background: #fff7f0;
+        padding: 0;
       }
 
       .store-img img {
-        object-fit: contain;
+        object-fit: cover;
       }
 
       .img-overlay,
@@ -849,46 +894,72 @@
       }
 
       .status-pill {
-        top: auto;
-        right: 10px;
-        bottom: 10px;
-        width: 18px;
-        height: 18px;
-        padding: 0;
+        top: 9px;
+        right: 9px;
+        bottom: auto;
+        width: auto;
+        height: auto;
+        padding: 5px 8px;
         border-radius: 999px;
-        border: 3px solid #ffffff;
-        font-size: 0;
-        line-height: 0;
-        box-shadow: 0 8px 16px -12px rgba(15, 23, 42, 0.4);
+        border: 0;
+        font-size: 9px;
+        line-height: 1;
+        box-shadow: none;
       }
 
       .status-pill.open {
-        background: #86efac;
+        background: #16a34a;
       }
 
       .status-pill.closed {
         background: #cbd5e1;
+        color: #475569;
       }
 
       .store-body h3 {
-        min-height: auto;
-        margin-bottom: 6px;
-        font-size: 12.5px;
+        min-height: 32px;
+        margin-bottom: 4px;
+        font-size: 13px;
         line-height: 1.2;
       }
 
-      .store-cat {
-        margin-bottom: 8px;
-        padding: 4px 8px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.74);
-        border-color: #efe0d0;
+      .store-meta-compact {
+        display: block;
         font-size: 10px;
+        font-weight: 700;
+        color: #64748b;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .store-pin-line {
+        display: block;
+        margin-top: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        color: #94a3b8;
+      }
+
+      .store-open-line {
+        display: inline-flex;
+        margin-top: 6px;
+        font-size: 10px;
+        font-weight: 800;
+        color: #16a34a;
+      }
+
+      .store-open-line.closed {
+        color: #ef4444;
+      }
+
+      .store-cat {
+        display: none;
       }
 
       .store-meta-row {
-        justify-content: space-between;
-        gap: 6px;
+        display: none;
       }
 
       .meta-pill,
@@ -925,17 +996,12 @@
       }
 
       .store-body {
-        padding: 0 2px 8px;
+        padding: 10px 10px 11px;
       }
 
       .store-body h3 {
         font-size: 12.5px;
-        min-height: auto;
-      }
-      
-      .store-body p {
-        font-size: 11px;
-        margin-bottom: 6px;
+        min-height: 30px;
       }
     }
 

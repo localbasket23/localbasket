@@ -47,7 +47,7 @@ const updateMobileTopbar = () => {
   const backBtn = document.getElementById("categoryMobileBack");
   const user = getStoredUser();
 
-  if (nameEl) nameEl.textContent = "Explore Categories";
+  if (nameEl) nameEl.textContent = "Explore Stores";
 
   if (backBtn && !backBtn.dataset.bound) {
     backBtn.addEventListener("click", () => {
@@ -199,6 +199,9 @@ const renderSection = (title, stores) => {
             </div>
             <div class="store-body">
               <h3>${store.store_name}</h3>
+              <div class="store-meta-compact">${renderCompactStoreMeta(store)}</div>
+              <div class="store-pin-line">&#128205; ${store.pincode || "-"}</div>
+              <div class="store-open-line ${Number(store.is_online) === 1 ? "open" : "closed"}">${Number(store.is_online) === 1 ? "Open" : "Closed"}</div>
               <div class="store-cat">${store.business_type || store.category_name || store.category || 'General Store'}</div>
               <div class="store-meta-row">
                 <span class="meta-pill">Pin: ${store.pincode || "-"}</span>
@@ -210,6 +213,13 @@ const renderSection = (title, stores) => {
       </div>
     </section>
   `;
+};
+
+const renderCompactStoreMeta = (store) => {
+  const rating = getStoreRating(store);
+  const label = store.business_type || store.category_name || store.category || "General Store";
+  const ratingText = !rating || rating.label === "New" ? "New" : rating.value.toFixed(1);
+  return `\u2B50 ${ratingText} \u2022 ${label}`;
 };
 
 const getStoreRating = (store) => {
