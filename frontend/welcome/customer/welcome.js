@@ -204,6 +204,11 @@ const dom = {
     cartItems: () => getEl("cartItems"),
     storeGrid: () => getEl("storeGrid"),
     storeSearchInput: () => getEl("storeSearchInput"),
+    mobilePinInput: () => getEl("mobilePinInput"),
+    mobileGreetingName: () => getEl("mobileGreetingName"),
+    mobileAddressLabel: () => getEl("mobileAddressLabel"),
+    mobileUserAvatar: () => getEl("mobileUserAvatar"),
+    mobileCategoryBar: () => getEl("mobileCategoryBar"),
     openNowOnlyToggle: () => getEl("openNowOnlyToggle"),
     storeSortSelect: () => getEl("storeSortSelect"),
     heroPinInput: () => getEl("pinInput"),
@@ -246,6 +251,7 @@ function initApp() {
     updateAuthUI();
     updateCartUI();
     updateLocationUI();
+    updateMobileHomeShell();
     applyViewMode(state.viewMode);
     updateMobileSortButtons();
     updateHeroInsights();
@@ -529,6 +535,26 @@ function setupEventListeners() {
             setActiveCategory(category);
         });
     }
+
+    const mobileBar = dom.mobileCategoryBar();
+    if (mobileBar) {
+        mobileBar.addEventListener("click", (e) => {
+            const btn = e.target.closest(".mobile-chip");
+            if (!btn) return;
+            const category = btn.getAttribute("data-category") || "all";
+            setActiveCategory(category);
+        });
+    }
+
+    const mobilePinInput = dom.mobilePinInput();
+    if (mobilePinInput) {
+        mobilePinInput.addEventListener("input", () => {
+            mobilePinInput.value = mobilePinInput.value.replace(/[^\d]/g, "").slice(0, 6);
+        });
+        mobilePinInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") searchByPincode();
+        });
+    }
 }
 
 /* ============ CATEGORIES (FROM DB) ============ */
@@ -561,10 +587,27 @@ function renderCategories() {
         );
     });
     bar.innerHTML = buttons.join("");
+    renderMobileCategories();
     if (state.activeCategory !== "all" && !state.stores.some(s => mapStoreCategory(s) === state.activeCategory)) {
         state.activeCategory = "all";
     }
     setActiveCategory(state.activeCategory || "all");
+}
+
+function renderMobileCategories() {
+    const bar = dom.mobileCategoryBar();
+    if (!bar) return;
+    const chips = [
+        `<button class="mobile-chip ${state.activeCategory === "all" ? "active" : ""}" type="button" data-category="all">All</button>`
+    ];
+    state.categories.slice(0, 8).forEach((c) => {
+        const slug = c.slug || slugify(c.name || "category");
+        const name = c.name || slug;
+        chips.push(
+            `<button class="mobile-chip ${state.activeCategory === slug ? "active" : ""}" type="button" data-category="${slug}">${name}</button>`
+        );
+    });
+    bar.innerHTML = chips.join("");
 }
 
 function slugify(text) {
@@ -595,6 +638,26 @@ function updateAuthUI() {
         if (dom.userInitials()) dom.userInitials().innerText = initials;
         if (dom.userFullName()) dom.userFullName().innerText = `Hi, ${names[0]}`;
     }
+    updateMobileHomeShell();
+}
+
+function updateMobileHomeShell() {
+    const greetingEl = dom.mobileGreetingName();
+    const addressEl = dom.mobileAddressLabel();
+    const avatarEl = dom.mobileUserAvatar();
+    const pinInput = dom.mobilePinInput();
+    const firstName = String(state.user?.name || "").trim().split(" ").filter(Boolean)[0] || "Shubham";
+    const initials = firstName.slice(0, 2).toUpperCase() || "LB";
+
+    if (greetingEl) greetingEl.textContent = `Morning, ${firstName}`;
+    if (addressEl) {
+        addressEl.textContent =
+            state.location?.address && state.location.address !== "Select Location"
+                ? state.location.address
+                : "What would you like to order?";
+    }
+    if (avatarEl) avatarEl.textContent = initials;
+    if (pinInput && !pinInput.value) pinInput.value = String(state.location?.pincode || "").trim();
 }
 
 function switchTab(mode) {
@@ -895,6 +958,7 @@ function updateLocationUI() {
     } else if (locMobile) {
         locMobile.innerText = address;
     }
+    updateMobileHomeShell();
 }
 
 function setLocationStatus(message, tone = "info") {
@@ -1242,14 +1306,18 @@ async function applyDetectedLocation(pos, { fallback = false } = {}) {
 
 function searchByPincode() {
     const heroRaw = String(dom.heroPinInput()?.value || "").trim();
+    const mobileRaw = String(dom.mobilePinInput()?.value || "").trim();
     const modalRaw = String(dom.modalPinInput()?.value || "").trim();
     const raw = isLocationModalVisible()
-        ? (modalRaw || heroRaw)
-        : (heroRaw || modalRaw);
+        ? (modalRaw || mobileRaw || heroRaw)
+        : (mobileRaw || heroRaw || modalRaw);
     if (!/^[0-9]{6}$/.test(raw)) {
         alert("Enter valid 6-digit pincode");
         return;
     }
+
+    if (dom.heroPinInput()) dom.heroPinInput().value = raw;
+    if (dom.mobilePinInput()) dom.mobilePinInput().value = raw;
 
     state.location.pincode = raw;
     state.location.address = `Pincode: ${raw}`;
@@ -1257,6 +1325,7 @@ function searchByPincode() {
     localStorage.setItem("lbAddr", state.location.address);
 
     updateLocationUI();
+    updateMobileHomeShell();
     setLocationStatus(`Manual pin set: ${raw}`, "info");
     if (dom.locModal()) dom.locModal().style.display = 'none';
     scrollToStoresArea();
@@ -1824,6 +1893,9 @@ function renderStars(value) {
 function setActiveCategory(category) {
     state.activeCategory = category || "all";
     document.querySelectorAll("#categoryBar .cat-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.getAttribute("data-category") === state.activeCategory);
+    });
+    document.querySelectorAll("#mobileCategoryBar .mobile-chip").forEach(btn => {
         btn.classList.toggle("active", btn.getAttribute("data-category") === state.activeCategory);
     });
     applyCategoryFilter();

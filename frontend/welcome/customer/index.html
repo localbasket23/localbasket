@@ -2710,6 +2710,334 @@
   }
 }
 
+.mobile-home-shell {
+    display: none;
+}
+
+@media (max-width: 768px) {
+  body {
+    background: linear-gradient(180deg, #e7eef1 0%, #f6f5ef 14%, #fffdf8 36%), #fffdf8;
+  }
+
+  #header,
+  #siteHeader,
+  .nav-container,
+  .hero-card,
+  .cta-strip,
+  .trust-row {
+    display: none !important;
+  }
+
+  .mobile-home-shell {
+    display: block;
+    padding: 18px 16px 8px;
+  }
+
+  .mobile-home-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .mobile-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .mobile-user-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #ff8a1a, #ffd15d);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    font-weight: 800;
+    box-shadow: 0 16px 24px -18px rgba(255, 138, 26, 0.9);
+    flex: 0 0 auto;
+  }
+
+  .mobile-user-copy {
+    min-width: 0;
+  }
+
+  .mobile-eyebrow {
+    margin: 0 0 2px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .mobile-user-copy h2 {
+    margin: 0;
+    font-size: 19px;
+    line-height: 1.05;
+    font-weight: 800;
+    color: #111827;
+  }
+
+  .mobile-user-copy span {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 220px;
+  }
+
+  .mobile-bell {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    border: 1px solid #fde7d1;
+    background: rgba(255,255,255,0.92);
+    color: #f59e0b;
+    font-size: 15px;
+    box-shadow: 0 10px 18px -18px rgba(15, 23, 42, 0.45);
+  }
+
+  .mobile-search-shell {
+    display: grid;
+    grid-template-columns: 1fr 46px;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .mobile-search-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 0 14px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.96);
+    border: 1px solid #eef2f7;
+    box-shadow: 0 18px 28px -24px rgba(15, 23, 42, 0.35);
+  }
+
+  .mobile-search-box i {
+    color: #94a3b8;
+    font-size: 14px;
+  }
+
+  .mobile-search-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  .mobile-filter-btn {
+    border: 1px solid #eef2f7;
+    border-radius: 16px;
+    background: #ffffff;
+    color: #334155;
+    box-shadow: 0 18px 28px -24px rgba(15, 23, 42, 0.35);
+    font-size: 14px;
+  }
+
+  .mobile-promo-card {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 10px;
+    padding: 16px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #ffe2d0, #fff1e6);
+    box-shadow: 0 24px 30px -26px rgba(249, 115, 22, 0.55);
+    margin-bottom: 18px;
+    align-items: center;
+  }
+
+  .promo-kicker {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.35px;
+    text-transform: uppercase;
+    color: #c2410c;
+    margin-bottom: 8px;
+  }
+
+  .mobile-promo-copy h3 {
+    margin: 0;
+    font-size: 28px;
+    line-height: 0.98;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #111827;
+  }
+
+  .mobile-promo-copy h3 span {
+    color: #f97316;
+  }
+
+  .promo-cta {
+    margin-top: 12px;
+    min-height: 38px;
+    padding: 0 16px;
+    border: none;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ff7a18, #fb923c);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+    box-shadow: 0 16px 22px -20px rgba(249, 115, 22, 0.8);
+  }
+
+  .mobile-promo-art {
+    justify-self: end;
+    width: 108px;
+    height: 108px;
+    border-radius: 28px;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.95), rgba(255,255,255,0) 58%), linear-gradient(145deg, #fff8f2, #ffd2b0);
+    font-size: 52px;
+  }
+
+  .mobile-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .mobile-section-head h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 800;
+    color: #111827;
+  }
+
+  .mobile-category-bar {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    scrollbar-width: none;
+  }
+
+  .mobile-category-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mobile-chip {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.92);
+    border: 1px solid #f3e7d7;
+    color: #334155;
+    font-size: 12px;
+    font-weight: 800;
+    box-shadow: 0 12px 20px -22px rgba(15, 23, 42, 0.45);
+  }
+
+  .mobile-chip.active {
+    background: linear-gradient(135deg, #ff8a1a, #fb923c);
+    color: #fff;
+    border-color: #ff8a1a;
+  }
+
+  .hero {
+    padding: 0 16px 6px !important;
+    background: transparent !important;
+    border-bottom: none !important;
+  }
+
+  .hero h1,
+  .hero-sub,
+  .hero-visual {
+    display: none !important;
+  }
+
+  .hero-left,
+  .hero-left-top {
+    gap: 0 !important;
+  }
+
+  .search-wrapper {
+    background: #ffffff !important;
+    border: 1px solid #eef2f7 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 18px 28px -24px rgba(15, 23, 42, 0.35) !important;
+  }
+
+  #categorySection,
+  #categoryBar {
+    display: none !important;
+  }
+
+  .main-content {
+    padding: 10px 16px 24px !important;
+  }
+
+  .section-title {
+    font-size: 20px !important;
+  }
+
+  .store-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 12px !important;
+  }
+
+  .store-card {
+    border-radius: 18px !important;
+    overflow: hidden;
+    box-shadow: 0 18px 24px -24px rgba(15, 23, 42, 0.45) !important;
+  }
+
+  .store-img-wrap {
+    height: 116px !important;
+  }
+
+  .store-body {
+    padding: 12px 11px 14px !important;
+  }
+
+  .store-body h3 {
+    font-size: 13px !important;
+    margin-bottom: 6px !important;
+    line-height: 1.2 !important;
+  }
+
+  .store-cat,
+  .meta-pill,
+  .rating-chip {
+    font-size: 10px !important;
+  }
+
+  .meta-row {
+    gap: 6px !important;
+    flex-wrap: wrap;
+  }
+
+  .status-badge {
+    top: 8px !important;
+    left: 8px !important;
+    font-size: 9px !important;
+    padding: 4px 7px !important;
+    border-radius: 999px !important;
+  }
+}
+
 
     </style>
 </head>
@@ -2718,6 +3046,46 @@
 
   <div id="header"></div>
   <div id="siteHeader"></div>
+
+  <section class="mobile-home-shell" aria-label="Mobile home">
+    <div class="mobile-home-topbar">
+      <div class="mobile-user">
+        <div class="mobile-user-avatar" id="mobileUserAvatar">LB</div>
+        <div class="mobile-user-copy">
+          <p class="mobile-eyebrow">Morning</p>
+          <h2 id="mobileGreetingName">Shop local today</h2>
+          <span id="mobileAddressLabel">What would you like to order?</span>
+        </div>
+      </div>
+      <button class="mobile-bell" type="button" aria-label="Notifications">
+        <i class="fas fa-bell"></i>
+      </button>
+    </div>
+
+    <div class="mobile-search-shell">
+      <label class="mobile-search-box" for="mobilePinInput">
+        <i class="fas fa-search"></i>
+        <input type="text" id="mobilePinInput" inputmode="numeric" maxlength="6" placeholder="Search by pincode">
+      </label>
+      <button class="mobile-filter-btn" type="button" onclick="searchByPincode()" aria-label="Find stores">
+        <i class="fas fa-sliders-h"></i>
+      </button>
+    </div>
+
+    <div class="mobile-promo-card">
+      <div class="mobile-promo-copy">
+        <span class="promo-kicker">Local fresh picks</span>
+        <h3>Offer Up to<br><span>30% off</span></h3>
+        <button type="button" class="promo-cta" onclick="document.getElementById('storesSection').scrollIntoView({behavior:'smooth'})">Shop now</button>
+      </div>
+      <div class="mobile-promo-art" aria-hidden="true">🥕</div>
+    </div>
+
+    <div class="mobile-section-head">
+      <h3>Categories</h3>
+    </div>
+    <div class="mobile-category-bar" id="mobileCategoryBar"></div>
+  </section>
 
   <header class="hero">
     <div class="hero-inner">
