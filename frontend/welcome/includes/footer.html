@@ -1,11 +1,73 @@
 <footer class="lb-footer-pro">
   <div class="footer-glass">
+    <div class="footer-grid">
+      <section class="footer-brand">
+        <div class="footer-brand-row">
+          <div class="footer-logo">LB</div>
+          <h2>LocalBasket</h2>
+        </div>
+        <p>Fresh groceries, nearby stores, and faster local delivery from verified sellers around you.</p>
+        <div class="footer-badges">
+          <span class="footer-badge">Verified Stores</span>
+          <span class="footer-badge">Fast Delivery</span>
+          <span class="footer-badge">Local Support</span>
+        </div>
+        <div class="footer-social" aria-label="Social links">
+          <a href="#" aria-label="Instagram">Ig</a>
+          <a href="#" aria-label="X">X</a>
+          <a href="#" aria-label="Facebook">f</a>
+          <a href="#" aria-label="YouTube">Yt</a>
+        </div>
+        <div class="footer-help-line">Quick actions</div>
+        <div class="footer-help-actions">
+          <a id="lbFooterLocBtn" href="#" role="button">Change Location</a>
+          <a id="lbFooterTopBtn" href="#" role="button" data-mode="inline">Back to Top</a>
+        </div>
+      </section>
+
+      <section class="footer-col">
+        <h4>Explore</h4>
+        <a href="/welcome/customer/index.html">Home</a>
+        <a href="/welcome/customer/profile/profile.html">My Profile</a>
+        <a href="/welcome/customer/order/customer-orders.html">My Orders</a>
+        <a href="/welcome/customer/category.html">Categories</a>
+      </section>
+
+      <section class="footer-seller">
+        <span class="seller-kicker">Grow with us</span>
+        <h4>Sell on LocalBasket</h4>
+        <p class="seller-copy">Reach more local customers and manage your store with one seller panel.</p>
+        <div class="seller-points">
+          <span>Easy setup</span>
+          <span>Order management</span>
+          <span>Local reach</span>
+        </div>
+        <div class="seller-cta-row">
+          <a class="seller-cta primary" id="lbFooterSellerBtnDesktop" href="/welcome/seller/seller-auth/seller-auth.html">Start Selling</a>
+        </div>
+      </section>
+
+      <section class="footer-news">
+        <h4>Stay Updated</h4>
+        <form class="news-box" id="lbFooterNewsForm">
+          <input type="email" id="lbFooterEmail" placeholder="Enter your email" autocomplete="email">
+          <button type="submit">Join</button>
+        </form>
+        <div class="footer-news-msg" id="lbFooterNewsMsg" aria-live="polite"></div>
+        <div class="footer-help-line">Quick pin check</div>
+        <form class="news-box" id="lbQuickPinForm">
+          <input type="text" id="lbQuickPinInput" inputmode="numeric" maxlength="6" placeholder="Enter pincode">
+          <button type="submit">Check</button>
+        </form>
+        <div class="footer-news-msg" id="lbQuickPinMsg" aria-live="polite"></div>
+      </section>
+    </div>
     <div class="footer-bottom-pro">
       <div class="footer-bottom-actions">
         <a id="lbFooterSellerBtn" aria-label="Sell on LocalBasket" href="/welcome/seller/seller-auth/seller-auth.html">Sell on LocalBasket</a>
       </div>
       <div class="footer-bottom-row">
-        <span class="footer-bottom-copy">&copy; LocalBasket 2026 &middot; <a class="lb-admin-trigger" id="lbAdminLoginBtn" href="#" role="button">panel</a></span>
+        <span class="footer-bottom-copy">&copy; LocalBasket <span id="lbFooterYear">2026</span> &middot; <a class="lb-admin-trigger" id="lbAdminLoginBtn" href="#" role="button">panel</a></span>
       </div>
     </div>
   </div>
