@@ -221,6 +221,16 @@ const dom = {
     cartItems: () => getEl("cartItems"),
     storeGrid: () => getEl("storeGrid"),
     storeSearchInput: () => getEl("storeSearchInput"),
+    mobilePinInput: () => getEl("mobilePinInput"),
+    mobileGreetingName: () => getEl("mobileGreetingName"),
+    mobileAddressLabel: () => getEl("mobileAddressLabel"),
+    mobileUserAvatar: () => getEl("mobileUserAvatar"),
+    mobileAuthBtn: () => getEl("mobileAuthBtn"),
+    mobileCategoryBar: () => getEl("mobileCategoryBar"),
+    mobileFilterTrigger: () => getEl("mobileFilterTrigger"),
+    mobileFilterPanel: () => getEl("mobileFilterPanel"),
+    mobileSortSelect: () => getEl("mobileSortSelect"),
+    mobileAvailabilitySelect: () => getEl("mobileAvailabilitySelect"),
     openNowOnlyToggle: () => getEl("openNowOnlyToggle"),
     storeSortSelect: () => getEl("storeSortSelect"),
     heroPinInput: () => getEl("pinInput"),
@@ -269,6 +279,7 @@ function initApp() {
     updateAuthUI();
     updateCartUI();
     updateLocationUI();
+    updateMobileHomeShell();
     applyViewMode(state.viewMode);
     updateMobileSortButtons();
     loadHeroSettings();
@@ -302,6 +313,40 @@ function initApp() {
     setTimeout(() => {
         autoDetectLocationOnLoad().catch(() => {});
     }, 260);
+}
+
+function updateMobileHomeShell() {
+    const mobileName = dom.mobileGreetingName();
+    const mobileAddress = dom.mobileAddressLabel();
+    const mobileAuthBtn = dom.mobileAuthBtn();
+    const mobileAvatar = dom.mobileUserAvatar();
+    const user = normalizeUser(safeParse(localStorage.getItem("lbUser"), null));
+
+    if (mobileName) {
+        mobileName.textContent = String(user?.name || "Customer").trim() || "Customer";
+    }
+
+    if (mobileAddress) {
+        const text = String(state.location.address || state.location.pincode || "Select your location").trim();
+        mobileAddress.textContent = text || "Select your location";
+    }
+
+    if (mobileAuthBtn) {
+        const loggedIn = !!user;
+        mobileAuthBtn.textContent = loggedIn ? "Profile" : "Login";
+        mobileAuthBtn.setAttribute("aria-label", loggedIn ? "Open profile" : "Login");
+        mobileAuthBtn.onclick = () => {
+            if (loggedIn) {
+                window.location.href = welcomePath("customer/profile/profile.html");
+                return;
+            }
+            openAuth();
+        };
+    }
+
+    if (mobileAvatar) {
+        mobileAvatar.innerHTML = `<img src="/welcome/logo2.png?v=20260303" alt="LocalBasket logo">`;
+    }
 }
 
 const HERO_DEFAULTS = {
@@ -607,10 +652,25 @@ function syncLocationMapSize() {
 
 function updateMobileSortButtons() {
     const row = getEl("mobileSortRow");
-    if (!row) return;
-    row.querySelectorAll(".mobile-sort-btn").forEach((btn) => {
-        btn.classList.toggle("active", btn.getAttribute("data-sort") === state.storeSort);
-    });
+    if (row) {
+        row.querySelectorAll(".mobile-sort-btn").forEach((btn) => {
+            btn.classList.toggle("active", btn.getAttribute("data-sort") === state.storeSort);
+        });
+    }
+    const mobileSortSelect = dom.mobileSortSelect();
+    if (mobileSortSelect) mobileSortSelect.value = state.storeSort || "relevance";
+    const mobileAvailabilitySelect = dom.mobileAvailabilitySelect();
+    if (mobileAvailabilitySelect) mobileAvailabilitySelect.value = state.openNowOnly ? "open" : "all";
+}
+
+function setMobileFilterPanel(open) {
+    const trigger = dom.mobileFilterTrigger();
+    const panel = dom.mobileFilterPanel();
+    if (!trigger || !panel) return;
+    const next = !!open;
+    trigger.setAttribute("aria-expanded", next ? "true" : "false");
+    panel.hidden = !next;
+    panel.classList.toggle("open", next);
 }
 
 function setupEventListeners() {
@@ -635,11 +695,21 @@ function setupEventListeners() {
         if (menu && !e.target.closest("#accountBtn") && !e.target.closest("#userMenu")) {
             menu.style.display = "none";
         }
+        const panel = dom.mobileFilterPanel();
+        const trigger = dom.mobileFilterTrigger();
+        if (
+            panel && trigger &&
+            !panel.hidden &&
+            !e.target.closest("#mobileFilterPanel") &&
+            !e.target.closest("#mobileFilterTrigger")
+        ) {
+            setMobileFilterPanel(false);
+        }
         if (e.target === dom.cartOverlay()) toggleCart(false);
     });
 
     // 3. Pincode Input Logic
-    [dom.heroPinInput(), dom.modalPinInput()].forEach(input => {
+    [dom.heroPinInput(), dom.modalPinInput(), dom.mobilePinInput()].forEach(input => {
         input?.addEventListener("keydown", (e) => {
             if (e.key === "Enter") searchByPincode();
         });
@@ -737,6 +807,33 @@ function setupEventListeners() {
             applyCategoryFilter();
         });
     }
+    const mobileSortSelect = dom.mobileSortSelect();
+    if (mobileSortSelect) {
+        mobileSortSelect.addEventListener("change", () => {
+            state.storeSort = mobileSortSelect.value || "relevance";
+            if (storeSortSelect) storeSortSelect.value = state.storeSort;
+            updateMobileSortButtons();
+            applyCategoryFilter();
+        });
+    }
+    const mobileAvailabilitySelect = dom.mobileAvailabilitySelect();
+    if (mobileAvailabilitySelect) {
+        mobileAvailabilitySelect.addEventListener("change", () => {
+            state.openNowOnly = mobileAvailabilitySelect.value === "open";
+            const toggle = dom.openNowOnlyToggle();
+            if (toggle) toggle.checked = state.openNowOnly;
+            updateMobileSortButtons();
+            applyCategoryFilter();
+        });
+    }
+    const mobileFilterTrigger = dom.mobileFilterTrigger();
+    if (mobileFilterTrigger) {
+        mobileFilterTrigger.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const expanded = mobileFilterTrigger.getAttribute("aria-expanded") === "true";
+            setMobileFilterPanel(!expanded);
+        });
+    }
     const mobileSortRow = getEl("mobileSortRow");
     if (mobileSortRow) {
         mobileSortRow.addEventListener("click", (e) => {
@@ -825,26 +922,48 @@ function setupEventListeners() {
             setActiveCategory(category);
         });
     }
+    const mobileBar = dom.mobileCategoryBar();
+    if (mobileBar) {
+        mobileBar.addEventListener("click", (e) => {
+            const btn = e.target.closest(".mobile-chip");
+            if (!btn) return;
+            const category = btn.getAttribute("data-category") || "all";
+            setActiveCategory(category);
+        });
+    }
 }
 
 /* ============ CATEGORIES (FROM DB) ============ */
 async function loadCategories() {
     const bar = document.getElementById("categoryBar");
-    if (!bar) return;
-    bar.innerHTML = `<button class="cat-btn" data-category="all">All</button>`;
+    if (bar) {
+        bar.innerHTML = `<button class="cat-btn" data-category="all">All</button>`;
+    }
+    renderMobileCategories();
     try {
         const data = await fetchApiJson("/admin/categories");
         const cats = Array.isArray(data.categories) ? data.categories : [];
-        state.categories = cats.filter(c => c && (c.is_active === 1 || c.is_active === true));
+        state.categories = cats.filter((c) => {
+            if (!c) return false;
+            if (c.is_active === undefined || c.is_active === null || c.is_active === "") return true;
+            const activeValue = String(c.is_active).toLowerCase();
+            return activeValue === "1" || activeValue === "true";
+        });
+        if (!state.categories.length && state.stores.length) {
+            state.categories = deriveCategoriesFromStores(state.stores);
+        }
         renderCategories();
     } catch (e) {
         console.error("Category load failed", e);
+        if (state.stores.length) {
+            state.categories = deriveCategoriesFromStores(state.stores);
+        }
+        renderMobileCategories();
     }
 }
 
 function renderCategories() {
     const bar = document.getElementById("categoryBar");
-    if (!bar) return;
     const buttons = [
         `<button class="cat-btn" data-category="all">All</button>`
     ];
@@ -856,11 +975,54 @@ function renderCategories() {
             `<button class="cat-btn ${hasStores ? "" : "disabled"}" data-category="${slug}" ${hasStores ? "" : "disabled"}>${name}</button>`
         );
     });
-    bar.innerHTML = buttons.join("");
+    if (bar) {
+        bar.innerHTML = buttons.join("");
+    }
+    renderMobileCategories();
     if (state.activeCategory !== "all" && !state.stores.some(s => mapStoreCategory(s) === state.activeCategory)) {
         state.activeCategory = "all";
     }
     setActiveCategory(state.activeCategory || "all");
+}
+
+function renderMobileCategories() {
+    const bar = dom.mobileCategoryBar();
+    if (!bar) return;
+    const getMobileCategoryMeta = (slug, name) => {
+        const key = `${slug} ${name}`.toLowerCase();
+        if (key.includes("fruit")) return { icon: "🍎", tone: "fruit" };
+        if (key.includes("vegetable")) return { icon: "🥦", tone: "veg" };
+        if (key.includes("snack")) return { icon: "🍪", tone: "snack" };
+        if (key.includes("oil")) return { icon: "🫙", tone: "oil" };
+        if (key.includes("dairy") || key.includes("milk")) return { icon: "🥛", tone: "dairy" };
+        if (key.includes("bakery")) return { icon: "🥐", tone: "bakery" };
+        if (key.includes("drink") || key.includes("beverage")) return { icon: "🥤", tone: "drink" };
+        if (key.includes("masala") || key.includes("spice")) return { icon: "🌶️", tone: "spice" };
+        return { icon: "🛒", tone: "all" };
+    };
+    const chips = [
+        `<button class="mobile-chip ${state.activeCategory === "all" ? "active" : ""}" type="button" data-category="all"><span class="mobile-chip-icon tone-all" aria-hidden="true">🛒</span><span class="mobile-chip-text">All</span></button>`
+    ];
+    state.categories.forEach((c) => {
+        const slug = c.slug || slugify(c.name || "category");
+        const name = c.name || slug;
+        const meta = getMobileCategoryMeta(slug, name);
+        chips.push(
+            `<button class="mobile-chip ${state.activeCategory === slug ? "active" : ""}" type="button" data-category="${slug}"><span class="mobile-chip-icon tone-${meta.tone}" aria-hidden="true">${meta.icon}</span><span class="mobile-chip-text">${name}</span></button>`
+        );
+    });
+    bar.innerHTML = chips.join("");
+}
+
+function deriveCategoriesFromStores(stores) {
+    const seen = new Map();
+    (Array.isArray(stores) ? stores : []).forEach((store) => {
+        const slug = slugify(store?.category_slug || store?.category_name || store?.category || store?.business_type || "");
+        const name = String(store?.category_name || store?.category || store?.business_type || "").trim();
+        if (!slug || !name || seen.has(slug)) return;
+        seen.set(slug, { slug, name, is_active: 1 });
+    });
+    return Array.from(seen.values());
 }
 
 function slugify(text) {
@@ -891,6 +1053,7 @@ function updateAuthUI() {
         if (dom.userInitials()) dom.userInitials().innerText = initials;
         if (dom.userFullName()) dom.userFullName().innerText = `Hi, ${names[0]}`;
     }
+    updateMobileHomeShell();
 }
 
 function switchTab(mode) {
@@ -1200,6 +1363,7 @@ function updateLocationUI() {
     } else if (locMobile) {
         locMobile.innerText = address;
     }
+    updateMobileHomeShell();
 }
 
 function setLocationStatus(message, tone = "info") {
@@ -1692,6 +1856,9 @@ async function loadStores(query, isPin = true) {
 
         if (stores.length > 0) {
             state.stores = stores;
+            if (!state.categories.length) {
+                state.categories = deriveCategoriesFromStores(stores);
+            }
             updateHeroInsights();
             renderCategories();
             applyCategoryFilter();
@@ -2092,6 +2259,9 @@ function renderStars(value) {
 function setActiveCategory(category) {
     state.activeCategory = category || "all";
     document.querySelectorAll("#categoryBar .cat-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.getAttribute("data-category") === state.activeCategory);
+    });
+    document.querySelectorAll("#mobileCategoryBar .mobile-chip").forEach(btn => {
         btn.classList.toggle("active", btn.getAttribute("data-category") === state.activeCategory);
     });
     applyCategoryFilter();
