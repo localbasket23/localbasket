@@ -679,7 +679,7 @@ function renderMobileCategories() {
     const chips = [
         `<button class="mobile-chip ${state.activeCategory === "all" ? "active" : ""}" type="button" data-category="all"><span class="mobile-chip-icon tone-all" aria-hidden="true">🛒</span><span class="mobile-chip-text">All</span></button>`
     ];
-    state.categories.slice(0, 8).forEach((c) => {
+    state.categories.forEach((c) => {
         const slug = c.slug || slugify(c.name || "category");
         const name = c.name || slug;
         const meta = getMobileCategoryMeta(slug, name);
