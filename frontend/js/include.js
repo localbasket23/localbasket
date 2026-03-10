@@ -246,12 +246,46 @@ document.addEventListener("DOMContentLoaded", async () => {
       const target = document.getElementById("mobileHeaderAddress");
       if (target) target.textContent = String(text || "Select Location");
     };
+    const getDefaultTimeZone = () => {
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        return String(tz || "").trim() || "Asia/Kolkata";
+      } catch {
+        return "Asia/Kolkata";
+      }
+    };
+    const isValidTimeZone = (timeZone) => {
+      try {
+        new Intl.DateTimeFormat("en-US", { timeZone: String(timeZone || "") }).format(new Date(0));
+        return true;
+      } catch {
+        return false;
+      }
+    };
+    const getAppTimeZone = () => {
+      const candidate = getDefaultTimeZone();
+      return isValidTimeZone(candidate) ? candidate : "Asia/Kolkata";
+    };
+    const getHourInTimeZone = (timeZone) => {
+      try {
+        const parts = new Intl.DateTimeFormat("en-US", {
+          hour: "2-digit",
+          hour12: false,
+          timeZone: String(timeZone || "Asia/Kolkata")
+        }).formatToParts(new Date());
+        const hourPart = parts.find((p) => p.type === "hour")?.value;
+        const hour = Number(hourPart);
+        return Number.isFinite(hour) ? hour : new Date().getHours();
+      } catch {
+        return new Date().getHours();
+      }
+    };
     const getTimeGreeting = () => {
-      const hour = new Date().getHours();
-      if (hour < 12) return "Good morning";
-      if (hour < 17) return "Good afternoon";
-      if (hour < 21) return "Good evening";
-      return "Good night";
+      const hour = getHourInTimeZone(getAppTimeZone());
+      if (hour < 12) return "Morning";
+      if (hour < 17) return "Afternoon";
+      if (hour < 21) return "Evening";
+      return "Night";
     };
     const getMobilePageTitle = (path) => {
       const value = String(path || "").toLowerCase();

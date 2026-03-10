@@ -844,15 +844,28 @@ function updateMobileHomeShell() {
     const addressEl = dom.mobileAddressLabel();
     const authBtn = dom.mobileAuthBtn();
     const pinInput = dom.mobilePinInput();
-    const hour = new Date().getHours();
+    const hour = (() => {
+        try {
+            const fallbackTz = (() => {
+                try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Kolkata"; } catch { return "Asia/Kolkata"; }
+            })();
+            const tz = String(fallbackTz || "").trim() || "Asia/Kolkata";
+            const parts = new Intl.DateTimeFormat("en-US", { hour: "2-digit", hour12: false, timeZone: tz }).formatToParts(new Date());
+            const hourPart = parts.find((p) => p.type === "hour")?.value;
+            const value = Number(hourPart);
+            return Number.isFinite(value) ? value : new Date().getHours();
+        } catch {
+            return new Date().getHours();
+        }
+    })();
     const greeting =
         hour < 12
-            ? "Good morning"
+            ? "Morning"
             : hour < 17
-                ? "Good afternoon"
+                ? "Afternoon"
                 : hour < 21
-                    ? "Good evening"
-                    : "Good night";
+                    ? "Evening"
+                    : "Night";
     const fullName = String(state.user?.name || "").trim() || "Customer";
     const locationText =
         state.location?.address && state.location.address !== "Select Location"
