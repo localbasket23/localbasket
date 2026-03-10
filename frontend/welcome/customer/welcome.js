@@ -856,13 +856,15 @@ function updateMobileHomeShell() {
         }
     })();
     const greeting =
-        hour < 12
-            ? "Morning"
-            : hour < 17
-                ? "Afternoon"
-                : hour < 21
-                    ? "Evening"
-                    : "Night";
+        hour < 5
+            ? "Good Night"
+            : hour < 12
+                ? "Good Morning"
+                : hour < 17
+                    ? "Good Afternoon"
+                    : hour < 21
+                        ? "Good Evening"
+                        : "Good Night";
     const fullName = String(state.user?.name || "").trim() || "Customer";
     const locationText =
         state.location?.address && state.location.address !== "Select Location"

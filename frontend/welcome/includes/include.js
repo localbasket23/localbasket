@@ -393,10 +393,12 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
   };
   const getTimeGreeting = () => {
     const hour = getHourInTimeZone(getAppTimeZone());
-    if (hour < 12) return "Morning";
-    if (hour < 17) return "Afternoon";
-    if (hour < 21) return "Evening";
-    return "Night";
+    // Treat late night / early morning as "Good Night" (0-4).
+    if (hour < 5) return "Good Night";
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    if (hour < 21) return "Good Evening";
+    return "Good Night";
   };
 
   const syncHeaderLocation = () => {

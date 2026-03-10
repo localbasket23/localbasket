@@ -336,13 +336,15 @@ function updateMobileHomeShell() {
             return new Date().getHours();
         }
     })();
-    const greeting = hour < 12
-        ? "Morning"
-        : hour < 17
-            ? "Afternoon"
-            : hour < 21
-                ? "Evening"
-                : "Night";
+    const greeting = hour < 5
+        ? "Good Night"
+        : hour < 12
+            ? "Good Morning"
+            : hour < 17
+                ? "Good Afternoon"
+                : hour < 21
+                    ? "Good Evening"
+                    : "Good Night";
 
     if (mobileEyebrow) {
         mobileEyebrow.textContent = greeting;
