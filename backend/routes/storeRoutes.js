@@ -1,6 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../db/connection");
+const upload = require("../middlewares/upload");
+const { register: createStore } = require("../controllers/sellerController");
+
+router.post("/create", upload.any(), createStore);
 
 router.get("/", (req, res) => {
   const pincode = String(req.query?.pincode || "").trim();
