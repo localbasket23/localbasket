@@ -1157,7 +1157,7 @@ function updateFooterSafeOffsets() {
   }
   if (mobileBar && mobileBar.classList.contains("is-visible")) {
     if (isMobile) {
-      mobileBar.style.bottom = `${Math.max(70, navHeight + 8) + overlap}px`;
+      mobileBar.style.bottom = `${Math.max(88, navHeight + 24) + overlap}px`;
       mobileBar.style.left = "0";
       mobileBar.style.right = "0";
       mobileBar.style.top = "auto";
