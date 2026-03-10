@@ -1921,6 +1921,9 @@ function renderStores(stores) {
             </div>
             <div class="store-body">
                 <h3>${store.store_name}</h3>
+                <div class="store-meta-compact">${renderStoreCompactMeta(store)}</div>
+                <div class="store-pin-line">&#128205; ${store.pincode || "-"}</div>
+                <div class="store-open-line ${store.is_online ? 'open' : 'closed'}">${store.is_online ? 'Open' : 'Closed'}</div>
                 <div class="store-cat">${store.business_type || store.category_name || store.category || 'General Store'}</div>
                 <div class="meta-row">
                     <span class="meta-pill">Pin: ${store.pincode}</span>
@@ -1929,6 +1932,13 @@ function renderStores(stores) {
             </div>
         </div>
     `).join('');
+}
+
+function renderStoreCompactMeta(store) {
+    const rating = getStoreRating(store);
+    const category = store.business_type || store.category_name || store.category || 'General Store';
+    const ratingText = !rating || rating.label === "New" ? "New" : rating.value.toFixed(1);
+    return `\u2B50 ${ratingText} • ${category}`;
 }
 
 function getStoreRatingValue(store) {
