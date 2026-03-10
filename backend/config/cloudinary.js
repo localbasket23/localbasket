@@ -14,7 +14,38 @@ if (hasCloudinary) {
   });
 }
 
+const uploadToCloudinary = async (file, options = {}) => {
+  if (!file || !hasCloudinary) return null;
+
+  const existing = String(file.secure_url || file.url || file.path || "").trim();
+  if (/^https?:\/\//i.test(existing)) {
+    return {
+      secure_url: existing,
+      public_id: String(file.filename || "").trim() || null
+    };
+  }
+
+  const uploadOptions = {
+    folder: "localbasket",
+    resource_type: "auto",
+    ...options
+  };
+
+  if (file.buffer && file.mimetype) {
+    const dataUri = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
+    return cloudinary.uploader.upload(dataUri, uploadOptions);
+  }
+
+  const localPath = String(file.path || "").trim();
+  if (localPath) {
+    return cloudinary.uploader.upload(localPath, uploadOptions);
+  }
+
+  return null;
+};
+
 module.exports = {
   cloudinary,
-  hasCloudinary
+  hasCloudinary,
+  uploadToCloudinary
 };

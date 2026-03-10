@@ -1,22 +1,13 @@
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const { cloudinary, hasCloudinary } = require("../config/cloudinary");
+const { hasCloudinary } = require("../config/cloudinary");
 const mustUseCloudinary = process.env.NODE_ENV === "production" || !!process.env.VERCEL;
 
 let storage = null;
 
 if (hasCloudinary) {
-  const { CloudinaryStorage } = require("multer-storage-cloudinary");
-  storage = new CloudinaryStorage({
-    cloudinary,
-    params: (req, file) => ({
-      folder: "localbasket",
-      allowed_formats: ["jpg", "jpeg", "png", "webp", "avif"],
-      resource_type: "auto",
-      public_id: `${Date.now()}-${path.parse(file.originalname || "upload").name}`
-    })
-  });
+  storage = multer.memoryStorage();
 } else if (!mustUseCloudinary) {
   const uploadDir = path.join(__dirname, "..", "uploads");
   if (!fs.existsSync(uploadDir)) {
@@ -48,7 +39,10 @@ const fileFilter = (req, file, cb) => {
 
 const multerInstance = multer({
   storage,
-  fileFilter
+  fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024
+  }
 });
 
 const withUploadGuard = (handler) => (req, res, next) => {

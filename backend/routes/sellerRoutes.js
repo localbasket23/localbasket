@@ -5,6 +5,7 @@ const path = require("path");
 const upload = require("../middlewares/upload");
 const db = require("../db/connection");
 const isProductionLike = process.env.NODE_ENV === "production" || !!process.env.VERCEL;
+const { uploadToCloudinary, hasCloudinary } = require("../config/cloudinary");
 
 /* ================= CONTROLLER ================= */
 const sellerController = require("../controllers/sellerController");
@@ -103,6 +104,19 @@ const getStoredFileRef = (file) => {
   return "";
 };
 
+const hydrateRouteFilesWithCloudinary = async (req) => {
+  if (!hasCloudinary) return;
+  const files = Array.isArray(req?.files) ? req.files : [];
+  await Promise.all(files.map(async (file) => {
+    const uploaded = await uploadToCloudinary(file, { folder: "localbasket" });
+    if (!uploaded?.secure_url) return;
+    file.secure_url = uploaded.secure_url;
+    file.url = uploaded.secure_url;
+    file.path = uploaded.secure_url;
+    if (uploaded.public_id) file.filename = uploaded.public_id;
+  }));
+};
+
 router.put("/products/:id", upload.array("image", 8), async (req, res) => {
   const productId = Number(req.params.id);
   const { name, price, stock, mrp, unit } = req.body;
@@ -113,6 +127,8 @@ router.put("/products/:id", upload.array("image", 8), async (req, res) => {
       message: "Missing required fields"
     });
   }
+
+  await hydrateRouteFilesWithCloudinary(req);
 
   const images = getUploadedFilesByNames(req, ["image", "images", "images[]"])
     .map((f) => getStoredFileRef(f))

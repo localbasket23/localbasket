@@ -1,6 +1,7 @@
 const db = require("../db/connection");
 const bcrypt = require("bcrypt");
 const path = require("path");
+const { uploadToCloudinary, hasCloudinary } = require("../config/cloudinary");
 const { sendOtpSms } = require("../utils/otpSender");
 const dbp = db.promise();
 const query = dbp.query.bind(dbp);
@@ -173,6 +174,29 @@ const verifySellerOtp = (phone, otp) => {
   return { ok: true };
 };
 
+const listRequestFiles = (req) => {
+  if (!req) return [];
+  if (Array.isArray(req.files)) return req.files.filter(Boolean);
+  if (req.files && typeof req.files === "object") {
+    return Object.values(req.files).flat().filter(Boolean);
+  }
+  if (req.file) return [req.file];
+  return [];
+};
+
+const hydrateRequestFilesWithCloudinary = async (req) => {
+  if (!hasCloudinary) return;
+  const files = listRequestFiles(req);
+  await Promise.all(files.map(async (file) => {
+    const uploaded = await uploadToCloudinary(file, { folder: "localbasket" });
+    if (!uploaded?.secure_url) return;
+    file.secure_url = uploaded.secure_url;
+    file.url = uploaded.secure_url;
+    file.path = uploaded.secure_url;
+    if (uploaded.public_id) file.filename = uploaded.public_id;
+  }));
+};
+
 const fetchSellerByPhone = async (phone) => {
   const [rows] = await query(
     `SELECT s.*, c.name AS category
@@ -255,6 +279,7 @@ const buildSellerLoginPayload = (seller) => {
 ===================================================== */
 exports.register = async (req, res) => {
   try {
+    await hydrateRequestFilesWithCloudinary(req);
     const {
       store_name,
       owner_name,
@@ -563,6 +588,7 @@ exports.verifyLoginOtp = async (req, res) => {
 ===================================================== */
 exports.resubmit = async (req, res) => {
   try {
+    await hydrateRequestFilesWithCloudinary(req);
     const sellerId = req.params.id;
     const {
       store_name,
@@ -719,6 +745,7 @@ exports.addProduct = async (req, res) => {
   }
 
   try {
+    await hydrateRequestFilesWithCloudinary(req);
     const columns = await ensureProductsImagesColumn();
     const singleImage = getUploadedFile(req, "image")?.storedRef || null;
     const multiImages = getUploadedFilesByNames(req, ["image", "images", "images[]"])
@@ -840,6 +867,7 @@ exports.updateStatus = (req, res) => {
 ===================================================== */
 exports.updateProfile = async (req, res) => {
   try {
+    await hydrateRequestFilesWithCloudinary(req);
     const sellerId = Number(req.body.seller_id);
     if (!sellerId) {
       return res.status(400).json({ success: false, message: "Seller ID missing" });

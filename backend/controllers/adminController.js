@@ -1,6 +1,7 @@
 const db = require("../db/connection");
 const util = require("util");
 const path = require("path");
+const { uploadToCloudinary, hasCloudinary } = require("../config/cloudinary");
 let PDFDocument = null;
 try {
   PDFDocument = require("pdfkit");
@@ -23,6 +24,29 @@ const getStoredFileRef = (file) => {
   if (!isProductionLike && filenameValue) return `/uploads/${filenameValue}`;
   if (!isProductionLike && pathValue) return `/uploads/${path.basename(pathValue)}`;
   return "";
+};
+
+const listRequestFiles = (req) => {
+  if (!req) return [];
+  if (Array.isArray(req.files)) return req.files.filter(Boolean);
+  if (req.files && typeof req.files === "object") {
+    return Object.values(req.files).flat().filter(Boolean);
+  }
+  if (req.file) return [req.file];
+  return [];
+};
+
+const hydrateRequestFilesWithCloudinary = async (req) => {
+  if (!hasCloudinary) return;
+  const files = listRequestFiles(req);
+  await Promise.all(files.map(async (file) => {
+    const uploaded = await uploadToCloudinary(file, { folder: "localbasket" });
+    if (!uploaded?.secure_url) return;
+    file.secure_url = uploaded.secure_url;
+    file.url = uploaded.secure_url;
+    file.path = uploaded.secure_url;
+    if (uploaded.public_id) file.filename = uploaded.public_id;
+  }));
 };
 
 const getSellerColumns = async () => {
@@ -1078,6 +1102,7 @@ exports.saveHeroSettings = async (req, res) => {
 ===================================================== */
 exports.saveHeroImage = async (req, res) => {
   try {
+    await hydrateRequestFilesWithCloudinary(req);
     await ensureSettingsColumns();
     await ensureSettingsRow();
     const file = req.file;
@@ -1102,6 +1127,7 @@ exports.saveHeroImage = async (req, res) => {
 ===================================================== */
 exports.saveHeroImages = async (req, res) => {
   try {
+    await hydrateRequestFilesWithCloudinary(req);
     await ensureSettingsColumns();
     await ensureSettingsRow();
     const target = String(req.body?.target || "desktop").toLowerCase();
