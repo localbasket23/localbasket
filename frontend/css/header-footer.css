@@ -2620,6 +2620,89 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
   }
 }
 
+/* Light theme footer (desktop/tablet): keep the current dark look only for html.lb-theme-dark. */
+@media (min-width: 769px) {
+  html:not(.lb-theme-dark) .lb-footer-pro {
+    background:
+      radial-gradient(90% 120% at 10% -10%, rgba(255,138,26,0.18), rgba(255,138,26,0) 55%),
+      radial-gradient(70% 100% at 90% -20%, rgba(59,130,246,0.08), rgba(59,130,246,0) 58%),
+      linear-gradient(180deg, #fff6ee 0%, #ffffff 70%);
+    color: #475569;
+    border-top: 1px solid rgba(15, 23, 42, 0.08) !important;
+    box-shadow: 0 -22px 44px -34px rgba(15, 23, 42, 0.18) !important;
+  }
+  html:not(.lb-theme-dark) .lb-footer-pro::before {
+    background: linear-gradient(90deg, rgba(15,23,42,0), rgba(15,23,42,0.12), rgba(15,23,42,0));
+  }
+  html:not(.lb-theme-dark) .lb-footer-pro .footer-grid > .footer-brand,
+  html:not(.lb-theme-dark) .lb-footer-pro .footer-grid > .footer-col,
+  html:not(.lb-theme-dark) .lb-footer-pro .footer-grid > .footer-seller,
+  html:not(.lb-theme-dark) .lb-footer-pro .footer-grid > .footer-news {
+    border-color: rgba(15, 23, 42, 0.10) !important;
+    background:
+      radial-gradient(130% 90% at 100% 0%, rgba(255, 138, 26, 0.08), rgba(255, 138, 26, 0) 58%),
+      linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255, 246, 238, 0.72)) !important;
+    box-shadow: 0 18px 30px -28px rgba(15, 23, 42, 0.25) !important;
+  }
+
+  html:not(.lb-theme-dark) .footer-brand-row,
+  html:not(.lb-theme-dark) .footer-brand h2,
+  html:not(.lb-theme-dark) .footer-col h4,
+  html:not(.lb-theme-dark) .footer-news h4 {
+    color: #0f172a;
+  }
+  html:not(.lb-theme-dark) .footer-logo {
+    background: rgba(255, 255, 255, 0.95);
+    color: #0f172a;
+    border: 1px solid rgba(15, 23, 42, 0.12);
+    box-shadow: 0 14px 22px -22px rgba(15, 23, 42, 0.35);
+  }
+  html:not(.lb-theme-dark) .footer-brand p,
+  html:not(.lb-theme-dark) .footer-help-line {
+    color: #475569;
+  }
+  html:not(.lb-theme-dark) .footer-col a {
+    color: #475569;
+  }
+  html:not(.lb-theme-dark) .footer-badge {
+    border-color: rgba(249, 115, 22, 0.22);
+    background: rgba(255, 138, 26, 0.10);
+    color: #0f172a;
+  }
+  html:not(.lb-theme-dark) .footer-social a,
+  html:not(.lb-theme-dark) .footer-help-actions a {
+    background: rgba(255,255,255,0.9);
+    border: 1px solid rgba(15, 23, 42, 0.10);
+    color: #334155;
+  }
+  html:not(.lb-theme-dark) .news-box {
+    background: rgba(255,255,255,0.9);
+    border-color: rgba(15, 23, 42, 0.10);
+  }
+  html:not(.lb-theme-dark) .news-box input {
+    color: #0f172a;
+  }
+  html:not(.lb-theme-dark) .news-box input::placeholder {
+    color: #94a3b8;
+  }
+  html:not(.lb-theme-dark) .footer-bottom-pro {
+    border-top: 1px solid rgba(15, 23, 42, 0.10);
+    color: #64748b;
+  }
+  html:not(.lb-theme-dark) .footer-bottom-actions button,
+  html:not(.lb-theme-dark) .footer-bottom-actions a {
+    border-color: rgba(15, 23, 42, 0.10);
+    background: rgba(255,255,255,0.92);
+    color: #0f172a;
+  }
+  html:not(.lb-theme-dark) .lb-footer-pro .lb-admin-trigger {
+    color: #64748b;
+  }
+  html:not(.lb-theme-dark) .lb-footer-pro .lb-admin-trigger:hover {
+    color: #475569;
+  }
+}
+
 
 
 
