@@ -661,7 +661,7 @@ document.addEventListener("DOMContentLoaded", () => {
         saveProfileBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
       }
       const res = await fetch(`${window.API_BASE_URL}/api/seller/update-profile`, { method:"POST", body:fd });
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
       if(data && data.success) {
         Object.assign(seller, {
           owner_name: ownerName.value.trim(),
@@ -693,7 +693,15 @@ document.addEventListener("DOMContentLoaded", () => {
           alert(msg);
         }
       }
-    } catch(err) { alert("Update failed!"); }
+    } catch(err) {
+      const msg = err?.message || "Update failed!";
+      if (profileStatus) {
+        profileStatus.style.color = "var(--red)";
+        profileStatus.textContent = msg;
+      } else {
+        alert(msg);
+      }
+    }
     finally {
       if (saveProfileBtn) {
         saveProfileBtn.disabled = false;

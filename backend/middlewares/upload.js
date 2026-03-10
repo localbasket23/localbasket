@@ -45,13 +45,26 @@ const multerInstance = multer({
   }
 });
 
-const withUploadGuard = (handler) => (req, res, next) => {
-  if (mustUseCloudinary && !hasCloudinary) {
-    const err = new Error("Cloudinary is not configured on this deployment");
-    err.statusCode = 500;
-    return next(err);
+const requestHasFiles = (req) => {
+  if (Array.isArray(req?.files) && req.files.length > 0) return true;
+  if (req?.files && typeof req.files === "object") {
+    return Object.values(req.files).some((value) => Array.isArray(value) && value.length > 0);
   }
-  return handler(req, res, next);
+  return !!req?.file;
+};
+
+const withUploadGuard = (handler) => (req, res, next) => {
+  return handler(req, res, (err) => {
+    if (err) return next(err);
+
+    if (mustUseCloudinary && !hasCloudinary && requestHasFiles(req)) {
+      const uploadErr = new Error("Cloudinary is not configured on this deployment");
+      uploadErr.statusCode = 500;
+      return next(uploadErr);
+    }
+
+    return next();
+  });
 };
 
 module.exports = {
