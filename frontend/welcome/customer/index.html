@@ -3142,16 +3142,60 @@
 
 
 @media (max-width: 768px) {
+  .mobile-filter-trigger,
+  .mobile-filter-panel {
+    display: none;
+  }
+
   .mobile-sort-row,
   .open-now-toggle {
     display: none !important;
   }
 
+  .store-tools {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    align-items: center !important;
+  }
+
+  .tool-select {
+    display: none !important;
+  }
+
+  .mobile-filter-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 84px;
+    min-height: 38px;
+    border: 1px solid #c7d2e3;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 800;
+    box-shadow: 0 8px 18px -18px rgba(15, 23, 42, 0.35);
+  }
+
+  .mobile-filter-panel {
+    display: block;
+    grid-column: 1 / -1;
+    margin-top: 2px;
+    padding-top: 8px;
+  }
+
+  .mobile-filter-panel[hidden] {
+    display: none;
+  }
+
   .mobile-filter-grid {
     display: grid !important;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 8px;
     width: 100%;
+    padding: 10px;
+    border: 1px solid #dde5f0;
+    border-radius: 12px;
+    background: #ffffff;
   }
 
   .mobile-filter-select {
@@ -3174,16 +3218,20 @@
 }
 
 @media (max-width: 420px) {
-  .mobile-filter-grid {
-    grid-template-columns: 1fr;
-    gap: 6px;
-  }
-
   .mobile-filter-select {
     min-height: 36px;
     font-size: 10px;
     padding: 7px 26px 7px 9px;
     background-position: right 9px center;
+  }
+  .mobile-filter-trigger {
+    min-width: 76px;
+    min-height: 36px;
+    font-size: 10px;
+  }
+  .mobile-filter-grid {
+    gap: 6px;
+    padding: 8px;
   }
 }
     </style>
@@ -3328,6 +3376,7 @@
         <label class="tool-search">
           <input type="search" id="storeSearchInput" name="store_query" placeholder="Search store name or category" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false">
         </label>
+      <button type="button" class="mobile-filter-trigger" id="mobileFilterTrigger" aria-expanded="false" aria-controls="mobileFilterPanel">Filter</button>
       <select class="tool-select" id="storeSortSelect">
         <option value="relevance">Sort: Relevance</option>
         <option value="rating">Sort: Rating</option>
@@ -3353,6 +3402,19 @@
         <input type="checkbox" id="openNowOnlyToggle">
         Open Now Only
       </label>
+      <div class="mobile-filter-panel" id="mobileFilterPanel" hidden>
+        <div class="mobile-filter-grid" id="mobileFilterGrid">
+          <select class="mobile-filter-select" id="mobileSortSelect" aria-label="Sort stores">
+            <option value="relevance">Sort: Relevance</option>
+            <option value="rating">Sort: Rating</option>
+            <option value="name">Sort: A-Z</option>
+          </select>
+          <select class="mobile-filter-select" id="mobileAvailabilitySelect" aria-label="Store availability">
+            <option value="all">Availability: All</option>
+            <option value="open">Open Now Only</option>
+          </select>
+        </div>
+      </div>
     </div>
     <div class="store-meta-bar">
       <div class="results-meta">

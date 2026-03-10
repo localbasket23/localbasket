@@ -210,6 +210,8 @@ const dom = {
     mobileUserAvatar: () => getEl("mobileUserAvatar"),
     mobileAuthBtn: () => getEl("mobileAuthBtn"),
     mobileCategoryBar: () => getEl("mobileCategoryBar"),
+    mobileFilterTrigger: () => getEl("mobileFilterTrigger"),
+    mobileFilterPanel: () => getEl("mobileFilterPanel"),
     mobileSortSelect: () => getEl("mobileSortSelect"),
     mobileAvailabilitySelect: () => getEl("mobileAvailabilitySelect"),
     openNowOnlyToggle: () => getEl("openNowOnlyToggle"),
@@ -331,6 +333,16 @@ function updateMobileSortButtons() {
     if (mobileAvailabilitySelect) mobileAvailabilitySelect.value = state.openNowOnly ? "open" : "all";
 }
 
+function setMobileFilterPanel(open) {
+    const trigger = dom.mobileFilterTrigger();
+    const panel = dom.mobileFilterPanel();
+    if (!trigger || !panel) return;
+    const next = !!open;
+    trigger.setAttribute("aria-expanded", next ? "true" : "false");
+    panel.hidden = !next;
+    panel.classList.toggle("open", next);
+}
+
 function setupEventListeners() {
     // 1. User Menu Toggle
     const accBtn = dom.accountBtn();
@@ -352,6 +364,16 @@ function setupEventListeners() {
         const menu = dom.userMenu();
         if (menu && !e.target.closest("#accountBtn") && !e.target.closest("#userMenu")) {
             menu.style.display = "none";
+        }
+        const panel = dom.mobileFilterPanel();
+        const trigger = dom.mobileFilterTrigger();
+        if (
+            panel && trigger &&
+            !panel.hidden &&
+            !e.target.closest("#mobileFilterPanel") &&
+            !e.target.closest("#mobileFilterTrigger")
+        ) {
+            setMobileFilterPanel(false);
         }
         if (e.target === dom.cartOverlay()) toggleCart(false);
     });
@@ -472,6 +494,14 @@ function setupEventListeners() {
             if (toggle) toggle.checked = state.openNowOnly;
             updateMobileSortButtons();
             applyCategoryFilter();
+        });
+    }
+    const mobileFilterTrigger = dom.mobileFilterTrigger();
+    if (mobileFilterTrigger) {
+        mobileFilterTrigger.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const expanded = mobileFilterTrigger.getAttribute("aria-expanded") === "true";
+            setMobileFilterPanel(!expanded);
         });
     }
     const mobileSortRow = getEl("mobileSortRow");
