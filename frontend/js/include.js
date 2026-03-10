@@ -251,6 +251,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (hour < 17) return "Afternoon";
       return "Evening";
     };
+    const getMobilePageTitle = (path) => {
+      const value = String(path || "").toLowerCase();
+      if (value.includes("/customer/store/")) return "Explore Stores";
+      if (value.includes("/customer/profile/")) return "My Profile";
+      if (value.includes("/customer/order/")) return "My Orders";
+      if (value.includes("/customer/support/")) return "Help Center";
+      if (value.includes("/customer/checkout/")) return "Checkout";
+      if (value.includes("/customer/category")) return "Explore Categories";
+      return "LocalBasket";
+    };
     const watchLocationTicker = (elementId, opts = {}) => {
       const target = document.getElementById(elementId);
       if (!target || target.dataset.lbTickerWatch === "1") return;
@@ -310,6 +320,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       const mobileHeaderKicker = document.getElementById("mobileHeaderKicker");
       const mobileHeaderName = document.getElementById("mobileHeaderName");
       const mobileHeaderAction = document.getElementById("mobileHeaderAction");
+      const currentPath = String(window.location.pathname || "").toLowerCase();
+      const isInnerMobileHeader = document.body.classList.contains("lb-mobile-inner-header");
 
       const normalizedId = user && (user.id || user.customer_id || user._id || user.user_id || user.customerId);
       if (user && !user.id && normalizedId) {
@@ -342,7 +354,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           .join("") || "U";
         if (userInitials) userInitials.textContent = initials;
         if (userFullName) userFullName.textContent = fullName;
-        if (mobileHeaderName) mobileHeaderName.textContent = fullName;
+        if (mobileHeaderName) {
+          mobileHeaderName.textContent = isInnerMobileHeader ? getMobilePageTitle(currentPath) : fullName;
+        }
         if (mobileHeaderAction) {
           mobileHeaderAction.textContent = "Profile";
           mobileHeaderAction.setAttribute("aria-label", `Open ${firstName} profile`);
@@ -354,7 +368,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       } else {
         if (userInitials) userInitials.textContent = "";
         if (userFullName) userFullName.textContent = "Welcome!";
-        if (mobileHeaderName) mobileHeaderName.textContent = "Customer";
+        if (mobileHeaderName) {
+          mobileHeaderName.textContent = isInnerMobileHeader ? getMobilePageTitle(currentPath) : "Customer";
+        }
         if (mobileHeaderAction) {
           mobileHeaderAction.textContent = "Login";
           mobileHeaderAction.setAttribute("aria-label", "Open login");
@@ -396,8 +412,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const isHomePage =
       currentPath.endsWith("/welcome/customer/index.html") ||
       currentPath === "/welcome/customer/index.html";
+    const isCategoryPage = currentPath.includes("/welcome/customer/category");
+    document.body.classList.toggle("lb-mobile-inner-header", !isHomePage && !isCategoryPage);
 
-    ["lbHeaderBackBtn", "lbHeaderBackBtnMobile"].forEach((id) => {
+    ["lbHeaderBackBtn", "lbHeaderBackBtnMobile", "mobileHeaderInlineBack"].forEach((id) => {
       const btn = document.getElementById(id);
       if (!btn) return;
       btn.style.display = isHomePage ? "none" : "inline-flex";
@@ -427,12 +445,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       window.location.href = "/welcome/customer/index.html";
     };
 
-    ["locBtn", "mobileLocBtn", "mobileHeaderSummary"].forEach((id) => {
+    ["locBtn", "mobileLocBtn"].forEach((id) => {
       const btn = document.getElementById(id);
       if (!btn || btn.dataset.lbLocBound) return;
       btn.addEventListener("click", openLocation);
       btn.dataset.lbLocBound = "1";
     });
+    const mobileHeaderSummary = document.getElementById("mobileHeaderSummary");
+    if (mobileHeaderSummary) {
+      const isInnerMobileHeader = document.body.classList.contains("lb-mobile-inner-header");
+      if (!isInnerMobileHeader && !mobileHeaderSummary.dataset.lbLocBound) {
+        mobileHeaderSummary.addEventListener("click", openLocation);
+        mobileHeaderSummary.dataset.lbLocBound = "1";
+      }
+    }
 
     const openCart = () => {
       if (typeof window.toggleCart === "function") {
