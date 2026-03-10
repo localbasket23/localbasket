@@ -811,7 +811,7 @@ html.lb-theme-dark .lb-cart-checkout:disabled {
 /* Footer */
 .lb-footer-pro {
   margin-top: 80px;
-  padding: 70px 20px 30px;
+  padding: 56px 20px 24px;
   background:
     radial-gradient(90% 120% at 10% -10%, rgba(255,138,26,0.14), rgba(255,138,26,0) 55%),
     radial-gradient(70% 100% at 90% -20%, rgba(59,130,246,0.1), rgba(59,130,246,0) 58%),
@@ -826,7 +826,7 @@ html.lb-theme-dark .lb-cart-checkout:disabled {
   position: relative;
 }
 .footer-glass { max-width: 1280px; margin: auto; }
-.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 36px; margin-bottom: 40px; }
+.footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 26px; margin-bottom: 28px; }
 .footer-brand,
 .footer-col,
 .footer-news {
@@ -853,7 +853,7 @@ html.lb-theme-dark .lb-cart-checkout:disabled {
 .footer-brand p { font-size: 14px; line-height: 1.6; color: #94a3b8; max-width: 340px; }
 .footer-social { display: flex; gap: 10px; margin-top: 16px; }
 .footer-social a {
-  width: 34px; height: 34px; border-radius: 10px; background: rgba(255,255,255,0.08);
+  width: 36px; height: 36px; border-radius: 12px; background: rgba(255,255,255,0.08);
   display: flex; align-items: center; justify-content: center; color: #e2e8f0;
   font-size: 14px; font-weight: 700; transition: transform 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, color 0.18s ease;
 }
@@ -886,6 +886,10 @@ html.lb-theme-dark .lb-cart-checkout:disabled {
   color: var(--primary);
   transform: translateX(5px);
   background-size: 100% 1px;
+}
+.footer-links a {
+  margin-bottom: 0;
+  line-height: 28px;
 }
 .footer-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .footer-badge {
@@ -944,13 +948,14 @@ html.lb-theme-dark .lb-cart-checkout:disabled {
   border-color: transparent;
   transform: translateY(-1px);
 }
-.footer-bottom-pro { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 22px; text-align: center; font-size: 13px; color: #64748b; }
+.footer-bottom-pro { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 18px; text-align: center; font-size: 12px; color: #94a3b8; }
 .footer-bottom-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+  opacity: 0.75;
 }
 .footer-bottom-actions { display: inline-flex; align-items: center; gap: 8px; }
 .footer-bottom-actions button,
@@ -972,6 +977,22 @@ html.lb-theme-dark .lb-cart-checkout:disabled {
   border-color: transparent;
   transform: translateY(-1px);
   box-shadow: 0 10px 18px -14px rgba(255,138,26,0.9);
+}
+
+/* Desktop: remove duplicate seller CTA from the bottom bar (seller card already has Start Selling). */
+@media (min-width: 769px) {
+  .lb-footer-pro .footer-bottom-actions {
+    display: none;
+  }
+  .lb-footer-pro .footer-bottom-row {
+    justify-content: center;
+    gap: 10px;
+  }
+  .lb-footer-pro .lb-admin-trigger {
+    opacity: 0.85;
+    font-size: 12px;
+    text-decoration: none;
+  }
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -2212,13 +2233,13 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
 .lb-footer-pro .footer-grid > .footer-col,
 .lb-footer-pro .footer-grid > .footer-seller,
 .lb-footer-pro .footer-grid > .footer-news {
-  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
   border-radius: 18px !important;
   padding: 14px !important;
   background:
-    radial-gradient(130% 90% at 100% 0%, rgba(255, 138, 26, 0.12), rgba(255, 138, 26, 0) 58%),
-    linear-gradient(170deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03)) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 14px 28px -22px rgba(0, 0, 0, 0.55) !important;
+    radial-gradient(130% 90% at 100% 0%, rgba(255, 138, 26, 0.08), rgba(255, 138, 26, 0) 58%),
+    linear-gradient(170deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10), 0 12px 24px -22px rgba(0, 0, 0, 0.42) !important;
 }
 
 .lb-footer-pro .footer-grid > .footer-brand::after {
