@@ -1014,26 +1014,32 @@ function updateCartUI() {
   const isLegacyCartOpen = !!document.getElementById("cartPanel")?.classList.contains("active");
   const isSharedCartOpen = !!document.getElementById("lbCartDrawer")?.classList.contains("active");
   const isCartOpen = isLegacyCartOpen || isSharedCartOpen;
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
   document.getElementById("cartCountLabel").innerText = `Basket (${count})`;
   document.getElementById("cartTotal").innerText = totalText;
   document.getElementById("mItemCount").innerText = `Basket (${count})`;
   document.getElementById("mTotalAmount").innerText = totalText;
+
   const mobileBarBtn = document.getElementById("mobileBarBtn");
-  if (mobileBarBtn) mobileBarBtn.innerText = `View Basket • ${count} item${count === 1 ? "" : "s"}`;
+  if (mobileBarBtn) {
+    mobileBarBtn.innerText = `View Basket - ${count} item${count === 1 ? "" : "s"}`;
+  }
+
   const mobileBar = document.getElementById("mobileBar");
   if (mobileBar) {
     mobileBar.classList.toggle("is-visible", count > 0 && !isCartOpen);
     if (count > 0 && !isCartOpen) {
-      if (window.matchMedia("(max-width: 768px)").matches) {
-        mobileBar.style.left = "12px";
-        mobileBar.style.right = "12px";
+      if (isMobile) {
+        mobileBar.style.left = "0";
+        mobileBar.style.right = "0";
         mobileBar.style.top = "auto";
       } else {
         applyMobileBarSavedPosition(mobileBar);
       }
     }
   }
+
   const floatingCheckoutBtn = document.getElementById("floatingCheckoutBtn");
   if (floatingCheckoutBtn) {
     floatingCheckoutBtn.style.display = count > 0 && !isCartOpen ? "inline-flex" : "none";
@@ -1045,6 +1051,7 @@ function updateCartUI() {
     }
     floatingCheckoutBtn.innerText = `Checkout (${totalText})`;
   }
+
   updateFooterSafeOffsets();
 
   const box = document.getElementById("cartItemsContainer");
@@ -1150,9 +1157,9 @@ function updateFooterSafeOffsets() {
   }
   if (mobileBar && mobileBar.classList.contains("is-visible")) {
     if (isMobile) {
-      mobileBar.style.bottom = `${Math.max(74, navHeight + 12) + overlap}px`;
-      mobileBar.style.left = "12px";
-      mobileBar.style.right = "12px";
+      mobileBar.style.bottom = `${Math.max(70, navHeight + 8) + overlap}px`;
+      mobileBar.style.left = "0";
+      mobileBar.style.right = "0";
       mobileBar.style.top = "auto";
     } else {
       const hasCustom = !!readMobileBarPos();
