@@ -69,85 +69,42 @@
     }
 
     .profile-hero {
-      padding: 18px;
-    }
-
-    .profile-topbar {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 18px;
-    }
-
-    .back-btn {
-      width: 48px;
-      height: 48px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: #fffdfb;
-      color: var(--text-main);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      cursor: pointer;
-    }
-
-    .profile-topbar h1 {
-      flex: 1 1 auto;
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: -0.04em;
-    }
-
-    .hero-badge {
-      min-width: 104px;
-      height: 48px;
-      border-radius: 16px;
-      border: 1px solid #ffd8b0;
-      background: #fffaf5;
-      color: var(--primary);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 15px;
-      font-weight: 800;
-      text-decoration: none;
+      padding: 20px 18px;
     }
 
     .profile-identity {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 16px;
     }
 
     .avatar-circle {
-      width: 68px;
-      height: 68px;
-      border-radius: 22px;
+      width: 84px;
+      height: 84px;
+      border-radius: 24px;
       background: linear-gradient(135deg, var(--primary), #ffb54d);
       color: #fff;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 28px;
+      font-size: 42px;
       font-weight: 800;
       box-shadow: 0 14px 24px -18px rgba(255, 138, 0, 0.7);
       flex: 0 0 auto;
     }
 
     .profile-identity h2 {
-      font-size: 24px;
+      font-size: 26px;
       font-weight: 800;
       line-height: 1.08;
       letter-spacing: -0.05em;
     }
 
     .profile-identity p {
-      margin-top: 6px;
+      margin-top: 8px;
       color: var(--text-muted);
-      font-size: 14px;
-      font-weight: 600;
+      font-size: 16px;
+      font-weight: 700;
     }
 
     .quick-menu {
@@ -482,9 +439,7 @@
     }
 
     .btn-save:hover,
-    .btn-logout:hover,
-    .back-btn:hover,
-    .hero-badge:hover {
+    .btn-logout:hover {
       transform: translateY(-1px);
     }
 
@@ -505,14 +460,10 @@
     }
 
     html.lb-theme-dark .profile-card,
-    html.lb-theme-dark .pref-row,
-    html.lb-theme-dark .back-btn,
-    html.lb-theme-dark .hero-badge {
+    html.lb-theme-dark .pref-row {
       border-color: #233455;
     }
 
-    html.lb-theme-dark .back-btn,
-    html.lb-theme-dark .hero-badge,
     html.lb-theme-dark .pref-row {
       background: #12233f;
     }
@@ -542,10 +493,6 @@
       .profile-shell {
         width: min(100%, 960px);
         padding-top: 26px;
-      }
-
-      .profile-topbar h1 {
-        font-size: 26px;
       }
 
       .profile-identity h2 {
@@ -591,23 +538,19 @@
         padding-right: 14px;
       }
 
-      .profile-topbar {
-        margin-bottom: 14px;
-      }
-
-      .back-btn {
-        width: 44px;
-        height: 44px;
-        border-radius: 14px;
-      }
-
-      .hero-badge {
-        min-width: 94px;
-        height: 44px;
-      }
-
       .profile-identity h2 {
-        font-size: 20px;
+        font-size: 19px;
+      }
+
+      .profile-identity p {
+        font-size: 13px;
+      }
+
+      .avatar-circle {
+        width: 72px;
+        height: 72px;
+        border-radius: 22px;
+        font-size: 36px;
       }
 
       .field-grid,
@@ -624,12 +567,6 @@
   <main class="profile-shell">
     <div class="profile-stack">
       <section class="profile-card profile-hero">
-        <div class="profile-topbar">
-          <button type="button" class="back-btn" onclick="window.history.back()" aria-label="Go back">&#8592;</button>
-          <h1>My Profile</h1>
-          <a href="./welcome/customer/profile/profile.html" class="hero-badge">Profile</a>
-        </div>
-
         <div class="profile-identity">
           <div class="avatar-circle" id="userInitial">U</div>
           <div>
