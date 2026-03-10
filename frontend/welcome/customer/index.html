@@ -600,13 +600,67 @@
             max-width: 100%;
         }
 
-        /* Hide mobile-only chrome on laptop/desktop (it is enabled inside the mobile media queries). */
-        .mobile-section-head,
-        .mobile-category-bar,
+        /* Hide mobile-only chrome on laptop/desktop. Note: category chips use the "mobile" bar on >= 769px
+           because #categoryBar is hidden via a separate rule, so do NOT hide .mobile-category-bar here. */
         .mobile-section-filter,
         .mobile-filter-panel,
         .mobile-sort-row {
-            display: none;
+            display: none !important;
+        }
+
+        /* Desktop/laptop: category chips (the page uses #mobileCategoryBar as the primary UI on >= 769px). */
+        @media (min-width: 769px) {
+            .mobile-section-head {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin: 6px 0 12px;
+            }
+            .mobile-section-head h3 {
+                margin: 0;
+                font-size: 20px;
+                font-weight: 900;
+                letter-spacing: -0.35px;
+                color: #0f172a;
+            }
+            .mobile-category-bar {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 12px;
+                overflow: visible;
+                padding-bottom: 0;
+                margin: 0 0 26px;
+                scrollbar-width: auto;
+            }
+            .mobile-chip {
+                cursor: pointer;
+                user-select: none;
+                transition: transform var(--anim-fast), box-shadow var(--anim-fast), border-color var(--anim-fast);
+                font-size: 13px;
+                min-height: 44px;
+                padding: 0 14px 0 10px;
+                border-radius: 999px;
+                background: linear-gradient(180deg, #ffffff, #fff8f1);
+                border: 1px solid #ffe3c6;
+                box-shadow: 0 14px 28px -24px rgba(249, 115, 22, 0.55);
+            }
+            .mobile-chip:hover {
+                transform: translateY(-2px);
+                border-color: rgba(249, 115, 22, 0.45);
+                box-shadow: 0 18px 34px -24px rgba(249, 115, 22, 0.6);
+            }
+            .mobile-chip:active {
+                transform: translateY(-1px);
+            }
+            .mobile-chip.active:hover {
+                transform: translateY(-1px);
+                border-color: #ff8a1a;
+            }
+            .mobile-chip-icon {
+                width: 30px;
+                height: 30px;
+                font-size: 16px;
+            }
         }
 
         .category-bar {

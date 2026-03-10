@@ -1078,21 +1078,25 @@ function renderCategories() {
 function renderMobileCategories() {
     const bar = dom.mobileCategoryBar();
     if (!bar) return;
+
     const getMobileCategoryMeta = (slug, name) => {
         const key = `${slug} ${name}`.toLowerCase();
-        if (key.includes("fruit")) return { icon: "🍎", tone: "fruit" };
-        if (key.includes("vegetable")) return { icon: "🥦", tone: "veg" };
-        if (key.includes("snack")) return { icon: "🍪", tone: "snack" };
-        if (key.includes("oil")) return { icon: "🫙", tone: "oil" };
-        if (key.includes("dairy") || key.includes("milk")) return { icon: "🥛", tone: "dairy" };
-        if (key.includes("bakery")) return { icon: "🥐", tone: "bakery" };
-        if (key.includes("drink") || key.includes("beverage")) return { icon: "🥤", tone: "drink" };
-        if (key.includes("masala") || key.includes("spice")) return { icon: "🌶️", tone: "spice" };
-        return { icon: "🛒", tone: "all" };
+        // Use unicode escapes so the file encoding can't break emoji on some editors.
+        if (key.includes("fruit")) return { icon: "\u{1F34E}", tone: "fruit" }; // ??
+        if (key.includes("vegetable")) return { icon: "\u{1F966}", tone: "veg" }; // ??
+        if (key.includes("snack")) return { icon: "\u{1F36A}", tone: "snack" }; // ??
+        if (key.includes("oil")) return { icon: "\u{1FAD9}", tone: "oil" }; // ??
+        if (key.includes("dairy") || key.includes("milk")) return { icon: "\u{1F95B}", tone: "dairy" }; // ??
+        if (key.includes("bakery")) return { icon: "\u{1F950}", tone: "bakery" }; // ??
+        if (key.includes("drink") || key.includes("beverage")) return { icon: "\u{1F964}", tone: "drink" }; // ??
+        if (key.includes("masala") || key.includes("spice")) return { icon: "\u{1F336}\uFE0F", tone: "spice" }; // ???
+        return { icon: "\u{1F6D2}", tone: "all" }; // ??
     };
+
     const chips = [
-        `<button class="mobile-chip ${state.activeCategory === "all" ? "active" : ""}" type="button" data-category="all"><span class="mobile-chip-icon tone-all" aria-hidden="true">🛒</span><span class="mobile-chip-text">All</span></button>`
+        `<button class="mobile-chip ${state.activeCategory === "all" ? "active" : ""}" type="button" data-category="all"><span class="mobile-chip-icon tone-all" aria-hidden="true">\u{1F6D2}</span><span class="mobile-chip-text">All</span></button>`
     ];
+
     state.categories.forEach((c) => {
         const slug = c.slug || slugify(c.name || "category");
         const name = c.name || slug;
@@ -1101,6 +1105,7 @@ function renderMobileCategories() {
             `<button class="mobile-chip ${state.activeCategory === slug ? "active" : ""}" type="button" data-category="${slug}"><span class="mobile-chip-icon tone-${meta.tone}" aria-hidden="true">${meta.icon}</span><span class="mobile-chip-text">${name}</span></button>`
         );
     });
+
     bar.innerHTML = chips.join("");
 }
 
