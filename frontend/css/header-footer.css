@@ -2185,29 +2185,31 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
     font-size: 10px;
     border-radius: 10px;
   }
-  .lb-footer-pro .footer-support,
-  .lb-footer-pro .footer-news {
+  .lb-footer-pro .footer-grid {
     display: none;
   }
-  .lb-footer-pro .footer-support-mobile {
-    display: block;
+  .lb-footer-pro .footer-glass {
+    padding: 14px 14px 10px;
   }
   .lb-footer-pro .footer-bottom-pro {
-    padding: 18px 0 8px;
+    padding: 10px 0 6px;
   }
   .lb-footer-pro .footer-bottom-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 16px;
   }
   .lb-footer-pro .footer-bottom-copy {
-    width: 100%;
+    width: auto;
     justify-content: flex-start;
+    font-size: 12px;
+    gap: 14px;
   }
   .lb-footer-pro .footer-bottom-actions {
     position: relative;
     z-index: 4;
-    margin-bottom: calc(96px + env(safe-area-inset-bottom));
+    margin-bottom: calc(88px + env(safe-area-inset-bottom));
   }
   .lb-footer-pro .footer-bottom-actions button,
   .lb-footer-pro .footer-bottom-actions a {
