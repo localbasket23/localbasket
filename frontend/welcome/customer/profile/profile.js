@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
 function initProfile() {
   loadUserData();
   wireEnhancedInputs();
+  wireProfileShortcuts();
 
   const profileForm = document.getElementById("profileForm");
   if (profileForm) {
@@ -34,8 +35,8 @@ function loadUserData() {
   if (!currentUser) return;
 
   const userInitial = document.getElementById("userInitial");
-  const sidebarName = document.getElementById("sidebarName");
-  const sidebarEmail = document.getElementById("sidebarEmail");
+  const summaryName = document.getElementById("summaryName");
+  const summaryEmail = document.getElementById("summaryEmail");
 
   if (userInitial) {
     userInitial.textContent = currentUser.name
@@ -43,8 +44,8 @@ function loadUserData() {
       : "U";
   }
 
-  if (sidebarName) sidebarName.textContent = currentUser.name || "";
-  if (sidebarEmail) sidebarEmail.textContent = currentUser.email || "";
+  if (summaryName) summaryName.textContent = currentUser.name || "User";
+  if (summaryEmail) summaryEmail.textContent = maskEmail(currentUser.email || "");
 
   const nameInput = document.getElementById("profName");
   const emailInput = document.getElementById("profEmail");
@@ -90,6 +91,49 @@ function wireEnhancedInputs() {
       togglePassBtn.textContent = isPassword ? "Hide" : "Show";
     });
   }
+}
+
+function wireProfileShortcuts() {
+  document.querySelectorAll("[data-scroll-target]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-scroll-target");
+      const target = id ? document.getElementById(id) : null;
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  const securityCard = document.getElementById("securityCard");
+  const securityToggle = document.getElementById("securityToggle");
+  const quickSecurity = document.querySelector("[data-toggle-security]");
+
+  const setSecurityOpen = (open) => {
+    if (!securityCard || !securityToggle) return;
+    securityCard.classList.toggle("open", open);
+    securityToggle.setAttribute("aria-expanded", open ? "true" : "false");
+  };
+
+  if (securityToggle) {
+    securityToggle.addEventListener("click", () => {
+      const open = !securityCard?.classList.contains("open");
+      setSecurityOpen(open);
+    });
+  }
+
+  if (quickSecurity) {
+    quickSecurity.addEventListener("click", () => {
+      setSecurityOpen(true);
+      securityCard?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+}
+
+function maskEmail(email) {
+  const value = String(email || "").trim();
+  if (!value || !value.includes("@")) return value || "No email added";
+  const [name, domain] = value.split("@");
+  if (!name || !domain) return value;
+  const visible = name.slice(0, Math.min(5, name.length));
+  return `${visible}${name.length > 5 ? "..." : ""}@${domain}`;
 }
 
 async function handleProfileUpdate(e) {

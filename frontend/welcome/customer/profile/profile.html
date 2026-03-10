@@ -2,466 +2,801 @@
 <html lang="en">
 <head>
   <script src="/js/config.js"></script>
-<base href="/" />
+  <base href="/" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Settings | LocalBasket</title>
 
-<link rel="stylesheet" href="/css/header-footer.css">
-<!-- Favicon -->
+  <link rel="stylesheet" href="/css/header-footer.css">
   <link rel="icon" type="image/png" href="./welcome/logo2.png?v=20260303">
   <link rel="icon" type="image/png" sizes="32x32" href="./welcome/logo2.png?v=20260303">
-<link rel="icon" type="image/png" sizes="48x48" href="./welcome/logo2.png?v=20260303">
-<link rel="icon" type="image/png" sizes="96x96" href="./welcome/logo2.png?v=20260303">
-<link rel="apple-touch-icon" sizes="180x180" href="./welcome/logo2.png?v=20260303">
+  <link rel="icon" type="image/png" sizes="48x48" href="./welcome/logo2.png?v=20260303">
+  <link rel="icon" type="image/png" sizes="96x96" href="./welcome/logo2.png?v=20260303">
+  <link rel="apple-touch-icon" sizes="180x180" href="./welcome/logo2.png?v=20260303">
   <style>
     :root {
-      --primary:#ff8a1a;
-      --primary-light:#ffe8d2;
-      --bg:#f4f7fe;
-      --card:#ffffff;
-      --text-main:#0f172a;
-      --text-muted:#64748b;
-      --danger:#ff4d4d;
-      --shadow:0 10px 30px -5px rgba(0,0,0,.05);
+      --primary: #ff8a00;
+      --primary-soft: #fff6ee;
+      --bg: #fff6ee;
+      --card: #ffffff;
+      --line: #eadfd3;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --shadow: 0 18px 30px -24px rgba(30, 41, 59, 0.22);
+      --radius: 24px;
     }
 
     * {
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-      font-family:'Plus Jakarta Sans',sans-serif;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Plus Jakarta Sans", sans-serif;
     }
 
     body {
-      background:var(--bg);
-      background-image:none;
-      min-height:100vh;
-      color:var(--text-main);
-      padding-bottom:110px;
+      background:
+        radial-gradient(circle at top right, rgba(255, 138, 0, 0.12), transparent 24%),
+        linear-gradient(180deg, #fffaf5 0%, var(--bg) 100%);
+      min-height: 100vh;
+      color: var(--text-main);
+      padding-bottom: 124px;
     }
+
     #siteHeader,
     #siteFooter {
       background: transparent;
     }
 
-    .dashboard {
-      max-width:1200px;
-      margin:40px auto;
-      padding:0 20px;
-      display:grid;
-      grid-template-columns:300px 1fr;
-      gap:30px;
+    .profile-shell {
+      width: min(100%, 760px);
+      margin: 0 auto;
+      padding: 18px 16px 32px;
     }
 
-    .sidebar {
-      background:var(--card);
-      border-radius:24px;
-      padding:40px 24px;
-      box-shadow:var(--shadow);
-      height:fit-content;
-      position:sticky;
-      top:40px;
+    .profile-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
 
-    .profile-header {
-      text-align:center;
-      margin-bottom:40px;
+    .profile-card {
+      background: var(--card);
+      border: 1px solid rgba(255, 138, 0, 0.12);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
     }
-    .profile-header h2 {
-      color: var(--text-main) !important;
-      font-size: 30px;
-      line-height: 1.1;
-      margin-bottom: 8px;
-      word-break: break-word;
+
+    .profile-hero {
+      padding: 18px;
     }
-    .profile-header p {
-      color: var(--text-muted) !important;
+
+    .profile-topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .back-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      background: #fffdfb;
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .profile-topbar h1 {
+      flex: 1 1 auto;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+
+    .hero-badge {
+      min-width: 104px;
+      height: 48px;
+      border-radius: 16px;
+      border: 1px solid #ffd8b0;
+      background: #fffaf5;
+      color: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .profile-identity {
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
 
     .avatar-circle {
-      width:100px;
-      height:100px;
-      margin:0 auto 14px;
-      background:linear-gradient(135deg,var(--primary),#ffb347);
-      color:#fff;
-      border-radius:32px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:40px;
-      font-weight:800;
-      box-shadow:0 10px 20px rgba(255,138,26,.24);
+      width: 68px;
+      height: 68px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, var(--primary), #ffb54d);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 800;
+      box-shadow: 0 14px 24px -18px rgba(255, 138, 0, 0.7);
+      flex: 0 0 auto;
     }
 
-    .nav-menu { list-style:none; }
-    .nav-item { margin-bottom:8px; }
-
-    .nav-link {
-      display:flex;
-      align-items:center;
-      gap:12px;
-      padding:14px 18px;
-      text-decoration:none;
-      color:var(--text-muted);
-      font-weight:600;
-      border-radius:16px;
-      transition:.25s;
+    .profile-identity h2 {
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.05em;
     }
 
-    .nav-link:hover {
-      background:var(--primary-light);
-      color:var(--primary);
+    .profile-identity p {
+      margin-top: 6px;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
     }
 
-    .nav-link.active {
-      background:var(--primary);
-      color:#fff;
-      box-shadow:0 10px 20px -5px rgba(255,138,26,.32);
+    .quick-menu {
+      padding: 12px 14px;
     }
 
-    .main-card {
-      background:var(--card);
-      border-radius:24px;
-      padding:40px;
-      box-shadow:var(--shadow);
+    .quick-link {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 15px 4px;
+      border: none;
+      border-bottom: 1px solid #f3e7da;
+      background: transparent;
+      color: var(--text-main);
+      text-align: left;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
     }
 
-    .section-title {
-      font-size:24px;
-      font-weight:800;
-      margin-bottom:30px;
+    .quick-link:last-child {
+      border-bottom: none;
     }
 
-    .grid-row {
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:24px;
-      margin-bottom:24px;
+    .quick-link .icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: var(--primary-soft);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex: 0 0 auto;
     }
 
-    .input-group { margin-bottom:24px; }
+    .quick-link .label {
+      flex: 1 1 auto;
+    }
+
+    .quick-link .hint {
+      font-size: 18px;
+      color: #94a3b8;
+      margin: 0;
+    }
+
+    .form-card {
+      padding: 16px;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .card-head h3 {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .card-head p {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field-grid.single {
+      grid-template-columns: 1fr;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
 
     .input-group label {
-      display:block;
-      font-size:14px;
-      font-weight:700;
-      margin-bottom:10px;
-      color:var(--text-muted);
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-muted);
     }
 
     .input-wrapper input {
-      width:100%;
-      padding:16px 20px;
-      border-radius:16px;
-      border:2px solid #f1f5f9;
-      background:#f8fafc;
-      font-size:15px;
-      font-weight:600;
-      outline:none;
-      transition:.25s;
+      width: 100%;
+      min-height: 54px;
+      border-radius: 18px;
+      border: 1px solid #e6edf5;
+      background: #f8fafc;
+      padding: 0 16px;
+      color: var(--text-main);
+      font-size: 15px;
+      font-weight: 700;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     }
 
     .input-wrapper input:focus {
-      border-color:var(--primary);
-      background:#fff;
-      box-shadow:0 0 0 4px rgba(255,138,26,.08);
+      background: #ffffff;
+      border-color: rgba(255, 138, 0, 0.42);
+      box-shadow: 0 0 0 4px rgba(255, 138, 0, 0.08);
     }
 
     .input-wrapper input[readonly] {
-      background:#f1f5f9;
-      color:var(--text-muted);
-      cursor:not-allowed;
+      background: #f1f5f9;
+      color: #7b8797;
     }
 
     .hint {
-      font-size:12px;
-      color:var(--text-muted);
-      margin-top:8px;
+      margin-top: 10px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
     }
-    .settings-block {
-      margin: 24px 0;
-      padding: 18px;
-      border: 1px solid #e2e8f0;
-      border-radius: 16px;
-      background: #f8fafc;
+
+    .section-divider {
+      height: 1px;
+      border: 0;
+      background: #f2e7db;
+      margin: 6px 0;
     }
-    .settings-block h4 {
-      margin: 0 0 12px;
-      font-size: 15px;
-      font-weight: 800;
+
+    .security-card {
+      overflow: hidden;
+    }
+
+    .security-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 16px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
       color: var(--text-main);
     }
+
+    .security-toggle-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .security-toggle .icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: var(--primary-soft);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .security-toggle strong {
+      display: block;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .security-toggle span {
+      display: block;
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .security-toggle .chevron {
+      font-size: 20px;
+      color: #94a3b8;
+      transition: transform 0.2s ease;
+    }
+
+    .security-card.open .security-toggle .chevron {
+      transform: rotate(180deg);
+    }
+
+    .security-content {
+      display: none;
+      padding: 0 16px 16px;
+      border-top: 1px solid #f2e7db;
+    }
+
+    .security-card.open .security-content {
+      display: block;
+    }
+
+    .password-wrap {
+      position: relative;
+    }
+
+    .toggle-pass {
+      position: absolute;
+      top: 50%;
+      right: 10px;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      padding: 6px 8px;
+    }
+
+    .pass-strength {
+      margin-top: 8px;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pref-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
     .pref-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      padding: 10px 0;
-      border-bottom: 1px dashed #e2e8f0;
+      min-height: 58px;
+      padding: 0 14px;
+      border: 1px solid #edf2f7;
+      border-radius: 18px;
+      background: #fbfdff;
+    }
+
+    .pref-copy strong {
+      display: block;
       font-size: 14px;
+      font-weight: 800;
+    }
+
+    .pref-copy span {
+      display: block;
+      margin-top: 4px;
       color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 600;
     }
-    .pref-row:last-child {
-      border-bottom: none;
-    }
+
     .switch {
       position: relative;
       display: inline-block;
-      width: 44px;
-      height: 24px;
+      width: 46px;
+      height: 26px;
+      flex: 0 0 auto;
     }
-    .switch input { display: none; }
+
+    .switch input {
+      display: none;
+    }
+
     .slider {
       position: absolute;
-      cursor: pointer;
       inset: 0;
-      background: #cbd5e1;
-      transition: .2s;
       border-radius: 999px;
+      background: #d6dee9;
+      cursor: pointer;
+      transition: background 0.2s ease;
     }
-    .slider:before {
-      position: absolute;
+
+    .slider::before {
       content: "";
-      width: 18px;
-      height: 18px;
-      left: 3px;
+      position: absolute;
       top: 3px;
-      background: #fff;
-      transition: .2s;
+      left: 3px;
+      width: 20px;
+      height: 20px;
       border-radius: 999px;
+      background: #fff;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);
+      transition: transform 0.2s ease;
     }
+
     .switch input:checked + .slider {
       background: var(--primary);
     }
-    .switch input:checked + .slider:before {
+
+    .switch input:checked + .slider::before {
       transform: translateX(20px);
     }
-    .password-wrap {
-      position: relative;
+
+    .footer-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 2px;
     }
-    .toggle-pass {
-      position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      border: none;
-      background: transparent;
-      color: var(--text-muted);
-      font-weight: 700;
+
+    .btn-save,
+    .btn-logout {
+      width: 100%;
+      min-height: 56px;
+      border-radius: 18px;
+      font-size: 16px;
+      font-weight: 800;
       cursor: pointer;
-      padding: 4px 8px;
-    }
-    .pass-strength {
-      margin-top: 8px;
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--text-muted);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
     .btn-save {
-      background:var(--primary);
-      color:#fff;
-      border:none;
-      padding:16px 32px;
-      border-radius:16px;
-      font-weight:700;
-      font-size:16px;
-      cursor:pointer;
-      transition:.25s;
+      border: none;
+      background: linear-gradient(135deg, var(--primary), #ff9f2a);
+      color: #fff;
+      box-shadow: 0 18px 24px -18px rgba(255, 138, 0, 0.68);
     }
 
-    .btn-save:hover {
-      transform:translateY(-2px);
-      box-shadow:0 10px 20px rgba(255,138,26,.24);
+    .btn-logout {
+      border: 1px solid #f5c9c9;
+      background: #fff7f7;
+      color: var(--danger);
+    }
+
+    .btn-save:hover,
+    .btn-logout:hover,
+    .back-btn:hover,
+    .hero-badge:hover {
+      transform: translateY(-1px);
     }
 
     html.lb-theme-dark {
-      --bg:#06122b;
-      --card:#0f1f42;
-      --text-main:#e8eefc;
-      --text-muted:#a9badc;
-      --primary-light:rgba(255,138,26,.16);
-      --shadow:0 16px 34px -12px rgba(0,0,0,.65);
+      --bg: #071224;
+      --card: #0f1d34;
+      --line: #21314f;
+      --text-main: #e8eefc;
+      --text-muted: #9cafcf;
+      --primary-soft: rgba(255, 138, 0, 0.14);
+      --shadow: 0 20px 34px -18px rgba(0, 0, 0, 0.52);
     }
 
     html.lb-theme-dark body {
-      background: radial-gradient(circle at top right, #152c57 0%, #081632 55%, #06122b 100%);
+      background:
+        radial-gradient(circle at top right, rgba(255, 138, 0, 0.12), transparent 28%),
+        linear-gradient(180deg, #071224 0%, #0b1730 100%);
     }
 
-    html.lb-theme-dark .sidebar,
-    html.lb-theme-dark .main-card {
-      border: 1px solid rgba(255,255,255,.09);
+    html.lb-theme-dark .profile-card,
+    html.lb-theme-dark .pref-row,
+    html.lb-theme-dark .back-btn,
+    html.lb-theme-dark .hero-badge {
+      border-color: #233455;
+    }
+
+    html.lb-theme-dark .back-btn,
+    html.lb-theme-dark .hero-badge,
+    html.lb-theme-dark .pref-row {
+      background: #12233f;
     }
 
     html.lb-theme-dark .input-wrapper input {
-      background:#0a1936;
-      border-color:#21355f;
-      color:var(--text-main);
-    }
-
-    html.lb-theme-dark .input-wrapper input:focus {
-      background:#0d2145;
-      border-color:var(--primary);
-      box-shadow:0 0 0 4px rgba(255,138,26,.16);
+      background: #0d1a31;
+      border-color: #223556;
+      color: var(--text-main);
     }
 
     html.lb-theme-dark .input-wrapper input[readonly] {
-      background:#0a1730;
-      color:#95a9cf;
-    }
-
-    html.lb-theme-dark .settings-block {
-      background:#0b1a38;
-      border-color:#21355f;
-    }
-
-    html.lb-theme-dark .pref-row {
-      border-bottom-color:#253c67;
+      background: #0b1730;
+      color: #93a7ca;
     }
 
     html.lb-theme-dark .slider {
-      background:#304a77;
+      background: #39527c;
     }
 
-    html.lb-theme-dark .toggle-pass {
-      color:#c3d2ee;
+    html.lb-theme-dark .security-content,
+    html.lb-theme-dark .section-divider,
+    html.lb-theme-dark .quick-link {
+      border-color: #21314f;
     }
 
-    html.lb-theme-dark .main-card hr {
-      background:#243b66 !important;
-    }
+    @media (min-width: 901px) {
+      .profile-shell {
+        width: min(100%, 960px);
+        padding-top: 26px;
+      }
 
-    @media (max-width:900px) {
-      .dashboard { grid-template-columns:1fr; margin:20px auto; }
-      .sidebar { position:relative; top:0; }
-      .grid-row { grid-template-columns:1fr; }
-      .profile-header h2 {
+      .profile-topbar h1 {
+        font-size: 26px;
+      }
+
+      .profile-identity h2 {
         font-size: 28px;
       }
+
+      .quick-menu {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        padding: 14px;
+      }
+
+      .quick-link {
+        min-height: 68px;
+        border: 1px solid #f3e7da;
+        border-radius: 18px;
+        padding: 0 14px;
+      }
+
+      .field-grid.triple {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .footer-actions {
+        flex-direction: row;
+      }
+
+      .btn-logout {
+        max-width: 200px;
+      }
     }
-    @media (max-width:768px){
+
+    @media (max-width: 680px) {
+      .profile-shell {
+        padding: 12px 12px 28px;
+      }
+
+      .profile-hero,
+      .quick-menu,
+      .form-card {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      .profile-topbar {
+        margin-bottom: 14px;
+      }
+
+      .back-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+      }
+
+      .hero-badge {
+        min-width: 94px;
+        height: 44px;
+      }
+
+      .profile-identity h2 {
+        font-size: 20px;
+      }
+
+      .field-grid,
+      .field-grid.triple {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
 <body>
-
-
   <div id="header"></div>
   <div id="siteHeader"></div>
 
-  <div class="dashboard">
-    <aside class="sidebar">
-      <div class="profile-header">
-        <div class="avatar-circle" id="userInitial">U</div>
-        <h2 id="sidebarName">User</h2>
-        <p id="sidebarEmail" style="color:var(--text-muted);font-size:13px;"></p>
-      </div>
-
-      <ul class="nav-menu">
-        <li class="nav-item">
-          <a href="./welcome/customer/profile/customer-profile.html" class="nav-link active">Account</a>
-        </li>
-        <li class="nav-item">
-          <a href="./welcome/customer/order/customer-orders.html" class="nav-link">My Orders</a>
-        </li>
-        <li class="nav-item" style="margin-top:20px;">
-          <a href="javascript:void(0)" onclick="handleLogout()" class="nav-link" style="color:var(--danger);">
-            Sign Out
-          </a>
-        </li>
-      </ul>
-    </aside>
-
-    <main class="main-card">
-      <div class="section-title">Personal Settings</div>
-
-      <form id="profileForm">
-        <div class="grid-row">
-          <div class="input-group">
-            <label>Display Name</label>
-            <div class="input-wrapper">
-              <input type="text" id="profName" required />
-            </div>
-          </div>
-
-          <div class="input-group">
-            <label>Phone Identity</label>
-            <div class="input-wrapper">
-              <input type="tel" id="profPhone" readonly />
-            </div>
-          </div>
+  <main class="profile-shell">
+    <div class="profile-stack">
+      <section class="profile-card profile-hero">
+        <div class="profile-topbar">
+          <button type="button" class="back-btn" onclick="window.history.back()" aria-label="Go back">&#8592;</button>
+          <h1>My Profile</h1>
+          <a href="./welcome/customer/profile/profile.html" class="hero-badge">Profile</a>
         </div>
 
-        <div class="input-group">
-          <label>Email Address</label>
-          <div class="input-wrapper">
-            <input type="email" id="profEmail" required />
+        <div class="profile-identity">
+          <div class="avatar-circle" id="userInitial">U</div>
+          <div>
+            <h2 id="summaryName">User</h2>
+            <p id="summaryEmail">user@email.com</p>
           </div>
         </div>
+      </section>
 
-        <div class="settings-block">
-          <h4>Default Delivery Address</h4>
-          <div class="input-group">
-            <label>Address</label>
-            <div class="input-wrapper">
-              <input type="text" id="profAddress" placeholder="House no, street, landmark" />
+      <nav class="profile-card quick-menu" aria-label="Profile shortcuts">
+        <a href="./welcome/customer/order/customer-orders.html" class="quick-link">
+          <span class="icon" aria-hidden="true">📦</span>
+          <span class="label">My Orders</span>
+          <span class="hint" aria-hidden="true">&#8250;</span>
+        </a>
+        <button type="button" class="quick-link" data-scroll-target="addressSection">
+          <span class="icon" aria-hidden="true">📍</span>
+          <span class="label">Delivery Address</span>
+          <span class="hint" aria-hidden="true">&#8250;</span>
+        </button>
+        <button type="button" class="quick-link" data-scroll-target="accountSection">
+          <span class="icon" aria-hidden="true">⚙</span>
+          <span class="label">Account Settings</span>
+          <span class="hint" aria-hidden="true">&#8250;</span>
+        </button>
+        <button type="button" class="quick-link" data-toggle-security="true">
+          <span class="icon" aria-hidden="true">🔐</span>
+          <span class="label">Security</span>
+          <span class="hint" aria-hidden="true">&#8250;</span>
+        </button>
+      </nav>
+
+      <form id="profileForm" class="profile-stack">
+        <section class="profile-card form-card" id="accountSection">
+          <div class="card-head">
+            <div>
+              <h3>Personal Settings</h3>
+              <p>Basic account details</p>
             </div>
           </div>
-          <div class="grid-row" style="margin-bottom:0;">
-            <div class="input-group" style="margin-bottom:0;">
-              <label>Area / Locality</label>
+
+          <div class="field-grid triple">
+            <div class="input-group">
+              <label for="profName">Display Name</label>
               <div class="input-wrapper">
-                <input type="text" id="profArea" placeholder="e.g. Rajendra Nagar" />
+                <input type="text" id="profName" required />
               </div>
             </div>
-            <div class="input-group" style="margin-bottom:0;">
-              <label>Pincode</label>
+            <div class="input-group">
+              <label for="profPhone">Phone</label>
               <div class="input-wrapper">
-                <input type="text" id="profPincode" maxlength="6" placeholder="6-digit pincode" />
+                <input type="tel" id="profPhone" readonly />
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="profEmail">Email</label>
+              <div class="input-wrapper">
+                <input type="email" id="profEmail" required />
               </div>
             </div>
           </div>
+        </section>
+
+        <section class="profile-card form-card" id="addressSection">
+          <div class="card-head">
+            <div>
+              <h3>Delivery Address</h3>
+              <p>Default address for checkout</p>
+            </div>
+          </div>
+
+          <div class="field-grid single">
+            <div class="input-group">
+              <label for="profAddress">Address</label>
+              <div class="input-wrapper">
+                <input type="text" id="profAddress" placeholder="House no, street, landmark" />
+              </div>
+            </div>
+          </div>
+
+          <div class="field-grid">
+            <div class="input-group">
+              <label for="profArea">Area</label>
+              <div class="input-wrapper">
+                <input type="text" id="profArea" placeholder="Bhayandar West" />
+              </div>
+            </div>
+            <div class="input-group">
+              <label for="profPincode">Pincode</label>
+              <div class="input-wrapper">
+                <input type="text" id="profPincode" maxlength="6" placeholder="401107" />
+              </div>
+            </div>
+          </div>
+
           <p class="hint">Checkout page will auto-fill this address.</p>
-        </div>
+        </section>
 
-        <hr style="margin:40px 0;border:none;height:1px;background:#f1f5f9;">
+        <section class="profile-card security-card" id="securityCard">
+          <button type="button" class="security-toggle" id="securityToggle" aria-expanded="false" aria-controls="securityContent">
+            <span class="security-toggle-left">
+              <span class="icon" aria-hidden="true">🔐</span>
+              <span>
+                <strong>Security</strong>
+                <span>Password and notification settings</span>
+              </span>
+            </span>
+            <span class="chevron" aria-hidden="true">&#9662;</span>
+          </button>
 
-        <div class="section-title" style="font-size:20px;">Security Upgrade</div>
+          <div class="security-content" id="securityContent">
+            <div class="form-card" style="padding:16px 0 0;">
+              <div class="field-grid single">
+                <div class="input-group">
+                  <label for="profPass">Password</label>
+                  <div class="input-wrapper password-wrap">
+                    <input type="password" id="profPass" maxlength="10" placeholder="Leave empty to keep current" />
+                    <button type="button" class="toggle-pass" id="togglePassBtn">Show</button>
+                  </div>
+                  <div class="pass-strength" id="passStrength">Password strength: -</div>
+                </div>
+              </div>
 
-        <div class="input-group">
-          <label>Update Password</label>
-          <div class="input-wrapper password-wrap">
-            <input type="password" id="profPass" maxlength="10" placeholder="Leave empty to keep current" />
-            <button type="button" class="toggle-pass" id="togglePassBtn">Show</button>
+              <div class="section-divider"></div>
+
+              <div class="card-head" style="margin-top:16px; margin-bottom:12px;">
+                <div>
+                  <h3 style="font-size:16px;">Notifications</h3>
+                  <p>Choose how you want updates</p>
+                </div>
+              </div>
+
+              <div class="pref-list">
+                <div class="pref-row">
+                  <div class="pref-copy">
+                    <strong>WhatsApp</strong>
+                    <span>Order updates on WhatsApp</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="prefWhatsapp">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="pref-row">
+                  <div class="pref-copy">
+                    <strong>Emails</strong>
+                    <span>Promotional and account emails</span>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="prefPromoMail">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <p class="hint">Password must not be more than 10 characters.</p>
+            </div>
           </div>
-          <div class="pass-strength" id="passStrength">Password strength: -</div>
+        </section>
+
+        <div class="footer-actions">
+          <button type="submit" class="btn-save">Update Profile</button>
+          <button type="button" class="btn-logout" onclick="handleLogout()">Sign Out</button>
         </div>
-
-        <div class="settings-block">
-          <h4>Notifications</h4>
-          <div class="pref-row">
-            <span>Order updates on WhatsApp</span>
-            <label class="switch">
-              <input type="checkbox" id="prefWhatsapp">
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="pref-row">
-            <span>Promotional emails</span>
-            <label class="switch">
-              <input type="checkbox" id="prefPromoMail">
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-
-        <p class="hint">Password must not be more than 10 characters.</p>
-
-        <button type="submit" class="btn-save">Update Profile</button>
       </form>
-    </main>
-  </div>
+    </div>
+  </main>
 
   <div id="siteFooter"></div>
 
@@ -473,27 +808,3 @@
   <script src="/js/theme.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
