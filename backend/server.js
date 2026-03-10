@@ -5,6 +5,7 @@ if (process.env.NODE_ENV !== "production") {
 
 const express = require("express");
 const cors = require("cors");
+const { hasCloudinary } = require("./config/cloudinary");
 
 const customerRoutes = require("./routes/customerRoutes");
 const sellerRoutes = require("./routes/sellerRoutes");
@@ -32,6 +33,19 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
+});
+
+app.get("/api/health/cloudinary", (req, res) => {
+  res.json({
+    status: "ok",
+    cloudinary: {
+      configured: hasCloudinary,
+      cloud_name_present: !!String(process.env.CLOUDINARY_CLOUD_NAME || "").trim(),
+      api_key_present: !!String(process.env.CLOUDINARY_API_KEY || "").trim(),
+      api_secret_present: !!String(process.env.CLOUDINARY_API_SECRET || "").trim(),
+      cloud_name_value: String(process.env.CLOUDINARY_CLOUD_NAME || "").trim() || null
+    }
+  });
 });
 
 app.use("/api/customer", customerRoutes);
