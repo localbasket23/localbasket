@@ -1917,6 +1917,14 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
   word-spacing: 1px;
 }
 
+/* Desktop/laptop: hide mobile-only back buttons. */
+@media (min-width: 769px) {
+  #lbHeaderBackBtn,
+  #mobileHeaderInlineBack {
+    display: none !important;
+  }
+}
+
 .lb-footer-pro .footer-bottom-actions button:hover,
 .lb-footer-pro .footer-bottom-actions a:hover {
   transform: translateY(-1px);

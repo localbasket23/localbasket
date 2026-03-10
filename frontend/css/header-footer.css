@@ -2126,6 +2126,14 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
   justify-content: center;
 }
 
+/* Desktop/laptop: hide mobile-only back buttons. */
+@media (min-width: 769px) {
+  #lbHeaderBackBtn,
+  #mobileHeaderInlineBack {
+    display: none !important;
+  }
+}
+
 .lb-footer-pro .footer-bottom-copy {
   display: inline-flex;
   align-items: center;
