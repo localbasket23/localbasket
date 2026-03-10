@@ -208,6 +208,7 @@ const dom = {
     mobileGreetingName: () => getEl("mobileGreetingName"),
     mobileAddressLabel: () => getEl("mobileAddressLabel"),
     mobileUserAvatar: () => getEl("mobileUserAvatar"),
+    mobileAuthBtn: () => getEl("mobileAuthBtn"),
     mobileCategoryBar: () => getEl("mobileCategoryBar"),
     openNowOnlyToggle: () => getEl("openNowOnlyToggle"),
     storeSortSelect: () => getEl("storeSortSelect"),
@@ -645,6 +646,7 @@ function updateMobileHomeShell() {
     const greetingEl = dom.mobileGreetingName();
     const addressEl = dom.mobileAddressLabel();
     const avatarEl = dom.mobileUserAvatar();
+    const authBtn = dom.mobileAuthBtn();
     const pinInput = dom.mobilePinInput();
     const firstName = String(state.user?.name || "").trim().split(" ").filter(Boolean)[0] || "Shubham";
     const initials = firstName.slice(0, 2).toUpperCase() || "LB";
@@ -658,6 +660,17 @@ function updateMobileHomeShell() {
     }
     if (avatarEl) avatarEl.textContent = initials;
     if (pinInput && !pinInput.value) pinInput.value = String(state.location?.pincode || "").trim();
+    if (authBtn) {
+        if (state.user) {
+            authBtn.textContent = "Profile";
+            authBtn.setAttribute("aria-label", "Profile");
+            authBtn.onclick = () => viewProfile();
+        } else {
+            authBtn.textContent = "Login";
+            authBtn.setAttribute("aria-label", "Login");
+            authBtn.onclick = () => openAuth();
+        }
+    }
 }
 
 function switchTab(mode) {
