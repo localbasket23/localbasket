@@ -952,6 +952,12 @@ html.lb-theme-dark .lb-cart-checkout:disabled {
   gap: 12px;
   flex-wrap: wrap;
 }
+.footer-bottom-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 .footer-bottom-actions { display: inline-flex; align-items: center; gap: 8px; }
 .footer-bottom-actions button,
 .footer-bottom-actions a {
@@ -1884,6 +1890,14 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
   justify-content: center;
 }
 
+.lb-footer-pro .footer-bottom-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .lb-footer-pro .footer-bottom-actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -2184,7 +2198,11 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
   .lb-footer-pro .footer-bottom-row {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: 8px;
+  }
+  .lb-footer-pro .footer-bottom-copy {
+    width: 100%;
+    justify-content: flex-start;
   }
   .lb-footer-pro .footer-bottom-actions {
     position: relative;
