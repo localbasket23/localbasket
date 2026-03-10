@@ -342,7 +342,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (loginBtn) loginBtn.style.display = hasUser ? "none" : "inline-flex";
       if (userAccount) userAccount.style.display = hasUser ? "flex" : "none";
-      if (mobileHeaderKicker) mobileHeaderKicker.textContent = getTimeGreeting().toUpperCase();
+      if (mobileHeaderKicker) mobileHeaderKicker.textContent = getTimeGreeting();
 
       if (hasUser) {
         const fullName = String(user.name || user.full_name || user.phone || user.email || "User").trim();
@@ -387,7 +387,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!document.body.dataset.lbGreetingClockBound) {
       window.setInterval(() => {
         const mobileHeaderKicker = document.getElementById("mobileHeaderKicker");
-        if (mobileHeaderKicker) mobileHeaderKicker.textContent = getTimeGreeting().toUpperCase();
+        if (mobileHeaderKicker) mobileHeaderKicker.textContent = getTimeGreeting();
       }, 60000);
       document.body.dataset.lbGreetingClockBound = "1";
     }

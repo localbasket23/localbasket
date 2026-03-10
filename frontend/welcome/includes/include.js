@@ -488,7 +488,7 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
       (user && (user.id || user._id || user.email || user.phone || user.mobile || displayName))
     );
 
-    if (mobileHeaderKicker) mobileHeaderKicker.textContent = getTimeGreeting().toUpperCase();
+    if (mobileHeaderKicker) mobileHeaderKicker.textContent = getTimeGreeting();
 
     if (hasSession) {
       if (loginBtn) loginBtn.style.display = "none";
@@ -516,7 +516,7 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
   if (!document.body.dataset.lbGreetingClockBound) {
     window.setInterval(() => {
       const mobileHeaderKicker = document.getElementById("mobileHeaderKicker");
-      if (mobileHeaderKicker) mobileHeaderKicker.textContent = getTimeGreeting().toUpperCase();
+      if (mobileHeaderKicker) mobileHeaderKicker.textContent = getTimeGreeting();
     }, 60000);
     document.body.dataset.lbGreetingClockBound = "1";
   }
