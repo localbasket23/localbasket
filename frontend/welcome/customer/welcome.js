@@ -5,7 +5,6 @@
 const host = String(window.location.hostname || "").trim();
 const isPrivateLanHost = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(host);
 const isVercelHost = host.endsWith(".vercel.app");
-const hostedBackend = "https://localbasket-egpn.onrender.com";
 const IS_LOCAL_HOST =
     ["localhost", "127.0.0.1"].includes(host) ||
     isPrivateLanHost ||
@@ -15,8 +14,8 @@ const API_BASE_URL = (() => {
     const stored = (typeof localStorage !== "undefined" && localStorage.getItem("lbApiBase")) || "";
     const byWindow = window.API_BASE_URL || window.LB_API_BASE || "";
     const byOrigin = window.location.protocol === "file:" ? localApiOrigin : window.location.origin;
-    const preferred = isVercelHost ? hostedBackend : (byWindow || stored || byOrigin);
-    const clean = String(preferred || hostedBackend).trim().replace(/\/+$/, "");
+    const preferred = byWindow || stored || byOrigin;
+    const clean = String(preferred || byOrigin).trim().replace(/\/+$/, "");
     window.API_BASE_URL = clean;
     return clean;
 })();
@@ -33,7 +32,6 @@ const CONFIG = {
 function getApiCandidates() {
     const candidates = [
         CONFIG.API_BASE,
-        `${hostedBackend}/api`,
         ...(isVercelHost ? [] : [`${window.location.origin}/api`])
     ]
         .map((value) => String(value || "").trim().replace(/\/+$/, ""))
