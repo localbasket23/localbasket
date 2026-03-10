@@ -267,16 +267,25 @@ body.lb-footer-full .lb-footer-pro {
   align-items: center;
   gap: 8px;
   padding: 6px 10px;
+  background: transparent;
   border-radius: 14px;
   border: 1px solid transparent;
   cursor: pointer;
   transition: var(--anim-fast);
   max-width: min(42vw, 480px);
+  appearance: none;
+  -webkit-appearance: none;
+  text-align: left;
+  font: inherit;
 }
 .location-box:hover {
   background: var(--white);
   border-color: #e2e8f0;
   box-shadow: 0 6px 14px rgba(0,0,0,0.04);
+}
+.location-box:focus-visible {
+  outline: 2px solid rgba(255, 138, 26, 0.45);
+  outline-offset: 2px;
 }
 .loc-icon {
   width: 30px;
@@ -305,6 +314,9 @@ body.lb-footer-full .lb-footer-pro {
   flex: 0 0 auto;
 }
 .loc-caret { color: var(--slate); font-size: 12px; margin-left: 0; }
+.location-box > * {
+  pointer-events: none;
+}
 
 .nav-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
 .login-theme-wrap {
