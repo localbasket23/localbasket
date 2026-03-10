@@ -235,10 +235,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         target.dataset.lbTickerApplying = "";
       });
     };
-    const setMobileLocationTicker = (text) =>
+    const setMobileLocationTicker = (text) => {
       setLocationTicker("locTextMobile", text, { spacer: 32, minOverflow: 6, minSpeed: 7, maxSpeed: 18, speedDivisor: 22 });
+      setSharedMobileHeaderAddress(text);
+    };
     const setDesktopLocationTicker = (text) =>
       setLocationTicker("locText", text, { spacer: 26, minOverflow: 8, minSpeed: 8, maxSpeed: 20, speedDivisor: 24 });
+    const setSharedMobileHeaderAddress = (text) => {
+      const target = document.getElementById("mobileHeaderAddress");
+      if (target) target.textContent = String(text || "Select Location");
+    };
+    const getTimeGreeting = () => {
+      const hour = new Date().getHours();
+      if (hour < 12) return "Morning";
+      if (hour < 17) return "Afternoon";
+      return "Evening";
+    };
     const watchLocationTicker = (elementId, opts = {}) => {
       const target = document.getElementById(elementId);
       if (!target || target.dataset.lbTickerWatch === "1") return;
@@ -295,6 +307,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       const userAccount = document.getElementById("userAccount");
       const userInitials = document.getElementById("userInitials");
       const userFullName = document.getElementById("userFullName");
+      const mobileHeaderKicker = document.getElementById("mobileHeaderKicker");
+      const mobileHeaderName = document.getElementById("mobileHeaderName");
+      const mobileHeaderAction = document.getElementById("mobileHeaderAction");
 
       const normalizedId = user && (user.id || user.customer_id || user._id || user.user_id || user.customerId);
       if (user && !user.id && normalizedId) {
@@ -314,9 +329,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (loginBtn) loginBtn.style.display = hasUser ? "none" : "inline-flex";
       if (userAccount) userAccount.style.display = hasUser ? "flex" : "none";
+      if (mobileHeaderKicker) mobileHeaderKicker.textContent = getTimeGreeting().toUpperCase();
 
       if (hasUser) {
         const fullName = String(user.name || user.full_name || user.phone || user.email || "User").trim();
+        const firstName = fullName.split(/\s+/).filter(Boolean)[0] || "User";
         const initials = fullName
           .split(/\s+/)
           .filter(Boolean)
@@ -325,9 +342,27 @@ document.addEventListener("DOMContentLoaded", async () => {
           .join("") || "U";
         if (userInitials) userInitials.textContent = initials;
         if (userFullName) userFullName.textContent = fullName;
+        if (mobileHeaderName) mobileHeaderName.textContent = fullName;
+        if (mobileHeaderAction) {
+          mobileHeaderAction.textContent = "Profile";
+          mobileHeaderAction.setAttribute("aria-label", `Open ${firstName} profile`);
+          mobileHeaderAction.onclick = () => {
+            if (window.viewProfile) window.viewProfile();
+            else window.location.href = "/welcome/customer/profile/profile.html";
+          };
+        }
       } else {
         if (userInitials) userInitials.textContent = "";
         if (userFullName) userFullName.textContent = "Welcome!";
+        if (mobileHeaderName) mobileHeaderName.textContent = "Customer";
+        if (mobileHeaderAction) {
+          mobileHeaderAction.textContent = "Login";
+          mobileHeaderAction.setAttribute("aria-label", "Open login");
+          mobileHeaderAction.onclick = () => {
+            if (window.openAuth) window.openAuth();
+            else document.getElementById("loginBtn")?.click();
+          };
+        }
       }
     };
 
@@ -343,7 +378,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (savedAddress) {
       setDesktopLocationTicker(savedAddress);
       setMobileLocationTicker(savedAddress);
+      setSharedMobileHeaderAddress(savedAddress);
     }
+    if (!savedAddress) setSharedMobileHeaderAddress("Select Location");
     watchLocationTicker("locText", { spacer: 26, minOverflow: 8, minSpeed: 8, maxSpeed: 20, speedDivisor: 24 });
     watchLocationTicker("locTextMobile", { spacer: 32, minOverflow: 6, minSpeed: 7, maxSpeed: 18, speedDivisor: 22 });
 
@@ -390,7 +427,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       window.location.href = "/welcome/customer/index.html";
     };
 
-    ["locBtn", "mobileLocBtn"].forEach((id) => {
+    ["locBtn", "mobileLocBtn", "mobileHeaderSummary"].forEach((id) => {
       const btn = document.getElementById(id);
       if (!btn || btn.dataset.lbLocBound) return;
       btn.addEventListener("click", openLocation);

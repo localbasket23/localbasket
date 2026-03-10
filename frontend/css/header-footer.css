@@ -32,6 +32,19 @@ html.lb-theme-dark .logo-text,
 html.lb-theme-dark .loc-value {
   color: #f8fafc;
 }
+html.lb-theme-dark .mobile-header-kicker {
+  color: #8fa3c2;
+}
+html.lb-theme-dark .mobile-header-name,
+html.lb-theme-dark .mobile-header-address {
+  color: #f3f8ff;
+}
+html.lb-theme-dark .mobile-header-action {
+  background: rgba(15, 28, 49, 0.92);
+  border-color: rgba(148, 163, 184, 0.28);
+  color: #ffb347;
+  box-shadow: 0 10px 18px -18px rgba(2, 6, 23, 0.6);
+}
 html.lb-theme-dark .loc-label,
 html.lb-theme-dark .loc-caret {
   color: #cbd5e1;
@@ -211,6 +224,68 @@ body.lb-footer-full .lb-footer-pro {
 .nav-left { display: flex; align-items: center; gap: 28px; min-width: 0; }
 .logo-box { display: flex; align-items: center; gap: 12px; transition: transform 0.2s; min-width: 0; }
 .logo-box:hover { transform: translateY(-1px); }
+.mobile-header-summary,
+.mobile-header-action {
+  display: none;
+}
+.mobile-header-summary {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  min-width: 0;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.mobile-header-kicker {
+  display: block;
+  margin: 0 0 2px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.mobile-header-name {
+  display: block;
+  font-size: 19px;
+  line-height: 1.05;
+  font-weight: 800;
+  color: #111827;
+}
+.mobile-header-address {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: min(42vw, 240px);
+}
+.mobile-header-address::before {
+  content: "\1F4CD";
+  margin-right: 6px;
+  font-size: 11px;
+}
+.mobile-header-summary:focus-visible,
+.mobile-header-action:focus-visible {
+  outline: 2px solid rgba(255, 138, 26, 0.45);
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+.mobile-header-action {
+  min-width: 92px;
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 18px;
+  border: 1px solid #efddcf;
+  background: rgba(255,255,255,0.96);
+  color: #f97316;
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 10px 18px -18px rgba(15, 23, 42, 0.35);
+}
 .navbar a,
 .logo-box,
 .logo-box:link,
@@ -1318,19 +1393,53 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
   .lb-nav-theme .theme-toggle-thumb { top: 2px; left: 2px; width: 26px; height: 26px; }
   .lb-nav-theme .theme-toggle[aria-pressed="true"] .theme-toggle-track::after,
   .lb-nav-theme .theme-toggle[aria-pressed="true"] .theme-toggle-thumb { transform: translateX(28px); }
-  .nav-container { padding: 12px 12px 6px; }
-  .navbar { border-radius: 16px; padding: 8px 10px; gap: 8px; flex-wrap: nowrap; }
-  .nav-left { gap: 10px; }
-  .nav-actions { margin-left: auto; gap: 8px; }
-  .user-account { margin-left: 2px; }
-  .logo-img { width: 34px; height: 34px; }
-  .logo-text { font-size: 17px; max-width: 140px; }
+  .nav-container { padding: 10px 12px 4px; }
+  .navbar {
+    border-radius: 0;
+    padding: 0;
+    gap: 12px;
+    flex-wrap: nowrap;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .nav-left {
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+  .nav-actions {
+    margin-left: auto;
+    gap: 8px;
+    flex: 0 0 auto;
+  }
+  .user-account { margin-left: 0; }
+  .logo-box {
+    gap: 0;
+    flex: 0 0 auto;
+  }
+  .logo-img {
+    width: 44px;
+    height: 44px;
+    border-radius: 16px;
+    box-shadow: 0 16px 24px -18px rgba(255, 138, 26, 0.9);
+  }
+  .logo-text { display: none; }
+  .mobile-header-summary { display: block; flex: 1; }
+  .mobile-header-action { display: inline-flex; align-items: center; justify-content: center; }
   .location-box { display: none; }
   .loc-caret { display: none; }
-  .mobile-loc-row { padding: 0 12px 8px; gap: 8px; }
+  .mobile-loc-row { display: none; }
   .lb-header-back { display: inline-flex; flex: 0 0 auto; width: 36px; height: 36px; border-radius: 11px; }
   .mobile-loc-btn { min-height: 38px; padding: 6px 10px; }
   .sell-btn { display: none; }
+  .cart-pill { display: none; }
+  .login-theme-wrap,
+  .user-account {
+    display: none !important;
+  }
   .login-theme-wrap { gap: 6px; padding: 2px; }
   .login-theme-wrap .login-nav-btn {
     min-height: 30px;
