@@ -183,7 +183,8 @@ const state = {
     storeProductsCache: {},
     topRatedStores: [],
     topProducts: [],
-    topPicks: safeParse(localStorage.getItem("lbTopPicks"), [])
+    topPicks: safeParse(localStorage.getItem("lbTopPicks"), []),
+    favoriteStoreIds: safeParse(localStorage.getItem("lbFavoriteStoreIds"), [])
 };
 const AUTO_LOCATION_SESSION_KEY = "lbAutoLocAttempted";
 const AUTO_LOCATION_FRESH_MS = 30 * 60 * 1000;
@@ -1912,6 +1913,12 @@ function renderStores(stores) {
     grid.innerHTML = stores.map(store => `
         <div class="store-card" onclick="openStore(${store.id})">
             <div class="store-img-wrap">
+                <button
+                    class="fav-btn ${isFavoriteStore(store.id) ? "active" : ""}"
+                    type="button"
+                    onclick="toggleFavoriteStore(event, ${store.id})"
+                    aria-label="${isFavoriteStore(store.id) ? "Remove from favorites" : "Add to favorites"}"
+                >${isFavoriteStore(store.id) ? "&#10084;" : "&#9825;"}</button>
                 <img class="store-img" src="${resolveImageUrl(store.store_photo)}" 
                      alt="${store.store_name}" 
                      onerror="this.src='${CONFIG.DEFAULT_IMG}'">
@@ -1939,6 +1946,26 @@ function renderStoreCompactMeta(store) {
     const category = store.business_type || store.category_name || store.category || 'General Store';
     const ratingText = !rating || rating.label === "New" ? "New" : rating.value.toFixed(1);
     return `\u2B50 ${ratingText} • ${category}`;
+}
+
+function isFavoriteStore(storeId) {
+    return Array.isArray(state.favoriteStoreIds) && state.favoriteStoreIds.includes(Number(storeId));
+}
+
+function toggleFavoriteStore(event, storeId) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    const id = Number(storeId);
+    if (!Number.isFinite(id)) return;
+    const next = Array.isArray(state.favoriteStoreIds) ? [...state.favoriteStoreIds] : [];
+    const index = next.indexOf(id);
+    if (index >= 0) next.splice(index, 1);
+    else next.unshift(id);
+    state.favoriteStoreIds = next;
+    localStorage.setItem("lbFavoriteStoreIds", JSON.stringify(next));
+    applyCategoryFilter();
 }
 
 function getStoreRatingValue(store) {
