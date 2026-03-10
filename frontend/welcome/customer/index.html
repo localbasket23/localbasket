@@ -3398,6 +3398,19 @@
       <h2 class="section-title">Top Stores Near You</h2>
       <button type="button" class="mobile-filter-trigger mobile-section-filter" id="mobileFilterTrigger" aria-expanded="false" aria-controls="mobileFilterPanel">Filter</button>
     </div>
+    <div class="mobile-filter-panel" id="mobileFilterPanel" hidden>
+      <div class="mobile-filter-grid" id="mobileFilterGrid">
+        <select class="mobile-filter-select" id="mobileSortSelect" aria-label="Sort stores">
+          <option value="relevance">Sort: Relevance</option>
+          <option value="rating">Sort: Rating</option>
+          <option value="name">Sort: A-Z</option>
+        </select>
+        <select class="mobile-filter-select" id="mobileAvailabilitySelect" aria-label="Store availability">
+          <option value="all">Availability: All</option>
+          <option value="open">Open Now Only</option>
+        </select>
+      </div>
+    </div>
       <div class="store-tools">
         <label class="tool-search">
           <input type="search" id="storeSearchInput" name="store_query" placeholder="Search store name or category" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false">
@@ -3412,34 +3425,10 @@
         <button type="button" class="mobile-sort-btn" data-sort="rating">Rating</button>
         <button type="button" class="mobile-sort-btn" data-sort="name">A-Z</button>
       </div>
-      <div class="mobile-filter-grid" id="mobileFilterGrid">
-        <select class="mobile-filter-select" id="mobileSortSelect" aria-label="Sort stores">
-          <option value="relevance">Sort: Relevance</option>
-          <option value="rating">Sort: Rating</option>
-          <option value="name">Sort: A-Z</option>
-        </select>
-        <select class="mobile-filter-select" id="mobileAvailabilitySelect" aria-label="Store availability">
-          <option value="all">Availability: All</option>
-          <option value="open">Open Now Only</option>
-        </select>
-      </div>
       <label class="open-now-toggle">
         <input type="checkbox" id="openNowOnlyToggle">
         Open Now Only
       </label>
-      <div class="mobile-filter-panel" id="mobileFilterPanel" hidden>
-        <div class="mobile-filter-grid" id="mobileFilterGrid">
-          <select class="mobile-filter-select" id="mobileSortSelect" aria-label="Sort stores">
-            <option value="relevance">Sort: Relevance</option>
-            <option value="rating">Sort: Rating</option>
-            <option value="name">Sort: A-Z</option>
-          </select>
-          <select class="mobile-filter-select" id="mobileAvailabilitySelect" aria-label="Store availability">
-            <option value="all">Availability: All</option>
-            <option value="open">Open Now Only</option>
-          </select>
-        </div>
-      </div>
     </div>
     <div class="store-meta-bar">
       <div class="results-meta">
