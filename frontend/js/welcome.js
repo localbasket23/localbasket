@@ -251,6 +251,7 @@ const dom = {
     heroSubtitle: () => getEl("heroSubtitle"),
     heroVisual: () => getEl("heroVisual"),
     heroSection: () => document.querySelector(".hero"),
+    mobilePromoArt: () => document.querySelector(".mobile-promo-art"),
     storeResultsCount: () => getEl("storeResultsCount"),
     storeResultsHint: () => getEl("storeResultsHint"),
     activeFilters: () => getEl("activeFilters"),
@@ -338,6 +339,45 @@ const appendTextWithBreaks = (parent, text) => {
     });
 };
 
+const renderMobilePromoArt = (settings = {}) => {
+    const promoArt = dom.mobilePromoArt();
+    if (!promoArt) return;
+
+    let mobileImages = [];
+    let desktopImages = [];
+    if (settings.hero_images_mobile_json) {
+        try {
+            mobileImages = normalizeHeroImageList(JSON.parse(settings.hero_images_mobile_json));
+        } catch {}
+    }
+    if (settings.hero_images_json) {
+        try {
+            desktopImages = normalizeHeroImageList(JSON.parse(settings.hero_images_json));
+        } catch {}
+    }
+
+    const candidate =
+        mobileImages[0]?.src ||
+        String(settings.hero_image || "").trim() ||
+        desktopImages[0]?.src ||
+        "";
+
+    const resolved = candidate ? resolveHeroImageUrl(candidate) : "";
+    if (!resolved) {
+        promoArt.textContent = "🥕";
+        return;
+    }
+
+    promoArt.innerHTML = "";
+    const img = document.createElement("img");
+    img.src = resolved;
+    img.alt = "Promo";
+    img.addEventListener("error", () => {
+        promoArt.textContent = "🥕";
+    }, { once: true });
+    promoArt.appendChild(img);
+};
+
 const applyHeroTitle = (title, highlight) => {
     const heroTitleEl = dom.heroTitle();
     if (!heroTitleEl) return;
@@ -379,6 +419,7 @@ const applyHeroTitle = (title, highlight) => {
 
 const applyHeroSettings = (settings = {}) => {
     heroSettingsCache = settings;
+    renderMobilePromoArt(settings);
     const heroSection = dom.heroSection();
     const title = settings.hero_title || HERO_DEFAULTS.title;
     const highlight = settings.hero_highlight || HERO_DEFAULTS.highlight;
