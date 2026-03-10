@@ -638,9 +638,15 @@ async function loadCategories() {
             const activeValue = String(c.is_active).toLowerCase();
             return activeValue === "1" || activeValue === "true";
         });
+        if (!state.categories.length && state.stores.length) {
+            state.categories = deriveCategoriesFromStores(state.stores);
+        }
         renderCategories();
     } catch (e) {
         console.error("Category load failed", e);
+        if (state.stores.length) {
+            state.categories = deriveCategoriesFromStores(state.stores);
+        }
         renderMobileCategories();
     }
 }
@@ -695,6 +701,21 @@ function renderMobileCategories() {
         );
     });
     bar.innerHTML = chips.join("");
+}
+
+function deriveCategoriesFromStores(stores) {
+    const seen = new Map();
+    (Array.isArray(stores) ? stores : []).forEach((store) => {
+        const slug = slugify(store?.category_slug || store?.category_name || store?.category || store?.business_type || "");
+        const name = String(store?.category_name || store?.category || store?.business_type || "").trim();
+        if (!slug || !name || seen.has(slug)) return;
+        seen.set(slug, {
+            slug,
+            name,
+            is_active: 1
+        });
+    });
+    return Array.from(seen.values());
 }
 
 function slugify(text) {
@@ -1552,6 +1573,9 @@ async function loadStores(query, isPin = true) {
 
         if (stores.length > 0) {
             state.stores = stores;
+            if (!state.categories.length) {
+                state.categories = deriveCategoriesFromStores(stores);
+            }
             updateHeroInsights();
             renderCategories();
             applyCategoryFilter();
