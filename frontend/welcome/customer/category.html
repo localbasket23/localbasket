@@ -652,7 +652,7 @@
     }
 
     @media (max-width: 768px) {
-      body.lb-category-page {
+      html:not(.lb-theme-dark) body.lb-category-page {
         background:
           radial-gradient(120% 70% at 50% 0%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 55%),
           linear-gradient(180deg, #f4ede7 0%, #f6efe8 100%);
@@ -663,7 +663,7 @@
         display: none !important;
       }
 
-      .category-mobile-topbar {
+      html:not(.lb-theme-dark) .category-mobile-topbar {
         display: flex;
         align-items: center;
         gap: 12px;
@@ -675,6 +675,18 @@
         border: 1px solid rgba(255, 138, 0, 0.14);
         box-shadow: 0 16px 24px -24px rgba(255, 138, 0, 0.2);
       }
+      html.lb-theme-dark .category-mobile-topbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-height: 60px;
+        margin-bottom: 12px;
+        padding: 8px 10px;
+        border-radius: 20px;
+        background: rgba(15, 23, 42, 0.88);
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        box-shadow: 0 16px 24px -24px rgba(2, 6, 23, 0.75);
+      }
 
       .category-mobile-head {
         display: flex;
@@ -684,13 +696,24 @@
         min-width: 0;
       }
 
-      .category-mobile-back {
+      html:not(.lb-theme-dark) .category-mobile-back {
         width: 40px;
         height: 40px;
         border-radius: 12px;
         border: 1px solid #edd8c8;
         background: #fff7f0;
         color: #1E293B;
+        font-size: 17px;
+        font-weight: 800;
+        flex: 0 0 auto;
+      }
+      html.lb-theme-dark .category-mobile-back {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        background: rgba(15, 28, 49, 0.92);
+        color: #f3f8ff;
         font-size: 17px;
         font-weight: 800;
         flex: 0 0 auto;
@@ -713,7 +736,7 @@
         display: none;
       }
 
-      .category-mobile-name {
+      html:not(.lb-theme-dark) .category-mobile-name {
         display: block;
         font-size: 17px;
         line-height: 1.1;
@@ -724,8 +747,19 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
+      html.lb-theme-dark .category-mobile-name {
+        display: block;
+        font-size: 17px;
+        line-height: 1.1;
+        font-weight: 800;
+        color: #f3f8ff;
+        letter-spacing: -0.3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
-      .category-mobile-action {
+      html:not(.lb-theme-dark) .category-mobile-action {
         min-width: 80px;
         min-height: 40px;
         padding: 0 14px;
@@ -733,6 +767,17 @@
         border: 1px solid rgba(255, 138, 0, 0.18);
         background: #fff7f0;
         color: #FF8A00;
+        font-size: 12px;
+        font-weight: 800;
+      }
+      html.lb-theme-dark .category-mobile-action {
+        min-width: 80px;
+        min-height: 40px;
+        padding: 0 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        background: rgba(15, 28, 49, 0.92);
+        color: #ffb347;
         font-size: 12px;
         font-weight: 800;
       }
@@ -768,7 +813,7 @@
         gap: 12px;
       }
       
-      .pin-panel {
+      html:not(.lb-theme-dark) .pin-panel {
         position: relative;
         grid-template-columns: 1fr auto;
         align-items: center;
@@ -786,7 +831,7 @@
         height: 44px;
       }
 
-      .pin-panel::before {
+      html:not(.lb-theme-dark) .pin-panel::before {
         content: "\01F4CD";
         position: absolute;
         left: 20px;
@@ -832,7 +877,7 @@
         align-items: center;
       }
 
-      .chip {
+      html:not(.lb-theme-dark) .chip {
         min-height: 34px;
         font-size: 11px;
         padding: 0 16px;
@@ -861,7 +906,7 @@
         box-shadow: 0 14px 22px -18px rgba(255, 138, 0, 0.54);
       }
 
-      .chip.disabled {
+      html:not(.lb-theme-dark) .chip.disabled {
         opacity: 1;
         color: #c4b8ab;
         background: rgba(255, 255, 255, 0.62);
@@ -889,7 +934,7 @@
         padding-left: 6px;
       }
 
-      .store-card {
+      html:not(.lb-theme-dark) .store-card {
         border-radius: 18px;
         padding: 0;
         background: #ffffff;
@@ -903,7 +948,7 @@
         min-width: 0;
       }
 
-      .store-img {
+      html:not(.lb-theme-dark) .store-img {
         order: 1;
         aspect-ratio: auto;
         height: 120px;
@@ -934,11 +979,11 @@
         box-shadow: none;
       }
 
-      .status-pill.open {
+      html:not(.lb-theme-dark) .status-pill.open {
         background: #16a34a;
       }
 
-      .status-pill.closed {
+      html:not(.lb-theme-dark) .status-pill.closed {
         background: #cbd5e1;
         color: #475569;
       }
@@ -950,7 +995,7 @@
         line-height: 1.2;
       }
 
-      .store-meta-compact {
+      html:not(.lb-theme-dark) .store-meta-compact {
         display: block;
         font-size: 10px;
         font-weight: 700;
@@ -961,7 +1006,7 @@
         text-overflow: ellipsis;
       }
 
-      .store-pin-line {
+      html:not(.lb-theme-dark) .store-pin-line {
         display: block;
         margin-top: 4px;
         font-size: 10px;
@@ -969,7 +1014,7 @@
         color: #94a3b8;
       }
 
-      .store-open-line {
+      html:not(.lb-theme-dark) .store-open-line {
         display: inline-flex;
         margin-top: 6px;
         font-size: 10px;
