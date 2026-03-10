@@ -198,6 +198,10 @@ async function initCoreTables() {
       hero_image VARCHAR(255) DEFAULT NULL,
       hero_images_json TEXT NULL,
       hero_images_mobile_json TEXT NULL,
+      mobile_promo_kicker VARCHAR(80) DEFAULT 'Local fresh picks',
+      mobile_promo_title VARCHAR(120) DEFAULT 'Offer Up to',
+      mobile_promo_highlight VARCHAR(60) DEFAULT '30% off',
+      mobile_promo_cta VARCHAR(40) DEFAULT 'Shop now',
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     )
     `,

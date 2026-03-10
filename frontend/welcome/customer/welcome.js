@@ -369,6 +369,30 @@ function renderMobilePromoArt(rawPath) {
     box.appendChild(img);
 }
 
+function renderMobilePromoCopy(settings = {}) {
+    const kicker = getEl("mobilePromoKicker");
+    const title = getEl("mobilePromoTitle");
+    const highlight = getEl("mobilePromoHighlight");
+    const cta = getEl("mobilePromoCta");
+
+    if (kicker && settings.mobile_promo_kicker != null) {
+        const next = String(settings.mobile_promo_kicker || "").trim();
+        if (next) kicker.textContent = next;
+    }
+    if (title && settings.mobile_promo_title != null) {
+        const next = String(settings.mobile_promo_title || "").trim();
+        if (next) title.textContent = next;
+    }
+    if (highlight && settings.mobile_promo_highlight != null) {
+        const next = String(settings.mobile_promo_highlight || "").trim();
+        if (next) highlight.textContent = next;
+    }
+    if (cta && settings.mobile_promo_cta != null) {
+        const next = String(settings.mobile_promo_cta || "").trim();
+        if (next) cta.textContent = next;
+    }
+}
+
 async function loadMobilePromoArt() {
     try {
         const data = await fetchApiJson("/admin/settings");
@@ -379,6 +403,7 @@ async function loadMobilePromoArt() {
         const desktopImages = normalizePromoImageList(
             safeParse(settings.hero_images_json, [])
         );
+        renderMobilePromoCopy(settings);
         renderMobilePromoArt(mobileImages[0] || settings.hero_image || desktopImages[0] || "");
     } catch (err) {
         renderMobilePromoArt("");

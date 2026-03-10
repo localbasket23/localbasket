@@ -366,10 +366,10 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
 
   const getTimeGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good Morning";
-    if (hour < 17) return "Good Afternoon";
-    if (hour < 21) return "Good Evening";
-    return "Good Night";
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    if (hour < 21) return "Good evening";
+    return "Good night";
   };
 
   const syncHeaderLocation = () => {

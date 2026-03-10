@@ -327,12 +327,12 @@ function updateMobileHomeShell() {
     const user = normalizeUser(safeParse(localStorage.getItem("lbUser"), null));
     const hour = new Date().getHours();
     const greeting = hour < 12
-        ? "Good Morning"
+        ? "Good morning"
         : hour < 17
-            ? "Good Afternoon"
+            ? "Good afternoon"
             : hour < 21
-                ? "Good Evening"
-                : "Good Night";
+                ? "Good evening"
+                : "Good night";
 
     if (mobileEyebrow) {
         mobileEyebrow.textContent = greeting;
@@ -371,6 +371,7 @@ const HERO_DEFAULTS = {
     subtitle: "Discover trusted neighborhood stores and connect directly with local sellers in minutes."
 };
 let heroSliderTimer = null;
+let mobilePromoSliderTimer = null;
 let heroSliderIndex = 0;
 let heroSliderData = [];
 let heroSettingsCache = null;
@@ -439,6 +440,57 @@ const renderMobilePromoArt = (settings = {}) => {
     promoArt.appendChild(img);
 };
 
+const renderMobilePromoArtAuto = (settings = {}) => {
+    const promoArt = dom.mobilePromoArt();
+    if (!promoArt) return;
+
+    let mobileImages = [];
+    let desktopImages = [];
+    if (settings.hero_images_mobile_json) {
+        try {
+            mobileImages = normalizeHeroImageList(JSON.parse(settings.hero_images_mobile_json));
+        } catch {}
+    }
+    if (settings.hero_images_json) {
+        try {
+            desktopImages = normalizeHeroImageList(JSON.parse(settings.hero_images_json));
+        } catch {}
+    }
+
+    const promoImages = (mobileImages.length ? mobileImages : desktopImages)
+        .map((item) => resolveHeroImageUrl(item?.src || item))
+        .filter(Boolean);
+    const fallbackImage = resolveHeroImageUrl(String(settings.hero_image || "").trim());
+    const images = promoImages.length ? promoImages : (fallbackImage ? [fallbackImage] : []);
+
+    if (mobilePromoSliderTimer) {
+        clearInterval(mobilePromoSliderTimer);
+        mobilePromoSliderTimer = null;
+    }
+
+    if (!images.length) {
+        renderMobilePromoArt(settings);
+        return;
+    }
+
+    promoArt.innerHTML = "";
+    const img = document.createElement("img");
+    let promoIndex = 0;
+    img.src = images[promoIndex];
+    img.alt = "Promo";
+    img.addEventListener("error", () => {
+        renderMobilePromoArt(settings);
+    }, { once: true });
+    promoArt.appendChild(img);
+
+    if (images.length > 1) {
+        mobilePromoSliderTimer = setInterval(() => {
+            promoIndex = (promoIndex + 1) % images.length;
+            img.src = images[promoIndex];
+        }, 3500);
+    }
+};
+
 const applyHeroTitle = (title, highlight) => {
     const heroTitleEl = dom.heroTitle();
     if (!heroTitleEl) return;
@@ -480,7 +532,7 @@ const applyHeroTitle = (title, highlight) => {
 
 const applyHeroSettings = (settings = {}) => {
     heroSettingsCache = settings;
-    renderMobilePromoArt(settings);
+    renderMobilePromoArtAuto(settings);
     const heroSection = dom.heroSection();
     const title = settings.hero_title || HERO_DEFAULTS.title;
     const highlight = settings.hero_highlight || HERO_DEFAULTS.highlight;

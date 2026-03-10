@@ -162,7 +162,11 @@ async function ensureSettingsColumns() {
     { name: "hero_subtitle", sql: "ALTER TABLE settings ADD COLUMN hero_subtitle VARCHAR(260) DEFAULT 'Discover trusted neighborhood stores and connect directly with local sellers in minutes.'" },
     { name: "hero_image", sql: "ALTER TABLE settings ADD COLUMN hero_image VARCHAR(255) DEFAULT NULL" },
     { name: "hero_images_json", sql: "ALTER TABLE settings ADD COLUMN hero_images_json TEXT NULL" },
-    { name: "hero_images_mobile_json", sql: "ALTER TABLE settings ADD COLUMN hero_images_mobile_json TEXT NULL" }
+    { name: "hero_images_mobile_json", sql: "ALTER TABLE settings ADD COLUMN hero_images_mobile_json TEXT NULL" },
+    { name: "mobile_promo_kicker", sql: "ALTER TABLE settings ADD COLUMN mobile_promo_kicker VARCHAR(80) DEFAULT 'Local fresh picks'" },
+    { name: "mobile_promo_title", sql: "ALTER TABLE settings ADD COLUMN mobile_promo_title VARCHAR(120) DEFAULT 'Offer Up to'" },
+    { name: "mobile_promo_highlight", sql: "ALTER TABLE settings ADD COLUMN mobile_promo_highlight VARCHAR(60) DEFAULT '30% off'" },
+    { name: "mobile_promo_cta", sql: "ALTER TABLE settings ADD COLUMN mobile_promo_cta VARCHAR(40) DEFAULT 'Shop now'" }
   ];
 
   for (const col of columns) {
@@ -180,6 +184,22 @@ async function ensureSettingsRow() {
     );
   } catch (e) {
     // ignore if schema differs
+  }
+  try {
+    // Backfill defaults for newer columns when upgrading existing DBs.
+    await query(
+      `
+      UPDATE settings
+      SET
+        mobile_promo_kicker = COALESCE(NULLIF(TRIM(mobile_promo_kicker), ''), 'Local fresh picks'),
+        mobile_promo_title = COALESCE(NULLIF(TRIM(mobile_promo_title), ''), 'Offer Up to'),
+        mobile_promo_highlight = COALESCE(NULLIF(TRIM(mobile_promo_highlight), ''), '30% off'),
+        mobile_promo_cta = COALESCE(NULLIF(TRIM(mobile_promo_cta), ''), 'Shop now')
+      WHERE id=1
+      `
+    );
+  } catch {
+    // non-blocking
   }
 }
 function timeAgo(input) {
@@ -1088,6 +1108,43 @@ exports.saveHeroSettings = async (req, res) => {
   } catch (err) {
     console.error("HERO SETTINGS ERROR:", err);
     res.status(500).json({ success: false, message: "Failed to save hero settings" });
+  }
+};
+
+/* =====================================================
+   SAVE MOBILE PROMO TEXT (HOME)
+   POST /api/admin/settings/mobile-promo
+===================================================== */
+exports.saveMobilePromoSettings = async (req, res) => {
+  try {
+    await ensureSettingsColumns();
+    await ensureSettingsRow();
+    const {
+      mobile_promo_kicker,
+      mobile_promo_title,
+      mobile_promo_highlight,
+      mobile_promo_cta
+    } = req.body || {};
+
+    const clean = (value, fallback) => {
+      const next = String(value == null ? "" : value).trim();
+      return next ? next : fallback;
+    };
+
+    await query(
+      "UPDATE settings SET mobile_promo_kicker=?, mobile_promo_title=?, mobile_promo_highlight=?, mobile_promo_cta=? WHERE id=1",
+      [
+        clean(mobile_promo_kicker, "Local fresh picks"),
+        clean(mobile_promo_title, "Offer Up to"),
+        clean(mobile_promo_highlight, "30% off"),
+        clean(mobile_promo_cta, "Shop now")
+      ]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("MOBILE PROMO SETTINGS ERROR:", err);
+    res.status(500).json({ success: false, message: "Failed to save mobile promo settings" });
   }
 };
 

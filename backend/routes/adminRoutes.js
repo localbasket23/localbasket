@@ -26,6 +26,7 @@ const {
   savePayoutSettings,
   saveSystemSettings,
   saveHeroSettings,
+  saveMobilePromoSettings,
   saveHeroImage,
   saveHeroImages,
   saveHeroImagesMeta,
@@ -119,6 +120,8 @@ router.post("/settings/payout", savePayoutSettings);
 router.post("/settings/system", saveSystemSettings);
 // POST /api/admin/settings/hero
 router.post("/settings/hero", saveHeroSettings);
+// POST /api/admin/settings/mobile-promo
+router.post("/settings/mobile-promo", saveMobilePromoSettings);
 // POST /api/admin/settings/hero-image
 router.post("/settings/hero-image", upload.single("hero_image"), saveHeroImage);
 // POST /api/admin/settings/hero-image/remove
