@@ -30,9 +30,66 @@ const state = {
   requirePin: false,
   favoriteStoreIds: JSON.parse(localStorage.getItem("lbFavoriteStoreIds") || "[]")
 };
+const OPEN_LOCATION_FLAG = "lbOpenLocationAfterRedirect";
 
 const chipBar = document.getElementById("chipBar");
 const sections = document.getElementById("categorySections");
+
+const getStoredUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem("lbUser") || "null");
+  } catch {
+    return null;
+  }
+};
+
+const getTimeGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour < 12) return "MORNING";
+  if (hour < 17) return "AFTERNOON";
+  return "EVENING";
+};
+
+const updateMobileTopbar = () => {
+  const nameEl = document.getElementById("categoryMobileName");
+  const kickerEl = document.getElementById("categoryMobileKicker");
+  const addrEl = document.getElementById("categoryMobileAddress");
+  const actionBtn = document.getElementById("categoryMobileAction");
+  const summaryBtn = document.getElementById("categoryMobileSummary");
+  const user = getStoredUser();
+  const fullName = String(user?.name || user?.full_name || user?.phone || "Customer").trim();
+  const address =
+    String(localStorage.getItem("lbAddr") || "").trim() ||
+    (String(localStorage.getItem("lbPin") || "").trim() ? `Pincode: ${String(localStorage.getItem("lbPin") || "").trim()}` : "Select Location");
+
+  if (kickerEl) kickerEl.textContent = getTimeGreeting();
+  if (nameEl) nameEl.textContent = fullName || "Customer";
+  if (addrEl) addrEl.textContent = address;
+
+  if (summaryBtn && !summaryBtn.dataset.bound) {
+    summaryBtn.addEventListener("click", () => {
+      try {
+        sessionStorage.setItem(OPEN_LOCATION_FLAG, "1");
+      } catch {}
+      window.location.href = "/welcome/customer/index.html";
+    });
+    summaryBtn.dataset.bound = "1";
+  }
+
+  if (actionBtn) {
+    if (user && (user.id || user.customer_id || user.phone || user.email || user.name)) {
+      actionBtn.textContent = "Profile";
+      actionBtn.onclick = () => {
+        window.location.href = "/welcome/customer/profile/profile.html";
+      };
+    } else {
+      actionBtn.textContent = "Login";
+      actionBtn.onclick = () => {
+        window.location.href = "/welcome/customer/index.html";
+      };
+    }
+  }
+};
 
 const slugify = (text) => {
   return String(text || "")
@@ -274,6 +331,7 @@ const renderAll = () => {
 };
 
 const init = async () => {
+  updateMobileTopbar();
   const pinInput = document.getElementById("pinInput");
   if (pinInput) {
     const saved = localStorage.getItem("lbPin") || "";

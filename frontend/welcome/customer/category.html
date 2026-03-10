@@ -61,6 +61,10 @@
       width: 100%;
     }
 
+    .category-mobile-topbar {
+      display: none;
+    }
+
     .intro {
       margin-bottom: 20px;
     }
@@ -648,6 +652,110 @@
           linear-gradient(180deg, #f4ede7 0%, #f6efe8 100%);
       }
 
+      .lb-category-page #header,
+      .lb-category-page #siteHeader {
+        display: none !important;
+      }
+
+      .category-mobile-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .category-mobile-user {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+        flex: 1;
+      }
+
+      .category-mobile-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #ff8a1a, #ffd15d);
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        box-shadow: 0 16px 24px -18px rgba(255, 138, 26, 0.9);
+        flex: 0 0 auto;
+      }
+
+      .category-mobile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .category-mobile-summary {
+        border: 0;
+        background: transparent;
+        padding: 0;
+        text-align: left;
+        font: inherit;
+        min-width: 0;
+        cursor: pointer;
+      }
+
+      .category-mobile-summary:focus-visible,
+      .category-mobile-action:focus-visible {
+        outline: 2px solid rgba(255, 138, 26, 0.45);
+        outline-offset: 3px;
+        border-radius: 12px;
+      }
+
+      .category-mobile-kicker {
+        display: block;
+        margin: 0 0 2px;
+        font-size: 11px;
+        font-weight: 800;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+      }
+
+      .category-mobile-name {
+        display: block;
+        font-size: 19px;
+        line-height: 1.05;
+        font-weight: 800;
+        color: #111827;
+      }
+
+      .category-mobile-address {
+        display: block;
+        margin-top: 4px;
+        font-size: 12px;
+        color: #64748b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: min(50vw, 240px);
+      }
+
+      .category-mobile-address::before {
+        content: "\1F4CD";
+        margin-right: 6px;
+        font-size: 11px;
+      }
+
+      .category-mobile-action {
+        min-width: 92px;
+        min-height: 46px;
+        padding: 0 18px;
+        border-radius: 18px;
+        border: 1px solid #efddcf;
+        background: rgba(255,255,255,0.96);
+        color: #f97316;
+        font-size: 13px;
+        font-weight: 800;
+        box-shadow: 0 10px 18px -18px rgba(15, 23, 42, 0.35);
+      }
+
       .page-shell {
         max-width: 430px;
         padding: 10px 14px calc(128px + env(safe-area-inset-bottom));
@@ -926,6 +1034,20 @@
   <div id="siteHeader"></div>
 
   <main class="page-shell">
+    <section class="category-mobile-topbar" aria-label="Category page header">
+      <div class="category-mobile-user">
+        <div class="category-mobile-avatar">
+          <img src="/welcome/logo2.png?v=20260303" alt="LocalBasket logo">
+        </div>
+        <button class="category-mobile-summary" id="categoryMobileSummary" type="button" aria-label="Change location">
+          <span class="category-mobile-kicker" id="categoryMobileKicker">MORNING</span>
+          <span class="category-mobile-name" id="categoryMobileName">Customer</span>
+          <span class="category-mobile-address" id="categoryMobileAddress">Select Location</span>
+        </button>
+      </div>
+      <button class="category-mobile-action" id="categoryMobileAction" type="button">Login</button>
+    </section>
+
     <section class="intro">
       <h1>Explore Categories</h1>
       <p>Find the best local stores and products near you.</p>
