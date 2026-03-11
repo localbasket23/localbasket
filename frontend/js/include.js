@@ -1667,6 +1667,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const onPointerMove = (e) => {
       if (!dragging) return;
+      try { if (e.cancelable) e.preventDefault(); } catch {}
       const dx = e.clientX - dragStartX;
       const dy = e.clientY - dragStartY;
       if (!moved && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) moved = true;
@@ -1708,6 +1709,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     btn.addEventListener("pointerdown", (e) => {
       if (panel.classList.contains("lb-ai-open")) return;
+      try { if (e.cancelable) e.preventDefault(); } catch {}
       moved = false;
       dragging = true;
       btn.__lbPointerId = e.pointerId;
@@ -1717,10 +1719,37 @@ document.addEventListener("DOMContentLoaded", async () => {
       startLeft = rect.left;
       startTop = rect.top;
       try { btn.setPointerCapture?.(e.pointerId); } catch {}
-      window.addEventListener("pointermove", onPointerMove, { passive: true });
-      window.addEventListener("pointerup", endDrag, { passive: true });
-      window.addEventListener("pointercancel", endDrag, { passive: true });
+      window.addEventListener("pointermove", onPointerMove);
+      window.addEventListener("pointerup", endDrag);
+      window.addEventListener("pointercancel", endDrag);
     });
+
+    // Touch fallback (for browsers where pointer events are unreliable)
+    if (typeof window !== "undefined" && !("PointerEvent" in window)) {
+      btn.addEventListener("touchstart", (e) => {
+        if (panel.classList.contains("lb-ai-open")) return;
+        const t = e.touches && e.touches[0];
+        if (!t) return;
+        moved = false;
+        dragging = true;
+        dragStartX = t.clientX;
+        dragStartY = t.clientY;
+        const rect = btn.getBoundingClientRect();
+        startLeft = rect.left;
+        startTop = rect.top;
+      }, { passive: true });
+
+      window.addEventListener("touchmove", (e) => {
+        if (!dragging) return;
+        const t = e.touches && e.touches[0];
+        if (!t) return;
+        const fake = { clientX: t.clientX, clientY: t.clientY, cancelable: false };
+        onPointerMove(fake);
+      }, { passive: false });
+
+      window.addEventListener("touchend", endDrag, { passive: true });
+      window.addEventListener("touchcancel", endDrag, { passive: true });
+    }
 
     btn.addEventListener("click", () => {
       if (moved) { moved = false; return; }
