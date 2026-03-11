@@ -517,7 +517,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         cursor: pointer;
         box-shadow: 0 18px 42px -28px rgba(255,140,0,0.85);
         transition: transform 140ms ease, filter 140ms ease;
-        touch-action: manipulation;
+        touch-action: none;
         max-width: calc(100vw - 24px);
       }
       #lb-ai-btn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
@@ -806,13 +806,13 @@ document.addEventListener("DOMContentLoaded", async () => {
           right: 0;
           bottom: auto;
           top: 55%;
-          transform: translateY(-50%);
+          transform: none;
           border-radius: 16px 0 0 16px;
           padding: 10px 10px;
           box-shadow: 0 18px 42px -28px rgba(255,140,0,0.75);
         }
-        #lb-ai-btn:hover{ transform: translateY(-50%); }
-        #lb-ai-btn:active{ transform: translateY(-50%) scale(0.99); }
+        #lb-ai-btn:hover{ filter: brightness(1.02); }
+        #lb-ai-btn:active{ transform: scale(0.99); }
         .lb-ai-btn-label{ display: none; }
         #lb-ai-panel{
           left: calc(10px + env(safe-area-inset-left, 0px));
@@ -923,6 +923,84 @@ document.addEventListener("DOMContentLoaded", async () => {
       try { return JSON.parse(raw); } catch { return fallback; }
     };
 
+    const getCartKey = () => {
+      try {
+        const user = safeParse(localStorage.getItem("lbUser") || "null", null);
+        if (user && user.id) return `lbCart_${user.id}`;
+      } catch {}
+      return "lbCart_guest";
+    };
+
+    const loadCart = () => {
+      try {
+        const key = getCartKey();
+        const parsed = safeParse(localStorage.getItem(key) || "[]", []);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    };
+
+    const saveCart = (cart) => {
+      try {
+        const key = getCartKey();
+        localStorage.setItem(key, JSON.stringify(Array.isArray(cart) ? cart : []));
+        if (localStorage.getItem("lbCart")) localStorage.removeItem("lbCart");
+      } catch {}
+      try { window.dispatchEvent(new Event("lb-cart-updated")); } catch {}
+    };
+
+    const addItemsToCart = async ({ storeId, storeName, items }) => {
+      const sid = Number(storeId || 0);
+      const list = Array.isArray(items) ? items : [];
+      if (!sid || !list.length) {
+        addMsg("Nothing to add to cart yet.", "bot");
+        return;
+      }
+
+      let cart = loadCart();
+      if (cart.length && String(cart[0]?.storeId) !== String(sid)) {
+        const ok = typeof window.lbConfirm === "function"
+          ? await window.lbConfirm(`Your cart has items from another store.\nReplace cart with items from ${storeName || "this store"}?`, "Confirm")
+          : confirm("Your cart has items from another store. Replace cart?");
+        if (!ok) return;
+        cart = [];
+      }
+
+      const byId = new Map();
+      cart.forEach((c) => {
+        const id = Number(c?.id || 0);
+        if (!id) return;
+        byId.set(id, { ...c });
+      });
+
+      list.forEach((it) => {
+        const id = Number(it?.id || 0);
+        if (!id) return;
+        const existing = byId.get(id);
+        if (existing) {
+          existing.qty = Number(existing.qty || 0) + Number(it.qty || 1);
+          byId.set(id, existing);
+          return;
+        }
+        byId.set(id, {
+          id,
+          name: String(it?.name || "Item"),
+          price: Number(it?.price || 0),
+          qty: Number(it?.qty || 1),
+          storeId: sid,
+          seller_id: it?.seller_id || it?.sellerId || null,
+        });
+      });
+
+      const next = Array.from(byId.values()).filter((x) => Number(x.qty || 0) > 0);
+      saveCart(next);
+      addMsg(`Added ${list.length} item(s) to cart.`, "bot", [
+        { label: "Open store", type: "nav", href: `/welcome/customer/store/store.html?id=${sid}`, primary: true },
+        { label: "Checkout", type: "nav", href: "/welcome/customer/checkout/checkout.html" },
+      ]);
+    };
+
     const readCartAny = () => {
       try {
         const user = safeParse(localStorage.getItem("lbUser") || "null", null);
@@ -976,6 +1054,9 @@ document.addEventListener("DOMContentLoaded", async () => {
               if (a.type === "geo" && a.kind === "nearbyStores") {
                 await runNearbyStoresFlow();
               }
+              if (a.type === "cart" && a.payload) {
+                await addItemsToCart(a.payload);
+              }
             } catch {}
           });
           wrap.appendChild(b);
@@ -990,7 +1071,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const aiState = {
       awaiting: null, // "pincode"
-      lastIntent: null
+      lastIntent: null,
+      cache: {
+        storesByPin: new Map(),
+        productsByStore: new Map(),
+      }
     };
 
     const sleep = (ms) => new Promise((r) => window.setTimeout(r, ms));
@@ -1032,8 +1117,159 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     const listStoresByPincode = async (pin) => {
+      const now = Date.now();
+      const cached = aiState.cache.storesByPin.get(pin);
+      if (cached && Number.isFinite(cached.ts) && now - cached.ts < 2 * 60 * 1000) {
+        return Array.isArray(cached.stores) ? cached.stores : [];
+      }
       const data = await fetchJson(`/api/stores?pincode=${encodeURIComponent(pin)}`, { method: "GET" });
-      return Array.isArray(data?.stores) ? data.stores : [];
+      const stores = Array.isArray(data?.stores) ? data.stores : [];
+      aiState.cache.storesByPin.set(pin, { ts: now, stores });
+      return stores;
+    };
+
+    const listProductsByStoreId = async (storeId) => {
+      const sid = Number(storeId || 0);
+      if (!sid) return [];
+      const now = Date.now();
+      const cached = aiState.cache.productsByStore.get(sid);
+      if (cached && Number.isFinite(cached.ts) && now - cached.ts < 2 * 60 * 1000) {
+        return Array.isArray(cached.products) ? cached.products : [];
+      }
+      const data = await fetchJson(`/api/products?storeId=${encodeURIComponent(String(sid))}`, { method: "GET" });
+      const products = Array.isArray(data?.products) ? data.products : [];
+      aiState.cache.productsByStore.set(sid, { ts: now, products });
+      return products;
+    };
+
+    const isRecipeQuery = (t) => {
+      const s = String(t || "").toLowerCase();
+      if (!s) return false;
+      return /recipe|ingredients|how to|make |cook|prepare|banane|banau|kaise|kya chahiye|kya kya|kya lagega/.test(s);
+    };
+
+    const recipeDB = [
+      { match: /\bchai\b|\btea\b/, title: "Chai", ingredients: ["Milk", "Tea powder", "Sugar", "Ginger (optional)", "Cardamom (optional)"] },
+      { match: /\bpasta\b/, title: "Pasta", ingredients: ["Pasta", "Tomato puree (or tomatoes)", "Garlic", "Onion (optional)", "Olive oil (or butter)", "Salt", "Chili flakes / oregano (optional)", "Cheese (optional)"] },
+      { match: /\bbiryani\b/, title: "Biryani", ingredients: ["Basmati rice", "Onions", "Tomatoes", "Curd (yogurt)", "Ginger-garlic paste", "Biryani masala", "Whole spices", "Mint and coriander", "Ghee/oil"] },
+      { match: /\bpoha\b/, title: "Poha", ingredients: ["Poha", "Onion", "Potato", "Peanuts", "Mustard seeds", "Turmeric", "Lemon", "Salt", "Oil"] },
+      { match: /\bmaggi\b|\bnoodles\b/, title: "Instant noodles", ingredients: ["Noodles", "Tastemaker", "Water", "Vegetables (optional)"] },
+      { match: /\bomelette\b|\banda\b/, title: "Omelette", ingredients: ["Eggs", "Onion (optional)", "Green chili (optional)", "Salt", "Oil/butter"] },
+      { match: /\bpaneer\b/, title: "Paneer dish", ingredients: ["Paneer", "Onion", "Tomato", "Ginger-garlic paste", "Spices", "Cream (optional)", "Butter/oil", "Salt"] },
+      { match: /\bdal\b/, title: "Dal", ingredients: ["Dal (lentils)", "Onion (optional)", "Tomato (optional)", "Turmeric", "Salt", "Oil/ghee", "Cumin", "Garlic (optional)"] },
+      { match: /\bfried\\s*rice\b/, title: "Fried rice", ingredients: ["Rice", "Vegetables", "Soy sauce (optional)", "Vinegar (optional)", "Salt", "Oil"] },
+    ];
+
+    const guessRecipe = (raw) => {
+      const t = String(raw || "").toLowerCase();
+      for (const r of recipeDB) {
+        if (r.match.test(t)) return { title: r.title, ingredients: r.ingredients };
+      }
+      const dish = String(raw || "")
+        .replace(/ingredients|recipe|how to make|how to cook|how to prepare|banane ka tarika|banane|kaise banaye|kaise banau|make|cook|prepare/gi, "")
+        .trim();
+      const title = dish ? `${dish} (basic)` : "Recipe (basic)";
+      const base = ["Oil", "Salt", "Onion (optional)", "Tomato (optional)", "Ginger-garlic (optional)", "Spices (as needed)"];
+      return { title, ingredients: base };
+    };
+
+    const ingredientKeywords = (ing) => {
+      const s = String(ing || "").toLowerCase();
+      const map = [
+        { k: ["milk"], w: ["milk", "doodh"] },
+        { k: ["tea powder"], w: ["tea", "chai", "patti"] },
+        { k: ["sugar"], w: ["sugar", "chini"] },
+        { k: ["ginger"], w: ["ginger", "adrak"] },
+        { k: ["cardamom"], w: ["cardamom", "elaichi"] },
+        { k: ["paneer"], w: ["paneer"] },
+        { k: ["butter"], w: ["butter"] },
+        { k: ["ghee"], w: ["ghee"] },
+        { k: ["oil"], w: ["oil"] },
+        { k: ["salt"], w: ["salt", "namak"] },
+        { k: ["onion"], w: ["onion", "pyaz"] },
+        { k: ["tomato"], w: ["tomato"] },
+        { k: ["garlic"], w: ["garlic", "lahsun"] },
+        { k: ["ginger-garlic"], w: ["ginger", "garlic", "paste"] },
+        { k: ["rice"], w: ["rice", "chawal", "basmati"] },
+        { k: ["noodles"], w: ["noodles", "maggi"] },
+        { k: ["poha"], w: ["poha"] },
+        { k: ["dal"], w: ["dal", "lentil", "toor", "moong", "masoor"] },
+        { k: ["curd"], w: ["curd", "dahi", "yogurt"] },
+        { k: ["masala"], w: ["masala", "spice"] },
+        { k: ["cumin"], w: ["cumin", "jeera"] },
+      ];
+      for (const entry of map) {
+        if (entry.k.some((x) => s.includes(x))) return entry.w;
+      }
+      const tokens = s.replace(/[()]/g, " ").split(/\s+/).map((x) => x.trim()).filter((x) => x.length >= 3);
+      return tokens.slice(0, 4);
+    };
+
+    const chooseStoreForPin = async (pin) => {
+      const stores = await listStoresByPincode(pin);
+      if (!stores.length) return null;
+      const online = stores.find((s) => String(s?.is_online || "").toLowerCase() === "1" || s?.is_online === 1 || s?.is_online === true);
+      return online || stores[0];
+    };
+
+    const matchProductsForIngredients = async ({ storeId, ingredients }) => {
+      const products = await listProductsByStoreId(storeId);
+      const found = [];
+      const missing = [];
+
+      const norm = (x) => String(x || "").toLowerCase();
+      const escapeRe = (s) => String(s || "").replace(/[.*+?^${}()|[\\]\\\\]/g, "\\\\$&");
+      const scoreProduct = (p, keys) => {
+        const name = norm(p?.name);
+        const cat = norm(p?.category);
+        let score = 0;
+        keys.forEach((k) => {
+          if (!k) return;
+          const kk = norm(k);
+          if (name.includes(kk)) score += 3;
+          if (cat.includes(kk)) score += 1;
+          if (new RegExp(`\\b${escapeRe(kk)}\\b`, "i").test(name)) score += 2;
+        });
+        return score;
+      };
+
+      for (const ing of ingredients) {
+        const keys = ingredientKeywords(ing);
+        let best = null;
+        let bestScore = 0;
+        for (const p of products) {
+          const id = Number(p?.id || 0);
+          if (!id) continue;
+          const sc = scoreProduct(p, keys);
+          if (sc > bestScore) {
+            bestScore = sc;
+            best = p;
+          }
+        }
+        if (!best || bestScore < 3) {
+          missing.push(String(ing));
+          continue;
+        }
+        found.push({ ingredient: String(ing), product: best });
+      }
+
+      const unique = new Map();
+      const cartItems = [];
+      found.forEach(({ product }) => {
+        const pid = Number(product?.id || 0);
+        if (!pid || unique.has(pid)) return;
+        unique.set(pid, true);
+        cartItems.push({
+          id: pid,
+          name: String(product?.name || "Item"),
+          price: Number(product?.price || 0),
+          qty: 1,
+          storeId: Number(storeId),
+          seller_id: product?.seller_id || null,
+        });
+      });
+
+      return { found, missing, cartItems };
     };
 
     const storeToLine = (s) => {
@@ -1189,36 +1425,51 @@ document.addEventListener("DOMContentLoaded", async () => {
         return await showStores(pin);
       }
 
-      // Recipe ingredients
-      if (/chai|tea/.test(t)) {
-        const a = "To make chai, you need:\n- Milk\n- Tea powder\n- Sugar\n- Ginger (optional)\n- Cardamom (optional)";
-        return [{
-          text: a,
-          actions: [
-            { label: "Copy list", type: "copy", text: a, primary: true },
-            { label: "Browse categories", type: "nav", href: "/welcome/customer/category.html" },
-          ]
-        }];
-      }
-      if (/pasta/.test(t)) {
-        const a = "For a simple pasta:\n- Pasta\n- Tomato puree (or tomatoes)\n- Garlic\n- Onion (optional)\n- Olive oil (or butter)\n- Salt\n- Chili flakes / oregano (optional)\n- Cheese (optional)";
-        return [{
-          text: a,
-          actions: [
-            { label: "Copy list", type: "copy", text: a, primary: true },
-            { label: "Browse categories", type: "nav", href: "/welcome/customer/category.html" },
-          ]
-        }];
-      }
-      if (/biryani/.test(t)) {
-        const a = "For biryani basics:\n- Basmati rice\n- Onions\n- Tomatoes\n- Curd (yogurt)\n- Ginger-garlic paste\n- Biryani masala\n- Whole spices (bay leaf, cloves, cinnamon)\n- Mint and coriander\n- Ghee/oil";
-        return [{
-          text: a,
-          actions: [
-            { label: "Copy list", type: "copy", text: a, primary: true },
-            { label: "Browse categories", type: "nav", href: "/welcome/customer/category.html" },
-          ]
-        }];
+      // Recipes: show ingredients + suggest real products from nearby store when possible
+      if (isRecipeQuery(t) || recipeDB.some((r) => r.match.test(t))) {
+        const recipe = guessRecipe(raw);
+        const ingredientsText = `${recipe.title}\nIngredients:\n- ${recipe.ingredients.join("\n- ")}`;
+
+        const pin = getSavedPincode();
+        if (!pin) {
+          aiState.awaiting = "pincode";
+          return [{
+            text: `${ingredientsText}\n\nTo suggest products, share your 6-digit pincode or use current location.`,
+            actions: [
+              { label: "Use my location", type: "geo", kind: "nearbyStores", primary: true },
+              { label: "Set pincode", type: "ask", text: "My pincode is " },
+            ]
+          }];
+        }
+
+        const store = await chooseStoreForPin(pin);
+        if (!store) {
+          return [{
+            text: `${ingredientsText}\n\nNo stores found for pincode ${pin}. Try another pincode.`,
+            actions: [{ label: "Set pincode", type: "ask", text: "My pincode is ", primary: true }]
+          }];
+        }
+
+        const match = await matchProductsForIngredients({ storeId: store.id, ingredients: recipe.ingredients });
+        const lines = match.found.slice(0, 10).map(({ ingredient, product }) => {
+          const price = Number(product?.price || 0);
+          const nm = String(product?.name || "Item");
+          return `- ${ingredient} -> ${nm} (Rs. ${Number.isFinite(price) ? price : 0})`;
+        });
+        const missing = match.missing.length ? `\n\nNot found in store:\n- ${match.missing.slice(0, 8).join("\n- ")}` : "";
+
+        const suggestionText = `Suggested products in ${String(store.store_name || "store")}:\n${lines.length ? lines.join("\n") : "- (No close matches found)"}${missing}`;
+
+        const actions = [
+          match.cartItems.length ? { label: "Add ingredients to cart", type: "cart", payload: { storeId: store.id, storeName: store.store_name, items: match.cartItems }, primary: true } : null,
+          { label: "Open store", type: "nav", href: `/welcome/customer/store/store.html?id=${store.id}` },
+          { label: "Browse categories", type: "nav", href: "/welcome/customer/category.html" },
+        ].filter(Boolean);
+
+        return [
+          { text: ingredientsText, actions: [{ label: "Copy list", type: "copy", text: ingredientsText, primary: true }] },
+          { text: suggestionText, actions }
+        ];
       }
 
       // Deals
@@ -1330,6 +1581,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (isMobileDock()) {
           const saved = Number(localStorage.getItem("lbAiBtnY") || "NaN");
           const y = Number.isFinite(saved) ? saved : Math.round(vh * 0.55 - rect.height / 2);
+          // Ensure no transform offsets in dock mode; we control `top` directly.
+          btn.style.transform = "none";
           btn.style.left = "auto";
           btn.style.right = "0px";
           btn.style.bottom = "auto";
