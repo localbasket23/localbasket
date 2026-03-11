@@ -548,12 +548,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         opacity: 1;
         transform: translateX(0px);
       }
-      @media (hover: none){
-        .lb-ai-btn-label{
-          max-width: 240px;
-          opacity: 1;
-          transform: translateX(0px);
-        }
+
+      #lb-ai-btn.lb-ai-hidden{
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(6px);
       }
 
       #lb-ai-panel{
@@ -802,7 +801,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       /* Mobile/tablet: near full-screen with rounded corners */
       @media (max-width: 768px){
-        #lb-ai-btn{ right: 16px; bottom: 16px; }
+        /* Dock button to the edge, user can drag it up/down */
+        #lb-ai-btn{
+          right: 0;
+          bottom: auto;
+          top: 55%;
+          transform: translateY(-50%);
+          border-radius: 16px 0 0 16px;
+          padding: 10px 10px;
+          box-shadow: 0 18px 42px -28px rgba(255,140,0,0.75);
+        }
+        #lb-ai-btn:hover{ transform: translateY(-50%); }
+        #lb-ai-btn:active{ transform: translateY(-50%) scale(0.99); }
+        .lb-ai-btn-label{ display: none; }
         #lb-ai-panel{
           left: calc(10px + env(safe-area-inset-left, 0px));
           right: calc(10px + env(safe-area-inset-right, 0px));
@@ -1075,9 +1086,47 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     };
 
+    const isMobileDock = () => {
+      try { return window.matchMedia && window.matchMedia("(max-width: 768px)").matches; } catch { return false; }
+    };
+
+    const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+
+    const applyBtnPosition = () => {
+      try {
+        const vw = Math.max(1, window.innerWidth || 1);
+        const vh = Math.max(1, window.innerHeight || 1);
+        const rect = btn.getBoundingClientRect();
+
+        if (isMobileDock()) {
+          const saved = Number(localStorage.getItem("lbAiBtnY") || "NaN");
+          const y = Number.isFinite(saved) ? saved : Math.round(vh * 0.55 - rect.height / 2);
+          btn.style.left = "auto";
+          btn.style.right = "0px";
+          btn.style.bottom = "auto";
+          btn.style.top = `${clamp(y, 10, vh - rect.height - 10)}px`;
+        } else {
+          const raw = localStorage.getItem("lbAiBtnPos");
+          const pos = raw ? safeParse(raw, null) : null;
+          if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) {
+            btn.style.left = `${clamp(pos.x, 10, vw - rect.width - 10)}px`;
+            btn.style.top = `${clamp(pos.y, 10, vh - rect.height - 10)}px`;
+            btn.style.right = "auto";
+            btn.style.bottom = "auto";
+          } else {
+            btn.style.left = "auto";
+            btn.style.top = "auto";
+            btn.style.right = "";
+            btn.style.bottom = "";
+          }
+        }
+      } catch {}
+    };
+
     const open = () => {
       panel.classList.add("lb-ai-open");
       backdrop.classList.add("lb-ai-open");
+      btn.classList.add("lb-ai-hidden");
       btn.setAttribute("aria-expanded", "true");
       panel.setAttribute("aria-hidden", "false");
       document.body.style.overflow = "hidden";
@@ -1091,6 +1140,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const closePanel = () => {
       panel.classList.remove("lb-ai-open");
       backdrop.classList.remove("lb-ai-open");
+      btn.classList.remove("lb-ai-hidden");
       btn.setAttribute("aria-expanded", "false");
       panel.setAttribute("aria-hidden", "true");
       document.body.style.overflow = "";
@@ -1126,7 +1176,79 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     };
 
-    btn.addEventListener("click", () => (panel.classList.contains("lb-ai-open") ? closePanel() : open()));
+    // Drag: desktop free-move, mobile docked vertical move. Click/tap opens panel.
+    applyBtnPosition();
+    window.addEventListener("resize", applyBtnPosition, { passive: true });
+
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let startLeft = 0;
+    let startTop = 0;
+    let moved = false;
+    let dragging = false;
+
+    const onPointerMove = (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+      if (!moved && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) moved = true;
+
+      const vw = Math.max(1, window.innerWidth || 1);
+      const vh = Math.max(1, window.innerHeight || 1);
+      const rect = btn.getBoundingClientRect();
+
+      if (isMobileDock()) {
+        const y = clamp(startTop + dy, 10, vh - rect.height - 10);
+        btn.style.top = `${y}px`;
+      } else {
+        const x = clamp(startLeft + dx, 10, vw - rect.width - 10);
+        const y = clamp(startTop + dy, 10, vh - rect.height - 10);
+        btn.style.left = `${x}px`;
+        btn.style.top = `${y}px`;
+      }
+    };
+
+    const endDrag = () => {
+      if (!dragging) return;
+      dragging = false;
+      try { btn.releasePointerCapture?.(btn.__lbPointerId); } catch {}
+
+      // Persist position
+      try {
+        const rect = btn.getBoundingClientRect();
+        if (isMobileDock()) {
+          localStorage.setItem("lbAiBtnY", String(Math.round(rect.top)));
+        } else {
+          localStorage.setItem("lbAiBtnPos", JSON.stringify({ x: Math.round(rect.left), y: Math.round(rect.top) }));
+        }
+      } catch {}
+
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", endDrag);
+      window.removeEventListener("pointercancel", endDrag);
+    };
+
+    btn.addEventListener("pointerdown", (e) => {
+      if (panel.classList.contains("lb-ai-open")) return;
+      moved = false;
+      dragging = true;
+      btn.__lbPointerId = e.pointerId;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      const rect = btn.getBoundingClientRect();
+      startLeft = rect.left;
+      startTop = rect.top;
+      try { btn.setPointerCapture?.(e.pointerId); } catch {}
+      window.addEventListener("pointermove", onPointerMove, { passive: true });
+      window.addEventListener("pointerup", endDrag, { passive: true });
+      window.addEventListener("pointercancel", endDrag, { passive: true });
+    });
+
+    btn.addEventListener("click", () => {
+      if (moved) { moved = false; return; }
+      if (panel.classList.contains("lb-ai-open")) closePanel();
+      else open();
+    });
     close.addEventListener("click", closePanel);
     backdrop.addEventListener("click", closePanel);
     send.addEventListener("click", onSend);
