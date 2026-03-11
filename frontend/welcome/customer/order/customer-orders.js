@@ -1542,7 +1542,8 @@ async function reorderWithCurrentPrice(oldCart) {
     alert(`${unavailableCount} item(s) are out of stock and were skipped`);
   }
 
-  window.location.href = "../checkout/checkout.html";
+  // Use absolute path to avoid routing issues on some hosts (e.g. static deploys).
+  window.location.href = "/welcome/customer/checkout/checkout.html";
 }
 
 /* =====================================================

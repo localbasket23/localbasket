@@ -761,6 +761,20 @@ const applyHeroSettings = (settings = {}) => {
         }
 
         heroSliderData = images;
+
+        // Preload images to avoid flicker/jank during slide changes.
+        try {
+            images.slice(0, 10).forEach((it) => {
+                const src = String(it?.src || "").trim();
+                if (!src) return;
+                const img = new Image();
+                img.decoding = "async";
+                img.loading = "eager";
+                img.src = src;
+                if (img.decode) img.decode().catch(() => {});
+            });
+        } catch {}
+
         images.forEach((src, i) => {
             const slide = document.createElement("div");
             slide.className = `hero-slide${i === 0 ? " active" : ""}`;
@@ -798,13 +812,21 @@ const applyHeroSettings = (settings = {}) => {
         if (images.length > 1) {
             heroSliderIndex = 0;
             applyHeroLink();
-            heroSliderTimer = setInterval(() => {
-                const slideEls = heroVisual.querySelectorAll(".hero-slide");
-                const dotEls = heroVisual.querySelectorAll(".hero-dot");
-                heroSliderIndex = (heroSliderIndex + 1) % images.length;
-                slideEls.forEach((s, n) => s.classList.toggle("active", n === heroSliderIndex));
-                dotEls.forEach((d, n) => d.classList.toggle("active", n === heroSliderIndex));
+            const slideEls = Array.from(heroVisual.querySelectorAll(".hero-slide"));
+            const dotEls = Array.from(heroVisual.querySelectorAll(".hero-dot"));
+            const setActive = (next) => {
+                const prev = heroSliderIndex;
+                heroSliderIndex = next;
+                if (slideEls[prev]) slideEls[prev].classList.remove("active");
+                if (dotEls[prev]) dotEls[prev].classList.remove("active");
+                if (slideEls[next]) slideEls[next].classList.add("active");
+                if (dotEls[next]) dotEls[next].classList.add("active");
                 applyHeroLink();
+            };
+            heroSliderTimer = setInterval(() => {
+                const next = (heroSliderIndex + 1) % images.length;
+                // Use rAF so class flips happen on a frame boundary (smoother on mobile).
+                requestAnimationFrame(() => setActive(next));
             }, 4500);
         } else {
             heroSliderIndex = 0;
