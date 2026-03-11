@@ -1703,7 +1703,16 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            z-index: 3;
         }
+        .auth-eye-btn svg{
+            width: 18px;
+            height: 18px;
+            display: block;
+        }
+        .auth-eye-btn .eye-off{ display: none; }
+        .auth-eye-btn[data-visible="1"] .eye-on{ display: none; }
+        .auth-eye-btn[data-visible="1"] .eye-off{ display: block; }
         .auth-eye-btn:hover{
             background: rgba(15, 23, 42, 0.06);
             color: #0f172a;
@@ -3940,7 +3949,15 @@
           <div class="auth-field">
             <input type="password" id="authPassword" placeholder="Password">
             <button type="button" class="auth-eye-btn" id="toggleAuthPassword" aria-label="Show password">
-              <i class="fas fa-eye"></i>
+              <svg class="eye-on" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <svg class="eye-off" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 4l16 16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                <path d="M10.6 10.6a2.5 2.5 0 0 0 3.3 3.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M3.3 12S6.8 5.5 12 5.5c2 0 3.7.8 5.1 1.8M20.7 12S17.2 18.5 12 18.5c-2.1 0-3.9-.8-5.4-1.9" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              </svg>
             </button>
           </div>
           <div class="auth-otp-actions">
@@ -3951,7 +3968,15 @@
             <div class="auth-field" style="margin-bottom:0;">
               <input type="password" id="authOtp" placeholder="Enter OTP" inputmode="numeric" maxlength="6">
               <button type="button" class="auth-eye-btn" id="toggleAuthOtp" aria-label="Show OTP">
-                <i class="fas fa-eye"></i>
+                <svg class="eye-on" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M2.5 12s3.5-7 9.5-7 9.5 7 9.5 7-3.5 7-9.5 7-9.5-7-9.5-7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <svg class="eye-off" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 4l16 16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                  <path d="M10.6 10.6a2.5 2.5 0 0 0 3.3 3.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M3.3 12S6.8 5.5 12 5.5c2 0 3.7.8 5.1 1.8M20.7 12S17.2 18.5 12 18.5c-2.1 0-3.9-.8-5.4-1.9" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
               </button>
             </div>
             <button type="button" id="authRequestOtpBtn" onclick="requestCustomerOtp()">Send OTP</button>
