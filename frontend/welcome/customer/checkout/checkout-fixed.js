@@ -374,7 +374,7 @@ async function placeOrder() {
     return;
   }
 
-  if (!/^\\d{10}$/.test(phone)) {
+  if (!/^\d{10}$/.test(phone)) {
     alert(`Error: Invalid phone number. Enter 10 digits (e.g. 9876543210). Detected: ${phone || "(empty)"}`);
     return;
   }
@@ -384,7 +384,7 @@ async function placeOrder() {
     if (phoneInputEl) phoneInputEl.value = phone;
   } catch {}
 
-  if (!/^\\d{6}$/.test(pincode)) {
+  if (!/^\d{6}$/.test(pincode)) {
     alert("Error: Invalid pincode");
     return;
   }
