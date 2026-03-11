@@ -196,6 +196,11 @@
       display: inline-block;
     }
 
+    @media (max-width: 520px) {
+      /* Mobile: avoid "double launching" feel */
+      .badge { display: none; }
+    }
+
     .logo-wrap {
       width: 92px;
       height: 92px;
