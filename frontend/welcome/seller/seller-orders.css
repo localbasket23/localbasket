@@ -175,16 +175,41 @@ tr:hover { background: var(--bg); }
 .empty-state i { font-size: 40px; margin-bottom: 15px; opacity: 0.5; }
 
 /* ================= MOBILE ADAPTION ================= */
-@media (max-width: 768px) {
+@media (max-width: 992px) {
   .orders-toolbar {
     grid-template-columns: 1fr;
   }
   /* Turn table into Cards for Mobile */
   thead { display: none; }
-  tr { display: block; border: 1px solid var(--border-color); margin-bottom: 15px; border-radius: 12px; padding: 15px; background: var(--card); }
-  td { display: flex; justify-content: space-between; padding: 8px 0; border: none; font-size: 14px; }
-  td::before { content: attr(data-label); font-weight: 600; color: var(--text-light); }
-  .table-responsive { background: transparent; box-shadow: none; border: none; }
+  table { min-width: 0 !important; width: 100% !important; }
+  tr {
+    display: block;
+    border: 1px solid var(--border-color);
+    margin-bottom: 15px;
+    border-radius: 14px;
+    padding: 14px 14px 12px;
+    background: var(--card);
+    box-shadow: var(--shadow-sm);
+  }
+  td {
+    display: grid;
+    grid-template-columns: 118px minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+    padding: 8px 0;
+    border: none;
+    font-size: 14px;
+    min-width: 0;
+  }
+  td::before {
+    content: attr(data-label);
+    font-weight: 700;
+    color: var(--text-light);
+    font-size: 12px;
+    letter-spacing: 0.2px;
+  }
+  td > * { min-width: 0; }
+  .table-responsive { background: transparent; box-shadow: none; border: none; overflow-x: visible; }
 }
 
 /* Modal Styling */
@@ -286,7 +311,7 @@ body.dark .status-select {
   color: #b91c1c;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 992px) {
   table { min-width: 0; width: 100%; }
   tr { margin-bottom: 12px; padding: 12px; }
   td {
@@ -298,13 +323,17 @@ body.dark .status-select {
     min-width: 108px;
     font-size: 12px;
   }
+  td[data-label="Customer"],
   td[data-label="Items"],
+  td[data-label="Payment"],
   td[data-label="Current Status"],
   td[data-label="Action"],
   td[data-label="Final Status"] {
     display: block;
   }
+  td[data-label="Customer"]::before,
   td[data-label="Items"]::before,
+  td[data-label="Payment"]::before,
   td[data-label="Current Status"]::before,
   td[data-label="Action"]::before,
   td[data-label="Final Status"]::before {
