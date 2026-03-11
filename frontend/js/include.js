@@ -1014,7 +1014,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function loadHeader() {
-    const headerContainer = document.getElementById("header");
+    const headerContainer =
+      document.getElementById("header") ||
+      document.getElementById("siteHeader");
     if (!headerContainer) return;
 
     const res = await fetch(`/components/header.html?v=${LB_COMPONENTS_VERSION}`, { cache: "no-store" });
@@ -1025,7 +1027,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function loadFooter() {
-    const footerContainer = document.getElementById("footer");
+    const footerContainer =
+      document.getElementById("footer") ||
+      document.getElementById("siteFooter");
     if (!footerContainer) return;
 
     const res = await fetch(`/components/footer.html?v=${LB_COMPONENTS_VERSION}`, { cache: "no-store" });

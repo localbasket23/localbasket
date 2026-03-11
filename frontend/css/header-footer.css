@@ -1776,6 +1776,11 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
   }
 }
 
+/* Always show bottom nav on small screens (works in desktop responsive mode too). */
+@media (max-width: 768px) {
+  .lb-bottom-nav { display: flex; }
+}
+
 @media (max-width: 480px) {
   .navbar { padding: 8px; gap: 6px; }
   .nav-left { gap: 8px; }
