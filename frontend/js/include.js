@@ -555,8 +555,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (userAccount) userAccount.style.display = hasUser ? "flex" : "none";
       syncBottomNavSpacing();
       const timeGreeting = getTimeGreeting();
-      if (mobileHeaderKicker) mobileHeaderKicker.textContent = timeGreeting;
-      if (mobileGreetingEyebrow) mobileGreetingEyebrow.textContent = timeGreeting;
+      if (mobileHeaderKicker) {
+        mobileHeaderKicker.textContent = timeGreeting;
+        mobileHeaderKicker.style.display = hasUser ? "" : "none";
+      }
+      if (mobileGreetingEyebrow) {
+        mobileGreetingEyebrow.textContent = timeGreeting;
+        mobileGreetingEyebrow.style.display = hasUser ? "" : "none";
+      }
 
       if (hasUser) {
         const fullName = String(user.name || user.full_name || user.phone || user.email || "User").trim();
@@ -604,11 +610,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     syncHeaderAuth();
     if (!document.body.dataset.lbGreetingClockBound) {
       window.setInterval(() => {
+        const token = String(localStorage.getItem("lbToken") || "").trim();
+        let user = null;
+        try { user = JSON.parse(localStorage.getItem("lbUser") || "null"); } catch { user = null; }
+        const hasUser = !!(
+          token ||
+          (user && (user.id || user.customer_id || user._id || user.user_id || user.phone || user.email || user.name))
+        );
         const mobileHeaderKicker = document.getElementById("mobileHeaderKicker");
         const mobileGreetingEyebrow = document.getElementById("mobileGreetingEyebrow");
         const timeGreeting = getTimeGreeting();
-        if (mobileHeaderKicker) mobileHeaderKicker.textContent = timeGreeting;
-        if (mobileGreetingEyebrow) mobileGreetingEyebrow.textContent = timeGreeting;
+        if (mobileHeaderKicker) {
+          mobileHeaderKicker.textContent = timeGreeting;
+          mobileHeaderKicker.style.display = hasUser ? "" : "none";
+        }
+        if (mobileGreetingEyebrow) {
+          mobileGreetingEyebrow.textContent = timeGreeting;
+          mobileGreetingEyebrow.style.display = hasUser ? "" : "none";
+        }
       }, 60000);
       document.body.dataset.lbGreetingClockBound = "1";
     }

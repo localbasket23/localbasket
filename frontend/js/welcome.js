@@ -347,7 +347,9 @@ function updateMobileHomeShell() {
                     : "Good Night";
 
     if (mobileEyebrow) {
+        const loggedIn = !!user;
         mobileEyebrow.textContent = greeting;
+        mobileEyebrow.style.display = loggedIn ? "" : "none";
     }
 
     if (mobileName) {

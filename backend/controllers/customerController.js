@@ -151,7 +151,12 @@ const sendEmailOtp = async ({ email, otp }) => {
   });
 
   try {
-    await transporter.verify();
+    // Some SMTP providers may fail verify() even though sendMail works; don't hard-fail here.
+    try {
+      await transporter.verify();
+    } catch (err) {
+      console.warn("EMAIL SMTP VERIFY FAILED:", err?.message || err);
+    }
     await transporter.sendMail({
       from,
       to: email,
@@ -163,7 +168,7 @@ const sendEmailOtp = async ({ email, otp }) => {
     return {
       success: false,
       message: "Email OTP delivery failed",
-      details: err.message
+      details: err?.message || String(err || "")
     };
   }
 };
@@ -543,18 +548,36 @@ exports.requestPasswordResetOtp = async (req, res) => {
     }
 
     const otp = issueCustomerOtp(targetEmail);
-    const mail = await sendEmailOtp({ email: targetEmail, otp });
-    if (!mail.success) {
-      console.error("CUSTOMER PASSWORD RESET EMAIL OTP FAILURE:", mail);
-      return res.status(502).json({
+    const whatsappPhone = normalizeWhatsappPhone(customer.phone);
+    const [mail, whatsapp] = await Promise.all([
+      sendEmailOtp({ email: targetEmail, otp }),
+      whatsappPhone
+        ? sendWhatsappOtp({ phone: whatsappPhone, otp })
+        : Promise.resolve({ success: false, message: "Registered phone missing or invalid" })
+    ]);
+
+    if (!mail.success) console.error("CUSTOMER PASSWORD RESET EMAIL OTP FAILURE:", mail);
+    if (!whatsapp.success) console.error("CUSTOMER PASSWORD RESET WHATSAPP OTP FAILURE:", whatsapp);
+
+    const sentOn = [];
+    if (mail.success) sentOn.push("email");
+    if (whatsapp.success) sentOn.push("WhatsApp");
+
+    if (!sentOn.length) {
+      const payload = {
         success: false,
-        message: "Unable to send OTP email right now. Please try again."
-      });
+        message: "Unable to send OTP right now. Please try again."
+      };
+      // Provide debug info only in non-production to help setup SMTP/WhatsApp.
+      if (String(process.env.NODE_ENV || "").toLowerCase() !== "production") {
+        payload.debug = { email: mail, whatsapp };
+      }
+      return res.status(502).json(payload);
     }
 
     res.json({
       success: true,
-      message: "OTP sent to your registered email",
+      message: `OTP sent to your registered ${sentOn.join(" and ")}`,
       customer_id: customer.id
     });
   } catch (err) {

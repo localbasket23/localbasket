@@ -135,7 +135,12 @@ const sendEmailOtp = async ({ email, otp }) => {
   });
 
   try {
-    await transporter.verify();
+    // Some SMTP providers may fail verify() even though sendMail works; don't hard-fail here.
+    try {
+      await transporter.verify();
+    } catch (err) {
+      console.warn("EMAIL SMTP VERIFY FAILED:", err?.message || err);
+    }
     await transporter.sendMail({
       from,
       to: email,
@@ -147,7 +152,7 @@ const sendEmailOtp = async ({ email, otp }) => {
     return {
       success: false,
       message: "Email OTP delivery failed",
-      details: err.message
+      details: err?.message || String(err || "")
     };
   }
 };
