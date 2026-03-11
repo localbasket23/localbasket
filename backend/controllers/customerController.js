@@ -173,6 +173,10 @@ const sendEmailOtp = async ({ email, otp }) => {
   }
 };
 
+const isProductionEnv = () => String(process.env.NODE_ENV || "").toLowerCase() === "production";
+const isTruthyEnv = (value) => ["1", "true", "yes", "y", "on"].includes(String(value || "").trim().toLowerCase());
+const shouldReturnDebugOtp = () => !isProductionEnv() && isTruthyEnv(process.env.OTP_DEBUG_RETURN);
+
 const issueCustomerOtp = (identifier) => {
   const key = otpKey(identifier);
   const otp = generateOtp();
@@ -412,9 +416,19 @@ exports.requestLoginOtp = async (req, res) => {
     if (whatsapp.success) sentOn.push("WhatsApp");
 
     if (!sentOn.length) {
+      if (shouldReturnDebugOtp()) {
+        console.warn("CUSTOMER OTP DEBUG MODE: returning OTP in response (non-production only).");
+        return res.json({
+          success: true,
+          message: `OTP generated (debug): ${otp}`,
+          customer_id: customer.id,
+          debug_otp: otp
+        });
+      }
       return res.status(502).json({
         success: false,
-        message: "OTP delivery failed on all channels"
+        message: "OTP delivery failed on all channels",
+        ...(isProductionEnv() ? {} : { debug: { email: mail, whatsapp } })
       });
     }
 
@@ -564,6 +578,15 @@ exports.requestPasswordResetOtp = async (req, res) => {
     if (whatsapp.success) sentOn.push("WhatsApp");
 
     if (!sentOn.length) {
+      if (shouldReturnDebugOtp()) {
+        console.warn("CUSTOMER PASSWORD RESET OTP DEBUG MODE: returning OTP in response (non-production only).");
+        return res.json({
+          success: true,
+          message: `OTP generated (debug): ${otp}`,
+          customer_id: customer.id,
+          debug_otp: otp
+        });
+      }
       const payload = {
         success: false,
         message: "Unable to send OTP right now. Please try again."

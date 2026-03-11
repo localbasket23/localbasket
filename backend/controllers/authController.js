@@ -157,6 +157,10 @@ const sendEmailOtp = async ({ email, otp }) => {
   }
 };
 
+const isProductionEnv = () => String(process.env.NODE_ENV || "").toLowerCase() === "production";
+const isTruthyEnv = (value) => ["1", "true", "yes", "y", "on"].includes(String(value || "").trim().toLowerCase());
+const shouldReturnDebugOtp = () => !isProductionEnv() && isTruthyEnv(process.env.OTP_DEBUG_RETURN);
+
 exports.sendOtp = async (req, res) => {
   try {
     const rawPhone = String(req.body.phone || "").trim();
@@ -198,15 +202,24 @@ exports.sendOtp = async (req, res) => {
       details: emailResult.reason?.message || "Unknown error"
     };
 
-    if (!whatsapp.success || !mail.success) {
+    const sentOn = [];
+    if (whatsapp.success) sentOn.push("WhatsApp");
+    if (mail.success) sentOn.push("email");
+
+    if (!sentOn.length) {
       console.error("OTP CHANNEL FAILURE:", { whatsapp, email: mail });
+      if (shouldReturnDebugOtp()) {
+        console.warn("AUTH OTP DEBUG MODE: returning OTP in response (non-production only).");
+        return res.json({
+          success: true,
+          message: `OTP generated (debug): ${otp}`,
+          debug_otp: otp
+        });
+      }
       return res.status(502).json({
         success: false,
-        message: "OTP delivery failed on one or more channels",
-        channels: {
-          whatsapp,
-          email: mail
-        }
+        message: "OTP delivery failed on all channels",
+        ...(isProductionEnv() ? {} : { channels: { whatsapp, email: mail } })
       });
     }
 
@@ -219,7 +232,7 @@ exports.sendOtp = async (req, res) => {
 
     return res.json({
       success: true,
-      message: "OTP sent on WhatsApp and Email"
+      message: `OTP sent to ${sentOn.join(" and ")}`
     });
   } catch (err) {
     console.error("SEND OTP ERROR:", err);

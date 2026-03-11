@@ -515,9 +515,20 @@ exports.requestLoginOtp = async (req, res) => {
     const otp = issueSellerOtp(phone);
     const sms = await sendOtpSms({ phone, otp });
     if (!sms.success) {
+      const isProd = String(process.env.NODE_ENV || "").toLowerCase() === "production";
+      const debugReturn = !isProd && ["1", "true", "yes", "y", "on"].includes(String(process.env.OTP_DEBUG_RETURN || "").trim().toLowerCase());
+      if (debugReturn) {
+        console.warn("SELLER OTP DEBUG MODE: returning OTP in response (non-production only).", sms);
+        return res.json({
+          success: true,
+          message: `OTP generated (debug): ${otp}`,
+          debug_otp: otp
+        });
+      }
       return res.status(500).json({
         success: false,
-        message: sms.message || "Failed to send OTP to phone number"
+        message: sms.message || "Failed to send OTP to phone number",
+        ...(isProd ? {} : { debug: sms })
       });
     }
 
