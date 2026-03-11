@@ -965,13 +965,16 @@ document.addEventListener("DOMContentLoaded", async () => {
           b.type = "button";
           b.className = "lb-ai-action" + (a.primary ? " primary" : "");
           b.textContent = String(a.label || "Action");
-          b.addEventListener("click", () => {
+          b.addEventListener("click", async () => {
             try {
               if (a.type === "nav" && a.href) window.location.href = String(a.href);
               if (a.type === "copy" && a.text) navigator.clipboard?.writeText?.(String(a.text));
               if (a.type === "ask" && a.text) {
                 input.value = String(a.text);
                 onSend();
+              }
+              if (a.type === "geo" && a.kind === "nearbyStores") {
+                await runNearbyStoresFlow();
               }
             } catch {}
           });
@@ -985,33 +988,259 @@ document.addEventListener("DOMContentLoaded", async () => {
       persistChat();
     };
 
-    const answer = (q) => {
-      const t = String(q || "").trim().toLowerCase();
-      if (!t) return "Please type a question.";
+    const aiState = {
+      awaiting: null, // "pincode"
+      lastIntent: null
+    };
 
+    const sleep = (ms) => new Promise((r) => window.setTimeout(r, ms));
+
+    const parsePincode = (text) => {
+      const m = String(text || "").match(/\b(\d{6})\b/);
+      return m ? m[1] : null;
+    };
+
+    const getSavedPincode = () => {
+      try {
+        const pin = String(localStorage.getItem("lbPin") || "").trim();
+        return /^\d{6}$/.test(pin) ? pin : null;
+      } catch {
+        return null;
+      }
+    };
+
+    const setSavedPincode = (pin) => {
+      try {
+        if (/^\d{6}$/.test(String(pin || ""))) localStorage.setItem("lbPin", String(pin));
+      } catch {}
+    };
+
+    const fetchJson = async (path, options = {}) => {
+      const res = await fetch(path, options);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || data?.error || `HTTP ${res.status}`);
+      return data || {};
+    };
+
+    const getAreaByPincode = async (pin) => {
+      try {
+        const data = await fetchJson(`/api/location/area?pincode=${encodeURIComponent(pin)}`, { method: "GET" });
+        return data?.success ? String(data.area || "").trim() : "";
+      } catch {
+        return "";
+      }
+    };
+
+    const listStoresByPincode = async (pin) => {
+      const data = await fetchJson(`/api/stores?pincode=${encodeURIComponent(pin)}`, { method: "GET" });
+      return Array.isArray(data?.stores) ? data.stores : [];
+    };
+
+    const storeToLine = (s) => {
+      const name = String(s?.store_name || "Store").trim();
+      const rating = Number(s?.avg_rating || 0);
+      const count = Number(s?.rating_count || 0);
+      const minOrder = Number(s?.minimum_order || 0);
+      const r = count ? `${rating.toFixed(1)} (${count})` : "New";
+      return `${name}\n- Rating: ${r}\n- Min order: Rs. ${Number.isFinite(minOrder) ? minOrder : 0}`;
+    };
+
+    const showStores = async (pin) => {
+      const stores = await listStoresByPincode(pin);
+      if (!stores.length) {
+        return [{
+          text: `No stores found for pincode ${pin}.\nTry another pincode or use current location.`,
+          actions: [{ label: "Use my location", type: "geo", kind: "nearbyStores", primary: true }]
+        }];
+      }
+
+      const top = stores.slice(0, 3);
+      const out = [{
+        text: `Found ${stores.length} store(s) for ${pin}. Top picks:`,
+        actions: [
+          { label: "Open Home", type: "nav", href: "/welcome/customer/index.html", primary: true },
+          { label: "Browse categories", type: "nav", href: "/welcome/customer/category.html" },
+        ]
+      }];
+
+      top.forEach((s) => {
+        out.push({
+          text: storeToLine(s),
+          actions: [
+            { label: "Open store", type: "nav", href: `/welcome/customer/store/store.html?id=${s.id}`, primary: true },
+          ]
+        });
+      });
+
+      return out;
+    };
+
+    const runNearbyStoresFlow = async () => {
+      if (!navigator.geolocation) {
+        addMsg("Location is not supported on this browser. Please share your 6-digit pincode.", "bot");
+        aiState.awaiting = "pincode";
+        return;
+      }
+
+      addMsg("Getting your location... (please allow permission)", "bot");
+      const pos = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 12000,
+          maximumAge: 0,
+        });
+      }).catch((e) => {
+        addMsg("Couldn't access location. Please type your 6-digit pincode.", "bot");
+        aiState.awaiting = "pincode";
+        return null;
+      });
+      if (!pos) return;
+
+      const latitude = pos.coords?.latitude;
+      const longitude = pos.coords?.longitude;
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        addMsg("Location coordinates look invalid. Please type your 6-digit pincode.", "bot");
+        aiState.awaiting = "pincode";
+        return;
+      }
+
+      let pin = "";
+      let area = "";
+      try {
+        const data = await fetchJson("/api/location/nearby-stores", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ latitude, longitude }),
+        });
+        pin = String(data?.pincode || "").trim();
+        area = String(data?.area || "").trim();
+      } catch {
+        addMsg("Couldn't resolve pincode from your location. Please type your 6-digit pincode.", "bot");
+        aiState.awaiting = "pincode";
+        return;
+      }
+
+      if (!/^\d{6}$/.test(pin)) {
+        addMsg("Couldn't resolve a valid pincode from your location. Please type your 6-digit pincode.", "bot");
+        aiState.awaiting = "pincode";
+        return;
+      }
+
+      setSavedPincode(pin);
+      const label = area ? `${pin} (${area})` : pin;
+      addMsg(`Location set: ${label}`, "bot");
+
+      const storeMsgs = await showStores(pin);
+      storeMsgs.forEach((m) => addMsg(m.text, "bot", m.actions));
+    };
+
+    const handleQuery = async (q) => {
+      const raw = String(q || "").trim();
+      const t = raw.toLowerCase();
+      if (!t) return [{ text: "Please type a question." }];
+
+      // Awaiting pincode flow
+      if (aiState.awaiting === "pincode") {
+        const pin = parsePincode(raw);
+        if (!pin) return [{ text: "Please send a 6-digit pincode (example: 401105)." }];
+        aiState.awaiting = null;
+        setSavedPincode(pin);
+        const area = await getAreaByPincode(pin);
+        const label = area ? `${pin} (${area})` : pin;
+        const msgs = [{ text: `Pincode set to ${label}.`, actions: [{ label: "Open Home", type: "nav", href: "/welcome/customer/index.html", primary: true }] }];
+        const storeMsgs = await showStores(pin);
+        return msgs.concat(storeMsgs);
+      }
+
+      // Pincode in query
+      const inlinePin = parsePincode(raw);
+      if (inlinePin) {
+        setSavedPincode(inlinePin);
+        const area = await getAreaByPincode(inlinePin);
+        const label = area ? `${inlinePin} (${area})` : inlinePin;
+        const storeMsgs = await showStores(inlinePin);
+        return [{ text: `Using pincode ${label}.` }].concat(storeMsgs);
+      }
+
+      // Orders
       if (/(track).*(order)|order.*(track)/.test(t)) {
-        return "To track your order:\n- Open: My Orders\n- Select the latest order\n- Use the tracking status.\n\nIf you want, share your order id here.";
+        return [{
+          text: "To track your order:\n- Open: My Orders\n- Select the latest order\n- Check the status.\n\nIf you want, share your order id here.",
+          actions: [{ label: "Open My Orders", type: "nav", href: "/welcome/customer/order/customer-orders.html", primary: true }]
+        }];
       }
       if (/(cancel).*(order)|order.*(cancel)/.test(t)) {
-        return "To cancel an order:\n- Open: My Orders\n- Select the order\n- Tap: Cancel (if available).\n\nIf the seller already shipped it, cancellation may not be possible.";
-      }
-      if (/chai|tea/.test(t)) {
-        return "To make chai, you need:\n- Milk\n- Tea powder\n- Sugar\n- Ginger (optional)\n- Cardamom (optional)\n\nTip: boil water + ginger first, then add tea, then milk, then sugar.";
-      }
-      if (/pasta/.test(t)) {
-        return "For a simple pasta:\n- Pasta\n- Tomato puree (or tomatoes)\n- Garlic\n- Onion (optional)\n- Olive oil (or butter)\n- Salt\n- Chili flakes / oregano (optional)\n- Cheese (optional)";
-      }
-      if (/biryani/.test(t)) {
-        return "For biryani basics:\n- Basmati rice\n- Onions\n- Tomatoes\n- Curd (yogurt)\n- Ginger-garlic paste\n- Biryani masala\n- Whole spices (bay leaf, cloves, cinnamon)\n- Mint and coriander\n- Ghee/oil";
-      }
-      if (/deal|discount|offer|cheapest/.test(t)) {
-        return "Best way to find deals:\n- Open Categories\n- Sort by price / check store banners\n\nTell me what item you want (e.g. oil, vegetables), I will suggest what to compare.";
-      }
-      if (/vegetable|veggies|fresh/.test(t)) {
-        return "Fresh vegetables near you:\n- Use pincode search\n- Check Top Stores Near You\n- Compare delivery time and ratings.";
+        return [{
+          text: "To cancel an order:\n- Open: My Orders\n- Select the order\n- Tap: Cancel (if available).\n\nIf it is already shipped, cancellation may not be possible.",
+          actions: [{ label: "Open My Orders", type: "nav", href: "/welcome/customer/order/customer-orders.html", primary: true }]
+        }];
       }
 
-      return "I can help with:\n- Nearby stores\n- Grocery suggestions\n- Recipe ingredients\n- Deals\n- Orders\n\nTry: ingredients for pasta, track my order, cheapest vegetables.";
+      // Stores/area/pincode
+      if (/store|stores|near me|nearby|area|pincode|pin code/.test(t)) {
+        const pin = getSavedPincode();
+        if (!pin) {
+          aiState.awaiting = "pincode";
+          return [{
+            text: "Tell me your 6-digit pincode, or use current location.",
+            actions: [{ label: "Use my location", type: "geo", kind: "nearbyStores", primary: true }]
+          }];
+        }
+        return await showStores(pin);
+      }
+
+      // Recipe ingredients
+      if (/chai|tea/.test(t)) {
+        const a = "To make chai, you need:\n- Milk\n- Tea powder\n- Sugar\n- Ginger (optional)\n- Cardamom (optional)";
+        return [{
+          text: a,
+          actions: [
+            { label: "Copy list", type: "copy", text: a, primary: true },
+            { label: "Browse categories", type: "nav", href: "/welcome/customer/category.html" },
+          ]
+        }];
+      }
+      if (/pasta/.test(t)) {
+        const a = "For a simple pasta:\n- Pasta\n- Tomato puree (or tomatoes)\n- Garlic\n- Onion (optional)\n- Olive oil (or butter)\n- Salt\n- Chili flakes / oregano (optional)\n- Cheese (optional)";
+        return [{
+          text: a,
+          actions: [
+            { label: "Copy list", type: "copy", text: a, primary: true },
+            { label: "Browse categories", type: "nav", href: "/welcome/customer/category.html" },
+          ]
+        }];
+      }
+      if (/biryani/.test(t)) {
+        const a = "For biryani basics:\n- Basmati rice\n- Onions\n- Tomatoes\n- Curd (yogurt)\n- Ginger-garlic paste\n- Biryani masala\n- Whole spices (bay leaf, cloves, cinnamon)\n- Mint and coriander\n- Ghee/oil";
+        return [{
+          text: a,
+          actions: [
+            { label: "Copy list", type: "copy", text: a, primary: true },
+            { label: "Browse categories", type: "nav", href: "/welcome/customer/category.html" },
+          ]
+        }];
+      }
+
+      // Deals
+      if (/deal|discount|offer|cheapest/.test(t)) {
+        const pin = getSavedPincode();
+        const hint = pin ? `Your pincode: ${pin}` : "Set your pincode to see nearby stores.";
+        return [{
+          text: `To find best deals:\n- Open Categories\n- Compare store prices\n\n${hint}`,
+          actions: [
+            { label: "Browse categories", type: "nav", href: "/welcome/customer/category.html", primary: true },
+            { label: "Set pincode", type: "ask", text: "My pincode is " },
+          ]
+        }];
+      }
+
+      return [{
+        text: "I can help with:\n- Nearby stores\n- Grocery suggestions\n- Recipe ingredients\n- Deals\n- Orders\n\nTry: \"stores near me\", \"my pincode is 401105\", \"ingredients for chai\", \"track my order\".",
+        actions: [
+          { label: "Use my location", type: "geo", kind: "nearbyStores", primary: true },
+          { label: "Browse categories", type: "nav", href: "/welcome/customer/category.html" },
+        ]
+      }];
     };
 
     const showChipsInChat = (items) => {
@@ -1159,21 +1388,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       body.appendChild(typing);
       body.scrollTop = body.scrollHeight;
 
-      window.setTimeout(() => {
+      (async () => {
+        await sleep(180);
+        let msgs = [];
+        try {
+          msgs = await handleQuery(q);
+        } catch (e) {
+          msgs = [{ text: `Sorry, something went wrong. ${e?.message || ""}`.trim() }];
+        }
         try { typing.remove(); } catch {}
-        const a = answer(q);
-        const actions = [];
-        const low = String(q).toLowerCase();
-        if (/track/.test(low) && /order/.test(low)) actions.push({ label: "Open My Orders", type: "nav", href: "/welcome/customer/order/customer-orders.html", primary: true });
-        if (/store|near|area|pincode/.test(low)) actions.push({ label: "Open Home", type: "nav", href: "/welcome/customer/index.html", primary: true });
-        if (/pasta|biryani|chai|tea/.test(low)) actions.push({ label: "Copy list", type: "copy", text: a });
-        addMsg(a, "bot", actions);
-      }, 240);
-
-      // Keep chips inside chat (no separate section)
-      if (Math.random() < 0.35) {
-        showChipsInChat(["Ingredients for making chai", "Cheapest cooking oil", "Track my order"]);
-      }
+        (msgs || []).forEach((m) => addMsg(m.text, "bot", m.actions || null));
+      })();
     };
 
     // Drag: desktop free-move, mobile docked vertical move. Click/tap opens panel.
