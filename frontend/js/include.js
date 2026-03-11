@@ -584,7 +584,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (userInitials) userInitials.textContent = "";
         if (userFullName) userFullName.textContent = "Welcome!";
         if (mobileHeaderName) {
-          mobileHeaderName.textContent = isInnerMobileHeader ? getMobilePageTitle(currentPath) : "Customer";
+          if (isInnerMobileHeader) {
+            mobileHeaderName.textContent = getMobilePageTitle(currentPath);
+          } else {
+            mobileHeaderName.innerHTML = `<span class="lb-brand-mark"><span class="lb-brand-accent">Local</span>Basket</span>`;
+          }
         }
         if (mobileHeaderAction) {
           mobileHeaderAction.textContent = "Login";

@@ -280,6 +280,13 @@ body.lb-footer-full .lb-footer-pro {
   font-weight: 800;
   color: #111827;
 }
+.lb-brand-mark {
+  font-weight: 900;
+  letter-spacing: -0.3px;
+}
+.lb-brand-accent {
+  color: var(--primary);
+}
 .mobile-header-address {
   display: block;
   margin-top: 4px;

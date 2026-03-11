@@ -351,7 +351,11 @@ function updateMobileHomeShell() {
     }
 
     if (mobileName) {
-        mobileName.textContent = String(user?.name || "Customer").trim() || "Customer";
+        if (user?.name) {
+            mobileName.textContent = String(user.name).trim() || "Customer";
+        } else {
+            mobileName.innerHTML = `<span class="lb-brand-mark"><span class="lb-brand-accent">Local</span>Basket</span>`;
+        }
     }
 
     if (mobileAddress) {
