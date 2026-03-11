@@ -272,6 +272,10 @@ const dom = {
     heroVisual: () => getEl("heroVisual"),
     heroSection: () => document.querySelector(".hero"),
     mobilePromoArt: () => document.querySelector(".mobile-promo-art"),
+    mobilePromoKicker: () => document.getElementById("mobilePromoKicker"),
+    mobilePromoTitle: () => document.getElementById("mobilePromoTitle"),
+    mobilePromoHighlight: () => document.getElementById("mobilePromoHighlight"),
+    mobilePromoCta: () => document.getElementById("mobilePromoCta"),
     storeResultsCount: () => getEl("storeResultsCount"),
     storeResultsHint: () => getEl("storeResultsHint"),
     activeFilters: () => getEl("activeFilters"),
@@ -654,6 +658,34 @@ const renderMobilePromoArtAuto = (settings = {}) => {
     }
 };
 
+const applyMobilePromoText = (settings = {}) => {
+    const kickerEl = dom.mobilePromoKicker();
+    const titleEl = dom.mobilePromoTitle();
+    const highlightEl = dom.mobilePromoHighlight();
+    const ctaEl = dom.mobilePromoCta();
+    if (!kickerEl && !titleEl && !highlightEl && !ctaEl) return;
+
+    const clean = (v, fallback, max) => {
+        const s = String(v ?? "").replace(/\s+/g, " ").trim();
+        const out = s || String(fallback || "").trim();
+        const m = Number(max || 80);
+        return out.length > m ? out.slice(0, m - 1).trim() + "…" : out;
+    };
+
+    const kicker = clean(settings.mobile_promo_kicker, kickerEl?.textContent || "Local fresh picks", 80);
+    const title = clean(settings.mobile_promo_title, titleEl?.textContent || "Offer Up to", 120);
+    const highlight = clean(settings.mobile_promo_highlight, highlightEl?.textContent || "30% off", 60);
+
+    if (kickerEl) kickerEl.textContent = kicker;
+    if (titleEl) titleEl.textContent = title;
+    if (highlightEl) highlightEl.textContent = highlight;
+
+    // Optional CTA label (if admin later adds it)
+    if (ctaEl && settings.mobile_promo_cta_text) {
+        ctaEl.textContent = clean(settings.mobile_promo_cta_text, ctaEl.textContent || "Shop now", 30);
+    }
+};
+
 const applyHeroTitle = (title, highlight) => {
     const heroTitleEl = dom.heroTitle();
     if (!heroTitleEl) return;
@@ -695,6 +727,7 @@ const applyHeroTitle = (title, highlight) => {
 
 const applyHeroSettings = (settings = {}) => {
     heroSettingsCache = settings;
+    applyMobilePromoText(settings);
     renderMobilePromoArtAuto(settings);
     const heroSection = dom.heroSection();
     const title = settings.hero_title || HERO_DEFAULTS.title;
@@ -817,11 +850,24 @@ const applyHeroSettings = (settings = {}) => {
             const setActive = (next) => {
                 const prev = heroSliderIndex;
                 heroSliderIndex = next;
-                if (slideEls[prev]) slideEls[prev].classList.remove("active");
+                if (slideEls[prev]) {
+                    slideEls[prev].classList.remove("active");
+                    slideEls[prev].classList.add("prev");
+                }
                 if (dotEls[prev]) dotEls[prev].classList.remove("active");
                 if (slideEls[next]) slideEls[next].classList.add("active");
                 if (dotEls[next]) dotEls[next].classList.add("active");
                 applyHeroLink();
+
+                // Cleanup prev class after the transition.
+                try {
+                    window.clearTimeout(heroVisual.__lbPrevCleanup);
+                    heroVisual.__lbPrevCleanup = window.setTimeout(() => {
+                        slideEls.forEach((s, i) => {
+                            if (i !== heroSliderIndex) s.classList.remove("prev");
+                        });
+                    }, 900);
+                } catch {}
             };
             heroSliderTimer = setInterval(() => {
                 const next = (heroSliderIndex + 1) % images.length;

@@ -247,15 +247,19 @@
             background-position: center center;
             background-repeat: no-repeat;
             opacity: 0;
-            transform: scale(1.03) translateZ(0);
+            transform: translate3d(10%, 0, 0);
             will-change: opacity, transform;
             transition:
-              opacity 800ms cubic-bezier(0.16, 1, 0.3, 1),
-              transform 1600ms cubic-bezier(0.16, 1, 0.3, 1);
+              opacity 520ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 720ms cubic-bezier(0.16, 1, 0.3, 1);
         }
         .hero-slide.active{
             opacity: 1;
-            transform: scale(1) translateZ(0);
+            transform: translate3d(0, 0, 0);
+        }
+        .hero-slide.prev{
+            opacity: 0;
+            transform: translate3d(-10%, 0, 0);
         }
         @media (prefers-reduced-motion: reduce) {
           .hero-slide{ transition: opacity 200ms linear !important; transform: none !important; }
