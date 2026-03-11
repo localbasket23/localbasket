@@ -3,12 +3,17 @@
     if (window.__lbLaunchOverlayReady) return;
     window.__lbLaunchOverlayReady = true;
 
+    try {
+      if (sessionStorage.getItem("lbLaunchSeen") === "1") return;
+      sessionStorage.setItem("lbLaunchSeen", "1");
+    } catch {}
+
     const style = document.createElement("style");
     style.id = "lb-launch-style";
     style.textContent = `
       :root{
         --lb-launch-bg: radial-gradient(900px 600px at 20% -10%, #fff7ed 0%, #ffffff 55%, #f8fafc 100%);
-        --lb-launch-card: rgba(255,255,255,0.78);
+        --lb-launch-card: rgba(255,255,255,0.68);
         --lb-launch-border: rgba(148,163,184,0.35);
         --lb-launch-text: #0f172a;
         --lb-launch-sub: rgba(15,23,42,0.7);
@@ -16,7 +21,7 @@
       }
       html.lb-theme-dark{
         --lb-launch-bg: radial-gradient(1100px 700px at 20% -5%, #13284a 0%, #081428 58%, #061022 100%);
-        --lb-launch-card: rgba(15,23,42,0.62);
+        --lb-launch-card: rgba(15,23,42,0.56);
         --lb-launch-border: rgba(148,163,184,0.22);
         --lb-launch-text: #e2e8f0;
         --lb-launch-sub: rgba(226,232,240,0.75);
@@ -39,28 +44,28 @@
         pointer-events: none;
       }
       #lb-launch-card{
-        width: min(560px, calc(100vw - 36px));
-        border-radius: 22px;
+        width: min(520px, calc(100vw - 36px));
+        border-radius: 18px;
         background: var(--lb-launch-card);
         border: 1px solid var(--lb-launch-border);
         box-shadow: 0 30px 70px -50px rgba(2,6,23,0.55);
         backdrop-filter: blur(14px);
-        padding: 18px;
+        padding: 18px 18px 16px;
         display: grid;
-        gap: 14px;
+        gap: 12px;
+        text-align: center;
       }
       #lb-launch-top{
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        min-width: 0;
+        display: grid;
+        justify-items: center;
+        gap: 10px;
       }
       #lb-launch-logo{
-        width: 44px;
-        height: 44px;
-        border-radius: 14px;
-        background: rgba(255,255,255,0.7);
-        border: 1px solid rgba(148,163,184,0.28);
+        width: 54px;
+        height: 54px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.6);
+        border: 1px solid rgba(148,163,184,0.24);
         display: grid;
         place-items: center;
         position: relative;
@@ -82,17 +87,17 @@
         content: "";
         position: absolute;
         inset: 2px;
-        border-radius: 12px;
+        border-radius: 14px;
         background: var(--lb-launch-card);
         border: 1px solid rgba(148,163,184,0.15);
       }
-      #lb-launch-logo span{
+      #lb-launch-logo img{
         position: relative;
         z-index: 1;
-        font-weight: 1000;
-        letter-spacing: -0.5px;
-        color: #f97316;
-        font-size: 18px;
+        width: 34px;
+        height: 34px;
+        object-fit: contain;
+        border-radius: 10px;
       }
       #lb-launch-title{
         font-size: 18px;
@@ -100,18 +105,13 @@
         letter-spacing: -0.2px;
         color: var(--lb-launch-text);
         line-height: 1.1;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
       }
       #lb-launch-sub{
-        margin-top: 2px;
+        margin-top: 0;
         font-size: 12px;
         font-weight: 800;
         color: var(--lb-launch-sub);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        line-height: 1.35;
       }
       #lb-launch-bar{
         height: 10px;
@@ -131,7 +131,7 @@
       }
       #lb-launch-foot{
         display: flex;
-        justify-content: space-between;
+        justify-content: center;
         gap: 10px;
         align-items: center;
         flex-wrap: wrap;
@@ -146,6 +146,35 @@
         font-weight: 900;
         color: rgba(249,115,22,0.95);
         letter-spacing: 0.8px;
+      }
+      #lb-launch-actions{
+        display: grid;
+        gap: 8px;
+        margin-top: 4px;
+      }
+      #lb-launch-enter{
+        width: 100%;
+        min-height: 42px;
+        border-radius: 12px;
+        border: 0;
+        cursor: pointer;
+        font-weight: 1000;
+        letter-spacing: 0.1px;
+        background: linear-gradient(135deg, #ff8a00, #ff9f2f);
+        color: #ffffff;
+        box-shadow: 0 16px 26px -20px rgba(249,115,22,0.75);
+        transition: transform 160ms ease, filter 160ms ease;
+      }
+      #lb-launch-enter:active{ transform: translateY(1px) scale(0.99); }
+      #lb-launch-enter:disabled{
+        opacity: 0.78;
+        cursor: not-allowed;
+        filter: grayscale(0.1);
+      }
+      #lb-launch-skip{
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--lb-launch-sub);
       }
 
       @keyframes lbLaunchSpin{
@@ -164,7 +193,7 @@
       @media (max-width: 420px){
         #lb-launch-card{ padding: 16px; border-radius: 20px; }
         #lb-launch-title{ font-size: 16px; }
-        #lb-launch-logo{ width: 42px; height: 42px; border-radius: 14px; }
+        #lb-launch-logo{ width: 52px; height: 52px; border-radius: 16px; }
       }
     `;
     document.head.appendChild(style);
@@ -176,16 +205,20 @@
     overlay.innerHTML = `
       <div id="lb-launch-card">
         <div id="lb-launch-top">
-          <div id="lb-launch-logo" aria-hidden="true"><span>LB</span></div>
-          <div style="min-width:0">
-            <div id="lb-launch-title">LocalBasket</div>
-            <div id="lb-launch-sub">Getting things ready for you</div>
+          <div id="lb-launch-logo" aria-hidden="true">
+            <img alt="LocalBasket" src="/welcome/logo2.png?v=20260303" onerror="this.style.display='none'">
           </div>
+          <div id="lb-launch-title">LocalBasket</div>
+          <div id="lb-launch-sub">Fresh essentials, delivered fast.</div>
         </div>
         <div id="lb-launch-bar" aria-hidden="true"><i></i></div>
         <div id="lb-launch-foot">
           <div id="lb-launch-hint">Loading</div>
           <div id="lb-launch-dots" aria-hidden="true">•••</div>
+        </div>
+        <div id="lb-launch-actions">
+          <button id="lb-launch-enter" type="button" disabled>Enter App</button>
+          <div id="lb-launch-skip">Auto continue in a moment…</div>
         </div>
       </div>
     `;
@@ -197,7 +230,7 @@
       if (saved === "light") document.documentElement.classList.remove("lb-theme-dark");
     } catch {}
 
-    (document.body || document.documentElement).appendChild(overlay);
+    document.documentElement.appendChild(overlay);
 
     let dots = 0;
     const dotsEl = overlay.querySelector("#lb-launch-dots");
@@ -229,17 +262,34 @@
 
     // Hide when DOM is ready (faster than waiting for all images),
     // also hide on full load, plus a fallback timeout for safety.
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", () => window.setTimeout(hide, 420), { once: true });
-    } else {
-      window.setTimeout(hide, 420);
+    const enterBtn = overlay.querySelector("#lb-launch-enter");
+    const skipEl = overlay.querySelector("#lb-launch-skip");
+    const setReady = () => {
+      if (!enterBtn) return;
+      enterBtn.disabled = false;
+      if (skipEl) skipEl.textContent = "Tap Enter App to continue";
+    };
+
+    if (enterBtn) {
+      enterBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        hide();
+      });
     }
 
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => {
+        setReady();
+        window.setTimeout(hide, 2200);
+      }, { once: true });
+    } else {
+      setReady();
+      window.setTimeout(hide, 2200);
+    }
+
+    window.addEventListener("load", setReady, { once: true });
     window.addEventListener("load", hide, { once: true });
     window.setTimeout(hide, 6500);
-
-    // If this script loads very late (already complete), hide quickly
-    if (document.readyState === "complete") window.setTimeout(hide, 0);
   };
 
   ensureLaunchOverlay();
