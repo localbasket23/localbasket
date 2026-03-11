@@ -463,6 +463,451 @@ document.addEventListener("DOMContentLoaded", async () => {
   const LB_COMPONENTS_VERSION = "20260311a";
 
   const isAdminPage = /\/welcome\/admin(\/|$)/.test(path) || path.includes("/welcome/admin");
+  const isSellerPage = /\/welcome\/seller(\/|$)/.test(path) || path.includes("/welcome/seller");
+
+  const ensureAiWidget = () => {
+    // Skip on admin/seller pages by default; allow opt-in/out via flags.
+    try {
+      if (window.LB_DISABLE_AI_WIDGET) return;
+      const meta = document.querySelector('meta[name="lb:disable-ai"][content="true"]');
+      if (meta) return;
+      if (document.documentElement && document.documentElement.hasAttribute("data-lb-disable-ai")) return;
+      if (isAdminPage || isSellerPage) return;
+    } catch {}
+
+    if (document.getElementById("lb-ai-style")) return;
+
+    const style = document.createElement("style");
+    style.id = "lb-ai-style";
+    style.textContent = `
+      #lb-ai-btn{
+        position: fixed;
+        bottom: 25px;
+        right: 25px;
+        z-index: 90000;
+        border: 0;
+        border-radius: 50px;
+        background: #ff8c00;
+        color: #ffffff;
+        padding: 12px 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 900;
+        letter-spacing: 0.2px;
+        cursor: pointer;
+        box-shadow: 0 18px 42px -28px rgba(255,140,0,0.85);
+        transition: transform 140ms ease, filter 140ms ease;
+      }
+      #lb-ai-btn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+      #lb-ai-btn:active{ transform: translateY(0px) scale(0.99); }
+      #lb-ai-btn:focus-visible{ outline: none; box-shadow: 0 0 0 4px rgba(255,140,0,0.25), 0 18px 42px -28px rgba(255,140,0,0.85); }
+      #lb-ai-badge{
+        width: 30px; height: 30px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.18);
+        display: grid; place-items: center;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.22);
+        flex: 0 0 auto;
+      }
+      #lb-ai-badge svg{ width: 18px; height: 18px; }
+
+      #lb-ai-panel{
+        position: fixed;
+        bottom: 86px;
+        right: 25px;
+        width: 350px;
+        height: 500px;
+        z-index: 90000;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.96);
+        border: 1px solid rgba(15,23,42,0.12);
+        box-shadow: 0 30px 60px -40px rgba(2,6,23,0.35);
+        overflow: hidden;
+        display: none;
+        grid-template-rows: auto 1fr auto;
+        backdrop-filter: blur(10px);
+      }
+      html.lb-theme-dark #lb-ai-panel{
+        background: rgba(15,23,42,0.92);
+        border-color: rgba(148,163,184,0.22);
+        box-shadow: 0 40px 80px -50px rgba(0,0,0,0.7);
+        color: #e2e8f0;
+      }
+
+      #lb-ai-head{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 12px 12px 10px;
+        background: linear-gradient(90deg, rgba(255,140,0,0.10), rgba(255,255,255,0.0));
+        border-bottom: 1px solid rgba(15,23,42,0.08);
+      }
+      html.lb-theme-dark #lb-ai-head{ border-bottom-color: rgba(148,163,184,0.18); }
+      #lb-ai-title{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 1000;
+        color: inherit;
+      }
+      #lb-ai-title small{
+        display: block;
+        font-weight: 800;
+        font-size: 11px;
+        color: rgba(100,116,139,0.9);
+        letter-spacing: 0.2px;
+        margin-top: 1px;
+      }
+      html.lb-theme-dark #lb-ai-title small{ color: rgba(226,232,240,0.75); }
+
+      #lb-ai-close{
+        border: 1px solid rgba(15,23,42,0.12);
+        background: rgba(255,255,255,0.75);
+        color: inherit;
+        border-radius: 12px;
+        padding: 8px 10px;
+        cursor: pointer;
+        font-weight: 900;
+      }
+      html.lb-theme-dark #lb-ai-close{
+        background: rgba(15,23,42,0.45);
+        border-color: rgba(148,163,184,0.22);
+      }
+      #lb-ai-body{
+        padding: 12px;
+        overflow: auto;
+        display: grid;
+        gap: 10px;
+        background: transparent;
+      }
+      .lb-ai-msg{
+        max-width: 86%;
+        padding: 10px 12px;
+        border-radius: 14px;
+        border: 1px solid rgba(15,23,42,0.08);
+        background: #ffffff;
+        color: #0f172a;
+        box-shadow: 0 12px 24px -20px rgba(2,6,23,0.18);
+        white-space: pre-wrap;
+        line-height: 1.35;
+        font-size: 13px;
+        font-weight: 650;
+      }
+      html.lb-theme-dark .lb-ai-msg{
+        background: rgba(2,6,23,0.55);
+        border-color: rgba(148,163,184,0.18);
+        color: #e2e8f0;
+        box-shadow: none;
+      }
+      .lb-ai-msg.user{
+        margin-left: auto;
+        background: linear-gradient(135deg, rgba(255,140,0,0.16), rgba(255,179,71,0.10));
+        border-color: rgba(255,140,0,0.18);
+      }
+
+      #lb-ai-suggestions{
+        display: grid;
+        gap: 10px;
+        padding: 0 12px 10px;
+      }
+      .lb-ai-sg-title{
+        font-size: 12px;
+        font-weight: 1000;
+        letter-spacing: 0.25px;
+        color: rgba(100,116,139,0.9);
+        text-transform: uppercase;
+      }
+      html.lb-theme-dark .lb-ai-sg-title{ color: rgba(226,232,240,0.7); }
+      .lb-ai-sg-grid{
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .lb-ai-sg-btn{
+        border: 1px solid rgba(255,140,0,0.18);
+        background: rgba(255,140,0,0.10);
+        color: #9a3412;
+        border-radius: 999px;
+        padding: 8px 10px;
+        font-weight: 900;
+        font-size: 12px;
+        cursor: pointer;
+        transition: transform 120ms ease, filter 120ms ease;
+      }
+      .lb-ai-sg-btn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+      .lb-ai-sg-btn:active{ transform: translateY(0px); }
+      html.lb-theme-dark .lb-ai-sg-btn{
+        background: rgba(255,140,0,0.12);
+        border-color: rgba(255,140,0,0.18);
+        color: #fed7aa;
+      }
+
+      #lb-ai-foot{
+        border-top: 1px solid rgba(15,23,42,0.08);
+        padding: 10px 10px 12px;
+        display: grid;
+        gap: 8px;
+      }
+      html.lb-theme-dark #lb-ai-foot{ border-top-color: rgba(148,163,184,0.18); }
+      #lb-ai-input-row{
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        align-items: center;
+      }
+      #lb-ai-input{
+        width: 100%;
+        border-radius: 14px;
+        border: 1px solid rgba(15,23,42,0.12);
+        background: rgba(255,255,255,0.95);
+        padding: 10px 12px;
+        font-weight: 700;
+        font-size: 13px;
+        color: #0f172a;
+      }
+      html.lb-theme-dark #lb-ai-input{
+        background: rgba(2,6,23,0.35);
+        border-color: rgba(148,163,184,0.22);
+        color: #e2e8f0;
+      }
+      #lb-ai-send{
+        border: 0;
+        border-radius: 14px;
+        padding: 10px 14px;
+        background: linear-gradient(135deg, #ff8c00, #ffa726);
+        color: #ffffff;
+        font-weight: 1000;
+        cursor: pointer;
+        box-shadow: 0 14px 28px -18px rgba(255,140,0,0.85);
+      }
+      #lb-ai-send:active{ transform: translateY(1px); }
+      #lb-ai-help{
+        font-size: 11px;
+        font-weight: 800;
+        color: rgba(100,116,139,0.85);
+        text-align: center;
+      }
+      html.lb-theme-dark #lb-ai-help{ color: rgba(226,232,240,0.65); }
+
+      @media (max-width: 480px){
+        #lb-ai-btn{ right: 16px; bottom: 16px; }
+        #lb-ai-panel{
+          left: 12px;
+          right: 12px;
+          width: auto;
+          bottom: 74px;
+          height: min(520px, 72vh);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    const btn = document.createElement("button");
+    btn.id = "lb-ai-btn";
+    btn.type = "button";
+    btn.setAttribute("aria-haspopup", "dialog");
+    btn.setAttribute("aria-controls", "lb-ai-panel");
+    btn.innerHTML = `
+      <span id="lb-ai-badge" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M7 7.5c0-2.5 2-4.5 5-4.5s5 2 5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <path d="M6.5 10.5c0-1.1.9-2 2-2h7c1.1 0 2 .9 2 2v5c0 2-1.6 3.5-3.5 3.5h-1.2l-1.8 1.6-1.8-1.6H10c-2 0-3.5-1.6-3.5-3.5v-5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M9.5 13h.01M12 13h.01M14.5 13h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span>Ask LocalBasket AI</span>
+    `;
+
+    const panel = document.createElement("section");
+    panel.id = "lb-ai-panel";
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-modal", "false");
+    panel.innerHTML = `
+      <div id="lb-ai-head">
+        <div id="lb-ai-title">
+          <div>
+            <div>LocalBasket AI</div>
+            <small>Grocery assistant</small>
+          </div>
+        </div>
+        <button id="lb-ai-close" type="button" aria-label="Close">Close</button>
+      </div>
+      <div id="lb-ai-body"></div>
+      <div id="lb-ai-foot">
+        <div id="lb-ai-suggestions" aria-label="Suggested questions"></div>
+        <div id="lb-ai-input-row">
+          <input id="lb-ai-input" type="text" placeholder="Type your question..." autocomplete="off" />
+          <button id="lb-ai-send" type="button">Send</button>
+        </div>
+        <div id="lb-ai-help">Tips: try "track my order" or "ingredients for chai"</div>
+      </div>
+    `;
+
+    document.body.appendChild(btn);
+    document.body.appendChild(panel);
+
+    const body = panel.querySelector("#lb-ai-body");
+    const input = panel.querySelector("#lb-ai-input");
+    const send = panel.querySelector("#lb-ai-send");
+    const close = panel.querySelector("#lb-ai-close");
+    const suggestions = panel.querySelector("#lb-ai-suggestions");
+
+    const safeParse = (raw, fallback) => {
+      try { return JSON.parse(raw); } catch { return fallback; }
+    };
+
+    const readCartAny = () => {
+      try {
+        const user = safeParse(localStorage.getItem("lbUser") || "null", null);
+        const keys = [];
+        if (user && user.id) keys.push(`lbCart_${user.id}`);
+        keys.push("lbCart_guest", "lbCart");
+        for (const k of keys) {
+          const parsed = safeParse(localStorage.getItem(k) || "[]", []);
+          if (Array.isArray(parsed) && parsed.length) return parsed;
+        }
+      } catch {}
+      return [];
+    };
+
+    const addMsg = (text, who) => {
+      const el = document.createElement("div");
+      el.className = "lb-ai-msg" + (who === "user" ? " user" : "");
+      el.textContent = String(text || "");
+      body.appendChild(el);
+      body.scrollTop = body.scrollHeight;
+    };
+
+    const answer = (q) => {
+      const t = String(q || "").trim().toLowerCase();
+      if (!t) return "Please type a question.";
+
+      if (/(track).*(order)|order.*(track)/.test(t)) {
+        return "To track your order:\n- Open: My Orders\n- Select the latest order\n- Use the tracking status.\n\nIf you want, share your order id here.";
+      }
+      if (/(cancel).*(order)|order.*(cancel)/.test(t)) {
+        return "To cancel an order:\n- Open: My Orders\n- Select the order\n- Tap: Cancel (if available).\n\nIf the seller already shipped it, cancellation may not be possible.";
+      }
+      if (/chai|tea/.test(t)) {
+        return "To make chai, you need:\n- Milk\n- Tea powder\n- Sugar\n- Ginger (optional)\n- Cardamom (optional)\n\nTip: boil water + ginger first, then add tea, then milk, then sugar.";
+      }
+      if (/pasta/.test(t)) {
+        return "For a simple pasta:\n- Pasta\n- Tomato puree (or tomatoes)\n- Garlic\n- Onion (optional)\n- Olive oil (or butter)\n- Salt\n- Chili flakes / oregano (optional)\n- Cheese (optional)";
+      }
+      if (/biryani/.test(t)) {
+        return "For biryani basics:\n- Basmati rice\n- Onions\n- Tomatoes\n- Curd (yogurt)\n- Ginger-garlic paste\n- Biryani masala\n- Whole spices (bay leaf, cloves, cinnamon)\n- Mint and coriander\n- Ghee/oil";
+      }
+      if (/deal|discount|offer|cheapest/.test(t)) {
+        return "Best way to find deals:\n- Open Categories\n- Sort by price / check store banners\n\nTell me what item you want (e.g. oil, vegetables), I will suggest what to compare.";
+      }
+      if (/vegetable|veggies|fresh/.test(t)) {
+        return "Fresh vegetables near you:\n- Use pincode search\n- Check Top Stores Near You\n- Compare delivery time and ratings.";
+      }
+
+      return "I can help with:\n- Nearby stores\n- Grocery suggestions\n- Recipe ingredients\n- Deals\n- Orders\n\nTry: ingredients for pasta, track my order, cheapest vegetables.";
+    };
+
+    const buildSuggestions = () => {
+      const groups = [
+        {
+          title: "Shopping help",
+          items: ["Find fresh vegetables near me", "Show grocery stores in my area", "Find cheapest cooking oil"]
+        },
+        {
+          title: "Cooking help",
+          items: ["Ingredients for pasta", "What should I buy to cook biryani?", "Ingredients for making chai"]
+        },
+        {
+          title: "Deals",
+          items: ["What are today's best deals?", "Show cheapest vegetables"]
+        },
+        {
+          title: "Orders",
+          items: ["Track my order", "Cancel my order"]
+        }
+      ];
+
+      suggestions.innerHTML = "";
+      for (const g of groups) {
+        const wrap = document.createElement("div");
+        wrap.innerHTML = `
+          <div class="lb-ai-sg-title">${g.title}</div>
+          <div class="lb-ai-sg-grid"></div>
+        `;
+        const grid = wrap.querySelector(".lb-ai-sg-grid");
+        for (const s of g.items) {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "lb-ai-sg-btn";
+          b.textContent = s;
+          b.addEventListener("click", () => {
+            input.value = s;
+            onSend();
+          });
+          grid.appendChild(b);
+        }
+        suggestions.appendChild(wrap);
+      }
+    };
+
+    const welcome = () => {
+      addMsg("Hi.\n\nI am LocalBasket AI.\nI can help you:\n- Find nearby stores\n- Suggest groceries\n- Help with recipes\n- Show best deals\n- Help with orders", "bot");
+
+      const cart = readCartAny();
+      const names = cart
+        .map((x) => String(x?.product_name || x?.name || x?.productName || "").trim())
+        .filter(Boolean)
+        .slice(0, 6);
+      const has = (k) => names.some((n) => n.toLowerCase().includes(k));
+      if (names.length) {
+        if (has("milk") && has("bread")) {
+          addMsg("I noticed milk and bread in your cart.\nYou might also need:\n- Butter\n- Eggs", "bot");
+        }
+      }
+
+      buildSuggestions();
+    };
+
+    const open = () => {
+      panel.style.display = "grid";
+      btn.setAttribute("aria-expanded", "true");
+      try { input.focus(); } catch {}
+      if (!panel.__lbAiWelcomed) {
+        panel.__lbAiWelcomed = true;
+        welcome();
+      }
+    };
+
+    const closePanel = () => {
+      panel.style.display = "none";
+      btn.setAttribute("aria-expanded", "false");
+    };
+
+    const onSend = () => {
+      const q = String(input.value || "").trim();
+      if (!q) return;
+      input.value = "";
+      addMsg(q, "user");
+      addMsg(answer(q), "bot");
+      buildSuggestions();
+    };
+
+    btn.addEventListener("click", () => (panel.style.display === "grid" ? closePanel() : open()));
+    close.addEventListener("click", closePanel);
+    send.addEventListener("click", onSend);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") onSend();
+      if (e.key === "Escape") closePanel();
+    });
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closePanel();
+    });
+  };
+
+  // Ensure AI widget early so it feels native across pages.
+  try { ensureAiWidget(); } catch {}
 
   const ensureMaintenanceOverlay = () => {
     if (document.getElementById("lb-maintenance-overlay")) return;
