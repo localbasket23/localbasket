@@ -308,6 +308,13 @@
     .otp-row.active {
       display: grid;
       grid-template-columns: 1fr auto;
+      align-items: center;
+    }
+    .otp-row.active > *{
+      min-width: 0;
+    }
+    .otp-row.active.reset{
+      grid-template-columns: 1fr 1fr auto;
     }
     .otp-row .btn-secondary {
       margin-top: 0;
@@ -319,6 +326,16 @@
       color: #e56a00;
       font-weight: 700;
       cursor: pointer;
+    }
+
+    @media (max-width: 520px){
+      .otp-row.active,
+      .otp-row.active.reset{
+        grid-template-columns: 1fr;
+      }
+      .otp-row .btn-secondary{
+        width: 100%;
+      }
     }
 
     /* Toggle Switch Logic */

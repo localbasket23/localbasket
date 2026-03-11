@@ -616,6 +616,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         background: linear-gradient(90deg, rgba(255,140,0,0.14), rgba(255,255,255,0.0));
         backdrop-filter: blur(10px);
         border-bottom: 1px solid rgba(15,23,42,0.08);
+        position: sticky;
+        top: 0;
+        z-index: 2;
       }
       html.lb-theme-dark #lb-ai-head{ border-bottom-color: rgba(148,163,184,0.18); }
       #lb-ai-title{
@@ -823,6 +826,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         display: grid;
         gap: 8px;
         background: rgba(255,255,255,0.92);
+        position: sticky;
+        bottom: 0;
+        z-index: 2;
       }
       html.lb-theme-dark #lb-ai-foot{ border-top-color: rgba(148,163,184,0.18); }
       html.lb-theme-dark #lb-ai-foot{ background: rgba(15,23,42,0.78); }
@@ -895,10 +901,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         #lb-ai-panel{
           left: calc(10px + env(safe-area-inset-left, 0px));
           right: calc(10px + env(safe-area-inset-right, 0px));
-          top: calc(10px + env(safe-area-inset-top, 0px));
-          bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+          top: calc(10px + var(--lb-ai-vv-top, 0px) + env(safe-area-inset-top, 0px));
+          bottom: auto;
           width: auto;
-          height: auto;
+          height: calc(var(--lb-ai-vv-height, 100dvh) - 20px - env(safe-area-inset-top, 0px));
           border-radius: 22px;
           max-height: none;
           transform: translateY(12px);
@@ -2212,6 +2218,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
+    const syncVisualViewportVars = () => {
+      // Fix mobile keyboard issues where fixed panels can jump and header appears "missing".
+      // We size the panel to the *visual* viewport when supported.
+      try {
+        if (!isMobileDock()) return;
+        const vv = window.visualViewport;
+        const h = Math.max(1, Math.round(Number(vv?.height || window.innerHeight || 1)));
+        const top = Math.max(0, Math.round(Number(vv?.offsetTop || 0)));
+        panel.style.setProperty("--lb-ai-vv-height", `${h}px`);
+        panel.style.setProperty("--lb-ai-vv-top", `${top}px`);
+      } catch {}
+    };
+
     const applyBtnPosition = () => {
       try {
         const vw = Math.max(1, window.innerWidth || 1);
@@ -2268,6 +2287,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.setAttribute("aria-expanded", "true");
       panel.setAttribute("aria-hidden", "false");
       document.body.style.overflow = "hidden";
+      syncVisualViewportVars();
+      try {
+        window.visualViewport?.addEventListener("resize", syncVisualViewportVars, { passive: true });
+        window.visualViewport?.addEventListener("scroll", syncVisualViewportVars, { passive: true });
+      } catch {}
       try { input.focus(); } catch {}
       if (!panel.__lbAiWelcomed) {
         panel.__lbAiWelcomed = true;
@@ -2296,6 +2320,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.setAttribute("aria-expanded", "false");
       panel.setAttribute("aria-hidden", "true");
       document.body.style.overflow = "";
+      try {
+        window.visualViewport?.removeEventListener("resize", syncVisualViewportVars);
+        window.visualViewport?.removeEventListener("scroll", syncVisualViewportVars);
+      } catch {}
       try { clearInterval(panel.__lbAiIdentityWatch); } catch {}
     };
 
@@ -2330,6 +2358,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         e.preventDefault();
         onSend();
       }
+    });
+
+    // When keyboard opens, keep panel sized to the visible area.
+    input.addEventListener("focus", () => {
+      syncVisualViewportVars();
+      try { body.scrollTop = body.scrollHeight; } catch {}
     });
 
     // Drag: desktop free-move, mobile docked vertical move. Click/tap opens panel.

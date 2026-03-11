@@ -288,8 +288,31 @@ function setAuthOtpMeta(text) {
     const el = getEl("authOtpMeta");
     if (!el) return;
     const value = String(text || "").trim();
-    el.textContent = value;
-    el.style.display = value ? "block" : "none";
+
+    const expiryEl = getEl("authOtpExpiryMeta");
+    if (expiryEl) {
+        expiryEl.textContent = value;
+    } else {
+        el.textContent = value;
+    }
+
+    const resendEl = getEl("authOtpResendMeta");
+    const hasResend = resendEl ? String(resendEl.textContent || "").trim() : "";
+    const hasExpiry = expiryEl ? String(expiryEl.textContent || "").trim() : value;
+    const hasAny = !!(hasResend || hasExpiry);
+    el.style.display = hasAny ? (expiryEl || resendEl ? "flex" : "block") : "none";
+}
+
+function setAuthResendMeta(text) {
+    const el = getEl("authOtpMeta");
+    const resendEl = getEl("authOtpResendMeta");
+    if (!el || !resendEl) return;
+    const value = String(text || "").trim();
+    resendEl.textContent = value;
+    const expiryEl = getEl("authOtpExpiryMeta");
+    const hasExpiry = expiryEl ? String(expiryEl.textContent || "").trim() : "";
+    const hasAny = !!(value || hasExpiry);
+    el.style.display = hasAny ? "flex" : "none";
 }
 
 function resetAuthOtpExpiry() {
@@ -312,6 +335,7 @@ function resetAuthResendButton() {
         btn.disabled = false;
         btn.textContent = "Send OTP";
     }
+    setAuthResendMeta("");
     resetAuthOtpExpiry();
 }
 
@@ -323,7 +347,8 @@ function startAuthResendCooldown(seconds = 30) {
     authResendRemaining = Math.max(1, Number(seconds) || 30);
 
     btn.disabled = true;
-    btn.textContent = `Resend OTP (${authResendRemaining}s)`;
+    btn.textContent = "Resend OTP";
+    setAuthResendMeta(`Resend in ${authResendRemaining}s`);
 
     authResendTimer = setInterval(() => {
         authResendRemaining -= 1;
@@ -332,9 +357,10 @@ function startAuthResendCooldown(seconds = 30) {
             authResendTimer = null;
             btn.disabled = false;
             btn.textContent = "Resend OTP";
+            setAuthResendMeta("");
             return;
         }
-        btn.textContent = `Resend OTP (${authResendRemaining}s)`;
+        setAuthResendMeta(`Resend in ${authResendRemaining}s`);
     }, 1000);
 }
 

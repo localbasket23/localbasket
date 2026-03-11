@@ -275,6 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     resetResendButton();
     if (sellerOtpRow) sellerOtpRow.classList.toggle("active", enabled);
+    if (sellerOtpRow) sellerOtpRow.classList.toggle("reset", isReset);
 
     if (sellerUseOtpBtn) {
       sellerUseOtpBtn.textContent = otpMode === "login" ? "Back to Password Login" : "Login with OTP";
