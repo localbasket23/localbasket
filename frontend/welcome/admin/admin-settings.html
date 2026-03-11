@@ -485,7 +485,16 @@ function logout(){
 
 /* Commission preview + persistence */
 const COMMISSION_STORAGE_KEY = "lbGlobalCommission";
-const API_BASE = (localStorage.getItem("lbApiAdminBase") || "").trim() || `${window.API_BASE_URL}/api/admin`;
+const API_BASE = (() => {
+  const stored = String(localStorage.getItem("lbApiAdminBase") || "").trim();
+  const host = String(window.location.hostname || "").trim().toLowerCase();
+  const isLocalHost = host === "localhost" || host === "127.0.0.1" || /^10\.|^192\.168\.|^172\.(1[6-9]|2\d|3[0-1])\./.test(host);
+
+  // Prevent a stale localhost API base from breaking uploads on hosted admin pages.
+  if (stored && !isLocalHost && /localhost|127\.0\.0\.1/i.test(stored)) return `${window.API_BASE_URL}/api/admin`;
+
+  return stored || `${window.API_BASE_URL}/api/admin`;
+})();
 const slider=document.getElementById("commissionSlider");
 const valueText=document.getElementById("commissionValue");
 const preview=document.getElementById("previewBox");
@@ -821,10 +830,19 @@ function uploadHeroImage(){
   }
   const fd = new FormData();
   fd.append("hero_image", heroImageFile.files[0]);
+  const uploadBtn = document.querySelector("button.hero-upload-btn[onclick=\"uploadHeroImage()\"]");
+  if (uploadBtn) { uploadBtn.disabled = true; uploadBtn.textContent = "Uploading..."; }
   fetch(`${API_BASE}/settings/hero-image`, {
     method: "POST",
     body: fd
-  }).then(res => res.json())
+  }).then(async (res) => {
+    const ct = String(res.headers.get("content-type") || "");
+    const data = ct.includes("application/json")
+      ? await res.json().catch(() => ({}))
+      : { message: await res.text().catch(() => "") };
+    if (!res.ok) throw new Error((data && data.message) || `Upload failed (${res.status})`);
+    return data;
+  })
     .then(data => {
       if (data && data.success) {
         if (heroImageInput) heroImageInput.value = data.hero_image || "";
@@ -845,8 +863,11 @@ function uploadHeroImage(){
         alert((data && data.message) || "Failed to upload image");
       }
     })
-    .catch(() => {
-      alert("Failed to upload image");
+    .catch((err) => {
+      alert(err?.message || "Failed to upload image");
+    })
+    .finally(() => {
+      if (uploadBtn) { uploadBtn.disabled = false; uploadBtn.textContent = "Upload Image"; }
     });
 }
 
@@ -858,10 +879,19 @@ function uploadHeroImages(){
   const fd = new FormData();
   Array.from(heroImagesFile.files).forEach(f => fd.append("hero_images", f));
   fd.append("target", "desktop");
+  const uploadBtn = document.querySelector("button.hero-upload-btn[onclick=\"uploadHeroImages()\"]");
+  if (uploadBtn) { uploadBtn.disabled = true; uploadBtn.textContent = "Uploading..."; }
   fetch(`${API_BASE}/settings/hero-images`, {
     method: "POST",
     body: fd
-  }).then(res => res.json())
+  }).then(async (res) => {
+    const ct = String(res.headers.get("content-type") || "");
+    const data = ct.includes("application/json")
+      ? await res.json().catch(() => ({}))
+      : { message: await res.text().catch(() => "") };
+    if (!res.ok) throw new Error((data && data.message) || `Upload failed (${res.status})`);
+    return data;
+  })
     .then(data => {
       if (data && data.success) {
         if (heroImagesFile) heroImagesFile.value = "";
@@ -883,8 +913,11 @@ function uploadHeroImages(){
         alert((data && data.message) || "Failed to upload images");
       }
     })
-    .catch(() => {
-      alert("Failed to upload images");
+    .catch((err) => {
+      alert(err?.message || "Failed to upload images");
+    })
+    .finally(() => {
+      if (uploadBtn) { uploadBtn.disabled = false; uploadBtn.textContent = "Upload Multiple"; }
     });
 }
 
@@ -896,10 +929,19 @@ function uploadHeroImagesMobile(){
   const fd = new FormData();
   Array.from(heroImagesMobileFile.files).forEach(f => fd.append("hero_images", f));
   fd.append("target", "mobile");
+  const uploadBtn = document.querySelector("button.hero-upload-btn[onclick=\"uploadHeroImagesMobile()\"]");
+  if (uploadBtn) { uploadBtn.disabled = true; uploadBtn.textContent = "Uploading..."; }
   fetch(`${API_BASE}/settings/hero-images`, {
     method: "POST",
     body: fd
-  }).then(res => res.json())
+  }).then(async (res) => {
+    const ct = String(res.headers.get("content-type") || "");
+    const data = ct.includes("application/json")
+      ? await res.json().catch(() => ({}))
+      : { message: await res.text().catch(() => "") };
+    if (!res.ok) throw new Error((data && data.message) || `Upload failed (${res.status})`);
+    return data;
+  })
     .then(data => {
       if (data && data.success) {
         if (heroImagesMobileFile) heroImagesMobileFile.value = "";
@@ -921,8 +963,11 @@ function uploadHeroImagesMobile(){
         alert((data && data.message) || "Failed to upload images");
       }
     })
-    .catch(() => {
-      alert("Failed to upload images");
+    .catch((err) => {
+      alert(err?.message || "Failed to upload images");
+    })
+    .finally(() => {
+      if (uploadBtn) { uploadBtn.disabled = false; uploadBtn.textContent = "Upload Mobile"; }
     });
 }
 

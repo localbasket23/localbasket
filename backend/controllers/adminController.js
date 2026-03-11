@@ -1,5 +1,6 @@
 const db = require("../db/connection");
 const util = require("util");
+const path = require("path");
 const { uploadToCloudinary, hasCloudinary } = require("../config/cloudinary");
 let PDFDocument = null;
 try {
@@ -18,6 +19,15 @@ const getStoredFileRef = (file) => {
   if (/^https?:\/\//i.test(secureValue)) return secureValue;
   const pathValue = String(file.path || "").trim();
   if (/^https?:\/\//i.test(pathValue)) return pathValue;
+
+  const filename = String(file.filename || "").trim();
+  if (filename) return `/uploads/${filename}`;
+
+  if (pathValue) {
+    const base = path.basename(pathValue);
+    if (base) return `/uploads/${base}`;
+  }
+
   return "";
 };
 

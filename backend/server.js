@@ -44,6 +44,15 @@ app.use(express.static(path.join(__dirname, "..", "frontend"), {
   }
 }));
 
+// Serve uploaded files when using local disk storage (non-cloudinary).
+app.use("/uploads", express.static(path.join(__dirname, "uploads"), {
+  etag: false,
+  lastModified: false,
+  setHeaders: (res) => {
+    res.setHeader("Cache-Control", "no-store");
+  }
+}));
+
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
