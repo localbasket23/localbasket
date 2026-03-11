@@ -916,11 +916,75 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    const CHAT_KEY = "lbAiChatV1";
     const MAX_HISTORY = 40;
 
     const safeParse = (raw, fallback) => {
       try { return JSON.parse(raw); } catch { return fallback; }
+    };
+
+    const getAiUserId = () => {
+      try {
+        const user = safeParse(localStorage.getItem("lbUser") || "null", null);
+        if (!user || typeof user !== "object") return null;
+        const id =
+          user.id ??
+          user.customer_id ??
+          user._id ??
+          user.user_id ??
+          user.customerId ??
+          user.customerID ??
+          user.userId ??
+          null;
+        const cleaned = id != null ? String(id).trim() : "";
+        return cleaned ? cleaned : null;
+      } catch {
+        return null;
+      }
+    };
+
+    const fnv1a = (str) => {
+      // Small stable hash to avoid using full tokens in storage keys.
+      // Returns unsigned 32-bit integer.
+      let h = 0x811c9dc5;
+      const s = String(str || "");
+      for (let i = 0; i < s.length; i++) {
+        h ^= s.charCodeAt(i);
+        h = Math.imul(h, 0x01000193);
+      }
+      return (h >>> 0);
+    };
+
+    const getAiTokenHint = () => {
+      try {
+        const t = String(localStorage.getItem("lbToken") || "").trim();
+        if (!t) return null;
+        return `t_${fnv1a(t).toString(16)}`;
+      } catch {
+        return null;
+      }
+    };
+
+    const getChatStore = () => {
+      // Keep AI chat isolated per-customer so one customer's chat doesn't appear for another.
+      // - Logged-in: localStorage per user id
+      // - Token-only sessions: localStorage per token hash
+      // - Guest: sessionStorage per-tab id
+      const uid = getAiUserId();
+      if (uid) return { storage: localStorage, key: `lbAiChatV1_u_${uid}` };
+      const tokenHint = getAiTokenHint();
+      if (tokenHint) return { storage: localStorage, key: `lbAiChatV1_${tokenHint}` };
+
+      let guestId = "";
+      try { guestId = String(sessionStorage.getItem("lbAiGuestId") || "").trim(); } catch {}
+      if (!guestId) {
+        try {
+          guestId = `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+          sessionStorage.setItem("lbAiGuestId", guestId);
+        } catch {
+          guestId = "guest";
+        }
+      }
+      return { storage: sessionStorage, key: `lbAiChatV1_guest_${guestId}` };
     };
 
     const getCartKey = () => {
@@ -1017,12 +1081,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const persistChat = () => {
       try {
+        const { storage, key } = getChatStore();
         const all = Array.from(body.querySelectorAll("[data-lb-ai-role]")).map((el) => ({
           role: el.getAttribute("data-lb-ai-role") || "bot",
           text: el.getAttribute("data-lb-ai-text") || el.textContent || "",
           ts: Number(el.getAttribute("data-lb-ai-ts") || Date.now()),
         }));
-        localStorage.setItem(CHAT_KEY, JSON.stringify(all.slice(-MAX_HISTORY)));
+        storage.setItem(key, JSON.stringify(all.slice(-MAX_HISTORY)));
       } catch {}
     };
 
@@ -1554,7 +1619,18 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const restore = () => {
       try {
-        const hist = safeParse(localStorage.getItem(CHAT_KEY) || "[]", []);
+        const { storage, key } = getChatStore();
+        panel.dataset.lbAiChatKey = key;
+
+        // Migrate legacy guest key (older builds) into the per-tab guest key.
+        try {
+          if (storage === sessionStorage && !storage.getItem(key) && storage.getItem("lbAiChatV1_guest")) {
+            storage.setItem(key, storage.getItem("lbAiChatV1_guest"));
+            storage.removeItem("lbAiChatV1_guest");
+          }
+        } catch {}
+
+        const hist = safeParse(storage.getItem(key) || "[]", []);
         if (!Array.isArray(hist) || !hist.length) return false;
         body.innerHTML = "";
         hist.slice(-MAX_HISTORY).forEach((m) => {
@@ -1606,6 +1682,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     const open = () => {
+      const ensureIdentity = () => {
+        // If user changed (logout/login), switch to that user's chat store.
+        try {
+          const { key } = getChatStore();
+          if (panel.dataset.lbAiChatKey && panel.dataset.lbAiChatKey !== key) {
+            body.innerHTML = "";
+            panel.__lbAiWelcomed = false;
+            panel.dataset.lbAiChatKey = "";
+            return true;
+          }
+        } catch {}
+        return false;
+      };
+
+      ensureIdentity();
+
       panel.classList.add("lb-ai-open");
       backdrop.classList.add("lb-ai-open");
       btn.classList.add("lb-ai-hidden");
@@ -1617,6 +1709,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         panel.__lbAiWelcomed = true;
         if (!restore()) welcome();
       }
+
+      // Safety: while open, periodically re-check identity so chat doesn't leak
+      // if the user logs out/logs in without reloading the page.
+      try { clearInterval(panel.__lbAiIdentityWatch); } catch {}
+      try {
+        panel.__lbAiIdentityWatch = setInterval(() => {
+          if (!panel.classList.contains("lb-ai-open")) return;
+          const changed = ensureIdentity();
+          if (changed && !panel.__lbAiWelcomed) {
+            panel.__lbAiWelcomed = true;
+            if (!restore()) welcome();
+          }
+        }, 1200);
+      } catch {}
     };
 
     const closePanel = () => {
@@ -1626,6 +1732,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.setAttribute("aria-expanded", "false");
       panel.setAttribute("aria-hidden", "true");
       document.body.style.overflow = "";
+      try { clearInterval(panel.__lbAiIdentityWatch); } catch {}
     };
 
     const onSend = () => {
@@ -1765,7 +1872,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         : confirm("Clear this chat?");
       if (!ok) return;
       body.innerHTML = "";
-      try { localStorage.removeItem(CHAT_KEY); } catch {}
+      try {
+        const { storage, key } = getChatStore();
+        storage.removeItem(key);
+      } catch {}
       panel.__lbAiWelcomed = false;
       welcome();
     });
