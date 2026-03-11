@@ -388,7 +388,7 @@ function updateMobileHomeShell() {
     }
 
     if (mobileAvatar) {
-        mobileAvatar.innerHTML = `<img src="/welcome/logo2.png?v=20260303" alt="LocalBasket logo">`;
+        mobileAvatar.innerHTML = `<img src="${welcomePath("logo2.png?v=20260303")}" alt="LocalBasket logo">`;
     }
 }
 

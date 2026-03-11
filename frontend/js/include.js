@@ -1038,8 +1038,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("header");
     if (!headerContainer) return;
 
-    const res = await fetch(`/components/header.html?v=${LB_COMPONENTS_VERSION}`, { cache: "no-store" });
-    const html = await res.text();
+    const basePath = (() => {
+      const path = String(window.location.pathname || "").replace(/\\/g, "/");
+      return path.includes("/frontend/") ? "/frontend" : "";
+    })();
+    const candidates = [
+      `${basePath}/components/header.html?v=${LB_COMPONENTS_VERSION}`,
+      `/components/header.html?v=${LB_COMPONENTS_VERSION}`
+    ].filter((v, i, arr) => arr.indexOf(v) === i);
+
+    let html = "";
+    let lastErr = null;
+    for (const url of candidates) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        html = await res.text();
+        lastErr = null;
+        break;
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+    if (lastErr) throw lastErr;
     headerContainer.innerHTML = html;
     reInitializeUI();
     applySharedAssetBindings(headerContainer);
@@ -1051,8 +1072,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("footer");
     if (!footerContainer) return;
 
-    const res = await fetch(`/components/footer.html?v=${LB_COMPONENTS_VERSION}`, { cache: "no-store" });
-    const html = await res.text();
+    const basePath = (() => {
+      const path = String(window.location.pathname || "").replace(/\\/g, "/");
+      return path.includes("/frontend/") ? "/frontend" : "";
+    })();
+    const candidates = [
+      `${basePath}/components/footer.html?v=${LB_COMPONENTS_VERSION}`,
+      `/components/footer.html?v=${LB_COMPONENTS_VERSION}`
+    ].filter((v, i, arr) => arr.indexOf(v) === i);
+
+    let html = "";
+    let lastErr = null;
+    for (const url of candidates) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        html = await res.text();
+        lastErr = null;
+        break;
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+    if (lastErr) throw lastErr;
     footerContainer.innerHTML = html;
     applySharedAssetBindings(footerContainer);
     reInitializeUI();
