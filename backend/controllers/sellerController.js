@@ -2,6 +2,7 @@ const db = require("../db/connection");
 const bcrypt = require("bcrypt");
 const { uploadToCloudinary, hasCloudinary } = require("../config/cloudinary");
 const { sendOtpSms } = require("../utils/otpSender");
+const { sendOtpEmail } = require("../utils/emailOtpSender");
 const dbp = db.promise();
 const query = dbp.query.bind(dbp);
 let sellerColumnsCache = null;
@@ -544,28 +545,37 @@ exports.requestLoginOtp = async (req, res) => {
     }
 
     const otp = issueSellerOtp(phone);
-    const sms = await sendOtpSms({ phone, otp });
-    if (!sms.success) {
+    const email = String(seller.email || "").trim().toLowerCase();
+    const [mail, sms] = await Promise.all([
+      sendOtpEmail({ to: email, otp }),
+      sendOtpSms({ phone, otp })
+    ]);
+
+    const sentOn = [];
+    if (mail.success) sentOn.push("email");
+    if (sms.success) sentOn.push("SMS");
+
+    if (!sentOn.length) {
       if (shouldReturnDebugOtp()) {
-        console.warn("SELLER OTP DEBUG MODE: returning OTP in response (non-production only).", sms);
+        console.warn("SELLER OTP DEBUG MODE: returning OTP in response (non-production only).", { mail, sms });
         return res.json({
           success: true,
           message: `OTP generated (debug): ${otp}`,
           debug_otp: otp
         });
       }
-      return res.status(500).json({
+      return res.status(502).json({
         success: false,
-        message: sms.message || "Failed to send OTP to phone number",
-        ...(isProdEnv() ? {} : { debug: sms })
+        message: "OTP delivery failed on all channels",
+        ...(isProdEnv() ? {} : { debug: { email: mail, sms } })
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
-      message: "OTP sent successfully"
+      message: `OTP sent to your registered ${sentOn.join(" and ")}`
     });
-} catch (err) {
+  } catch (err) {
     console.error("SELLER OTP REQUEST ERROR:", err);
     res.status(500).json({
       success: false,
@@ -597,26 +607,35 @@ exports.requestPasswordResetOtp = async (req, res) => {
     }
 
     const otp = issueSellerPasswordResetOtp(phone);
-    const sms = await sendOtpSms({ phone, otp });
-    if (!sms.success) {
+    const email = String(seller.email || "").trim().toLowerCase();
+    const [mail, sms] = await Promise.all([
+      sendOtpEmail({ to: email, otp }),
+      sendOtpSms({ phone, otp })
+    ]);
+
+    const sentOn = [];
+    if (mail.success) sentOn.push("email");
+    if (sms.success) sentOn.push("SMS");
+
+    if (!sentOn.length) {
       if (shouldReturnDebugOtp()) {
-        console.warn("SELLER PASSWORD RESET OTP DEBUG MODE: returning OTP in response (non-production only).", sms);
+        console.warn("SELLER PASSWORD RESET OTP DEBUG MODE: returning OTP in response (non-production only).", { mail, sms });
         return res.json({
           success: true,
           message: `OTP generated (debug): ${otp}`,
           debug_otp: otp
         });
       }
-      return res.status(500).json({
+      return res.status(502).json({
         success: false,
-        message: sms.message || "Failed to send OTP to phone number",
-        ...(isProdEnv() ? {} : { debug: sms })
+        message: "OTP delivery failed on all channels",
+        ...(isProdEnv() ? {} : { debug: { email: mail, sms } })
       });
     }
 
     return res.json({
       success: true,
-      message: "OTP sent successfully"
+      message: `OTP sent to your registered ${sentOn.join(" and ")}`
     });
   } catch (err) {
     console.error("SELLER PASSWORD RESET OTP REQUEST ERROR:", err);

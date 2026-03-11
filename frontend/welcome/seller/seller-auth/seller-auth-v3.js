@@ -443,7 +443,7 @@ document.addEventListener("DOMContentLoaded", () => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ phone })
         });
-        showToast("Success", "OTP sent successfully. Please check your phone.", "success");
+        showToast("Success", "OTP sent successfully. Please check your registered email/SMS.", "success");
         setMessage(
           otpMode === "reset" ? "OTP sent. Enter OTP + new password to reset." : "OTP sent. Enter OTP to login.",
           "var(--accent)"
