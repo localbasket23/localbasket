@@ -8,6 +8,7 @@ let sellerColumnsCache = null;
 let productColumnsCache = null;
 const OTP_EXPIRY_MS = 5 * 60 * 1000;
 const sellerOtpStore = new Map();
+const sellerPasswordResetOtpStore = new Map();
 
 const getSellerColumns = async () => {
   if (sellerColumnsCache) return sellerColumnsCache;
@@ -167,6 +168,36 @@ const verifySellerOtp = (phone, otp) => {
   sellerOtpStore.delete(key);
   return { ok: true };
 };
+
+const issueSellerPasswordResetOtp = (phone) => {
+  const key = sellerOtpKey(phone);
+  const otp = generateOtp();
+  sellerPasswordResetOtpStore.set(key, {
+    otp,
+    expiresAt: Date.now() + OTP_EXPIRY_MS
+  });
+  return otp;
+};
+
+const verifySellerPasswordResetOtp = (phone, otp) => {
+  const key = sellerOtpKey(phone);
+  const rec = sellerPasswordResetOtpStore.get(key);
+  if (!rec) return { ok: false, message: "OTP not requested" };
+  if (Date.now() > rec.expiresAt) {
+    sellerPasswordResetOtpStore.delete(key);
+    return { ok: false, message: "OTP expired. Please request again." };
+  }
+  if (String(rec.otp) !== String(otp || "").trim()) {
+    return { ok: false, message: "Invalid OTP" };
+  }
+  sellerPasswordResetOtpStore.delete(key);
+  return { ok: true };
+};
+
+const isProdEnv = () => String(process.env.NODE_ENV || "").toLowerCase() === "production";
+const shouldReturnDebugOtp = () =>
+  !isProdEnv() &&
+  ["1", "true", "yes", "y", "on"].includes(String(process.env.OTP_DEBUG_RETURN || "").trim().toLowerCase());
 
 const listRequestFiles = (req) => {
   if (!req) return [];
@@ -515,9 +546,7 @@ exports.requestLoginOtp = async (req, res) => {
     const otp = issueSellerOtp(phone);
     const sms = await sendOtpSms({ phone, otp });
     if (!sms.success) {
-      const isProd = String(process.env.NODE_ENV || "").toLowerCase() === "production";
-      const debugReturn = !isProd && ["1", "true", "yes", "y", "on"].includes(String(process.env.OTP_DEBUG_RETURN || "").trim().toLowerCase());
-      if (debugReturn) {
+      if (shouldReturnDebugOtp()) {
         console.warn("SELLER OTP DEBUG MODE: returning OTP in response (non-production only).", sms);
         return res.json({
           success: true,
@@ -528,7 +557,7 @@ exports.requestLoginOtp = async (req, res) => {
       return res.status(500).json({
         success: false,
         message: sms.message || "Failed to send OTP to phone number",
-        ...(isProd ? {} : { debug: sms })
+        ...(isProdEnv() ? {} : { debug: sms })
       });
     }
 
@@ -536,11 +565,131 @@ exports.requestLoginOtp = async (req, res) => {
       success: true,
       message: "OTP sent successfully"
     });
-  } catch (err) {
+} catch (err) {
     console.error("SELLER OTP REQUEST ERROR:", err);
     res.status(500).json({
       success: false,
       message: "Unable to send OTP"
+    });
+  }
+};
+
+/* =====================================================
+   REQUEST SELLER PASSWORD RESET OTP
+   POST /api/seller/password-reset/request
+===================================================== */
+exports.requestPasswordResetOtp = async (req, res) => {
+  try {
+    const phone = String(req.body.phone || "").trim();
+    if (!/^[0-9]{10}$/.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter valid 10-digit mobile number"
+      });
+    }
+
+    const seller = await fetchSellerByPhone(phone);
+    if (!seller) {
+      return res.status(404).json({
+        success: false,
+        message: "Seller account not found"
+      });
+    }
+
+    const otp = issueSellerPasswordResetOtp(phone);
+    const sms = await sendOtpSms({ phone, otp });
+    if (!sms.success) {
+      if (shouldReturnDebugOtp()) {
+        console.warn("SELLER PASSWORD RESET OTP DEBUG MODE: returning OTP in response (non-production only).", sms);
+        return res.json({
+          success: true,
+          message: `OTP generated (debug): ${otp}`,
+          debug_otp: otp
+        });
+      }
+      return res.status(500).json({
+        success: false,
+        message: sms.message || "Failed to send OTP to phone number",
+        ...(isProdEnv() ? {} : { debug: sms })
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "OTP sent successfully"
+    });
+  } catch (err) {
+    console.error("SELLER PASSWORD RESET OTP REQUEST ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Unable to send OTP"
+    });
+  }
+};
+
+/* =====================================================
+   RESET SELLER PASSWORD WITH OTP
+   POST /api/seller/password-reset/verify
+===================================================== */
+exports.resetPasswordWithOtp = async (req, res) => {
+  try {
+    const phone = String(req.body.phone || "").trim();
+    const otp = String(req.body.otp || "").trim();
+    const newPassword = String(req.body.newPassword || req.body.password || "").trim();
+
+    if (!phone || !otp || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone, OTP and new password are required"
+      });
+    }
+    if (!/^[0-9]{10}$/.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter valid 10-digit mobile number"
+      });
+    }
+    if (!/^[0-9]{6}$/.test(otp)) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter valid 6-digit OTP"
+      });
+    }
+    if (newPassword.length < 4) {
+      return res.status(400).json({
+        success: false,
+        message: "New password must be at least 4 characters"
+      });
+    }
+
+    const seller = await fetchSellerByPhone(phone);
+    if (!seller) {
+      return res.status(404).json({
+        success: false,
+        message: "Seller account not found"
+      });
+    }
+
+    const check = verifySellerPasswordResetOtp(phone, otp);
+    if (!check.ok) {
+      return res.status(401).json({
+        success: false,
+        message: check.message
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await query("UPDATE sellers SET password = ? WHERE id = ?", [hashedPassword, seller.id]);
+
+    return res.json({
+      success: true,
+      message: "Password reset successful. Please login with new password."
+    });
+  } catch (err) {
+    console.error("SELLER PASSWORD RESET VERIFY ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Password reset failed"
     });
   }
 };

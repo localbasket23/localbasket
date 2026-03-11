@@ -5,7 +5,7 @@ let isResubmit = false;
 let resubmitSellerId = null;
 let lastLoginSeller = null;
 let rejectedKeys = [];
-let isOtpLogin = false;
+let otpMode = "none"; // none | login | reset
 
 const getReadableRejectReason = (rejectReasonRaw) => {
   if (!rejectReasonRaw) return "Please update the highlighted details.";
@@ -63,8 +63,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const reviewBox = document.getElementById("reviewBox");
   const loginFields = document.getElementById("loginFields");
   const sellerUseOtpBtn = document.getElementById("sellerUseOtpBtn");
+  const sellerForgotBtn = document.getElementById("sellerForgotBtn");
   const sellerOtpRow = document.getElementById("sellerOtpRow");
   const sellerRequestOtpBtn = document.getElementById("sellerRequestOtpBtn");
+  const sellerNewPasswordWrap = document.getElementById("sellerNewPasswordWrap");
+  const sellerNewPassword = document.getElementById("sellerNewPassword");
 
   const inputs = {
     ownerName: document.getElementById("ownerName"),
@@ -195,30 +198,50 @@ document.addEventListener("DOMContentLoaded", () => {
         inputs.loginPassword.disabled = false;
         inputs.loginPassword.required = true;
       }
-      setOtpLogin(false);
+      setOtpMode("none");
     }
     resetForm();
   };
 
-  const setOtpLogin = (enable) => {
-    isOtpLogin = !!enable;
-    if (sellerOtpRow) sellerOtpRow.classList.toggle("active", isOtpLogin);
+  const setOtpMode = (mode) => {
+    otpMode = mode || "none";
+    const enabled = otpMode !== "none";
+    const isReset = otpMode === "reset";
+
+    if (sellerOtpRow) sellerOtpRow.classList.toggle("active", enabled);
+
     if (sellerUseOtpBtn) {
-      sellerUseOtpBtn.textContent = isOtpLogin
-        ? "Back to Password Login"
-        : "Forgot password? Login with OTP";
+      sellerUseOtpBtn.textContent = otpMode === "login" ? "Back to Password Login" : "Login with OTP";
       sellerUseOtpBtn.style.display = isRegister ? "none" : "block";
     }
-    if (inputs.loginPassword) {
-      inputs.loginPassword.disabled = isOtpLogin;
-      inputs.loginPassword.required = !isOtpLogin;
-      inputs.loginPassword.closest(".input-wrapper").style.display = isOtpLogin ? "none" : "block";
-      if (isOtpLogin) inputs.loginPassword.value = "";
+
+    if (sellerForgotBtn) {
+      sellerForgotBtn.textContent = otpMode === "reset" ? "Back to Password Login" : "Forgot Password";
+      sellerForgotBtn.style.display = isRegister ? "none" : "block";
     }
+
+    if (inputs.loginPassword) {
+      inputs.loginPassword.disabled = enabled;
+      inputs.loginPassword.required = !enabled;
+      inputs.loginPassword.closest(".input-wrapper").style.display = enabled ? "none" : "block";
+      if (enabled) inputs.loginPassword.value = "";
+    }
+
     if (inputs.sellerOtp) {
-      inputs.sellerOtp.required = isOtpLogin;
-      inputs.sellerOtp.disabled = !isOtpLogin;
-      if (!isOtpLogin) inputs.sellerOtp.value = "";
+      inputs.sellerOtp.required = enabled;
+      inputs.sellerOtp.disabled = !enabled;
+      if (!enabled) inputs.sellerOtp.value = "";
+    }
+
+    if (sellerNewPasswordWrap) sellerNewPasswordWrap.style.display = isReset ? "block" : "none";
+    if (sellerNewPassword) {
+      sellerNewPassword.required = isReset;
+      sellerNewPassword.disabled = !isReset;
+      if (!isReset) sellerNewPassword.value = "";
+    }
+
+    if (submitBtn && !isRegister) {
+      submitBtn.textContent = isReset ? "Reset Password" : "Login to Dashboard";
     }
   };
 
@@ -292,8 +315,10 @@ document.addEventListener("DOMContentLoaded", () => {
           await registerSeller();
         }
       } else {
-        if (isOtpLogin) {
+        if (otpMode === "login") {
           await loginSellerWithOtp();
+        } else if (otpMode === "reset") {
+          await resetSellerPasswordWithOtp();
         } else {
           await loginSeller();
         }
@@ -303,14 +328,22 @@ document.addEventListener("DOMContentLoaded", () => {
       setMessage(err.message || "Server error", "#ef4444");
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = isRegister ? "Register & Continue" : "Login to Dashboard";
+      submitBtn.textContent = isRegister ? "Register & Continue" : (otpMode === "reset" ? "Reset Password" : "Login to Dashboard");
     }
   });
 
   if (sellerUseOtpBtn) {
     sellerUseOtpBtn.addEventListener("click", () => {
       if (isRegister) return;
-      setOtpLogin(!isOtpLogin);
+      setOtpMode(otpMode === "login" ? "none" : "login");
+      setMessage("");
+    });
+  }
+
+  if (sellerForgotBtn) {
+    sellerForgotBtn.addEventListener("click", () => {
+      if (isRegister) return;
+      setOtpMode(otpMode === "reset" ? "none" : "reset");
       setMessage("");
     });
   }
@@ -322,16 +355,26 @@ document.addEventListener("DOMContentLoaded", () => {
         setMessage("Enter valid 10-digit mobile number", "#ef4444");
         return;
       }
+      if (otpMode === "none") {
+        setMessage("Select Login with OTP or Forgot Password first", "#ef4444");
+        return;
+      }
       sellerRequestOtpBtn.disabled = true;
       sellerRequestOtpBtn.textContent = "Sending...";
       try {
-        const data = await fetchJson(`${API_BASE}/seller/login-otp/request`, {
+        const endpoint = otpMode === "reset"
+          ? `${API_BASE}/seller/password-reset/request`
+          : `${API_BASE}/seller/login-otp/request`;
+        await fetchJson(endpoint, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ phone })
         });
-        showToast("Success", "OTP sent successfully. Please check your WhatsApp and Email.");
-        setMessage("OTP sent. Enter OTP to login.", "var(--accent)");
+        showToast("Success", "OTP sent successfully. Please check your phone.", "success");
+        setMessage(
+          otpMode === "reset" ? "OTP sent. Enter OTP + new password to reset." : "OTP sent. Enter OTP to login.",
+          "var(--accent)"
+        );
       } catch (err) {
         showToast("Error", err.message || "OTP request failed", "error");
         setMessage(err.message || "OTP request failed", "#ef4444");
@@ -530,6 +573,27 @@ document.addEventListener("DOMContentLoaded", () => {
       default:
         throw new Error(data.message || "Unable to identify seller account status");
     }
+  }
+
+  async function resetSellerPasswordWithOtp() {
+    const phone = String(inputs.loginPhone?.value || "").trim();
+    const otp = String(inputs.sellerOtp?.value || "").trim();
+    const newPassword = String(sellerNewPassword?.value || "").trim();
+
+    const data = await fetchJson(`${API_BASE}/seller/password-reset/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone, otp, newPassword })
+    });
+
+    if (!data?.success) {
+      throw new Error(data?.message || "Password reset failed");
+    }
+
+    showToast("Success", data.message || "Password reset successful", "success");
+    setMessage("Password reset successful. Please login with new password.", "var(--accent)");
+    setOtpMode("none");
+    resetForm();
   }
 
   async function resubmitSeller() {
@@ -770,9 +834,14 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!/^[0-9]{10}$/.test(sanitize(inputs.loginPhone?.value)))
         return "Enter valid 10-digit mobile number";
 
-      if (isOtpLogin) {
+      if (otpMode === "login") {
         if (!/^[0-9]{6}$/.test(sanitize(inputs.sellerOtp?.value)))
           return "Enter valid 6-digit OTP";
+      } else if (otpMode === "reset") {
+        if (!/^[0-9]{6}$/.test(sanitize(inputs.sellerOtp?.value)))
+          return "Enter valid 6-digit OTP";
+        if (sanitize(sellerNewPassword?.value).length < 4)
+          return "New password must be at least 4 characters";
       } else {
         if (sanitize(inputs.loginPassword?.value).length < 4)
           return "Password must be at least 4 characters";

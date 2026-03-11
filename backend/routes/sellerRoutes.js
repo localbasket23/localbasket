@@ -13,6 +13,8 @@ const {
   login,
   requestLoginOtp,
   verifyLoginOtp,
+  requestPasswordResetOtp,
+  resetPasswordWithOtp,
   resubmit,
   addProduct,
   getMyProducts,
@@ -37,6 +39,10 @@ router.post(
 router.post("/login", login);
 router.post("/login-otp/request", requestLoginOtp);
 router.post("/login-otp/verify", verifyLoginOtp);
+router.post("/password-reset/request", requestPasswordResetOtp);
+router.post("/password-reset/verify", resetPasswordWithOtp);
+router.post("/forgot-password/request", requestPasswordResetOtp);
+router.post("/forgot-password/verify", resetPasswordWithOtp);
 router.post("/request-otp", requestLoginOtp);
 router.post("/otp/request", requestLoginOtp);
 router.post("/verify-otp", verifyLoginOtp);

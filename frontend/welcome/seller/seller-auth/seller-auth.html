@@ -661,11 +661,16 @@
             <i class="fas fa-lock"></i>
             <input type="password" class="form-control" placeholder="Password" id="loginPassword" required>
           </div>
-          <button type="button" class="otp-toggle-btn" id="sellerUseOtpBtn">Forgot password? Login with OTP</button>
+          <button type="button" class="otp-toggle-btn" id="sellerUseOtpBtn">Login with OTP</button>
+          <button type="button" class="otp-toggle-btn" id="sellerForgotBtn">Forgot Password</button>
           <div class="otp-row" id="sellerOtpRow">
             <div class="input-wrapper" style="margin-bottom:0;">
               <i class="fas fa-key"></i>
               <input type="text" class="form-control" placeholder="Enter OTP" id="sellerOtp" maxlength="6">
+            </div>
+            <div class="input-wrapper" id="sellerNewPasswordWrap" style="margin-bottom:0; display:none;">
+              <i class="fas fa-lock"></i>
+              <input type="password" class="form-control" placeholder="New Password" id="sellerNewPassword" minlength="4">
             </div>
             <button type="button" class="btn-secondary" id="sellerRequestOtpBtn">Send OTP</button>
           </div>
