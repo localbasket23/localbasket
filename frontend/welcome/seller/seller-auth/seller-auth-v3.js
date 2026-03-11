@@ -68,6 +68,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const sellerRequestOtpBtn = document.getElementById("sellerRequestOtpBtn");
   const sellerNewPasswordWrap = document.getElementById("sellerNewPasswordWrap");
   const sellerNewPassword = document.getElementById("sellerNewPassword");
+  const toggleLoginPassword = document.getElementById("toggleLoginPassword");
+  const toggleRegisterPassword = document.getElementById("toggleRegisterPassword");
+  const toggleSellerOtp = document.getElementById("toggleSellerOtp");
+  const toggleSellerNewPassword = document.getElementById("toggleSellerNewPassword");
 
   const inputs = {
     ownerName: document.getElementById("ownerName"),
@@ -93,6 +97,8 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   let currentStep = 1;
+  let resendTimer = null;
+  let resendRemaining = 0;
 
   const showToast = (title, message, type = "success") => {
     if (!toast) return;
@@ -111,6 +117,64 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!msg) return;
     msg.textContent = text;
     msg.style.color = color;
+  };
+
+  const bindVisibilityToggle = (btn, input, labels = {}) => {
+    if (!btn || !input) return;
+    const showLabel = labels.show || "Show";
+    const hideLabel = labels.hide || "Hide";
+    const icon = btn.querySelector("i");
+    const setState = (visible) => {
+      try {
+        input.type = visible ? "text" : "password";
+      } catch {
+        // ignore if browser blocks type switch
+      }
+      btn.setAttribute("aria-label", visible ? hideLabel : showLabel);
+      if (icon) {
+        icon.className = `fas ${visible ? "fa-eye-slash" : "fa-eye"}`;
+      }
+      btn.dataset.visible = visible ? "1" : "0";
+    };
+
+    setState(false);
+    btn.addEventListener("click", () => {
+      const visible = btn.dataset.visible === "1";
+      setState(!visible);
+    });
+  };
+
+  const resetResendButton = () => {
+    if (resendTimer) {
+      clearInterval(resendTimer);
+      resendTimer = null;
+    }
+    resendRemaining = 0;
+    if (sellerRequestOtpBtn) {
+      sellerRequestOtpBtn.disabled = false;
+      sellerRequestOtpBtn.textContent = "Send OTP";
+    }
+  };
+
+  const startResendCooldown = (seconds = 30) => {
+    if (!sellerRequestOtpBtn) return;
+    if (resendTimer) clearInterval(resendTimer);
+
+    resendRemaining = Math.max(1, Number(seconds) || 30);
+    sellerRequestOtpBtn.disabled = true;
+    sellerRequestOtpBtn.textContent = `Resend OTP (${resendRemaining}s)`;
+
+    resendTimer = setInterval(() => {
+      resendRemaining -= 1;
+      if (resendRemaining <= 0) {
+        clearInterval(resendTimer);
+        resendTimer = null;
+        sellerRequestOtpBtn.disabled = false;
+        sellerRequestOtpBtn.textContent = "Resend OTP";
+        return;
+      }
+      sellerRequestOtpBtn.textContent = `Resend OTP (${resendRemaining}s)`;
+    }, 1000);
   };
 
   const updateFileLabel = (inputEl, label) => {
@@ -159,6 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const resetForm = () => {
     form.reset();
     setMessage("");
+    resetResendButton();
     isResubmit = false;
     resubmitSellerId = null;
   };
@@ -208,6 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const enabled = otpMode !== "none";
     const isReset = otpMode === "reset";
 
+    resetResendButton();
     if (sellerOtpRow) sellerOtpRow.classList.toggle("active", enabled);
 
     if (sellerUseOtpBtn) {
@@ -242,6 +308,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (submitBtn && !isRegister) {
       submitBtn.textContent = isReset ? "Reset Password" : "Login to Dashboard";
+    }
+
+    if (enabled) {
+      setTimeout(() => {
+        if (inputs.sellerOtp) inputs.sellerOtp.focus();
+        if (isReset && sellerNewPassword) sellerNewPassword.focus();
+      }, 0);
     }
   };
 
@@ -375,12 +448,16 @@ document.addEventListener("DOMContentLoaded", () => {
           otpMode === "reset" ? "OTP sent. Enter OTP + new password to reset." : "OTP sent. Enter OTP to login.",
           "var(--accent)"
         );
+        startResendCooldown(30);
       } catch (err) {
         showToast("Error", err.message || "OTP request failed", "error");
         setMessage(err.message || "OTP request failed", "#ef4444");
+        resetResendButton();
       } finally {
-        sellerRequestOtpBtn.disabled = false;
-        sellerRequestOtpBtn.textContent = "Send OTP";
+        if (resendRemaining <= 0 && sellerRequestOtpBtn) {
+          sellerRequestOtpBtn.disabled = false;
+          sellerRequestOtpBtn.textContent = "Send OTP";
+        }
       }
     });
   }
@@ -946,6 +1023,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   setMode();
+  bindVisibilityToggle(toggleLoginPassword, inputs.loginPassword, { show: "Show password", hide: "Hide password" });
+  bindVisibilityToggle(toggleRegisterPassword, inputs.password, { show: "Show password", hide: "Hide password" });
+  bindVisibilityToggle(toggleSellerOtp, inputs.sellerOtp, { show: "Show OTP", hide: "Hide OTP" });
+  bindVisibilityToggle(toggleSellerNewPassword, sellerNewPassword, { show: "Show password", hide: "Hide password" });
   initFileLabels();
   loadCategories();
 });

@@ -279,6 +279,70 @@ const dom = {
     backToTopBtn: () => getEl("backToTopBtn")
 };
 
+let authResendTimer = null;
+let authResendRemaining = 0;
+
+function resetAuthResendButton() {
+    if (authResendTimer) {
+        clearInterval(authResendTimer);
+        authResendTimer = null;
+    }
+    authResendRemaining = 0;
+    const btn = dom.authRequestOtpBtn();
+    if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Send OTP";
+    }
+}
+
+function startAuthResendCooldown(seconds = 30) {
+    const btn = dom.authRequestOtpBtn();
+    if (!btn) return;
+
+    if (authResendTimer) clearInterval(authResendTimer);
+    authResendRemaining = Math.max(1, Number(seconds) || 30);
+
+    btn.disabled = true;
+    btn.textContent = `Resend OTP (${authResendRemaining}s)`;
+
+    authResendTimer = setInterval(() => {
+        authResendRemaining -= 1;
+        if (authResendRemaining <= 0) {
+            clearInterval(authResendTimer);
+            authResendTimer = null;
+            btn.disabled = false;
+            btn.textContent = "Resend OTP";
+            return;
+        }
+        btn.textContent = `Resend OTP (${authResendRemaining}s)`;
+    }, 1000);
+}
+
+function bindAuthVisibilityToggles() {
+    const bind = (btnId, inputId, labels = {}) => {
+        const btn = getEl(btnId);
+        const input = getEl(inputId);
+        if (!btn || !input) return;
+        const icon = btn.querySelector("i");
+        const showLabel = labels.show || "Show";
+        const hideLabel = labels.hide || "Hide";
+        const setState = (visible) => {
+            try { input.type = visible ? "text" : "password"; } catch {}
+            btn.setAttribute("aria-label", visible ? hideLabel : showLabel);
+            if (icon) icon.className = `fas ${visible ? "fa-eye-slash" : "fa-eye"}`;
+            btn.dataset.visible = visible ? "1" : "0";
+        };
+        setState(false);
+        btn.addEventListener("click", () => {
+            const visible = btn.dataset.visible === "1";
+            setState(!visible);
+        });
+    };
+
+    bind("toggleAuthPassword", "authPassword", { show: "Show password", hide: "Hide password" });
+    bind("toggleAuthOtp", "authOtp", { show: "Show OTP", hide: "Hide OTP" });
+}
+
 /* ============ 3. INITIALIZATION ============ */
 document.addEventListener("DOMContentLoaded", () => {
     initApp();
@@ -286,6 +350,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function initApp() {
+    bindAuthVisibilityToggles();
     updateAuthUI();
     updateCartUI();
     updateLocationUI();
@@ -1172,6 +1237,7 @@ function switchTab(mode) {
     state.authMode = mode;
     state.authUseOtp = false;
     state.authOtpMode = "none";
+    resetAuthResendButton();
     const tabs = document.querySelectorAll(".auth-tab-btn");
     const regFields = dom.registerFields();
 
@@ -1239,6 +1305,8 @@ function updateOtpAuthUI() {
             authInput.type = "text";
         }
     }
+
+    if (!isOtp) resetAuthResendButton();
 }
 
 function setOtpMode(mode) {
@@ -1287,6 +1355,9 @@ async function requestCustomerOtp() {
                 const data = await res.json();
                 if (!res.ok || !data.success) throw new Error(data.message || "OTP send failed");
                 alert(data.message || "OTP sent successfully. Please check your registered email.");
+                startAuthResendCooldown(30);
+                const otpInput = dom.authOtp();
+                if (otpInput) setTimeout(() => otpInput.focus(), 0);
                 return;
             } catch (err) {
                 lastErr = err;
@@ -1300,7 +1371,7 @@ async function requestCustomerOtp() {
             : (err.message || "OTP send failed");
         alert(`Error: ${msg}`);
     } finally {
-        if (btn) {
+        if (btn && authResendRemaining <= 0 && !authResendTimer) {
             btn.disabled = false;
             btn.textContent = "Send OTP";
         }

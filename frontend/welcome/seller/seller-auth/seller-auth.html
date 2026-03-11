@@ -138,7 +138,7 @@
       position: relative;
     }
 
-    .input-wrapper i {
+    .input-wrapper > i {
       position: absolute;
       left: 16px;
       top: 50%;
@@ -146,6 +146,33 @@
       color: var(--text-muted);
       transition: var(--transition);
       z-index: 2;
+    }
+
+    .input-wrapper.has-toggle .form-control {
+      padding-right: 48px;
+    }
+
+    .pw-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: transparent;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      border-radius: 10px;
+      z-index: 3;
+    }
+
+    .pw-toggle:hover {
+      background: rgba(15, 23, 42, 0.06);
+      color: var(--text-main);
     }
 
     /* Floating Label Logic */
@@ -483,9 +510,12 @@
                   <i class="fas fa-phone-alt"></i>
                   <input type="tel" class="form-control" placeholder="Mobile Number" id="phone">
                 </div>
-                <div class="input-wrapper">
+                <div class="input-wrapper has-toggle">
                   <i class="fas fa-lock"></i>
                   <input type="password" class="form-control" placeholder="Password" id="password">
+                  <button type="button" class="pw-toggle" id="toggleRegisterPassword" aria-label="Show password">
+                    <i class="fas fa-eye"></i>
+                  </button>
                 </div>
               </div>
               <div class="input-wrapper">
@@ -657,20 +687,29 @@
             <input type="tel" class="form-control" placeholder="Mobile Number" id="loginPhone" required>
           </div>
 
-          <div class="input-wrapper">
+          <div class="input-wrapper has-toggle">
             <i class="fas fa-lock"></i>
             <input type="password" class="form-control" placeholder="Password" id="loginPassword" required>
+            <button type="button" class="pw-toggle" id="toggleLoginPassword" aria-label="Show password">
+              <i class="fas fa-eye"></i>
+            </button>
           </div>
           <button type="button" class="otp-toggle-btn" id="sellerUseOtpBtn">Login with OTP</button>
           <button type="button" class="otp-toggle-btn" id="sellerForgotBtn">Forgot Password</button>
           <div class="otp-row" id="sellerOtpRow">
-            <div class="input-wrapper" style="margin-bottom:0;">
+            <div class="input-wrapper has-toggle" style="margin-bottom:0;">
               <i class="fas fa-key"></i>
-              <input type="text" class="form-control" placeholder="Enter OTP" id="sellerOtp" maxlength="6">
+              <input type="password" class="form-control" placeholder="Enter OTP" id="sellerOtp" maxlength="6" inputmode="numeric">
+              <button type="button" class="pw-toggle" id="toggleSellerOtp" aria-label="Show OTP">
+                <i class="fas fa-eye"></i>
+              </button>
             </div>
-            <div class="input-wrapper" id="sellerNewPasswordWrap" style="margin-bottom:0; display:none;">
+            <div class="input-wrapper has-toggle" id="sellerNewPasswordWrap" style="margin-bottom:0; display:none;">
               <i class="fas fa-lock"></i>
               <input type="password" class="form-control" placeholder="New Password" id="sellerNewPassword" minlength="4">
+              <button type="button" class="pw-toggle" id="toggleSellerNewPassword" aria-label="Show password">
+                <i class="fas fa-eye"></i>
+              </button>
             </div>
             <button type="button" class="btn-secondary" id="sellerRequestOtpBtn">Send OTP</button>
           </div>
