@@ -1727,8 +1727,9 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
 
   .lb-bottom-nav { display: flex; }
 
+  /* Keep the full footer visible on touch devices (quick actions, links, etc.). */
   .lb-footer-pro .footer-grid {
-    display: none !important;
+    display: grid;
   }
   .lb-footer-pro .footer-glass {
     padding: 14px 14px 18px;
@@ -2506,7 +2507,8 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
     border-radius: 10px;
   }
   .lb-footer-pro .footer-grid {
-    display: none;
+    /* Keep footer cards visible on mobile; earlier in this media query we render it as a horizontal scroller. */
+    display: flex;
   }
   .lb-footer-pro .footer-glass {
     padding: 12px 14px 8px;

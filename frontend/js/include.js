@@ -1015,8 +1015,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function loadHeader() {
     const headerContainer =
-      document.getElementById("header") ||
-      document.getElementById("siteHeader");
+      document.getElementById("siteHeader") ||
+      document.getElementById("header");
     if (!headerContainer) return;
 
     const res = await fetch(`/components/header.html?v=${LB_COMPONENTS_VERSION}`, { cache: "no-store" });
@@ -1028,8 +1028,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function loadFooter() {
     const footerContainer =
-      document.getElementById("footer") ||
-      document.getElementById("siteFooter");
+      document.getElementById("siteFooter") ||
+      document.getElementById("footer");
     if (!footerContainer) return;
 
     const res = await fetch(`/components/footer.html?v=${LB_COMPONENTS_VERSION}`, { cache: "no-store" });
