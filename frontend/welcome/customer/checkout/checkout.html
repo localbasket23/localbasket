@@ -418,7 +418,8 @@
         <input id="name" class="co-input" type="text" placeholder="Enter full name" />
 
         <label class="field-label" for="phone">Mobile Number *</label>
-        <input id="phone" class="co-input" type="text" placeholder="10-digit mobile number" maxlength="10" />
+        <input id="phone" class="co-input" type="tel" inputmode="numeric" autocomplete="tel"
+               placeholder="Mobile number (10-digit or +91)" maxlength="16" />
 
         <label class="field-label" for="address">Full Address *</label>
         <textarea id="address" class="co-textarea" placeholder="House no, building, street"></textarea>

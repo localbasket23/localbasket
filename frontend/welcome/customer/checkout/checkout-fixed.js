@@ -13,6 +13,15 @@ function safeParseJson(raw, fallback) {
   }
 }
 
+function normalizeIndianPhone(raw) {
+  const digits = String(raw || "").replace(/\D/g, "");
+  let d = digits;
+  // Accept common variants: +91XXXXXXXXXX, 91XXXXXXXXXX, 0XXXXXXXXXX
+  if (d.length === 12 && d.startsWith("91")) d = d.slice(2);
+  if (d.length === 11 && d.startsWith("0")) d = d.slice(1);
+  return d;
+}
+
 const user = safeParseJson(localStorage.getItem("lbUser") || "null", null);
 
 if (!user || !user.id) {
@@ -298,12 +307,14 @@ function startRazorpayPayment(orderData) {
 
 async function placeOrder() {
   const name = String(document.getElementById("name")?.value || "").trim();
-  const phone = String(document.getElementById("phone")?.value || "").trim();
+  const phoneInputEl = document.getElementById("phone");
+  const phoneRaw = String(phoneInputEl?.value || "").trim();
+  const phone = normalizeIndianPhone(phoneRaw);
   const address = String(document.getElementById("address")?.value || "").trim();
   const pincode = String(document.getElementById("pincode")?.value || "").trim();
   const paymentMethod = String(document.getElementById("payment")?.value || "COD").trim();
 
-  if (!name || !phone || !address || !pincode) {
+  if (!name || !phoneRaw || !address || !pincode) {
     alert("Error: Fill all required fields");
     return;
   }
@@ -312,6 +323,11 @@ async function placeOrder() {
     alert("Error: Invalid phone number");
     return;
   }
+
+  // Normalize UI after validation (helps users see what format we accept)
+  try {
+    if (phoneInputEl) phoneInputEl.value = phone;
+  } catch {}
 
   if (!/^\\d{6}$/.test(pincode)) {
     alert("Error: Invalid pincode");
@@ -374,4 +390,3 @@ async function placeOrder() {
 
 // expose for inline onclick in checkout.html
 window.placeOrder = placeOrder;
-
