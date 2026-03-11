@@ -3283,9 +3283,72 @@ document.addEventListener("DOMContentLoaded", async () => {
     const adminOverlay = document.getElementById("lbAdminPopupOverlay");
     const adminClose = document.getElementById("lbAdminPopupClose");
     const adminForm = document.getElementById("lbAdminPopupForm");
-    const adminUserInput = document.getElementById("lbAdminUser");
-    const adminPassInput = document.getElementById("lbAdminPass");
+    const adminEmailInput = document.getElementById("lbAdminEmail");
+    const adminOtpInput = document.getElementById("lbAdminOtp");
+    const adminSendOtpBtn = document.getElementById("lbAdminSendOtpBtn");
+    const adminOtpToggle = document.getElementById("lbAdminOtpToggle");
     const adminError = document.getElementById("lbAdminPopupError");
+
+    const ADMIN_EMAIL = "localbasket.helpdesk@gmail.com";
+    let adminResendTimer = null;
+    let adminResendRemaining = 0;
+    let adminOtpExpiryTimer = null;
+    let adminOtpExpiryRemaining = 0;
+
+    const setAdminMsg = (text) => {
+      if (!adminError) return;
+      adminError.textContent = String(text || "");
+    };
+
+    const clearAdminTimers = () => {
+      try { if (adminResendTimer) clearInterval(adminResendTimer); } catch {}
+      try { if (adminOtpExpiryTimer) clearInterval(adminOtpExpiryTimer); } catch {}
+      adminResendTimer = null;
+      adminOtpExpiryTimer = null;
+      adminResendRemaining = 0;
+      adminOtpExpiryRemaining = 0;
+    };
+
+    const startAdminResendCooldown = (seconds = 30) => {
+      if (!adminSendOtpBtn) return;
+      if (adminResendTimer) clearInterval(adminResendTimer);
+      adminResendRemaining = Math.max(1, Number(seconds) || 30);
+      adminSendOtpBtn.disabled = true;
+      adminSendOtpBtn.textContent = `Resend in ${adminResendRemaining}s`;
+      adminResendTimer = setInterval(() => {
+        adminResendRemaining -= 1;
+        if (adminResendRemaining <= 0) {
+          clearInterval(adminResendTimer);
+          adminResendTimer = null;
+          adminSendOtpBtn.disabled = false;
+          adminSendOtpBtn.textContent = "Resend OTP";
+          return;
+        }
+        adminSendOtpBtn.textContent = `Resend in ${adminResendRemaining}s`;
+      }, 1000);
+    };
+
+    const startAdminOtpExpiry = (seconds = 300) => {
+      if (adminOtpExpiryTimer) clearInterval(adminOtpExpiryTimer);
+      adminOtpExpiryRemaining = Math.max(1, Number(seconds) || 300);
+      const fmt = (s) => {
+        const n = Math.max(0, s | 0);
+        const mm = String(Math.floor(n / 60)).padStart(2, "0");
+        const ss = String(n % 60).padStart(2, "0");
+        return `${mm}:${ss}`;
+      };
+      setAdminMsg(`OTP expires in ${fmt(adminOtpExpiryRemaining)}`);
+      adminOtpExpiryTimer = setInterval(() => {
+        adminOtpExpiryRemaining -= 1;
+        if (adminOtpExpiryRemaining <= 0) {
+          clearInterval(adminOtpExpiryTimer);
+          adminOtpExpiryTimer = null;
+          setAdminMsg("OTP expired. Tap Resend OTP.");
+          return;
+        }
+        setAdminMsg(`OTP expires in ${fmt(adminOtpExpiryRemaining)}`);
+      }, 1000);
+    };
 
     const getAdminAuth = () => {
       try {
@@ -3341,15 +3404,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       adminOverlay.hidden = false;
       document.body.style.overflow = "hidden";
-      if (adminError) adminError.textContent = "";
-      if (adminUserInput) adminUserInput.focus();
+      clearAdminTimers();
+      setAdminMsg("");
+      if (adminEmailInput) adminEmailInput.value = ADMIN_EMAIL;
+      try { adminOtpInput && (adminOtpInput.value = ""); } catch {}
+      if (adminOtpInput) adminOtpInput.focus();
     };
 
     const closeAdminPopup = () => {
       if (!adminOverlay) return;
       adminOverlay.hidden = true;
       document.body.style.overflow = "";
-      if (adminError) adminError.textContent = "";
+      clearAdminTimers();
+      setAdminMsg("");
       if (adminForm) adminForm.reset();
     };
 
@@ -3370,18 +3437,85 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       adminOverlay.dataset.lbBound = "1";
     }
-    if (adminForm && !adminForm.dataset.lbBound) {
-      adminForm.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const userId = String(adminUserInput?.value || "").trim();
-        const pass = String(adminPassInput?.value || "").trim();
-        if (userId === "shubham" && pass === "1234") {
-          saveAdminAuth(userId);
-          closeAdminPopup();
-          goAdminDashboard();
+    const fetchJson = async (url, options = {}) => {
+      const res = await fetch(url, options);
+      const data = await res.json().catch(() => ({}));
+      return { res, data };
+    };
+
+    if (adminOtpToggle && adminOtpInput && !adminOtpToggle.dataset.lbBound) {
+      adminOtpToggle.addEventListener("click", () => {
+        const visible = adminOtpToggle.dataset.visible === "1";
+        adminOtpToggle.dataset.visible = visible ? "0" : "1";
+        try { adminOtpInput.type = visible ? "password" : "text"; } catch {}
+      });
+      adminOtpToggle.dataset.lbBound = "1";
+    }
+
+    if (adminSendOtpBtn && !adminSendOtpBtn.dataset.lbBound) {
+      adminSendOtpBtn.addEventListener("click", async () => {
+        setAdminMsg("");
+        const email = String(adminEmailInput?.value || ADMIN_EMAIL).trim().toLowerCase();
+        if (email !== ADMIN_EMAIL) {
+          setAdminMsg("Admin email is fixed and cannot be changed.");
+          if (adminEmailInput) adminEmailInput.value = ADMIN_EMAIL;
           return;
         }
-        if (adminError) adminError.textContent = "Invalid ID or password.";
+        adminSendOtpBtn.disabled = true;
+        adminSendOtpBtn.textContent = "Sending...";
+        try {
+          const out = await fetchJson("/api/admin/auth/otp/request", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email })
+          });
+          if (!out.res.ok || !out.data?.success) {
+            throw new Error(out.data?.message || `Request failed (${out.res.status})`);
+          }
+          startAdminResendCooldown(30);
+          startAdminOtpExpiry(300);
+          setTimeout(() => { try { adminOtpInput?.focus?.(); } catch {} }, 0);
+        } catch (err) {
+          setAdminMsg(err?.message || "Failed to send OTP.");
+          adminSendOtpBtn.disabled = false;
+          adminSendOtpBtn.textContent = "Send OTP";
+        }
+      });
+      adminSendOtpBtn.dataset.lbBound = "1";
+    }
+
+    if (adminForm && !adminForm.dataset.lbBound) {
+      adminForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        setAdminMsg("");
+        const email = String(adminEmailInput?.value || ADMIN_EMAIL).trim().toLowerCase();
+        const otp = String(adminOtpInput?.value || "").trim();
+        if (email !== ADMIN_EMAIL) {
+          setAdminMsg("Admin email is fixed and cannot be changed.");
+          if (adminEmailInput) adminEmailInput.value = ADMIN_EMAIL;
+          return;
+        }
+        if (!/^\d{6}$/.test(otp)) {
+          setAdminMsg("Enter valid 6-digit OTP.");
+          try { adminOtpInput?.focus?.(); } catch {}
+          return;
+        }
+
+        try {
+          const out = await fetchJson("/api/admin/auth/otp/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, otp })
+          });
+          if (!out.res.ok || !out.data?.success) {
+            throw new Error(out.data?.message || `Verify failed (${out.res.status})`);
+          }
+          saveAdminAuth(email);
+          closeAdminPopup();
+          goAdminDashboard();
+        } catch (err) {
+          setAdminMsg(err?.message || "OTP verification failed.");
+        }
       });
       adminForm.dataset.lbBound = "1";
     }

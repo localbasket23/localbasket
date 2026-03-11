@@ -5,6 +5,7 @@ console.log("🔥 Admin Routes Loaded");
 
 /* ================= CONTROLLER ================= */
 const adminController = require("../controllers/adminController");
+const { requestAdminOtp, verifyAdminOtp } = require("../controllers/adminAuthController");
 const upload = require("../middlewares/upload");
 
 const {
@@ -137,6 +138,12 @@ router.post("/settings/hero-images/clear", clearHeroImages);
 
 // GET /api/admin/settings
 router.get("/settings", getAllSettings);
+
+/* ================= ADMIN AUTH (EMAIL OTP) ================= */
+// POST /api/admin/auth/otp/request
+router.post("/auth/otp/request", requestAdminOtp);
+// POST /api/admin/auth/otp/verify
+router.post("/auth/otp/verify", verifyAdminOtp);
 
 /* ================= CATEGORIES ================= */
 

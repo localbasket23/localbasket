@@ -91,10 +91,16 @@
     <button type="button" class="lb-admin-popup-close" id="lbAdminPopupClose" aria-label="Close" onclick="var o=document.getElementById('lbAdminPopupOverlay');if(o){o.hidden=true;}document.body.style.overflow='';">&times;</button>
     <h3 id="lbAdminPopupTitle">Admin Login</h3>
     <form id="lbAdminPopupForm">
-      <input type="text" id="lbAdminUser" placeholder="Admin ID" autocomplete="username" required>
-      <input type="password" id="lbAdminPass" placeholder="Password" autocomplete="current-password" required>
+      <input type="email" id="lbAdminEmail" placeholder="Admin email" autocomplete="username" value="localbasket.helpdesk@gmail.com" readonly>
+      <div style="position:relative;">
+        <input type="password" id="lbAdminOtp" placeholder="Enter OTP" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required style="padding-right:44px;">
+        <button type="button" id="lbAdminOtpToggle" aria-label="Show OTP" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); width:36px; height:36px; border:none; background:transparent; cursor:pointer; border-radius:10px;">
+          <span aria-hidden="true">👁️</span>
+        </button>
+      </div>
+      <button type="button" class="lb-admin-popup-submit" id="lbAdminSendOtpBtn">Send OTP</button>
       <p class="lb-admin-popup-error" id="lbAdminPopupError" aria-live="polite"></p>
-      <button type="submit" class="lb-admin-popup-submit">Login</button>
+      <button type="submit" class="lb-admin-popup-submit">Verify & Login</button>
     </form>
   </div>
 </div>
