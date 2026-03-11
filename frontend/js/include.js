@@ -406,6 +406,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       const target = document.getElementById("mobileHeaderAddress");
       if (target) target.textContent = String(text || "Select Location");
     };
+
+    const syncBottomNavSpacing = () => {
+      const nav = document.querySelector(".lb-bottom-nav");
+      if (!nav) return;
+
+      const display = getComputedStyle(nav).display;
+      if (display === "none") return;
+
+      // Avoid double-padding on pages that already reserve space for the fixed bottom nav.
+      const height = Math.ceil(nav.getBoundingClientRect().height || 0);
+      if (!height) return;
+
+      const bodyStyles = getComputedStyle(document.body);
+      const currentPad = Math.max(0, parseFloat(bodyStyles.paddingBottom) || 0);
+      const needed = height + 10;
+
+      if (currentPad < needed) {
+        document.body.style.paddingBottom = `${needed}px`;
+      }
+    };
     const getDefaultTimeZone = () => "Asia/Kolkata";
     const isValidTimeZone = (timeZone) => {
       try {
@@ -533,6 +553,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       if (loginBtn) loginBtn.style.display = hasUser ? "none" : "inline-flex";
       if (userAccount) userAccount.style.display = hasUser ? "flex" : "none";
+      syncBottomNavSpacing();
       const timeGreeting = getTimeGreeting();
       if (mobileHeaderKicker) mobileHeaderKicker.textContent = timeGreeting;
       if (mobileGreetingEyebrow) mobileGreetingEyebrow.textContent = timeGreeting;
@@ -787,6 +808,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           else window.location.href = "/welcome/customer/order/customer-orders.html";
         }
         if (action === "logout") {
+          // Clear any scroll locks (dialogs/overlays) before logout flow.
+          document.documentElement.style.overflow = "";
+          document.body.style.overflow = "";
+
           if (window.logoutUser) window.logoutUser();
           else {
             localStorage.removeItem("lbUser");
@@ -817,6 +842,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       document.body.dataset.lbAuthSyncBound = "1";
     }
+
+    // Ensure spacing after footer/nav injection.
+    syncBottomNavSpacing();
 
     const welcomePath = (suffix) => `/welcome/${String(suffix || "").replace(/^\/+/, "")}`;
 

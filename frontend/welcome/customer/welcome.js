@@ -1156,7 +1156,7 @@ async function submitAuth() {
     }
 }
 
-function logoutUser() {
+async function logoutUser() {
     localStorage.removeItem("lbUser");
     localStorage.removeItem("lbToken");
     state.user = null;
@@ -1166,7 +1166,17 @@ function logoutUser() {
     updateAuthUI();
     updateCartUI();
     if (dom.userMenu()) dom.userMenu().style.display = "none";
-    alert("Logged out successfully");
+
+    // Ensure any modal/overlay scroll locks are cleared before navigation.
+    document.documentElement.style.overflow = "";
+    document.body.style.overflow = "";
+
+    if (typeof window.lbAlert === "function") {
+        await window.lbAlert("Logged out successfully", "Logout");
+    } else {
+        window.alert("Logged out successfully");
+    }
+
     window.location.reload(); // Hard reset to clear memory
 }
 
