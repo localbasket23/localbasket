@@ -480,6 +480,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const style = document.createElement("style");
     style.id = "lb-ai-style";
     style.textContent = `
+      #lb-ai-panel, #lb-ai-btn{
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      }
       #lb-ai-backdrop{
         position: fixed;
         inset: 0;
@@ -506,7 +509,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         z-index: 120001;
         border: 0;
         border-radius: 50px;
-        background: #ff8c00;
+        background: linear-gradient(135deg, #ff8c00, #ffa726);
         color: #ffffff;
         padding: 12px 14px;
         display: inline-flex;
@@ -515,7 +518,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         font-weight: 900;
         letter-spacing: 0.2px;
         cursor: pointer;
-        box-shadow: 0 18px 42px -28px rgba(255,140,0,0.85);
+        box-shadow: 0 18px 42px -28px rgba(255,140,0,0.9), 0 0 0 1px rgba(255,255,255,0.12) inset;
         transition: transform 140ms ease, filter 140ms ease;
         touch-action: none;
         max-width: calc(100vw - 24px);
@@ -556,16 +559,23 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       #lb-ai-panel{
+        --lb-ai-accent: #ff8c00;
+        --lb-ai-accent2: #ffa726;
+        --lb-ai-text: #0f172a;
+        --lb-ai-muted: rgba(100,116,139,0.9);
+        --lb-ai-border: rgba(15,23,42,0.12);
+        --lb-ai-card: rgba(255,255,255,0.96);
+        --lb-ai-surface: rgba(255,255,255,0.86);
         position: fixed;
         bottom: calc(86px + env(safe-area-inset-bottom, 0px));
         right: calc(25px + env(safe-area-inset-right, 0px));
         width: 350px;
         height: 500px;
         z-index: 120000;
-        border-radius: 18px;
-        background: rgba(255,255,255,0.96);
-        border: 1px solid rgba(15,23,42,0.12);
-        box-shadow: 0 30px 60px -40px rgba(2,6,23,0.35);
+        border-radius: 20px;
+        background: linear-gradient(180deg, rgba(255,247,237,0.96) 0%, rgba(255,255,255,0.98) 48%, rgba(255,255,255,0.96) 100%);
+        border: 1px solid var(--lb-ai-border);
+        box-shadow: 0 34px 80px -54px rgba(2,6,23,0.55);
         overflow: hidden;
         display: grid;
         grid-template-rows: auto 1fr auto;
@@ -603,7 +613,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         justify-content: space-between;
         gap: 10px;
         padding: 12px 12px 10px;
-        background: linear-gradient(90deg, rgba(255,140,0,0.10), rgba(255,255,255,0.0));
+        background: linear-gradient(90deg, rgba(255,140,0,0.14), rgba(255,255,255,0.0));
+        backdrop-filter: blur(10px);
         border-bottom: 1px solid rgba(15,23,42,0.08);
       }
       html.lb-theme-dark #lb-ai-head{ border-bottom-color: rgba(148,163,184,0.18); }
@@ -614,15 +625,37 @@ document.addEventListener("DOMContentLoaded", async () => {
         font-weight: 1000;
         color: inherit;
       }
+      #lb-ai-title-badge{
+        width: 34px;
+        height: 34px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: rgba(255,140,0,0.14);
+        border: 1px solid rgba(255,140,0,0.18);
+        box-shadow: 0 10px 22px -18px rgba(255,140,0,0.55);
+        flex: 0 0 auto;
+      }
+      #lb-ai-title-badge svg{ width: 18px; height: 18px; }
       #lb-ai-title small{
         display: block;
         font-weight: 800;
         font-size: 11px;
-        color: rgba(100,116,139,0.9);
+        color: rgba(100,116,139,0.92);
         letter-spacing: 0.2px;
         margin-top: 1px;
       }
       html.lb-theme-dark #lb-ai-title small{ color: rgba(226,232,240,0.75); }
+      .lb-ai-dot{
+        width: 8px;
+        height: 8px;
+        display: inline-block;
+        border-radius: 99px;
+        background: #22c55e;
+        box-shadow: 0 0 0 3px rgba(34,197,94,0.14);
+        margin-right: 6px;
+        transform: translateY(1px);
+      }
 
       #lb-ai-head-actions{
         display: inline-flex;
@@ -630,32 +663,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         gap: 8px;
       }
 
-      #lb-ai-close{
+      #lb-ai-close, #lb-ai-clear{
+        width: 36px;
+        height: 36px;
         border: 1px solid rgba(15,23,42,0.12);
-        background: rgba(255,255,255,0.75);
+        background: rgba(255,255,255,0.78);
         color: inherit;
         border-radius: 12px;
-        padding: 8px 10px;
+        padding: 0;
         cursor: pointer;
         font-weight: 900;
+        display: grid;
+        place-items: center;
+        transition: transform 140ms ease, filter 140ms ease, background 140ms ease;
         touch-action: manipulation;
       }
-      html.lb-theme-dark #lb-ai-close{
-        background: rgba(15,23,42,0.45);
-        border-color: rgba(148,163,184,0.22);
-      }
-
-      #lb-ai-clear{
-        border: 1px solid rgba(15,23,42,0.12);
-        background: rgba(255,255,255,0.75);
-        color: inherit;
-        border-radius: 12px;
-        padding: 8px 10px;
-        cursor: pointer;
-        font-weight: 900;
-        touch-action: manipulation;
-      }
-      html.lb-theme-dark #lb-ai-clear{
+      #lb-ai-close:hover, #lb-ai-clear:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+      #lb-ai-close:active, #lb-ai-clear:active{ transform: translateY(0px) scale(0.98); }
+      #lb-ai-close svg, #lb-ai-clear svg{ width: 18px; height: 18px; }
+      html.lb-theme-dark #lb-ai-close, html.lb-theme-dark #lb-ai-clear{
         background: rgba(15,23,42,0.45);
         border-color: rgba(148,163,184,0.22);
       }
@@ -664,7 +690,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         overflow: auto;
         display: grid;
         gap: 10px;
-        background: transparent;
+        background: radial-gradient(120% 90% at 20% 0%, rgba(255,140,0,0.08) 0%, rgba(255,255,255,0.0) 55%);
       }
       .lb-ai-msg{
         max-width: 86%;
@@ -678,6 +704,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         line-height: 1.35;
         font-size: 13px;
         font-weight: 650;
+        position: relative;
+        animation: lbAiPop 160ms cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+      @keyframes lbAiPop{
+        from{ opacity: 0; transform: translateY(6px) scale(0.99); }
+        to{ opacity: 1; transform: translateY(0px) scale(1); }
       }
       html.lb-theme-dark .lb-ai-msg{
         background: rgba(2,6,23,0.55);
@@ -685,10 +717,41 @@ document.addEventListener("DOMContentLoaded", async () => {
         color: #e2e8f0;
         box-shadow: none;
       }
+      .lb-ai-msg:not(.user){
+        padding-left: 44px;
+      }
+      .lb-ai-msg:not(.user)::before{
+        content: "AI";
+        position: absolute;
+        left: 10px;
+        top: 10px;
+        width: 26px;
+        height: 26px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        font-weight: 1000;
+        font-size: 11px;
+        letter-spacing: 0.4px;
+        color: #9a3412;
+        background: rgba(255,140,0,0.12);
+        border: 1px solid rgba(255,140,0,0.18);
+      }
+      html.lb-theme-dark .lb-ai-msg:not(.user)::before{
+        color: #fed7aa;
+        background: rgba(255,140,0,0.14);
+        border-color: rgba(255,140,0,0.22);
+      }
+      .lb-ai-chips-wrap{
+        padding-left: 12px !important;
+      }
+      .lb-ai-chips-wrap::before{
+        content: none !important;
+      }
       .lb-ai-msg.user{
         margin-left: auto;
-        background: linear-gradient(135deg, rgba(255,140,0,0.16), rgba(255,179,71,0.10));
-        border-color: rgba(255,140,0,0.18);
+        background: linear-gradient(135deg, rgba(255,140,0,0.18), rgba(255,179,71,0.12));
+        border-color: rgba(255,140,0,0.22);
       }
 
       .lb-ai-actions{
@@ -710,7 +773,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       .lb-ai-action.primary{
         border-color: rgba(255,140,0,0.22);
-        background: rgba(255,140,0,0.12);
+        background: linear-gradient(135deg, rgba(255,140,0,0.18), rgba(255,167,38,0.12));
         color: #9a3412;
       }
       html.lb-theme-dark .lb-ai-action{
@@ -728,6 +791,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
+      }
+      .lb-ai-chips::-webkit-scrollbar{ height: 8px; }
+      .lb-ai-chips::-webkit-scrollbar-thumb{
+        background: rgba(100,116,139,0.22);
+        border-radius: 999px;
       }
       .lb-ai-chip{
         border: 1px solid rgba(255,140,0,0.18);
@@ -774,6 +842,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         font-size: 13px;
         color: #0f172a;
       }
+      #lb-ai-input:focus{
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(255,140,0,0.18);
+        border-color: rgba(255,140,0,0.35);
+      }
       html.lb-theme-dark #lb-ai-input{
         background: rgba(2,6,23,0.35);
         border-color: rgba(148,163,184,0.22);
@@ -781,8 +854,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       #lb-ai-send{
         border: 0;
+        width: 42px;
+        height: 42px;
         border-radius: 14px;
-        padding: 10px 14px;
+        padding: 0;
+        display: grid;
+        place-items: center;
         background: linear-gradient(135deg, #ff8c00, #ffa726);
         color: #ffffff;
         font-weight: 1000;
@@ -790,7 +867,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         box-shadow: 0 14px 28px -18px rgba(255,140,0,0.85);
         touch-action: manipulation;
       }
-      #lb-ai-send:active{ transform: translateY(1px); }
+      #lb-ai-send:hover{ filter: brightness(1.02); transform: translateY(-1px); }
+      #lb-ai-send:active{ transform: translateY(0px) scale(0.98); }
       #lb-ai-help{
         font-size: 11px;
         font-weight: 800;
@@ -828,21 +906,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         #lb-ai-panel.lb-ai-open{ transform: translateY(0px); }
         #lb-ai-head{ padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
         #lb-ai-foot{ padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+        #lb-ai-body{ padding: 12px 10px; gap: 10px; }
+        .lb-ai-msg{ max-width: 92%; }
+        .lb-ai-chips{ flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+        .lb-ai-chip{ white-space: nowrap; }
       }
 
       /* Scrollbars: keep subtle */
-      #lb-ai-body::-webkit-scrollbar,
       #lb-ai-body::-webkit-scrollbar{
         width: 10px;
       }
-      #lb-ai-body::-webkit-scrollbar-thumb,
       #lb-ai-body::-webkit-scrollbar-thumb{
         background: rgba(100,116,139,0.28);
         border-radius: 999px;
         border: 3px solid transparent;
         background-clip: content-box;
       }
-      html.lb-theme-dark #lb-ai-body::-webkit-scrollbar-thumb,
       html.lb-theme-dark #lb-ai-body::-webkit-scrollbar-thumb{
         background: rgba(226,232,240,0.22);
         border: 3px solid transparent;
@@ -878,21 +957,41 @@ document.addEventListener("DOMContentLoaded", async () => {
     panel.innerHTML = `
       <div id="lb-ai-head">
         <div id="lb-ai-title">
+          <div id="lb-ai-title-badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M7 7.5c0-2.5 2-4.5 5-4.5s5 2 5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M6.5 10.5c0-1.1.9-2 2-2h7c1.1 0 2 .9 2 2v5c0 2-1.6 3.5-3.5 3.5h-1.2l-1.8 1.6-1.8-1.6H10c-2 0-3.5-1.6-3.5-3.5v-5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            </svg>
+          </div>
           <div>
             <div>LocalBasket AI</div>
-            <small>Grocery assistant</small>
+            <small><span class="lb-ai-dot" aria-hidden="true"></span>Ready to help</small>
           </div>
         </div>
         <div id="lb-ai-head-actions">
-          <button id="lb-ai-clear" type="button">Clear</button>
-          <button id="lb-ai-close" type="button" aria-label="Close">Close</button>
+          <button id="lb-ai-clear" type="button" aria-label="Clear chat" title="Clear chat">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M6 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M10 7V5.5c0-.8.7-1.5 1.5-1.5h1c.8 0 1.5.7 1.5 1.5V7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M8 7l1 14h6l1-14" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button id="lb-ai-close" type="button" aria-label="Close" title="Close">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+            </svg>
+          </button>
         </div>
       </div>
       <div id="lb-ai-body"></div>
       <div id="lb-ai-foot">
         <div id="lb-ai-input-row">
           <input id="lb-ai-input" type="text" placeholder="Type your question..." autocomplete="off" />
-          <button id="lb-ai-send" type="button">Send</button>
+          <button id="lb-ai-send" type="button" aria-label="Send" title="Send">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M4 12l16-8-6 16-2.5-7L4 12Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            </svg>
+          </button>
         </div>
         <div id="lb-ai-help">Tips: try "track my order" or "ingredients for chai"</div>
       </div>
@@ -2029,7 +2128,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!list.length) return;
 
       const wrap = document.createElement("div");
-      wrap.className = "lb-ai-msg";
+      wrap.className = "lb-ai-msg lb-ai-chips-wrap";
 
       const chips = document.createElement("div");
       chips.className = "lb-ai-chips";
@@ -2225,6 +2324,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         (msgs || []).forEach((m) => addMsg(m.text, "bot", m.actions || null));
       })();
     };
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        onSend();
+      }
+    });
 
     // Drag: desktop free-move, mobile docked vertical move. Click/tap opens panel.
     applyBtnPosition();
