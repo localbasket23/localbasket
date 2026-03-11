@@ -484,17 +484,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         position: fixed;
         inset: 0;
         z-index: 119999;
-        display: none;
         background: rgba(2,6,23,0.35);
         backdrop-filter: blur(6px);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transition: opacity 180ms ease, visibility 180ms ease;
       }
       html.lb-theme-dark #lb-ai-backdrop{
         background: rgba(2,6,23,0.55);
       }
+      #lb-ai-backdrop.lb-ai-open{
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+      }
       #lb-ai-btn{
         position: fixed;
-        bottom: 25px;
-        right: 25px;
+        bottom: calc(25px + env(safe-area-inset-bottom, 0px));
+        right: calc(25px + env(safe-area-inset-right, 0px));
         z-index: 120001;
         border: 0;
         border-radius: 50px;
@@ -510,6 +518,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         box-shadow: 0 18px 42px -28px rgba(255,140,0,0.85);
         transition: transform 140ms ease, filter 140ms ease;
         touch-action: manipulation;
+        max-width: calc(100vw - 24px);
       }
       #lb-ai-btn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
       #lb-ai-btn:active{ transform: translateY(0px) scale(0.99); }
@@ -524,6 +533,29 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       #lb-ai-badge svg{ width: 18px; height: 18px; }
 
+      .lb-ai-btn-label{
+        white-space: nowrap;
+        overflow: hidden;
+        max-width: 0;
+        opacity: 0;
+        transform: translateX(-6px);
+        transition: max-width 240ms ease, opacity 200ms ease, transform 240ms ease;
+        display: inline-block;
+      }
+      #lb-ai-btn:hover .lb-ai-btn-label,
+      #lb-ai-btn:focus-visible .lb-ai-btn-label{
+        max-width: 240px;
+        opacity: 1;
+        transform: translateX(0px);
+      }
+      @media (hover: none){
+        .lb-ai-btn-label{
+          max-width: 240px;
+          opacity: 1;
+          transform: translateX(0px);
+        }
+      }
+
       #lb-ai-panel{
         position: fixed;
         bottom: calc(86px + env(safe-area-inset-bottom, 0px));
@@ -536,16 +568,25 @@ document.addEventListener("DOMContentLoaded", async () => {
         border: 1px solid rgba(15,23,42,0.12);
         box-shadow: 0 30px 60px -40px rgba(2,6,23,0.35);
         overflow: hidden;
-        display: none;
+        display: grid;
         grid-template-rows: auto 1fr auto;
         backdrop-filter: blur(10px);
         max-height: calc(100vh - 120px);
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateY(10px) scale(0.985);
+        transition: opacity 180ms ease, transform 220ms cubic-bezier(0.16, 1, 0.3, 1), visibility 180ms ease;
       }
       #lb-ai-panel > *{ min-height: 0; }
       #lb-ai-body{ min-height: 140px; }
 
-      #lb-ai-panel.lb-ai-open{ display: grid; }
-      #lb-ai-backdrop.lb-ai-open{ display: block; }
+      #lb-ai-panel.lb-ai-open{
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateY(0px) scale(1);
+      }
       html.lb-theme-dark #lb-ai-panel{
         background: rgba(15,23,42,0.92);
         border-color: rgba(148,163,184,0.22);
@@ -715,13 +756,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       @media (max-width: 480px){
         #lb-ai-btn{ right: 16px; bottom: 16px; }
         #lb-ai-panel{
-          left: 12px;
-          right: 12px;
+          left: 0;
+          right: 0;
+          top: 0;
+          bottom: 0;
           width: auto;
-          top: 12px;
-          bottom: calc(74px + env(safe-area-inset-bottom, 0px));
           height: auto;
+          border-radius: 0;
+          max-height: none;
+          transform: translateY(12px);
         }
+        #lb-ai-panel.lb-ai-open{ transform: translateY(0px); }
+        #lb-ai-head{ padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
+        #lb-ai-foot{ padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
       }
     `;
     document.head.appendChild(style);
@@ -742,13 +789,14 @@ document.addEventListener("DOMContentLoaded", async () => {
           <path d="M9.5 13h.01M12 13h.01M14.5 13h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
         </svg>
       </span>
-      <span>Ask LocalBasket AI</span>
+      <span class="lb-ai-btn-label">Ask LocalBasket AI</span>
     `;
 
     const panel = document.createElement("section");
     panel.id = "lb-ai-panel";
     panel.setAttribute("role", "dialog");
     panel.setAttribute("aria-modal", "false");
+    panel.setAttribute("aria-hidden", "true");
     panel.innerHTML = `
       <div id="lb-ai-head">
         <div id="lb-ai-title">
@@ -908,6 +956,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       panel.classList.add("lb-ai-open");
       backdrop.classList.add("lb-ai-open");
       btn.setAttribute("aria-expanded", "true");
+      panel.setAttribute("aria-hidden", "false");
       document.body.style.overflow = "hidden";
       try { input.focus(); } catch {}
       if (!panel.__lbAiWelcomed) {
@@ -920,6 +969,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       panel.classList.remove("lb-ai-open");
       backdrop.classList.remove("lb-ai-open");
       btn.setAttribute("aria-expanded", "false");
+      panel.setAttribute("aria-hidden", "true");
       document.body.style.overflow = "";
     };
 
