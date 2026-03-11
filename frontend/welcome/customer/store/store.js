@@ -345,6 +345,7 @@ function initMobileBarDrag() {
 
   bar.addEventListener("pointerdown", (e) => {
     if (!bar.classList.contains("is-visible")) return;
+    if (e.target?.closest?.("#mobileBarBtn")) return;
     pointerId = e.pointerId;
     dragging = true;
     moved = false;
@@ -421,7 +422,8 @@ async function loadStore() {
     const store = data.store;
     state.store = store;
     state.isStoreOnline = Number(store.is_online) === 1;
-    state.minimumOrder = Number(store.minimum_order || 100);
+    state.minimumOrder = Number(store.minimum_order);
+    if (!Number.isFinite(state.minimumOrder) || state.minimumOrder < 0) state.minimumOrder = 100;
 
     document.getElementById("storeName").innerText = store.store_name;
     document.getElementById("headerStoreName").innerText = store.store_name;
@@ -1091,8 +1093,9 @@ function checkout() {
   }
 
   const total = state.cart.reduce((sum, i) => sum + Number(i.price || 0) * Number(i.qty || 0), 0);
-  if (total < Number(state.minimumOrder || 100)) {
-    alert(`Minimum order is Rs. ${state.minimumOrder}. Please add more items.`);
+  const minOrder = Number(state.minimumOrder);
+  if (Number.isFinite(minOrder) && total < minOrder) {
+    alert(`Minimum order is Rs. ${minOrder}. Please add more items.`);
     return;
   }
 
