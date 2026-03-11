@@ -18,10 +18,15 @@
   <style>
     :root {
       --bg-1: #07133a;
-      --bg-2: #0b1f52;
+      --bg-2: #071b48;
       --accent: #ff8a1a;
-      --text: #e2e8f0;
-      --muted: #94a3b8;
+      --accent-2: #ffb347;
+      --text: #e8eefc;
+      --muted: rgba(232, 238, 252, 0.68);
+      --card: rgba(255, 255, 255, 0.06);
+      --card-border: rgba(255, 255, 255, 0.16);
+      --shadow: 0 22px 52px -30px rgba(0,0,0,0.72);
+      --radius: 26px;
     }
 
     * { box-sizing: border-box; }
@@ -37,34 +42,65 @@
       display: grid;
       place-items: center;
       background:
-        radial-gradient(120% 90% at 90% 10%, rgba(255,138,26,0.2), rgba(255,138,26,0) 50%),
-        radial-gradient(90% 70% at 0% 100%, rgba(59,130,246,0.18), rgba(59,130,246,0) 55%),
+        radial-gradient(1100px 620px at 70% 15%, rgba(255,138,26,0.18), rgba(255,138,26,0) 60%),
+        radial-gradient(980px 580px at 18% 85%, rgba(59,130,246,0.20), rgba(59,130,246,0) 62%),
+        radial-gradient(760px 520px at 12% 15%, rgba(99,102,241,0.12), rgba(99,102,241,0) 62%),
         linear-gradient(160deg, var(--bg-1), var(--bg-2));
       color: var(--text);
     }
 
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.12;
+      background-image:
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0, rgba(255,255,255,0.04) 1px, rgba(255,255,255,0) 1px, rgba(255,255,255,0) 6px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0, rgba(255,255,255,0.03) 1px, rgba(255,255,255,0) 1px, rgba(255,255,255,0) 7px);
+      mix-blend-mode: overlay;
+    }
+
     .launch-card {
       width: min(560px, calc(100vw - 28px));
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 22px;
-      padding: 26px 22px;
-      background: rgba(255,255,255,0.06);
-      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 28px 24px 22px;
+      background: var(--card);
+      backdrop-filter: blur(14px);
       text-align: center;
-      box-shadow: 0 24px 44px -28px rgba(0,0,0,0.6);
+      box-shadow: var(--shadow);
       animation: cardIn 0.55s ease both;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .launch-card::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      background:
+        radial-gradient(90% 70% at 20% 0%, rgba(255, 179, 71, 0.18), rgba(255, 179, 71, 0) 62%),
+        radial-gradient(80% 60% at 85% 100%, rgba(59,130,246,0.16), rgba(59,130,246,0) 62%);
+      pointer-events: none;
+    }
+
+    .content {
+      position: relative;
     }
 
     .logo-wrap {
       width: 92px;
       height: 92px;
-      margin: 0 auto 14px;
-      border-radius: 24px;
+      margin: 0 auto 16px;
+      border-radius: 26px;
       display: grid;
       place-items: center;
-      border: 1px solid rgba(255,255,255,0.2);
-      background: rgba(255,255,255,0.08);
-      animation: pulse 1.6s ease-in-out infinite;
+      border: 1px solid rgba(255,255,255,0.18);
+      background:
+        radial-gradient(120% 120% at 50% 20%, rgba(255,255,255,0.14), rgba(255,255,255,0.05));
+      box-shadow: 0 18px 40px -32px rgba(0,0,0,0.85);
+      animation: floaty 2.1s ease-in-out infinite;
     }
 
     .logo-wrap img {
@@ -87,24 +123,36 @@
       font-weight: 600;
     }
 
-    .loader {
-      margin: 18px auto 6px;
-      width: min(320px, 90%);
-      height: 7px;
+    .progress {
+      margin: 18px auto 10px;
+      width: min(360px, 92%);
+      height: 9px;
       border-radius: 999px;
-      background: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.12);
       overflow: hidden;
       position: relative;
     }
 
-    .loader::after {
+    .progress > .bar {
+      position: absolute;
+      inset: 0;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, rgba(255, 179, 71, 0.95), rgba(255, 138, 26, 1));
+      box-shadow: 0 10px 24px -18px rgba(255, 138, 26, 0.75);
+      transition: width 80ms linear;
+    }
+
+    .progress::after {
       content: "";
       position: absolute;
       inset: 0;
-      width: 42%;
-      border-radius: inherit;
-      background: linear-gradient(90deg, #ff9f2f, var(--accent));
-      animation: load 2.2s ease-in-out infinite;
+      width: 40%;
+      background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.22), rgba(255,255,255,0));
+      transform: translateX(-120%);
+      animation: sheen 1.35s ease-in-out infinite;
+      pointer-events: none;
     }
 
     .fallback {
@@ -112,16 +160,22 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border-radius: 12px;
+      border-radius: 14px;
       min-height: 42px;
-      padding: 0 14px;
+      padding: 0 16px;
       border: 0;
-      background: var(--accent);
-      color: #fff;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      color: #08112a;
       text-decoration: none;
       font-weight: 800;
       font-size: 14px;
+      box-shadow: 0 20px 40px -28px rgba(255, 138, 26, 0.75);
+      transition: transform 120ms ease, filter 120ms ease;
     }
+
+    .fallback:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    .fallback:active { transform: translateY(0); }
+    .fallback:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(255, 138, 26, 0.28), 0 20px 40px -28px rgba(255, 138, 26, 0.75); }
 
     .countdown {
       margin-top: 8px;
@@ -129,14 +183,9 @@
       color: var(--muted);
     }
 
-    @keyframes load {
+    @keyframes sheen {
       0% { transform: translateX(-120%); }
       100% { transform: translateX(320%); }
-    }
-
-    @keyframes pulse {
-      0%,100% { transform: scale(1); }
-      50% { transform: scale(1.04); }
     }
 
     @keyframes cardIn {
@@ -144,27 +193,40 @@
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
+    @keyframes floaty {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-3px); }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .launch-card { animation: none; }
       .logo-wrap { animation: none; }
-      .loader::after { animation: none; }
+      .progress::after { animation: none; }
+      .progress > .bar { transition: none; }
+      .fallback { transition: none; }
     }
   </style>
 </head>
 <body>
   <main class="launch-card" role="status" aria-live="polite">
-    <div class="logo-wrap">
-      <img src="./welcome/logo2.png?v=20260303" alt="LocalBasket logo" />
+    <div class="content">
+      <div class="logo-wrap">
+        <img src="./welcome/logo2.png?v=20260303" alt="LocalBasket logo" />
+      </div>
+      <h1>LocalBasket</h1>
+      <p>Launching your neighborhood marketplace...</p>
+      <div class="progress" aria-hidden="true"><div class="bar" id="progressBar"></div></div>
+      <a class="fallback" href="./welcome/customer/index.html">Enter Now</a>
+      <div class="countdown" id="countdown">Redirecting in 3s...</div>
     </div>
-    <h1>LocalBasket</h1>
-    <p>Launching your neighborhood marketplace...</p>
-    <div class="loader" aria-hidden="true"></div>
-    <a class="fallback" href="./welcome/customer/index.html">Enter Now</a>
-    <div class="countdown" id="countdown">Redirecting in 3s...</div>
   </main>
   <script>
     const target = "./welcome/customer/index.html";
     const countdownEl = document.getElementById("countdown");
+    const progressBar = document.getElementById("progressBar");
+
+    const durationMs = 3000;
+    const startedAt = performance.now();
     let remaining = 3;
 
     const tick = () => {
@@ -182,6 +244,14 @@
       }
       tick();
     }, 1000);
+
+    const animate = () => {
+      const elapsed = performance.now() - startedAt;
+      const t01 = Math.max(0, Math.min(1, elapsed / durationMs));
+      if (progressBar) progressBar.style.width = `${Math.round(t01 * 100)}%`;
+      if (t01 < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
   </script>
 </body>
 </html>
