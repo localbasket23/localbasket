@@ -25,9 +25,9 @@
       --accent: #ff8a1a;
       --accent-2: #ffb347;
       --text: #0f172a;
-      --muted: #64748b;
-      --card: rgba(255, 255, 255, 0.9);
-      --card-border: rgba(15, 23, 42, 0.08);
+      --muted: #475569;
+      --card: rgba(255, 255, 255, 0.95);
+      --card-border: rgba(15, 23, 42, 0.10);
       --shadow: 0 18px 50px -28px rgba(15, 23, 42, 0.25);
       --radius: 26px;
       --track: #e2e8f0;
@@ -47,6 +47,8 @@
     body {
       display: grid;
       place-items: center;
+      position: relative;
+      isolation: isolate;
       background:
         radial-gradient(1100px 720px at 50% 0%, rgba(255, 138, 26, 0.16), rgba(255, 138, 26, 0) 60%),
         radial-gradient(1000px 700px at 15% 100%, rgba(255, 179, 71, 0.14), rgba(255, 179, 71, 0) 62%),
@@ -62,6 +64,7 @@
       opacity: 0.2;
       background:
         radial-gradient(1200px 700px at 70% 35%, rgba(59,130,246,0.06), rgba(59,130,246,0) 60%);
+      z-index: -3;
     }
 
     body::after {
@@ -70,9 +73,11 @@
       inset: 0;
       pointer-events: none;
       background:
-        radial-gradient(740px 460px at 50% 32%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0) 74%);
+        radial-gradient(820px 520px at 50% 28%, rgba(255, 138, 26, 0.08), rgba(255, 138, 26, 0) 72%),
+        radial-gradient(920px 620px at 55% 38%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 72%);
       filter: blur(14px);
-      opacity: 0.55;
+      opacity: 0.45;
+      z-index: -2;
     }
 
     .bg-blob {
@@ -87,21 +92,20 @@
         radial-gradient(closest-side, rgba(255, 179, 71, 0.14), rgba(255, 179, 71, 0) 70%),
         radial-gradient(closest-side, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 70%);
       animation: blobDrift 10s ease-in-out infinite;
+      z-index: -1;
     }
 
     .launch-card {
       width: min(560px, calc(100vw - 28px));
-      border: 1px solid var(--card-border);
       border-radius: var(--radius);
-      padding: 30px 26px 22px;
-      background: var(--card);
-      backdrop-filter: blur(12px);
+      padding: 0;
+      background: transparent;
       text-align: center;
-      box-shadow: var(--shadow);
       animation: cardIn 0.55s ease both;
       position: relative;
       overflow: hidden;
       transition: transform 180ms ease, box-shadow 180ms ease;
+      z-index: 1;
     }
 
     .launch-card:hover {
@@ -109,29 +113,87 @@
       box-shadow: 0 18px 44px -22px rgba(15, 23, 42, 0.28);
     }
 
+    .card-surface {
+      position: relative;
+      border-radius: var(--radius);
+      padding: 30px 26px 22px;
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transform: translateZ(0);
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .launch-card:hover .card-surface {
+      transform: translateY(-1px);
+      box-shadow: 0 22px 60px -32px rgba(15, 23, 42, 0.26);
+    }
+
+    .card-surface::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      padding: 1px;
+      border-radius: inherit;
+      background: linear-gradient(135deg, rgba(255, 138, 26, 0.35), rgba(255, 255, 255, 0.9), rgba(255, 138, 26, 0.18));
+      -webkit-mask:
+        linear-gradient(#000 0 0) content-box,
+        linear-gradient(#000 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0.9;
+    }
+
+    .card-surface::after {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      pointer-events: none;
+      background:
+        radial-gradient(90% 70% at 20% 0%, rgba(255, 179, 71, 0.18), rgba(255, 179, 71, 0) 62%),
+        radial-gradient(80% 60% at 85% 100%, rgba(255, 138, 26, 0.10), rgba(255, 138, 26, 0) 62%),
+        radial-gradient(220px 160px at var(--px) var(--py), rgba(255, 138, 26, 0.12), rgba(255, 138, 26, 0) 72%);
+      opacity: 0.7;
+    }
+
     .launch-card::before {
       content: "";
       position: absolute;
       inset: -1px;
-      background:
-        radial-gradient(90% 70% at 20% 0%, rgba(255, 179, 71, 0.18), rgba(255, 179, 71, 0) 62%),
-        radial-gradient(80% 60% at 85% 100%, rgba(255, 138, 26, 0.10), rgba(255, 138, 26, 0) 62%);
+      background: radial-gradient(120% 90% at 50% 0%, rgba(255, 138, 26, 0.06), rgba(255, 138, 26, 0) 60%);
       pointer-events: none;
-    }
-
-    .launch-card::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background:
-        radial-gradient(260px 200px at var(--px) var(--py), rgba(255, 138, 26, 0.14), rgba(255, 138, 26, 0) 72%);
-      opacity: 0.55;
-      transition: opacity 180ms ease;
     }
 
     .content {
       position: relative;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 138, 26, 0.12);
+      border: 1px solid rgba(255, 138, 26, 0.18);
+      color: #9a3412;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 0.2px;
+      margin: 0 auto 14px;
+      user-select: none;
+    }
+
+    .badge i {
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #ff8c00, #ffb347);
+      box-shadow: 0 0 0 4px rgba(255, 138, 26, 0.16);
+      display: inline-block;
     }
 
     .logo-wrap {
@@ -147,6 +209,19 @@
       box-shadow: 0 14px 30px -24px rgba(15, 23, 42, 0.35);
       animation: floaty 2.1s ease-in-out infinite;
       transition: transform 180ms ease, box-shadow 180ms ease;
+      position: relative;
+    }
+
+    .logo-wrap::after {
+      content: "";
+      position: absolute;
+      inset: -18px;
+      border-radius: 34px;
+      background: radial-gradient(closest-side, rgba(255, 138, 26, 0.18), rgba(255, 138, 26, 0) 65%);
+      filter: blur(10px);
+      opacity: 0.9;
+      pointer-events: none;
+      z-index: -1;
     }
 
     .launch-card:hover .logo-wrap {
@@ -167,6 +242,11 @@
       letter-spacing: -1px;
       line-height: 1;
       color: #0f172a;
+      font-weight: 800;
+      background: linear-gradient(180deg, #0f172a, #334155);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     p {
@@ -291,6 +371,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       .launch-card { animation: none; }
+      .card-surface { transition: none; }
       .logo-wrap { animation: none; }
       .progress::after { animation: none; }
       .progress > .bar { transition: none; }
@@ -304,7 +385,9 @@
 <body>
   <div class="bg-blob" aria-hidden="true"></div>
   <main class="launch-card" id="launchCard" role="status" aria-live="polite">
+    <div class="card-surface">
     <div class="content">
+      <div class="badge" aria-hidden="true"><i></i> Launching</div>
       <div class="logo-wrap">
         <img src="./welcome/logo2.png?v=20260303" alt="LocalBasket logo" />
       </div>
@@ -314,6 +397,7 @@
       <a class="fallback" id="enterBtn" href="./welcome/customer/index.html">Enter Marketplace</a>
       <div class="countdown" id="countdown">Redirecting in 3s...</div>
       <div class="footer-line">Serving your neighborhood with fresh groceries</div>
+    </div>
     </div>
   </main>
   <script>
