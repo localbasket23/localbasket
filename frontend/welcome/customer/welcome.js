@@ -1557,8 +1557,18 @@ function getGeoPosition(options) {
     });
 }
 
+function describeGeoError(err) {
+    const code = Number(err?.code || 0);
+    const msg = String(err?.message || "").trim();
+    if (code === 1) return "Location permission denied. Please allow location in browser settings.";
+    if (code === 2) return "Location unavailable. Turn on GPS and try again.";
+    if (code === 3) return "Location request timed out. Please try again.";
+    return msg ? `Location error: ${msg}` : "Unable to access location.";
+}
+
 async function getBestGeoPosition(samples, options) {
     let best = null;
+    let lastErr = null;
     const total = Math.max(1, Number(samples || 1));
     for (let i = 0; i < total; i += 1) {
         try {
@@ -1566,9 +1576,11 @@ async function getBestGeoPosition(samples, options) {
             const acc = Number(pos?.coords?.accuracy || Number.POSITIVE_INFINITY);
             const bestAcc = Number(best?.coords?.accuracy || Number.POSITIVE_INFINITY);
             if (!best || acc < bestAcc) best = pos;
-        } catch {}
+        } catch (err) {
+            lastErr = err;
+        }
     }
-    if (!best) throw new Error("No geolocation sample found");
+    if (!best) throw (lastErr || new Error("No geolocation sample found"));
     return best;
 }
 
@@ -1657,6 +1669,12 @@ async function getLocation(optionsOrForce = false) {
         setLocationStatus("Geolocation not supported on this browser.", "error");
         return;
     }
+    if (!window.isSecureContext && window.location.protocol !== "file:") {
+        const tip = "Current location works only on HTTPS. Please open the HTTPS link or enter pincode.";
+        setLocationStatus(tip, "warn");
+        if (!silent) alert(tip);
+        return;
+    }
     const improveBtn = dom.improveLocBtn();
     const useSavedLocBtn = getEl("useSavedLocBtn");
     const setLocLoading = (loading) => {
@@ -1686,7 +1704,7 @@ async function getLocation(optionsOrForce = false) {
         setLocationStatus("Detecting location with high accuracy...", "info");
         let pos = await getBestGeoPosition(forceHighAccuracy ? 3 : 1, {
             enableHighAccuracy: forceHighAccuracy || !fastMode,
-            timeout: forceHighAccuracy ? 18000 : (fastMode ? 6500 : 9500),
+            timeout: forceHighAccuracy ? 24000 : (fastMode ? 8500 : 13000),
             maximumAge: fastMode ? 45000 : 0
         });
 
@@ -1704,30 +1722,30 @@ async function getLocation(optionsOrForce = false) {
 
         const finalAcc = Number(pos?.coords?.accuracy || 0);
         if (finalAcc > 350) {
-            setLocationStatus(`Low accuracy (~${Math.round(finalAcc)}m). Move to open area or use pincode.`, "error");
-            if (!silent) alert("GPS accuracy is low. Please try 'Improve Accuracy' or enter pincode.");
+            setLocationStatus(`Low accuracy (~${Math.round(finalAcc)}m). Using approximate location.`, "warn");
+            if (!silent) alert("Low GPS accuracy. We'll use approximate location. For better results, tap Improve Accuracy or enter pincode.");
+            await applyDetectedLocation(pos, { fallback: true });
             return;
         }
 
         await applyDetectedLocation(pos);
-    } catch {
+    } catch (err) {
         try {
-            setLocationStatus("High accuracy failed. Trying fallback location...", "warn");
+            setLocationStatus(describeGeoError(err) + " Trying fallback location...", "warn");
             const fallbackPos = await getGeoPosition({
                 enableHighAccuracy: false,
-                timeout: 9000,
+                timeout: 12000,
                 maximumAge: 0
             });
             const fallbackAcc = Number(fallbackPos?.coords?.accuracy || 0);
             if (fallbackAcc > 500) {
-                setLocationStatus(`Fallback location too broad (~${Math.round(fallbackAcc)}m). Enter pincode manually.`, "error");
-                if (!silent) alert("Couldn't get precise location. Please enter pincode.");
-                return;
+                setLocationStatus(`Using approximate location (~${Math.round(fallbackAcc)}m).`, "warn");
             }
             await applyDetectedLocation(fallbackPos, { fallback: true });
-        } catch {
-            setLocationStatus("Unable to detect location. Enter pincode manually.", "error");
-            if (!silent) alert("Unable to access location");
+        } catch (err2) {
+            const message = describeGeoError(err2 || err);
+            setLocationStatus(message + " Enter pincode manually.", "error");
+            if (!silent) alert(message);
         }
     } finally {
         setLocLoading(false);
