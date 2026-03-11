@@ -1700,15 +1700,17 @@
             background: transparent;
             color: #64748b;
             cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
+            display: grid;
+            place-items: center;
+            padding: 0;
+            line-height: 0;
             z-index: 3;
         }
         .auth-eye-btn svg{
             width: 18px;
             height: 18px;
             display: block;
+            margin: 0;
         }
         .auth-eye-btn .eye-off{ display: none; }
         .auth-eye-btn[data-visible="1"] .eye-on{ display: none; }

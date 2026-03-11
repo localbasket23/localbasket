@@ -2317,7 +2317,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       btn.setAttribute("aria-expanded", "true");
       panel.setAttribute("aria-hidden", "false");
       document.body.style.overflow = "hidden";
+      // First open can render with stale visual viewport metrics on some mobile browsers.
+      // Sync a few times across frames so header/body/footer sizes settle without requiring reload.
       syncVisualViewportVars();
+      try { requestAnimationFrame(() => syncVisualViewportVars()); } catch {}
+      try { setTimeout(syncVisualViewportVars, 60); } catch {}
+      try { setTimeout(syncVisualViewportVars, 220); } catch {}
       try {
         window.visualViewport?.addEventListener("resize", syncVisualViewportVars, { passive: true });
         window.visualViewport?.addEventListener("scroll", syncVisualViewportVars, { passive: true });
@@ -2326,6 +2331,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!panel.__lbAiWelcomed) {
         panel.__lbAiWelcomed = true;
         if (!restore()) welcome();
+        try { requestAnimationFrame(() => { body.scrollTop = body.scrollHeight; }); } catch {}
+        try { setTimeout(() => { try { body.scrollTop = body.scrollHeight; } catch {} }, 80); } catch {}
       }
 
       // Safety: while open, periodically re-check identity so chat doesn't leak
