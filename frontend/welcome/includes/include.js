@@ -692,12 +692,20 @@ html.lb-theme-dark .lb-global-btn.primary{background:linear-gradient(135deg,#ff8
     modal.innerHTML = `
       <div class="lb-global-card" onclick="event.stopPropagation()">
         <div class="lb-global-head">
-          <h3>Log In</h3>
+          <h3 id="lbGlobalAuthTitle">Log In</h3>
           <button class="lb-global-x" type="button" aria-label="Close">&times;</button>
         </div>
         <div class="lb-global-note" id="lbGlobalAuthMsg">Use your registered phone/email and password.</div>
         <input class="lb-global-input" id="lbGlobalAuthIdentifier" type="text" placeholder="Phone or Email">
         <input class="lb-global-input" id="lbGlobalAuthPassword" type="password" placeholder="Password">
+        <div class="lb-global-row" id="lbGlobalAuthOtpRow" style="display:none;align-items:stretch;">
+          <input class="lb-global-input" id="lbGlobalAuthOtp" type="text" inputmode="numeric" placeholder="Enter OTP" style="margin:0;flex:1;">
+          <button class="lb-global-btn soft" id="lbGlobalAuthSendOtp" type="button">Send OTP</button>
+        </div>
+        <div class="lb-global-row" style="justify-content:space-between;gap:10px;margin-top:6px;">
+          <button class="lb-global-btn soft" id="lbGlobalAuthForgot" type="button" style="height:34px;padding:0 12px;">Forgot Password</button>
+          <button class="lb-global-btn soft" id="lbGlobalAuthBack" type="button" style="height:34px;padding:0 12px;display:none;">Back</button>
+        </div>
         <button class="lb-global-btn primary" id="lbGlobalAuthSubmit" type="button" style="width:100%;">Continue</button>
       </div>
     `;
@@ -711,6 +719,30 @@ html.lb-theme-dark .lb-global-btn.primary{background:linear-gradient(135deg,#ff8
     const submitBtn = document.getElementById("lbGlobalAuthSubmit");
     const idInput = document.getElementById("lbGlobalAuthIdentifier");
     const passInput = document.getElementById("lbGlobalAuthPassword");
+    const otpRow = document.getElementById("lbGlobalAuthOtpRow");
+    const otpInput = document.getElementById("lbGlobalAuthOtp");
+    const sendOtpBtn = document.getElementById("lbGlobalAuthSendOtp");
+    const forgotBtn = document.getElementById("lbGlobalAuthForgot");
+    const backBtn = document.getElementById("lbGlobalAuthBack");
+    const titleEl = document.getElementById("lbGlobalAuthTitle");
+
+    let mode = "login"; // login | reset
+    const syncUi = () => {
+      const isReset = mode === "reset";
+      if (titleEl) titleEl.textContent = isReset ? "Reset Password" : "Log In";
+      if (otpRow) otpRow.style.display = isReset ? "flex" : "none";
+      if (backBtn) backBtn.style.display = isReset ? "inline-flex" : "none";
+      if (forgotBtn) forgotBtn.style.display = isReset ? "none" : "inline-flex";
+      if (passInput) {
+        passInput.placeholder = isReset ? "New Password" : "Password";
+      }
+      if (submitBtn) submitBtn.textContent = isReset ? "Reset Password" : "Continue";
+      setMsg(isReset
+        ? "Enter your registered phone/email, then send OTP. OTP will be sent to your registered email."
+        : "Use your registered phone/email and password."
+      );
+      if (!isReset && otpInput) otpInput.value = "";
+    };
     if (closeBtn) closeBtn.addEventListener("click", close);
     modal.addEventListener("click", close);
     if (passInput) {
@@ -719,37 +751,111 @@ html.lb-theme-dark .lb-global-btn.primary{background:linear-gradient(135deg,#ff8
         if (submitBtn) submitBtn.click();
       });
     }
+    if (otpInput) {
+      otpInput.addEventListener("keydown", (e) => {
+        if (e.key !== "Enter") return;
+        if (submitBtn) submitBtn.click();
+      });
+    }
+    if (forgotBtn) {
+      forgotBtn.addEventListener("click", () => {
+        mode = "reset";
+        syncUi();
+        if (otpInput) otpInput.focus();
+      });
+    }
+    if (backBtn) {
+      backBtn.addEventListener("click", () => {
+        mode = "login";
+        syncUi();
+        if (passInput) passInput.focus();
+      });
+    }
+    if (sendOtpBtn) {
+      sendOtpBtn.addEventListener("click", async () => {
+        const identifier = String(idInput?.value || "").trim();
+        if (!identifier) {
+          setMsg("Enter registered email or phone first.");
+          if (idInput) idInput.focus();
+          return;
+        }
+        sendOtpBtn.disabled = true;
+        const oldText = sendOtpBtn.textContent;
+        sendOtpBtn.textContent = "Sending...";
+        try {
+          const res = await fetch(`${API_BASE}/customer/forgot-password/request`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ identifier })
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data?.success) throw new Error(data?.message || "OTP send failed");
+          setMsg(data.message || "OTP sent. Please check your registered email.");
+          if (otpInput) otpInput.focus();
+        } catch (err) {
+          setMsg(String(err?.message || "Unable to send OTP. Please try again."));
+        } finally {
+          sendOtpBtn.disabled = false;
+          sendOtpBtn.textContent = oldText || "Send OTP";
+        }
+      });
+    }
     if (submitBtn) {
       submitBtn.addEventListener("click", async () => {
         const identifier = String(idInput?.value || "").trim();
         const password = String(passInput?.value || "").trim();
-        if (!identifier || !password) {
-          setMsg("Phone/email and password are required.");
-          return;
-        }
-        submitBtn.disabled = true;
-        submitBtn.textContent = "Logging in...";
         try {
+          if (mode === "reset") {
+            const otp = String(otpInput?.value || "").trim();
+            if (!identifier || !otp || !password) {
+              setMsg("Registered email/phone, OTP and new password are required.");
+              return;
+            }
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Resetting...";
+            const res = await fetch(`${API_BASE}/customer/forgot-password/verify`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ identifier, otp, newPassword: password })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data?.success) throw new Error(data?.message || "Password reset failed");
+            setMsg(data.message || "Password reset successful. Please login with new password.");
+            mode = "login";
+            syncUi();
+            if (passInput) passInput.value = "";
+            if (otpInput) otpInput.value = "";
+            return;
+          }
+
+          if (!identifier || !password) {
+            setMsg("Phone/email and password are required.");
+            return;
+          }
+
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Logging in...";
           const res = await fetch(`${API_BASE}/customer/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ identifier, password })
-          });
-          const data = await res.json().catch(() => ({}));
-          if (!res.ok || !data?.success || !data?.user) throw new Error(data?.message || "Login failed");
-          localStorage.setItem("lbUser", JSON.stringify(data.user));
-          if (data.token) localStorage.setItem("lbToken", data.token);
-          syncHeaderAuth();
-          window.dispatchEvent(new Event("lb-auth-updated"));
-          close();
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ identifier, password })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data?.success || !data?.user) throw new Error(data?.message || "Login failed");
+            localStorage.setItem("lbUser", JSON.stringify(data.user));
+            if (data.token) localStorage.setItem("lbToken", data.token);
+            syncHeaderAuth();
+            window.dispatchEvent(new Event("lb-auth-updated"));
+            close();
         } catch (err) {
           setMsg(String(err?.message || "Unable to login. Please try again."));
         } finally {
           submitBtn.disabled = false;
-          submitBtn.textContent = "Continue";
+          submitBtn.textContent = mode === "reset" ? "Reset Password" : "Continue";
         }
       });
     }
+    syncUi();
     return modal;
   };
 

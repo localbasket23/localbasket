@@ -1254,7 +1254,7 @@ async function requestCustomerOtp() {
     }
     try {
         const endpoints = state.authOtpMode === "reset"
-            ? ["/customer/password-reset/request"]
+            ? ["/customer/password-reset/request", "/customer/forgot-password/request"]
             : ["/customer/login-otp/request"];
         let lastErr = null;
 
@@ -1333,32 +1333,40 @@ async function submitAuth() {
         };
 
         if (state.authMode === "login" && state.authOtpMode === "reset") {
-            const resetTry = await fetchJson(`${CONFIG.API_BASE}/customer/password-reset/verify`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ identifier: phone, otp, newPassword: password })
-            });
+            const resetEndpoints = [
+                `${CONFIG.API_BASE}/customer/password-reset/verify`,
+                `${CONFIG.API_BASE}/customer/forgot-password/verify`
+            ];
 
-            if (resetTry.res.ok && resetTry.data?.success) {
-                alert(resetTry.data.message || "Password reset successful. Please login with new password.");
-                state.authUseOtp = false;
-                state.authOtpMode = "none";
-                updateOtpAuthUI();
-                const otpInput = dom.authOtp();
-                if (otpInput) otpInput.value = "";
-                return;
+            let lastReset = null;
+            for (const url of resetEndpoints) {
+                const attempt = await fetchJson(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ identifier: phone, otp, newPassword: password })
+                });
+                lastReset = attempt;
+                if (attempt.res.ok && attempt.data?.success) {
+                    alert(attempt.data.message || "Password reset successful. Please login with new password.");
+                    state.authUseOtp = false;
+                    state.authOtpMode = "none";
+                    updateOtpAuthUI();
+                    const otpInput = dom.authOtp();
+                    if (otpInput) otpInput.value = "";
+                    return;
+                }
+
+                const resetMsg = String(attempt.data?.message || "");
+                const canFallback =
+                    attempt.res.status === 404 ||
+                    attempt.res.status === 405 ||
+                    /cannot post|not found|route/i.test(resetMsg);
+                if (!canFallback) {
+                    throw new Error(resetMsg || "Password reset failed");
+                }
             }
 
-            const resetMsg = String(resetTry.data?.message || "");
-            const canFallback =
-                resetTry.res.status === 404 ||
-                resetTry.res.status === 405 ||
-                /cannot post|not found|route/i.test(resetMsg);
-
-            if (!canFallback) {
-                throw new Error(resetMsg || "Password reset failed");
-            }
-
+            const resetMsg = String(lastReset?.data?.message || "");
             throw new Error(resetMsg || "Password reset failed");
         }
 
