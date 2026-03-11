@@ -113,7 +113,7 @@ const hasActiveSession = (user, token) => {
     const t = String(token || "").trim();
     return !!(
         t ||
-        (user && (user.id || user.customer_id || user._id || user.user_id || user.phone || user.email || user.name))
+        (user && (user.id || user.customer_id || user._id || user.user_id || user.phone || user.mobile || user.email))
     );
 };
 const resolveImageUrl = (rawPath) => {

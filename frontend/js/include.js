@@ -548,7 +548,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const token = String(localStorage.getItem("lbToken") || "").trim();
       const hasUser = !!(
         token ||
-        (user && (user.id || user.customer_id || user._id || user.user_id || user.phone || user.email || user.name))
+        (user && (user.id || user.customer_id || user._id || user.user_id || user.phone || user.mobile || user.email))
       );
 
       if (loginBtn) loginBtn.style.display = hasUser ? "none" : "inline-flex";
@@ -615,7 +615,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         try { user = JSON.parse(localStorage.getItem("lbUser") || "null"); } catch { user = null; }
         const hasUser = !!(
           token ||
-          (user && (user.id || user.customer_id || user._id || user.user_id || user.phone || user.email || user.name))
+          (user && (user.id || user.customer_id || user._id || user.user_id || user.phone || user.mobile || user.email))
         );
         const mobileHeaderKicker = document.getElementById("mobileHeaderKicker");
         const mobileGreetingEyebrow = document.getElementById("mobileGreetingEyebrow");

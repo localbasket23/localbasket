@@ -865,7 +865,12 @@ function updateMobileHomeShell() {
                     : hour < 21
                         ? "Good Evening"
                         : "Good Night";
-    const isLoggedIn = !!state.user;
+    const token = String(state.token || localStorage.getItem("lbToken") || "").trim();
+    const user = state.user || null;
+    const isLoggedIn = !!(
+        token ||
+        (user && (user.id || user.customer_id || user._id || user.user_id || user.phone || user.mobile || user.email))
+    );
     const fullName = isLoggedIn ? (String(state.user?.name || "").trim() || "Customer") : "Local Basket";
     const locationText =
         state.location?.address && state.location.address !== "Select Location"

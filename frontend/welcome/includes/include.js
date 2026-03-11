@@ -516,7 +516,7 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
     const displayName = String(displayNameRaw || "").trim();
     const hasSession = !!(
       token ||
-      (user && (user.id || user._id || user.email || user.phone || user.mobile || displayName))
+      (user && (user.id || user._id || user.email || user.phone || user.mobile))
     );
 
     const timeGreeting = getTimeGreeting();
