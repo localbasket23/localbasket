@@ -361,10 +361,11 @@ function updateMobileHomeShell() {
     }
 
     if (mobileName) {
-        if (user?.name) {
-            mobileName.textContent = String(user.name).trim() || "Customer";
+        const loggedIn = hasActiveSession(user, token);
+        if (loggedIn) {
+            mobileName.textContent = String(user?.name || "").trim() || "Customer";
         } else {
-            mobileName.innerHTML = `<span class="lb-brand-mark"><span class="lb-brand-accent">Local</span>Basket</span>`;
+            mobileName.innerHTML = `<span class="lb-brand-mark"><span class="lb-brand-accent">Local</span> Basket</span>`;
         }
     }
 

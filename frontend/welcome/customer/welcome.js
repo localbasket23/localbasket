@@ -865,7 +865,8 @@ function updateMobileHomeShell() {
                     : hour < 21
                         ? "Good Evening"
                         : "Good Night";
-    const fullName = String(state.user?.name || "").trim() || "Customer";
+    const isLoggedIn = !!state.user;
+    const fullName = isLoggedIn ? (String(state.user?.name || "").trim() || "Customer") : "Local Basket";
     const locationText =
         state.location?.address && state.location.address !== "Select Location"
             ? state.location.address
@@ -876,7 +877,7 @@ function updateMobileHomeShell() {
     if (addressEl) addressEl.textContent = locationText;
     if (pinInput && !pinInput.value) pinInput.value = String(state.location?.pincode || "").trim();
     if (authBtn) {
-        if (state.user) {
+        if (isLoggedIn) {
             authBtn.textContent = "Profile";
             authBtn.setAttribute("aria-label", "Profile");
             authBtn.onclick = () => viewProfile();
@@ -886,6 +887,8 @@ function updateMobileHomeShell() {
             authBtn.onclick = () => openAuth();
         }
     }
+
+    if (eyebrowEl) eyebrowEl.style.display = isLoggedIn ? "" : "none";
 }
 
 function switchTab(mode) {

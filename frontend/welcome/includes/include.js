@@ -503,6 +503,7 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
     const userFullName = document.getElementById("userFullName");
     const mobileHeaderKicker = document.getElementById("mobileHeaderKicker");
     const mobileGreetingEyebrow = document.getElementById("mobileGreetingEyebrow");
+    const mobileGreetingName = document.getElementById("mobileGreetingName");
     const displayNameRaw = user && (
       user.name ||
       user.fullName ||
@@ -520,7 +521,15 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
 
     const timeGreeting = getTimeGreeting();
     if (mobileHeaderKicker) mobileHeaderKicker.textContent = timeGreeting;
-    if (mobileGreetingEyebrow) mobileGreetingEyebrow.textContent = timeGreeting;
+    if (mobileGreetingEyebrow) {
+      mobileGreetingEyebrow.textContent = timeGreeting;
+      mobileGreetingEyebrow.style.display = hasSession ? "" : "none";
+    }
+    if (mobileGreetingName) {
+      mobileGreetingName.textContent = hasSession
+        ? (displayName || "Customer")
+        : "Local Basket";
+    }
 
     if (hasSession) {
       if (loginBtn) loginBtn.style.display = "none";
