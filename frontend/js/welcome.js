@@ -641,19 +641,50 @@ const renderMobilePromoArtAuto = (settings = {}) => {
     }
 
     promoArt.innerHTML = "";
-    const img = document.createElement("img");
     let promoIndex = 0;
-    img.src = images[promoIndex];
-    img.alt = "Promo";
-    img.addEventListener("error", () => {
+
+    const createImg = (src) => {
+        const img = document.createElement("img");
+        img.alt = "Promo";
+        img.decoding = "async";
+        img.loading = "eager";
+        img.src = src;
+        return img;
+    };
+
+    let current = createImg(images[promoIndex]);
+    current.classList.add("active");
+    current.addEventListener("error", () => {
         renderMobilePromoArt(settings);
     }, { once: true });
-    promoArt.appendChild(img);
+    promoArt.appendChild(current);
+
+    const swapTo = async (nextSrc) => {
+        if (!nextSrc || nextSrc === current?.src) return;
+        const next = createImg(nextSrc);
+        promoArt.appendChild(next);
+
+        const ready = async () => {
+            try { if (next.decode) await next.decode(); } catch {}
+        };
+
+        await ready();
+        requestAnimationFrame(() => {
+            try { next.classList.add("active"); } catch {}
+            try { current.classList.remove("active"); } catch {}
+        });
+
+        // Remove previous after fade to keep DOM small.
+        window.setTimeout(() => {
+            try { current.remove(); } catch {}
+            current = next;
+        }, 700);
+    };
 
     if (images.length > 1) {
         mobilePromoSliderTimer = setInterval(() => {
             promoIndex = (promoIndex + 1) % images.length;
-            img.src = images[promoIndex];
+            swapTo(images[promoIndex]).catch(() => {});
         }, 3500);
     }
 };
