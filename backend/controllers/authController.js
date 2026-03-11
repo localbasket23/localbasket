@@ -108,19 +108,26 @@ const sendWhatsappOtp = async ({ phone, otp }) => {
 };
 
 const sendEmailOtp = async ({ email, otp }) => {
-  const user = String(process.env.EMAIL_USER || "localbasket.helpdesk@gmail.com").trim();
-  const pass = String(process.env.EMAIL_PASS || "").trim();
-  const host = String(process.env.EMAIL_HOST || "smtp.gmail.com").trim();
+  const host = String(process.env.EMAIL_HOST || "").trim();
   const port = Number(process.env.EMAIL_PORT || 465);
   const secure = String(process.env.EMAIL_SECURE || "").trim()
     ? String(process.env.EMAIL_SECURE).toLowerCase() === "true"
     : port === 465;
-  const from = String(process.env.EMAIL_FROM || `"LocalBasket" <${user}>`).trim();
+  const user = String(process.env.EMAIL_USER || "").trim();
+  const pass = String(process.env.EMAIL_PASS || "").trim();
+  const from = String(process.env.EMAIL_FROM || "").trim();
+  const replyTo = String(process.env.EMAIL_REPLY_TO || "").trim();
 
-  if (!user || !pass) {
+  if (!host || !user || !pass || !from) {
     return {
       success: false,
-      message: "Email SMTP config missing"
+      message: "Email SMTP config missing",
+      details: {
+        host_present: !!host,
+        user_present: !!user,
+        pass_present: !!pass,
+        from_present: !!from
+      }
     };
   }
 
@@ -129,9 +136,10 @@ const sendEmailOtp = async ({ email, otp }) => {
     port,
     secure,
     auth: { user, pass },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 10000
+    connectionTimeout: 12000,
+    greetingTimeout: 12000,
+    socketTimeout: 12000,
+    tls: { minVersion: "TLSv1.2" }
   });
 
   try {
@@ -144,15 +152,30 @@ const sendEmailOtp = async ({ email, otp }) => {
     await transporter.sendMail({
       from,
       to: email,
+      ...(replyTo ? { replyTo } : {}),
       subject: "LocalBasket OTP Verification",
       text: `Your LocalBasket OTP is ${otp}. Do not share it.`
     });
     return { success: true };
   } catch (err) {
+    const raw = err || {};
+    const errText = String(raw?.message || raw || "");
+    const needsVerifyHint =
+      /sender|from|domain|verify|verified|unauthorized|forbidden/i.test(errText) ||
+      /550|553|554/.test(String(raw?.responseCode || ""));
     return {
       success: false,
       message: "Email OTP delivery failed",
-      details: err?.message || String(err || "")
+      details: {
+        message: errText,
+        code: raw?.code || null,
+        command: raw?.command || null,
+        responseCode: raw?.responseCode || null,
+        response: raw?.response || null,
+        hint: needsVerifyHint
+          ? "Check EMAIL_FROM sender/domain is verified with your SMTP provider (e.g., Resend)."
+          : null
+      }
     };
   }
 };
