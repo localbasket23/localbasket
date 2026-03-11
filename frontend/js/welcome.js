@@ -1430,7 +1430,7 @@ async function submitAuth() {
     }
 }
 
-function logoutUser() {
+async function logoutUser() {
     localStorage.removeItem("lbUser");
     localStorage.removeItem("lbToken");
     state.user = null;
@@ -1440,7 +1440,22 @@ function logoutUser() {
     updateAuthUI();
     updateCartUI();
     if (dom.userMenu()) dom.userMenu().style.display = "none";
-    alert("Logged out successfully");
+
+    // Clear scroll locks and close overlays that can cover the bottom nav on mobile.
+    document.documentElement.style.overflow = "";
+    document.body.style.overflow = "";
+    try {
+        if (dom.authOverlay()) dom.authOverlay().style.display = "none";
+        if (dom.locModal()) dom.locModal().style.display = "none";
+        if (dom.cartOverlay()) dom.cartOverlay().style.display = "none";
+    } catch {}
+
+    if (typeof window.lbAlert === "function") {
+        await window.lbAlert("Logged out successfully", "Logout");
+    } else {
+        window.alert("Logged out successfully");
+    }
+
     window.location.reload(); // Hard reset to clear memory
 }
 

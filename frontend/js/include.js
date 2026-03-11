@@ -812,6 +812,14 @@ document.addEventListener("DOMContentLoaded", async () => {
           document.documentElement.style.overflow = "";
           document.body.style.overflow = "";
 
+          // Ensure login/location overlays don't keep covering the bottom nav after logout.
+          ["authOverlay", "authModal", "locationModal", "cartOverlay"].forEach((id) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.style.display = "none";
+            el.classList?.remove?.("active");
+          });
+
           if (window.logoutUser) window.logoutUser();
           else {
             localStorage.removeItem("lbUser");
