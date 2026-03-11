@@ -1,5 +1,17 @@
 (() => {
   const ensureLaunchOverlay = () => {
+    // The site already has a dedicated launch page at `/frontend/index.html`.
+    // Showing another full-screen "launch" overlay inside pages feels like a
+    // second launch on mobile, so we skip it on small screens and also allow
+    // explicit opt-out via a global flag/meta/html attribute.
+    try {
+      if (window.LB_DISABLE_LAUNCH_OVERLAY) return;
+      const meta = document.querySelector('meta[name="lb:disable-launch"][content="true"]');
+      if (meta) return;
+      if (document.documentElement && document.documentElement.hasAttribute("data-lb-disable-launch")) return;
+      if (window.matchMedia && window.matchMedia("(max-width: 640px)").matches) return;
+    } catch {}
+
     if (window.__lbLaunchOverlayReady) return;
     window.__lbLaunchOverlayReady = true;
 

@@ -484,6 +484,10 @@
     const tipEl = document.getElementById("tip");
     const surface = document.querySelector(".card-surface");
 
+    // Prevent in-page "launch overlays" (e.g. from `js/include.js`) so users don't
+    // experience a second launch screen after redirect.
+    try { sessionStorage.setItem("lbLaunchSeen", "1"); } catch {}
+
     const durationMs = 3000;
     const startedAt = performance.now();
     let remaining = 3;
