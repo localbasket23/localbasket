@@ -480,11 +480,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     const style = document.createElement("style");
     style.id = "lb-ai-style";
     style.textContent = `
+      #lb-ai-backdrop{
+        position: fixed;
+        inset: 0;
+        z-index: 119999;
+        display: none;
+        background: rgba(2,6,23,0.35);
+        backdrop-filter: blur(6px);
+      }
+      html.lb-theme-dark #lb-ai-backdrop{
+        background: rgba(2,6,23,0.55);
+      }
       #lb-ai-btn{
         position: fixed;
         bottom: 25px;
         right: 25px;
-        z-index: 90000;
+        z-index: 120001;
         border: 0;
         border-radius: 50px;
         background: #ff8c00;
@@ -498,6 +509,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         cursor: pointer;
         box-shadow: 0 18px 42px -28px rgba(255,140,0,0.85);
         transition: transform 140ms ease, filter 140ms ease;
+        touch-action: manipulation;
       }
       #lb-ai-btn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
       #lb-ai-btn:active{ transform: translateY(0px) scale(0.99); }
@@ -514,11 +526,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       #lb-ai-panel{
         position: fixed;
-        bottom: 86px;
-        right: 25px;
+        bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+        right: calc(25px + env(safe-area-inset-right, 0px));
         width: 350px;
         height: 500px;
-        z-index: 90000;
+        z-index: 120000;
         border-radius: 18px;
         background: rgba(255,255,255,0.96);
         border: 1px solid rgba(15,23,42,0.12);
@@ -527,7 +539,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         display: none;
         grid-template-rows: auto 1fr auto;
         backdrop-filter: blur(10px);
+        max-height: calc(100vh - 120px);
       }
+      #lb-ai-panel > *{ min-height: 0; }
+      #lb-ai-body{ min-height: 140px; }
+
+      #lb-ai-panel.lb-ai-open{ display: grid; }
+      #lb-ai-backdrop.lb-ai-open{ display: block; }
       html.lb-theme-dark #lb-ai-panel{
         background: rgba(15,23,42,0.92);
         border-color: rgba(148,163,184,0.22);
@@ -570,6 +588,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         padding: 8px 10px;
         cursor: pointer;
         font-weight: 900;
+        touch-action: manipulation;
       }
       html.lb-theme-dark #lb-ai-close{
         background: rgba(15,23,42,0.45);
@@ -635,6 +654,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         font-size: 12px;
         cursor: pointer;
         transition: transform 120ms ease, filter 120ms ease;
+        touch-action: manipulation;
       }
       .lb-ai-sg-btn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
       .lb-ai-sg-btn:active{ transform: translateY(0px); }
@@ -681,6 +701,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         font-weight: 1000;
         cursor: pointer;
         box-shadow: 0 14px 28px -18px rgba(255,140,0,0.85);
+        touch-action: manipulation;
       }
       #lb-ai-send:active{ transform: translateY(1px); }
       #lb-ai-help{
@@ -697,12 +718,16 @@ document.addEventListener("DOMContentLoaded", async () => {
           left: 12px;
           right: 12px;
           width: auto;
-          bottom: 74px;
-          height: min(520px, 72vh);
+          top: 12px;
+          bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+          height: auto;
         }
       }
     `;
     document.head.appendChild(style);
+
+    const backdrop = document.createElement("div");
+    backdrop.id = "lb-ai-backdrop";
 
     const btn = document.createElement("button");
     btn.id = "lb-ai-btn";
@@ -745,6 +770,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div>
     `;
 
+    document.body.appendChild(backdrop);
     document.body.appendChild(btn);
     document.body.appendChild(panel);
 
@@ -753,6 +779,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const send = panel.querySelector("#lb-ai-send");
     const close = panel.querySelector("#lb-ai-close");
     const suggestions = panel.querySelector("#lb-ai-suggestions");
+
+    if (!body || !input || !send || !close || !suggestions) {
+      try { panel.remove(); } catch {}
+      try { btn.remove(); } catch {}
+      try { backdrop.remove(); } catch {}
+      try { window.alert("LocalBasket AI failed to initialize. Please refresh."); } catch {}
+      return;
+    }
 
     const safeParse = (raw, fallback) => {
       try { return JSON.parse(raw); } catch { return fallback; }
@@ -871,8 +905,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     const open = () => {
-      panel.style.display = "grid";
+      panel.classList.add("lb-ai-open");
+      backdrop.classList.add("lb-ai-open");
       btn.setAttribute("aria-expanded", "true");
+      document.body.style.overflow = "hidden";
       try { input.focus(); } catch {}
       if (!panel.__lbAiWelcomed) {
         panel.__lbAiWelcomed = true;
@@ -881,8 +917,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     const closePanel = () => {
-      panel.style.display = "none";
+      panel.classList.remove("lb-ai-open");
+      backdrop.classList.remove("lb-ai-open");
       btn.setAttribute("aria-expanded", "false");
+      document.body.style.overflow = "";
     };
 
     const onSend = () => {
@@ -894,8 +932,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       buildSuggestions();
     };
 
-    btn.addEventListener("click", () => (panel.style.display === "grid" ? closePanel() : open()));
+    btn.addEventListener("click", () => (panel.classList.contains("lb-ai-open") ? closePanel() : open()));
     close.addEventListener("click", closePanel);
+    backdrop.addEventListener("click", closePanel);
     send.addEventListener("click", onSend);
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") onSend();
