@@ -108,7 +108,14 @@ const normalizeUser = (raw) => {
     if (!user.name && user.full_name) user.name = user.full_name;
     return user;
 };
-
+// Some flows can leave a stale/empty object in storage; `!!user` is not enough.
+const hasActiveSession = (user, token) => {
+    const t = String(token || "").trim();
+    return !!(
+        t ||
+        (user && (user.id || user.customer_id || user._id || user.user_id || user.phone || user.email || user.name))
+    );
+};
 const resolveImageUrl = (rawPath) => {
     const input = String(rawPath || "").trim();
     if (!input) return CONFIG.DEFAULT_IMG;
@@ -325,6 +332,7 @@ function updateMobileHomeShell() {
     const mobileAuthBtn = dom.mobileAuthBtn();
     const mobileAvatar = dom.mobileUserAvatar();
     const user = normalizeUser(safeParse(localStorage.getItem("lbUser"), null));
+    const token = localStorage.getItem("lbToken") || "";
     const hour = (() => {
         try {
             const tz = "Asia/Kolkata";
@@ -347,7 +355,7 @@ function updateMobileHomeShell() {
                     : "Good Night";
 
     if (mobileEyebrow) {
-        const loggedIn = !!user;
+        const loggedIn = hasActiveSession(user, token);
         mobileEyebrow.textContent = greeting;
         mobileEyebrow.style.display = loggedIn ? "" : "none";
     }
@@ -366,7 +374,7 @@ function updateMobileHomeShell() {
     }
 
     if (mobileAuthBtn) {
-        const loggedIn = !!user;
+        const loggedIn = hasActiveSession(user, token);
         mobileAuthBtn.textContent = loggedIn ? "Profile" : "Login";
         mobileAuthBtn.setAttribute("aria-label", loggedIn ? "Open profile" : "Login");
         mobileAuthBtn.onclick = () => {
@@ -1140,7 +1148,7 @@ function slugify(text) {
 /* ============ 4. AUTH UI & LOGIC ============ */
 
 function updateAuthUI() {
-    const isLoggedIn = !!state.user;
+    const isLoggedIn = hasActiveSession(state.user, state.token);
     const loginBtn = dom.loginBtn();
     const accountDiv = dom.userAccount();
 

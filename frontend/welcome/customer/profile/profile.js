@@ -225,8 +225,12 @@ function handleLogout() {
     if (!ok) return;
     const cartKey = currentUser && currentUser.id ? `lbCart_${currentUser.id}` : null;
     localStorage.removeItem("lbUser");
+    localStorage.removeItem("lbToken");
     if (cartKey) localStorage.removeItem(cartKey);
     localStorage.removeItem("lbCart");
+    try {
+      window.dispatchEvent(new Event("lb-auth-updated"));
+    } catch {}
     window.location.href = "/welcome/customer/index.html";
   });
 }
