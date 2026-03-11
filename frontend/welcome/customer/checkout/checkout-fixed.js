@@ -14,7 +14,16 @@ function safeParseJson(raw, fallback) {
 }
 
 function normalizeIndianPhone(raw) {
-  let d = String(raw || "").replace(/\D/g, "");
+  const toAsciiDigits = (s) =>
+    String(s || "")
+      // Arabic-Indic digits
+      .replace(/[\u0660-\u0669]/g, (ch) => String(ch.charCodeAt(0) - 0x0660))
+      // Eastern Arabic-Indic digits
+      .replace(/[\u06F0-\u06F9]/g, (ch) => String(ch.charCodeAt(0) - 0x06f0))
+      // Devanagari digits
+      .replace(/[\u0966-\u096F]/g, (ch) => String(ch.charCodeAt(0) - 0x0966));
+
+  let d = toAsciiDigits(raw).replace(/\D/g, "");
 
   // Common prefixes:
   // - +91XXXXXXXXXX / 91XXXXXXXXXX
@@ -365,8 +374,8 @@ async function placeOrder() {
     return;
   }
 
-  if (!/^[6-9]\\d{9}$/.test(phone)) {
-    alert("Error: Invalid phone number. Enter 10-digit Indian mobile (e.g. 9876543210).");
+  if (!/^\\d{10}$/.test(phone)) {
+    alert(`Error: Invalid phone number. Enter 10 digits (e.g. 9876543210). Detected: ${phone || "(empty)"}`);
     return;
   }
 
