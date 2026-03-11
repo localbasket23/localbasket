@@ -671,29 +671,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         border-color: rgba(255,140,0,0.18);
       }
 
-      #lb-ai-suggestions{
-        display: grid;
-        gap: 10px;
-        padding: 0 12px 10px;
-        max-height: 200px;
-        overflow: auto;
-        overscroll-behavior: contain;
-        scrollbar-gutter: stable;
-      }
-      .lb-ai-sg-title{
-        font-size: 12px;
-        font-weight: 1000;
-        letter-spacing: 0.25px;
-        color: rgba(100,116,139,0.9);
-        text-transform: uppercase;
-      }
-      html.lb-theme-dark .lb-ai-sg-title{ color: rgba(226,232,240,0.7); }
-      .lb-ai-sg-grid{
+      .lb-ai-chips{
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
       }
-      .lb-ai-sg-btn{
+      .lb-ai-chip{
         border: 1px solid rgba(255,140,0,0.18);
         background: rgba(255,140,0,0.10);
         color: #9a3412;
@@ -705,9 +688,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         transition: transform 120ms ease, filter 120ms ease;
         touch-action: manipulation;
       }
-      .lb-ai-sg-btn:hover{ transform: translateY(-1px); filter: brightness(1.02); }
-      .lb-ai-sg-btn:active{ transform: translateY(0px); }
-      html.lb-theme-dark .lb-ai-sg-btn{
+      .lb-ai-chip:hover{ transform: translateY(-1px); filter: brightness(1.02); }
+      .lb-ai-chip:active{ transform: translateY(0px); }
+      html.lb-theme-dark .lb-ai-chip{
         background: rgba(255,140,0,0.12);
         border-color: rgba(255,140,0,0.18);
         color: #fed7aa;
@@ -780,23 +763,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         #lb-ai-panel.lb-ai-open{ transform: translateY(0px); }
         #lb-ai-head{ padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
         #lb-ai-foot{ padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
-        #lb-ai-suggestions{ max-height: 150px; }
       }
 
       /* Scrollbars: keep subtle */
       #lb-ai-body::-webkit-scrollbar,
-      #lb-ai-suggestions::-webkit-scrollbar{
+      #lb-ai-body::-webkit-scrollbar{
         width: 10px;
       }
       #lb-ai-body::-webkit-scrollbar-thumb,
-      #lb-ai-suggestions::-webkit-scrollbar-thumb{
+      #lb-ai-body::-webkit-scrollbar-thumb{
         background: rgba(100,116,139,0.28);
         border-radius: 999px;
         border: 3px solid transparent;
         background-clip: content-box;
       }
       html.lb-theme-dark #lb-ai-body::-webkit-scrollbar-thumb,
-      html.lb-theme-dark #lb-ai-suggestions::-webkit-scrollbar-thumb{
+      html.lb-theme-dark #lb-ai-body::-webkit-scrollbar-thumb{
         background: rgba(226,232,240,0.22);
         border: 3px solid transparent;
         background-clip: content-box;
@@ -840,7 +822,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div>
       <div id="lb-ai-body"></div>
       <div id="lb-ai-foot">
-        <div id="lb-ai-suggestions" aria-label="Suggested questions"></div>
         <div id="lb-ai-input-row">
           <input id="lb-ai-input" type="text" placeholder="Type your question..." autocomplete="off" />
           <button id="lb-ai-send" type="button">Send</button>
@@ -857,9 +838,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     const input = panel.querySelector("#lb-ai-input");
     const send = panel.querySelector("#lb-ai-send");
     const close = panel.querySelector("#lb-ai-close");
-    const suggestions = panel.querySelector("#lb-ai-suggestions");
 
-    if (!body || !input || !send || !close || !suggestions) {
+    if (!body || !input || !send || !close) {
       try { panel.remove(); } catch {}
       try { btn.remove(); } catch {}
       try { backdrop.remove(); } catch {}
@@ -922,47 +902,31 @@ document.addEventListener("DOMContentLoaded", async () => {
       return "I can help with:\n- Nearby stores\n- Grocery suggestions\n- Recipe ingredients\n- Deals\n- Orders\n\nTry: ingredients for pasta, track my order, cheapest vegetables.";
     };
 
-    const buildSuggestions = () => {
-      const groups = [
-        {
-          title: "Shopping help",
-          items: ["Find fresh vegetables near me", "Show grocery stores in my area", "Find cheapest cooking oil"]
-        },
-        {
-          title: "Cooking help",
-          items: ["Ingredients for pasta", "What should I buy to cook biryani?", "Ingredients for making chai"]
-        },
-        {
-          title: "Deals",
-          items: ["What are today's best deals?", "Show cheapest vegetables"]
-        },
-        {
-          title: "Orders",
-          items: ["Track my order", "Cancel my order"]
-        }
-      ];
+    const showChipsInChat = (items) => {
+      const list = Array.isArray(items) ? items.filter(Boolean) : [];
+      if (!list.length) return;
 
-      suggestions.innerHTML = "";
-      for (const g of groups) {
-        const wrap = document.createElement("div");
-        wrap.innerHTML = `
-          <div class="lb-ai-sg-title">${g.title}</div>
-          <div class="lb-ai-sg-grid"></div>
-        `;
-        const grid = wrap.querySelector(".lb-ai-sg-grid");
-        for (const s of g.items) {
-          const b = document.createElement("button");
-          b.type = "button";
-          b.className = "lb-ai-sg-btn";
-          b.textContent = s;
-          b.addEventListener("click", () => {
-            input.value = s;
-            onSend();
-          });
-          grid.appendChild(b);
-        }
-        suggestions.appendChild(wrap);
-      }
+      const wrap = document.createElement("div");
+      wrap.className = "lb-ai-msg";
+
+      const chips = document.createElement("div");
+      chips.className = "lb-ai-chips";
+
+      list.slice(0, 10).forEach((label) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "lb-ai-chip";
+        b.textContent = String(label);
+        b.addEventListener("click", () => {
+          input.value = String(label);
+          onSend();
+        });
+        chips.appendChild(b);
+      });
+
+      wrap.appendChild(chips);
+      body.appendChild(wrap);
+      body.scrollTop = body.scrollHeight;
     };
 
     const welcome = () => {
@@ -980,7 +944,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
 
-      buildSuggestions();
+      showChipsInChat([
+        "Find grocery stores in my area",
+        "Ingredients for pasta",
+        "Cheapest vegetables",
+        "Track my order",
+      ]);
     };
 
     const open = () => {
@@ -1010,7 +979,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       input.value = "";
       addMsg(q, "user");
       addMsg(answer(q), "bot");
-      buildSuggestions();
+      // Keep chips inside chat (no separate section)
+      if (Math.random() < 0.35) {
+        showChipsInChat(["Ingredients for making chai", "Cheapest cooking oil", "Track my order"]);
+      }
     };
 
     btn.addEventListener("click", () => (panel.classList.contains("lb-ai-open") ? closePanel() : open()));
