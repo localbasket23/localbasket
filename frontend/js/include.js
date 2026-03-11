@@ -625,6 +625,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       html.lb-theme-dark #lb-ai-title small{ color: rgba(226,232,240,0.75); }
 
+      #lb-ai-head-actions{
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
       #lb-ai-close{
         border: 1px solid rgba(15,23,42,0.12);
         background: rgba(255,255,255,0.75);
@@ -636,6 +642,21 @@ document.addEventListener("DOMContentLoaded", async () => {
         touch-action: manipulation;
       }
       html.lb-theme-dark #lb-ai-close{
+        background: rgba(15,23,42,0.45);
+        border-color: rgba(148,163,184,0.22);
+      }
+
+      #lb-ai-clear{
+        border: 1px solid rgba(15,23,42,0.12);
+        background: rgba(255,255,255,0.75);
+        color: inherit;
+        border-radius: 12px;
+        padding: 8px 10px;
+        cursor: pointer;
+        font-weight: 900;
+        touch-action: manipulation;
+      }
+      html.lb-theme-dark #lb-ai-clear{
         background: rgba(15,23,42,0.45);
         border-color: rgba(148,163,184,0.22);
       }
@@ -669,6 +690,39 @@ document.addEventListener("DOMContentLoaded", async () => {
         margin-left: auto;
         background: linear-gradient(135deg, rgba(255,140,0,0.16), rgba(255,179,71,0.10));
         border-color: rgba(255,140,0,0.18);
+      }
+
+      .lb-ai-actions{
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .lb-ai-action{
+        border: 1px solid rgba(15,23,42,0.12);
+        background: rgba(255,255,255,0.85);
+        color: #0f172a;
+        border-radius: 999px;
+        padding: 8px 10px;
+        font-weight: 900;
+        font-size: 12px;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      .lb-ai-action.primary{
+        border-color: rgba(255,140,0,0.22);
+        background: rgba(255,140,0,0.12);
+        color: #9a3412;
+      }
+      html.lb-theme-dark .lb-ai-action{
+        background: rgba(2,6,23,0.45);
+        border-color: rgba(148,163,184,0.22);
+        color: #e2e8f0;
+      }
+      html.lb-theme-dark .lb-ai-action.primary{
+        background: rgba(255,140,0,0.14);
+        border-color: rgba(255,140,0,0.22);
+        color: #fed7aa;
       }
 
       .lb-ai-chips{
@@ -818,7 +872,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             <small>Grocery assistant</small>
           </div>
         </div>
-        <button id="lb-ai-close" type="button" aria-label="Close">Close</button>
+        <div id="lb-ai-head-actions">
+          <button id="lb-ai-clear" type="button">Clear</button>
+          <button id="lb-ai-close" type="button" aria-label="Close">Close</button>
+        </div>
       </div>
       <div id="lb-ai-body"></div>
       <div id="lb-ai-foot">
@@ -838,14 +895,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     const input = panel.querySelector("#lb-ai-input");
     const send = panel.querySelector("#lb-ai-send");
     const close = panel.querySelector("#lb-ai-close");
+    const clearBtn = panel.querySelector("#lb-ai-clear");
 
-    if (!body || !input || !send || !close) {
+    if (!body || !input || !send || !close || !clearBtn) {
       try { panel.remove(); } catch {}
       try { btn.remove(); } catch {}
       try { backdrop.remove(); } catch {}
       try { window.alert("LocalBasket AI failed to initialize. Please refresh."); } catch {}
       return;
     }
+
+    const CHAT_KEY = "lbAiChatV1";
+    const MAX_HISTORY = 40;
 
     const safeParse = (raw, fallback) => {
       try { return JSON.parse(raw); } catch { return fallback; }
@@ -865,12 +926,52 @@ document.addEventListener("DOMContentLoaded", async () => {
       return [];
     };
 
-    const addMsg = (text, who) => {
+    const persistChat = () => {
+      try {
+        const all = Array.from(body.querySelectorAll("[data-lb-ai-role]")).map((el) => ({
+          role: el.getAttribute("data-lb-ai-role") || "bot",
+          text: el.getAttribute("data-lb-ai-text") || el.textContent || "",
+          ts: Number(el.getAttribute("data-lb-ai-ts") || Date.now()),
+        }));
+        localStorage.setItem(CHAT_KEY, JSON.stringify(all.slice(-MAX_HISTORY)));
+      } catch {}
+    };
+
+    const addMsg = (text, who, actions = null) => {
       const el = document.createElement("div");
       el.className = "lb-ai-msg" + (who === "user" ? " user" : "");
+      const ts = Date.now();
+      el.setAttribute("data-lb-ai-role", who === "user" ? "user" : "bot");
+      el.setAttribute("data-lb-ai-text", String(text || ""));
+      el.setAttribute("data-lb-ai-ts", String(ts));
       el.textContent = String(text || "");
+
+      if (Array.isArray(actions) && actions.length) {
+        const wrap = document.createElement("div");
+        wrap.className = "lb-ai-actions";
+        actions.slice(0, 4).forEach((a) => {
+          const b = document.createElement("button");
+          b.type = "button";
+          b.className = "lb-ai-action" + (a.primary ? " primary" : "");
+          b.textContent = String(a.label || "Action");
+          b.addEventListener("click", () => {
+            try {
+              if (a.type === "nav" && a.href) window.location.href = String(a.href);
+              if (a.type === "copy" && a.text) navigator.clipboard?.writeText?.(String(a.text));
+              if (a.type === "ask" && a.text) {
+                input.value = String(a.text);
+                onSend();
+              }
+            } catch {}
+          });
+          wrap.appendChild(b);
+        });
+        el.appendChild(wrap);
+      }
+
       body.appendChild(el);
       body.scrollTop = body.scrollHeight;
+      persistChat();
     };
 
     const answer = (q) => {
@@ -930,7 +1031,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     };
 
     const welcome = () => {
-      addMsg("Hi.\n\nI am LocalBasket AI.\nI can help you:\n- Find nearby stores\n- Suggest groceries\n- Help with recipes\n- Show best deals\n- Help with orders", "bot");
+      addMsg(
+        "Hi.\n\nI am LocalBasket AI.\nI can help you:\n- Find nearby stores\n- Suggest groceries\n- Help with recipes\n- Show best deals\n- Help with orders",
+        "bot",
+        [
+          { label: "Nearby stores", type: "nav", href: "/welcome/customer/index.html", primary: true },
+          { label: "Categories", type: "nav", href: "/welcome/customer/category.html" },
+          { label: "My orders", type: "nav", href: "/welcome/customer/order/customer-orders.html" },
+        ]
+      );
 
       const cart = readCartAny();
       const names = cart
@@ -952,6 +1061,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       ]);
     };
 
+    const restore = () => {
+      try {
+        const hist = safeParse(localStorage.getItem(CHAT_KEY) || "[]", []);
+        if (!Array.isArray(hist) || !hist.length) return false;
+        body.innerHTML = "";
+        hist.slice(-MAX_HISTORY).forEach((m) => {
+          addMsg(String(m?.text || ""), String(m?.role || "bot") === "user" ? "user" : "bot");
+        });
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
     const open = () => {
       panel.classList.add("lb-ai-open");
       backdrop.classList.add("lb-ai-open");
@@ -961,7 +1084,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       try { input.focus(); } catch {}
       if (!panel.__lbAiWelcomed) {
         panel.__lbAiWelcomed = true;
-        welcome();
+        if (!restore()) welcome();
       }
     };
 
@@ -978,7 +1101,25 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (!q) return;
       input.value = "";
       addMsg(q, "user");
-      addMsg(answer(q), "bot");
+
+      // typing indicator (simple)
+      const typing = document.createElement("div");
+      typing.className = "lb-ai-msg";
+      typing.textContent = "Typing...";
+      body.appendChild(typing);
+      body.scrollTop = body.scrollHeight;
+
+      window.setTimeout(() => {
+        try { typing.remove(); } catch {}
+        const a = answer(q);
+        const actions = [];
+        const low = String(q).toLowerCase();
+        if (/track/.test(low) && /order/.test(low)) actions.push({ label: "Open My Orders", type: "nav", href: "/welcome/customer/order/customer-orders.html", primary: true });
+        if (/store|near|area|pincode/.test(low)) actions.push({ label: "Open Home", type: "nav", href: "/welcome/customer/index.html", primary: true });
+        if (/pasta|biryani|chai|tea/.test(low)) actions.push({ label: "Copy list", type: "copy", text: a });
+        addMsg(a, "bot", actions);
+      }, 240);
+
       // Keep chips inside chat (no separate section)
       if (Math.random() < 0.35) {
         showChipsInChat(["Ingredients for making chai", "Cheapest cooking oil", "Track my order"]);
@@ -989,6 +1130,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     close.addEventListener("click", closePanel);
     backdrop.addEventListener("click", closePanel);
     send.addEventListener("click", onSend);
+    clearBtn.addEventListener("click", async () => {
+      const ok = typeof window.lbConfirm === "function"
+        ? await window.lbConfirm("Clear this chat?", "Confirm")
+        : confirm("Clear this chat?");
+      if (!ok) return;
+      body.innerHTML = "";
+      try { localStorage.removeItem(CHAT_KEY); } catch {}
+      panel.__lbAiWelcomed = false;
+      welcome();
+    });
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter") onSend();
       if (e.key === "Escape") closePanel();
