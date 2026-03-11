@@ -28,6 +28,8 @@
       --shadow: 0 14px 30px -16px rgba(15, 23, 42, 0.24);
       --radius: 26px;
       --track: #e2e8f0;
+      --px: 50%;
+      --py: 35%;
     }
 
     * { box-sizing: border-box; }
@@ -72,6 +74,20 @@
       opacity: 0.65;
     }
 
+    .bg-blob {
+      position: fixed;
+      inset: -20%;
+      pointer-events: none;
+      opacity: 0.55;
+      filter: blur(26px);
+      transform: translate3d(0,0,0);
+      background:
+        radial-gradient(closest-side, rgba(255, 138, 26, 0.22), rgba(255, 138, 26, 0) 70%),
+        radial-gradient(closest-side, rgba(255, 179, 71, 0.18), rgba(255, 179, 71, 0) 70%),
+        radial-gradient(closest-side, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 70%);
+      animation: blobDrift 10s ease-in-out infinite;
+    }
+
     .launch-card {
       width: min(560px, calc(100vw - 28px));
       border: 1px solid rgba(15, 23, 42, 0.08);
@@ -84,6 +100,12 @@
       animation: cardIn 0.55s ease both;
       position: relative;
       overflow: hidden;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .launch-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 18px 44px -22px rgba(15, 23, 42, 0.28);
     }
 
     .launch-card::before {
@@ -94,6 +116,17 @@
         radial-gradient(90% 70% at 20% 0%, rgba(255, 179, 71, 0.20), rgba(255, 179, 71, 0) 62%),
         radial-gradient(80% 60% at 85% 100%, rgba(255, 138, 26, 0.12), rgba(255, 138, 26, 0) 62%);
       pointer-events: none;
+    }
+
+    .launch-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(240px 180px at var(--px) var(--py), rgba(255, 138, 26, 0.18), rgba(255, 138, 26, 0) 70%);
+      opacity: 0.9;
+      transition: opacity 180ms ease;
     }
 
     .content {
@@ -112,6 +145,12 @@
         radial-gradient(120% 120% at 50% 20%, rgba(255,255,255,0.98), rgba(255,255,255,0.78));
       box-shadow: 0 14px 30px -24px rgba(15, 23, 42, 0.35);
       animation: floaty 2.1s ease-in-out infinite;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .launch-card:hover .logo-wrap {
+      transform: translateY(-1px) rotate(-0.8deg);
+      box-shadow: 0 18px 44px -28px rgba(15, 23, 42, 0.38);
     }
 
     .logo-wrap img {
@@ -157,6 +196,19 @@
       transition: width 80ms linear;
     }
 
+    .progress > .bar::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        repeating-linear-gradient(45deg, rgba(255,255,255,0.0) 0 10px, rgba(255,255,255,0.25) 10px 18px);
+      opacity: 0.35;
+      transform: translateX(-20%);
+      animation: stripes 0.9s linear infinite;
+      mix-blend-mode: overlay;
+      pointer-events: none;
+    }
+
     .progress::after {
       content: "";
       position: absolute;
@@ -184,11 +236,25 @@
       font-size: 14px;
       box-shadow: 0 20px 40px -28px rgba(255, 138, 26, 0.75);
       transition: transform 120ms ease, filter 120ms ease;
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
     }
 
     .fallback:hover { transform: scale(1.05); filter: brightness(1.05); }
     .fallback:active { transform: translateY(0); }
     .fallback:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(255, 138, 26, 0.28), 0 20px 40px -28px rgba(255, 138, 26, 0.75); }
+
+    .ripple {
+      position: absolute;
+      border-radius: 999px;
+      transform: scale(0);
+      opacity: 0.55;
+      background: rgba(255, 255, 255, 0.65);
+      animation: ripple 520ms ease-out forwards;
+      pointer-events: none;
+      z-index: 0;
+    }
 
     .countdown {
       margin-top: 8px;
@@ -208,6 +274,16 @@
       100% { transform: translateX(320%); }
     }
 
+    @keyframes stripes {
+      0% { transform: translateX(-20%); }
+      100% { transform: translateX(20%); }
+    }
+
+    @keyframes ripple {
+      from { transform: scale(0); opacity: 0.55; }
+      to { transform: scale(1); opacity: 0; }
+    }
+
     @keyframes cardIn {
       from { opacity: 0; transform: translateY(10px) scale(0.98); }
       to { opacity: 1; transform: translateY(0) scale(1); }
@@ -218,17 +294,28 @@
       50% { transform: translateY(-3px); }
     }
 
+    @keyframes blobDrift {
+      0% { transform: translate3d(-2%, -2%, 0) rotate(0deg); }
+      50% { transform: translate3d(2.5%, 2%, 0) rotate(6deg); }
+      100% { transform: translate3d(-2%, -2%, 0) rotate(0deg); }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .launch-card { animation: none; }
       .logo-wrap { animation: none; }
       .progress::after { animation: none; }
       .progress > .bar { transition: none; }
+      .progress > .bar::after { animation: none; }
       .fallback { transition: none; }
+      .bg-blob { animation: none; }
+      .launch-card { transition: none; }
+      .logo-wrap { transition: none; }
     }
   </style>
 </head>
 <body>
-  <main class="launch-card" role="status" aria-live="polite">
+  <div class="bg-blob" aria-hidden="true"></div>
+  <main class="launch-card" id="launchCard" role="status" aria-live="polite">
     <div class="content">
       <div class="logo-wrap">
         <img src="./welcome/logo2.png?v=20260303" alt="LocalBasket logo" />
@@ -236,19 +323,55 @@
       <h1>LocalBasket</h1>
       <p>Connecting you to your local stores</p>
       <div class="progress" aria-hidden="true"><div class="bar" id="progressBar"></div></div>
-      <a class="fallback" href="./welcome/customer/index.html">Enter Marketplace</a>
+      <a class="fallback" id="enterBtn" href="./welcome/customer/index.html">Enter Marketplace</a>
       <div class="countdown" id="countdown">Redirecting in 3s...</div>
       <div class="footer-line">Serving your neighborhood with fresh groceries</div>
     </div>
   </main>
   <script>
     const target = "./welcome/customer/index.html";
+    const card = document.getElementById("launchCard");
+    const enterBtn = document.getElementById("enterBtn");
     const countdownEl = document.getElementById("countdown");
     const progressBar = document.getElementById("progressBar");
 
     const durationMs = 3000;
     const startedAt = performance.now();
     let remaining = 3;
+
+    const prefersReduce = (() => {
+      try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; }
+    })();
+
+    if (card && !prefersReduce) {
+      const setPointerGlow = (ev) => {
+        const rect = card.getBoundingClientRect();
+        const x = Math.max(0, Math.min(rect.width, ev.clientX - rect.left));
+        const y = Math.max(0, Math.min(rect.height, ev.clientY - rect.top));
+        card.style.setProperty("--px", `${Math.round(x)}px`);
+        card.style.setProperty("--py", `${Math.round(y)}px`);
+      };
+      card.addEventListener("pointermove", setPointerGlow, { passive: true });
+      card.addEventListener("pointerleave", () => {
+        card.style.setProperty("--px", "50%");
+        card.style.setProperty("--py", "35%");
+      }, { passive: true });
+    }
+
+    if (enterBtn && !prefersReduce) {
+      enterBtn.addEventListener("click", (ev) => {
+        const rect = enterBtn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height) * 1.15;
+        const ripple = document.createElement("span");
+        ripple.className = "ripple";
+        ripple.style.width = `${Math.round(size)}px`;
+        ripple.style.height = `${Math.round(size)}px`;
+        ripple.style.left = `${Math.round(ev.clientX - rect.left - size / 2)}px`;
+        ripple.style.top = `${Math.round(ev.clientY - rect.top - size / 2)}px`;
+        enterBtn.appendChild(ripple);
+        window.setTimeout(() => ripple.remove(), 650);
+      });
+    }
 
     const tick = () => {
       if (!countdownEl) return;
