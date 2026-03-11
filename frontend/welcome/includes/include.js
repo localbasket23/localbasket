@@ -576,6 +576,11 @@ html.lb-theme-dark .status.cancelled { color: #fca5a5 !important; }
 .lb-global-head h3{margin:0;font-size:24px;font-weight:800}
 .lb-global-x{width:34px;height:34px;border:none;border-radius:999px;background:#f1f5f9;cursor:pointer;font-size:20px}
 .lb-global-input{width:100%;height:44px;border:1px solid #e2e8f0;border-radius:12px;padding:0 12px;font-size:14px;margin:8px 0;background:#f8fafc}
+.lb-global-field{position:relative;width:100%}
+.lb-global-field .lb-global-input{padding-right:46px}
+.lb-global-eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:none;border-radius:10px;background:transparent;cursor:pointer;color:#64748b;display:inline-flex;align-items:center;justify-content:center}
+.lb-global-eye:hover{background:rgba(15,23,42,.06);color:#0f172a}
+.lb-global-otp-meta{display:none;font-size:12px;color:#64748b;margin-top:4px}
 .lb-global-row{display:flex;gap:8px}
 .lb-global-btn{height:42px;border:none;border-radius:12px;padding:0 14px;font-weight:800;cursor:pointer}
 .lb-global-btn.primary{background:#ff8a1a;color:#fff}
@@ -588,6 +593,7 @@ html.lb-theme-dark .lb-global-x{background:#12223a;color:#dbe7fb;border:1px soli
 html.lb-theme-dark .lb-global-note{background:#0f1c31;color:#9eb0ca;border-color:rgba(148,163,184,.3)}
 html.lb-theme-dark .lb-global-input{background:#0f1c31;color:#dbe7fb;border-color:rgba(148,163,184,.3)}
 html.lb-theme-dark .lb-global-input::placeholder{color:#8ea1bd}
+html.lb-theme-dark .lb-global-eye:hover{background:rgba(148,163,184,.16);color:#dbe7fb}
 html.lb-theme-dark .lb-global-btn.soft{background:#12223a;color:#ffd29f;border-color:rgba(255,186,114,.42)}
 html.lb-theme-dark .lb-global-btn.primary{background:linear-gradient(135deg,#ff8a1a,#fb923c);color:#fff}
 `;
@@ -706,11 +712,18 @@ html.lb-theme-dark .lb-global-btn.primary{background:linear-gradient(135deg,#ff8
         </div>
         <div class="lb-global-note" id="lbGlobalAuthMsg">Use your registered phone/email and password.</div>
         <input class="lb-global-input" id="lbGlobalAuthIdentifier" type="text" placeholder="Phone or Email">
-        <input class="lb-global-input" id="lbGlobalAuthPassword" type="password" placeholder="Password">
+        <div class="lb-global-field">
+          <input class="lb-global-input" id="lbGlobalAuthPassword" type="password" placeholder="Password" style="margin:8px 0;">
+          <button class="lb-global-eye" id="lbGlobalAuthEyePass" type="button" aria-label="Show password">👁</button>
+        </div>
         <div class="lb-global-row" id="lbGlobalAuthOtpRow" style="display:none;align-items:stretch;">
-          <input class="lb-global-input" id="lbGlobalAuthOtp" type="text" inputmode="numeric" placeholder="Enter OTP" style="margin:0;flex:1;">
+          <div class="lb-global-field" style="margin:0;flex:1;">
+            <input class="lb-global-input" id="lbGlobalAuthOtp" type="password" inputmode="numeric" maxlength="6" placeholder="Enter OTP" style="margin:0;width:100%;">
+            <button class="lb-global-eye" id="lbGlobalAuthEyeOtp" type="button" aria-label="Show OTP">👁</button>
+          </div>
           <button class="lb-global-btn soft" id="lbGlobalAuthSendOtp" type="button">Send OTP</button>
         </div>
+        <div class="lb-global-otp-meta" id="lbGlobalAuthOtpMeta">OTP expires in 05:00</div>
         <div class="lb-global-row" style="justify-content:space-between;gap:10px;margin-top:6px;">
           <button class="lb-global-btn soft" id="lbGlobalAuthForgot" type="button" style="height:34px;padding:0 12px;">Forgot Password</button>
           <button class="lb-global-btn soft" id="lbGlobalAuthBack" type="button" style="height:34px;padding:0 12px;display:none;">Back</button>
@@ -731,9 +744,96 @@ html.lb-theme-dark .lb-global-btn.primary{background:linear-gradient(135deg,#ff8
     const otpRow = document.getElementById("lbGlobalAuthOtpRow");
     const otpInput = document.getElementById("lbGlobalAuthOtp");
     const sendOtpBtn = document.getElementById("lbGlobalAuthSendOtp");
+    const otpMeta = document.getElementById("lbGlobalAuthOtpMeta");
     const forgotBtn = document.getElementById("lbGlobalAuthForgot");
     const backBtn = document.getElementById("lbGlobalAuthBack");
     const titleEl = document.getElementById("lbGlobalAuthTitle");
+    const eyePass = document.getElementById("lbGlobalAuthEyePass");
+    const eyeOtp = document.getElementById("lbGlobalAuthEyeOtp");
+
+    let resendTimer = null;
+    let resendRemaining = 0;
+    let expiryTimer = null;
+    let expiryRemaining = 0;
+
+    const setOtpMeta = (text) => {
+      if (!otpMeta) return;
+      const value = String(text || "").trim();
+      otpMeta.textContent = value;
+      otpMeta.style.display = value ? "block" : "none";
+    };
+    const resetExpiry = () => {
+      if (expiryTimer) clearInterval(expiryTimer);
+      expiryTimer = null;
+      expiryRemaining = 0;
+      setOtpMeta("");
+    };
+    const resetResend = () => {
+      if (resendTimer) clearInterval(resendTimer);
+      resendTimer = null;
+      resendRemaining = 0;
+      if (sendOtpBtn) {
+        sendOtpBtn.disabled = false;
+        sendOtpBtn.textContent = "Send OTP";
+      }
+      resetExpiry();
+    };
+    const startResend = (seconds = 30) => {
+      if (!sendOtpBtn) return;
+      if (resendTimer) clearInterval(resendTimer);
+      resendRemaining = Math.max(1, Number(seconds) || 30);
+      sendOtpBtn.disabled = true;
+      sendOtpBtn.textContent = `Resend OTP (${resendRemaining}s)`;
+      resendTimer = setInterval(() => {
+        resendRemaining -= 1;
+        if (resendRemaining <= 0) {
+          clearInterval(resendTimer);
+          resendTimer = null;
+          sendOtpBtn.disabled = false;
+          sendOtpBtn.textContent = "Resend OTP";
+          return;
+        }
+        sendOtpBtn.textContent = `Resend OTP (${resendRemaining}s)`;
+      }, 1000);
+    };
+    const startExpiry = (seconds = 300) => {
+      resetExpiry();
+      expiryRemaining = Math.max(1, Number(seconds) || 300);
+      const format = (total) => {
+        const s = Math.max(0, total | 0);
+        const mm = String(Math.floor(s / 60)).padStart(2, "0");
+        const ss = String(s % 60).padStart(2, "0");
+        return `${mm}:${ss}`;
+      };
+      setOtpMeta(`OTP expires in ${format(expiryRemaining)}`);
+      expiryTimer = setInterval(() => {
+        expiryRemaining -= 1;
+        if (expiryRemaining <= 0) {
+          clearInterval(expiryTimer);
+          expiryTimer = null;
+          expiryRemaining = 0;
+          setOtpMeta("OTP expired. Tap Resend OTP.");
+          return;
+        }
+        setOtpMeta(`OTP expires in ${format(expiryRemaining)}`);
+      }, 1000);
+    };
+
+    const bindEye = (btn, input, labels = {}) => {
+      if (!btn || !input) return;
+      const showLabel = labels.show || "Show";
+      const hideLabel = labels.hide || "Hide";
+      const setState = (visible) => {
+        try { input.type = visible ? "text" : "password"; } catch {}
+        btn.setAttribute("aria-label", visible ? hideLabel : showLabel);
+        btn.textContent = visible ? "🙈" : "👁";
+        btn.dataset.visible = visible ? "1" : "0";
+      };
+      setState(false);
+      btn.addEventListener("click", () => setState(btn.dataset.visible !== "1"));
+    };
+    bindEye(eyePass, passInput, { show: "Show password", hide: "Hide password" });
+    bindEye(eyeOtp, otpInput, { show: "Show OTP", hide: "Hide OTP" });
 
     let mode = "login"; // login | reset
     const syncUi = () => {
@@ -751,6 +851,7 @@ html.lb-theme-dark .lb-global-btn.primary{background:linear-gradient(135deg,#ff8
         : "Use your registered phone/email and password."
       );
       if (!isReset && otpInput) otpInput.value = "";
+      if (!isReset) resetResend();
     };
     if (closeBtn) closeBtn.addEventListener("click", close);
     modal.addEventListener("click", close);
@@ -801,11 +902,17 @@ html.lb-theme-dark .lb-global-btn.primary{background:linear-gradient(135deg,#ff8
           if (!res.ok || !data?.success) throw new Error(data?.message || "OTP send failed");
           setMsg(data.message || "OTP sent. Please check your registered email.");
           if (otpInput) otpInput.focus();
+          startResend(30);
+          startExpiry(300);
         } catch (err) {
           setMsg(String(err?.message || "Unable to send OTP. Please try again."));
-        } finally {
           sendOtpBtn.disabled = false;
           sendOtpBtn.textContent = oldText || "Send OTP";
+        } finally {
+          if (sendOtpBtn && resendRemaining <= 0 && !resendTimer) {
+            sendOtpBtn.disabled = false;
+            sendOtpBtn.textContent = oldText || "Send OTP";
+          }
         }
       });
     }

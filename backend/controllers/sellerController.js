@@ -223,6 +223,29 @@ const hydrateRequestFilesWithCloudinary = async (req) => {
   }));
 };
 
+const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(value || "").trim().toLowerCase());
+const isPhone10 = (value) => /^[0-9]{10}$/.test(String(value || "").trim());
+const normalizeLoginIdentifier = (value) => String(value || "").trim().toLowerCase();
+
+const fetchSellerByIdentifier = async (identifierRaw) => {
+  const identifier = normalizeLoginIdentifier(identifierRaw);
+  if (!identifier) return null;
+
+  const isMail = isEmail(identifier);
+  const isPhone = isPhone10(identifier);
+  if (!isMail && !isPhone) return null;
+
+  const where = isMail ? "s.email = ?" : "s.phone = ?";
+  const [rows] = await query(
+    `SELECT s.*, c.name AS category
+     FROM sellers s
+     JOIN categories c ON s.category_id = c.id
+     WHERE ${where} LIMIT 1`,
+    [identifier]
+  );
+  return rows[0] || null;
+};
+
 const fetchSellerByPhone = async (phone) => {
   const [rows] = await query(
     `SELECT s.*, c.name AS category
@@ -471,17 +494,17 @@ exports.register = async (req, res) => {
 ===================================================== */
 exports.login = async (req, res) => {
   try {
-    const phone = String(req.body.phone || req.body.identifier || "").trim();
+    const identifier = normalizeLoginIdentifier(req.body.phone || req.body.email || req.body.identifier || "");
     const password = String(req.body.password || "");
 
-    if (!phone || !password) {
+    if (!identifier || !password) {
       return res.status(400).json({
         success: false,
-        message: "Phone and password required"
+        message: "Phone/email and password required"
       });
     }
 
-    const seller = await fetchSellerByPhone(phone);
+    const seller = await fetchSellerByIdentifier(identifier);
     if (!seller) {
       return res.status(401).json({
         success: false,
@@ -528,15 +551,21 @@ exports.login = async (req, res) => {
 ===================================================== */
 exports.requestLoginOtp = async (req, res) => {
   try {
-    const phone = String(req.body.phone || "").trim();
-    if (!/^[0-9]{10}$/.test(phone)) {
+    const identifier = normalizeLoginIdentifier(req.body.phone || req.body.email || req.body.identifier || "");
+    if (!identifier) {
       return res.status(400).json({
         success: false,
-        message: "Enter valid 10-digit mobile number"
+        message: "Registered phone or email is required"
+      });
+    }
+    if (!isEmail(identifier) && !isPhone10(identifier)) {
+      return res.status(400).json({
+        success: false,
+        message: "Wrong input. Enter valid registered phone or email"
       });
     }
 
-    const seller = await fetchSellerByPhone(phone);
+    const seller = await fetchSellerByIdentifier(identifier);
     if (!seller) {
       return res.status(404).json({
         success: false,
@@ -544,6 +573,7 @@ exports.requestLoginOtp = async (req, res) => {
       });
     }
 
+    const phone = String(seller.phone || "").trim();
     const otp = issueSellerOtp(phone);
     const email = String(seller.email || "").trim().toLowerCase();
     const [mail, sms] = await Promise.all([
@@ -590,15 +620,21 @@ exports.requestLoginOtp = async (req, res) => {
 ===================================================== */
 exports.requestPasswordResetOtp = async (req, res) => {
   try {
-    const phone = String(req.body.phone || "").trim();
-    if (!/^[0-9]{10}$/.test(phone)) {
+    const identifier = normalizeLoginIdentifier(req.body.phone || req.body.email || req.body.identifier || "");
+    if (!identifier) {
       return res.status(400).json({
         success: false,
-        message: "Enter valid 10-digit mobile number"
+        message: "Registered phone or email is required"
+      });
+    }
+    if (!isEmail(identifier) && !isPhone10(identifier)) {
+      return res.status(400).json({
+        success: false,
+        message: "Wrong input. Enter valid registered phone or email"
       });
     }
 
-    const seller = await fetchSellerByPhone(phone);
+    const seller = await fetchSellerByIdentifier(identifier);
     if (!seller) {
       return res.status(404).json({
         success: false,
@@ -606,6 +642,7 @@ exports.requestPasswordResetOtp = async (req, res) => {
       });
     }
 
+    const phone = String(seller.phone || "").trim();
     const otp = issueSellerPasswordResetOtp(phone);
     const email = String(seller.email || "").trim().toLowerCase();
     const [mail, sms] = await Promise.all([
@@ -652,20 +689,20 @@ exports.requestPasswordResetOtp = async (req, res) => {
 ===================================================== */
 exports.resetPasswordWithOtp = async (req, res) => {
   try {
-    const phone = String(req.body.phone || "").trim();
+    const identifier = normalizeLoginIdentifier(req.body.phone || req.body.email || req.body.identifier || "");
     const otp = String(req.body.otp || "").trim();
     const newPassword = String(req.body.newPassword || req.body.password || "").trim();
 
-    if (!phone || !otp || !newPassword) {
+    if (!identifier || !otp || !newPassword) {
       return res.status(400).json({
         success: false,
-        message: "Phone, OTP and new password are required"
+        message: "Phone/email, OTP and new password are required"
       });
     }
-    if (!/^[0-9]{10}$/.test(phone)) {
+    if (!isEmail(identifier) && !isPhone10(identifier)) {
       return res.status(400).json({
         success: false,
-        message: "Enter valid 10-digit mobile number"
+        message: "Wrong input. Enter valid registered phone or email"
       });
     }
     if (!/^[0-9]{6}$/.test(otp)) {
@@ -681,7 +718,7 @@ exports.resetPasswordWithOtp = async (req, res) => {
       });
     }
 
-    const seller = await fetchSellerByPhone(phone);
+    const seller = await fetchSellerByIdentifier(identifier);
     if (!seller) {
       return res.status(404).json({
         success: false,
@@ -689,7 +726,7 @@ exports.resetPasswordWithOtp = async (req, res) => {
       });
     }
 
-    const check = verifySellerPasswordResetOtp(phone, otp);
+    const check = verifySellerPasswordResetOtp(String(seller.phone || "").trim(), otp);
     if (!check.ok) {
       return res.status(401).json({
         success: false,
@@ -719,17 +756,23 @@ exports.resetPasswordWithOtp = async (req, res) => {
 ===================================================== */
 exports.verifyLoginOtp = async (req, res) => {
   try {
-    const phone = String(req.body.phone || "").trim();
+    const identifier = normalizeLoginIdentifier(req.body.phone || req.body.email || req.body.identifier || "");
     const otp = String(req.body.otp || "").trim();
 
-    if (!phone || !otp) {
+    if (!identifier || !otp) {
       return res.status(400).json({
         success: false,
-        message: "Phone and OTP are required"
+        message: "Phone/email and OTP are required"
+      });
+    }
+    if (!isEmail(identifier) && !isPhone10(identifier)) {
+      return res.status(400).json({
+        success: false,
+        message: "Wrong input. Enter valid registered phone or email"
       });
     }
 
-    const seller = await fetchSellerByPhone(phone);
+    const seller = await fetchSellerByIdentifier(identifier);
     if (!seller) {
       return res.status(404).json({
         success: false,
@@ -737,7 +780,7 @@ exports.verifyLoginOtp = async (req, res) => {
       });
     }
 
-    const check = verifySellerOtp(phone, otp);
+    const check = verifySellerOtp(String(seller.phone || "").trim(), otp);
     if (!check.ok) {
       return res.status(401).json({
         success: false,

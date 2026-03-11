@@ -281,6 +281,25 @@ const dom = {
 
 let authResendTimer = null;
 let authResendRemaining = 0;
+let authOtpExpiryTimer = null;
+let authOtpExpiryRemaining = 0;
+
+function setAuthOtpMeta(text) {
+    const el = getEl("authOtpMeta");
+    if (!el) return;
+    const value = String(text || "").trim();
+    el.textContent = value;
+    el.style.display = value ? "block" : "none";
+}
+
+function resetAuthOtpExpiry() {
+    if (authOtpExpiryTimer) {
+        clearInterval(authOtpExpiryTimer);
+        authOtpExpiryTimer = null;
+    }
+    authOtpExpiryRemaining = 0;
+    setAuthOtpMeta("");
+}
 
 function resetAuthResendButton() {
     if (authResendTimer) {
@@ -293,6 +312,7 @@ function resetAuthResendButton() {
         btn.disabled = false;
         btn.textContent = "Send OTP";
     }
+    resetAuthOtpExpiry();
 }
 
 function startAuthResendCooldown(seconds = 30) {
@@ -315,6 +335,31 @@ function startAuthResendCooldown(seconds = 30) {
             return;
         }
         btn.textContent = `Resend OTP (${authResendRemaining}s)`;
+    }, 1000);
+}
+
+function startAuthOtpExpiryCountdown(seconds = 300) {
+    resetAuthOtpExpiry();
+    authOtpExpiryRemaining = Math.max(1, Number(seconds) || 300);
+
+    const format = (total) => {
+        const s = Math.max(0, total | 0);
+        const mm = String(Math.floor(s / 60)).padStart(2, "0");
+        const ss = String(s % 60).padStart(2, "0");
+        return `${mm}:${ss}`;
+    };
+
+    setAuthOtpMeta(`OTP expires in ${format(authOtpExpiryRemaining)}`);
+    authOtpExpiryTimer = setInterval(() => {
+        authOtpExpiryRemaining -= 1;
+        if (authOtpExpiryRemaining <= 0) {
+            clearInterval(authOtpExpiryTimer);
+            authOtpExpiryTimer = null;
+            authOtpExpiryRemaining = 0;
+            setAuthOtpMeta("OTP expired. Tap Resend OTP.");
+            return;
+        }
+        setAuthOtpMeta(`OTP expires in ${format(authOtpExpiryRemaining)}`);
     }, 1000);
 }
 
@@ -964,6 +1009,16 @@ function setupEventListeners() {
         state.storeSearch = "";
         renderActiveFilterChips();
     });
+
+    const cartCheckoutBtn = getEl("cartCheckoutBtn");
+    if (cartCheckoutBtn && !cartCheckoutBtn.dataset.lbBound) {
+        cartCheckoutBtn.dataset.lbBound = "1";
+        cartCheckoutBtn.addEventListener("click", () => {
+            const cart = loadCart();
+            if (!Array.isArray(cart) || !cart.length) return;
+            window.location.href = welcomePath("customer/checkout/checkout.html");
+        });
+    }
     const openNowOnlyToggle = dom.openNowOnlyToggle();
     if (openNowOnlyToggle) {
         openNowOnlyToggle.addEventListener("change", () => {
@@ -1307,6 +1362,7 @@ function updateOtpAuthUI() {
     }
 
     if (!isOtp) resetAuthResendButton();
+    if (!isOtp) setAuthOtpMeta("");
 }
 
 function setOtpMode(mode) {
@@ -1356,6 +1412,7 @@ async function requestCustomerOtp() {
                 if (!res.ok || !data.success) throw new Error(data.message || "OTP send failed");
                 alert(data.message || "OTP sent successfully. Please check your registered email.");
                 startAuthResendCooldown(30);
+                startAuthOtpExpiryCountdown(300);
                 const otpInput = dom.authOtp();
                 if (otpInput) setTimeout(() => otpInput.focus(), 0);
                 return;

@@ -423,9 +423,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (sellerRequestOtpBtn) {
     sellerRequestOtpBtn.addEventListener("click", async () => {
-      const phone = String(inputs.loginPhone?.value || "").trim();
-      if (!/^[0-9]{10}$/.test(phone)) {
-        setMessage("Enter valid 10-digit mobile number", "#ef4444");
+      const identifier = String(inputs.loginPhone?.value || "").trim();
+      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(identifier || "").trim().toLowerCase());
+      const isPhone = /^[0-9]{10}$/.test(String(identifier || "").trim());
+      if (!isEmail && !isPhone) {
+        setMessage("Enter registered phone or email", "#ef4444");
         return;
       }
       if (otpMode === "none") {
@@ -438,11 +440,25 @@ document.addEventListener("DOMContentLoaded", () => {
         const endpoint = otpMode === "reset"
           ? `${API_BASE}/seller/password-reset/request`
           : `${API_BASE}/seller/login-otp/request`;
-        await fetchJson(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone })
-        });
+        const attempts = [
+          { identifier },
+          isPhone ? { phone: identifier } : { email: identifier }
+        ];
+        let lastErr = null;
+        for (let i = 0; i < attempts.length; i += 1) {
+          try {
+            await fetchJson(endpoint, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(attempts[i])
+            });
+            lastErr = null;
+            break;
+          } catch (err) {
+            lastErr = err;
+          }
+        }
+        if (lastErr) throw lastErr;
         showToast("Success", "OTP sent successfully. Please check your registered email/SMS.", "success");
         setMessage(
           otpMode === "reset" ? "OTP sent. Enter OTP + new password to reset." : "OTP sent. Enter OTP to login.",
@@ -600,14 +616,30 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function loginSellerWithOtp() {
-    const phone = String(inputs.loginPhone?.value || "").trim();
+    const identifier = String(inputs.loginPhone?.value || "").trim();
     const otp = String(inputs.sellerOtp?.value || "").trim();
 
-    const data = await fetchJson(`${API_BASE}/seller/login-otp/verify`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, otp })
-    });
+    const attempts = [
+      { identifier, otp },
+      { phone: identifier, otp },
+      { email: identifier, otp }
+    ];
+    let data = null;
+    let lastErr = null;
+    for (let i = 0; i < attempts.length; i += 1) {
+      try {
+        data = await fetchJson(`${API_BASE}/seller/login-otp/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(attempts[i])
+        });
+        lastErr = null;
+        break;
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+    if (lastErr) throw lastErr;
 
     const seller =
       data.seller ||
@@ -653,15 +685,31 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function resetSellerPasswordWithOtp() {
-    const phone = String(inputs.loginPhone?.value || "").trim();
+    const identifier = String(inputs.loginPhone?.value || "").trim();
     const otp = String(inputs.sellerOtp?.value || "").trim();
     const newPassword = String(sellerNewPassword?.value || "").trim();
 
-    const data = await fetchJson(`${API_BASE}/seller/password-reset/verify`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, otp, newPassword })
-    });
+    const attempts = [
+      { identifier, otp, newPassword },
+      { phone: identifier, otp, newPassword },
+      { email: identifier, otp, newPassword }
+    ];
+    let data = null;
+    let lastErr = null;
+    for (let i = 0; i < attempts.length; i += 1) {
+      try {
+        data = await fetchJson(`${API_BASE}/seller/password-reset/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(attempts[i])
+        });
+        lastErr = null;
+        break;
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+    if (lastErr) throw lastErr;
 
     if (!data?.success) {
       throw new Error(data?.message || "Password reset failed");
@@ -908,8 +956,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function validateForm() {
     if (!isRegister) {
-      if (!/^[0-9]{10}$/.test(sanitize(inputs.loginPhone?.value)))
-        return "Enter valid 10-digit mobile number";
+      const identifier = sanitize(inputs.loginPhone?.value);
+      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(identifier || "").trim().toLowerCase());
+      const isPhone = /^[0-9]{10}$/.test(String(identifier || "").trim());
+      if (!isEmail && !isPhone) return "Enter registered phone or email";
 
       if (otpMode === "login") {
         if (!/^[0-9]{6}$/.test(sanitize(inputs.sellerOtp?.value)))

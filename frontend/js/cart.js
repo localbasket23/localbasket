@@ -204,7 +204,9 @@
     if (checkoutBtn) {
       checkoutBtn.addEventListener("click", function () {
         if (!getActiveCart().items.length) return;
-        window.location.href = "/welcome/customer/checkout/checkout.html";
+        var path = String(window.location.pathname || "").replace(/\\/g, "/");
+        var base = path.includes("/frontend/") ? "/frontend" : "";
+        window.location.href = base + "/welcome/customer/checkout/checkout.html";
       });
     }
 

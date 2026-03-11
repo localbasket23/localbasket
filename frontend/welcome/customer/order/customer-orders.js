@@ -1542,7 +1542,7 @@ async function reorderWithCurrentPrice(oldCart) {
     alert(`${unavailableCount} item(s) are out of stock and were skipped`);
   }
 
-  window.location.href = "/welcome/customer/checkout/checkout.html";
+  window.location.href = "../checkout/checkout.html";
 }
 
 /* =====================================================

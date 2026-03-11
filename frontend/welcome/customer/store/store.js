@@ -1096,7 +1096,7 @@ function checkout() {
     return;
   }
 
-  window.location.href = "/welcome/customer/checkout/checkout.html";
+  window.location.href = "../checkout/checkout.html";
 }
 
 /* =====================================================

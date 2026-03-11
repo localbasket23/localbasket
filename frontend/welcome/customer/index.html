@@ -1734,6 +1734,13 @@
         }
         .auth-otp-row .auth-field{ flex: 1; }
         .auth-otp-row .auth-field input{ flex: 1; }
+        .auth-otp-meta{
+            display:none;
+            margin-top: -2px;
+            margin-bottom: 6px;
+            font-size: 12px;
+            color: var(--slate);
+        }
         .auth-otp-row button {
             width: auto;
             height: 44px;
@@ -3895,6 +3902,7 @@
             </div>
             <button type="button" id="authRequestOtpBtn" onclick="requestCustomerOtp()">Send OTP</button>
           </div>
+          <div class="auth-otp-meta" id="authOtpMeta">OTP expires in 05:00</div>
           <button class="btn-auth" onclick="submitAuth()">Continue</button>
           <button onclick="document.getElementById('authOverlay').style.display='none'" style="width:100%; border:none; background:none; margin-top:15px; color:var(--slate); cursor:pointer; font-weight: 600;">Cancel</button>
         </div>
