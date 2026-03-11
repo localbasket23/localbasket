@@ -638,8 +638,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         border: 1px solid rgba(255,140,0,0.18);
         box-shadow: 0 10px 22px -18px rgba(255,140,0,0.55);
         flex: 0 0 auto;
+        overflow: hidden;
       }
       #lb-ai-title-badge svg{ width: 18px; height: 18px; }
+      #lb-ai-title-badge img{
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        padding: 4px;
+        display: block;
+      }
       #lb-ai-title small{
         display: block;
         font-weight: 800;
@@ -989,10 +997,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       <div id="lb-ai-head">
         <div id="lb-ai-title">
           <div id="lb-ai-title-badge" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M7 7.5c0-2.5 2-4.5 5-4.5s5 2 5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M6.5 10.5c0-1.1.9-2 2-2h7c1.1 0 2 .9 2 2v5c0 2-1.6 3.5-3.5 3.5h-1.2l-1.8 1.6-1.8-1.6H10c-2 0-3.5-1.6-3.5-3.5v-5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-            </svg>
+            <img alt="LocalBasket" src="/welcome/logo2.png?v=20260303" onerror="this.style.display='none'">
           </div>
           <div>
             <div>LocalBasket AI</div>
