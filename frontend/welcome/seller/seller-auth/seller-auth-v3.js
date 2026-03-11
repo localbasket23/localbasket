@@ -96,6 +96,13 @@ document.addEventListener("DOMContentLoaded", () => {
     bankBranch: document.getElementById("bankBranch")
   };
 
+  try {
+    const saved = String(localStorage.getItem("lbSellerLastAuthIdentifier") || "").trim();
+    if (saved && inputs.loginPhone && !String(inputs.loginPhone.value || "").trim()) {
+      inputs.loginPhone.value = saved;
+    }
+  } catch {}
+
   let currentStep = 1;
   let resendTimer = null;
   let resendRemaining = 0;
@@ -427,14 +434,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const identifier = String(inputs.loginPhone?.value || "").trim();
       const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(identifier || "").trim().toLowerCase());
       const isPhone = /^[0-9]{10}$/.test(String(identifier || "").trim());
-      if (!isEmail && !isPhone) {
-        setMessage("Enter registered phone or email", "#ef4444");
-        return;
-      }
       if (otpMode === "none") {
         setMessage("Select Login with OTP or Forgot Password first", "#ef4444");
         return;
       }
+
+      // OTP is delivered on email only (not SMS).
+      if (!isEmail) {
+        setMessage("For OTP, please enter your registered email (OTP comes on email).", "#ef4444");
+        try { inputs.loginPhone?.focus?.(); inputs.loginPhone?.select?.(); } catch {}
+        return;
+      }
+
+      try { localStorage.setItem("lbSellerLastAuthIdentifier", identifier); } catch {}
       sellerRequestOtpBtn.disabled = true;
       sellerRequestOtpBtn.textContent = "Sending...";
       try {
@@ -443,7 +455,7 @@ document.addEventListener("DOMContentLoaded", () => {
           : `${API_BASE}/seller/login-otp/request`;
         const attempts = [
           { identifier },
-          isPhone ? { phone: identifier } : { email: identifier }
+          { email: identifier }
         ];
         let lastErr = null;
         for (let i = 0; i < attempts.length; i += 1) {
@@ -609,6 +621,7 @@ document.addEventListener("DOMContentLoaded", () => {
         break;
       case "APPROVED":
         localStorage.setItem("lbSeller", JSON.stringify(seller));
+        try { localStorage.setItem("lbSellerLastAuthIdentifier", phone); } catch {}
         window.location.href = "/welcome/seller/seller-dashboard.html";
         break;
       default:
@@ -619,6 +632,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loginSellerWithOtp() {
     const identifier = String(inputs.loginPhone?.value || "").trim();
     const otp = String(inputs.sellerOtp?.value || "").trim();
+    try { localStorage.setItem("lbSellerLastAuthIdentifier", identifier); } catch {}
 
     const attempts = [
       { identifier, otp },

@@ -1339,6 +1339,14 @@ function openAuth() {
     if (!overlay) return;
     switchTab("login");
     overlay.style.display = "flex";
+    try {
+        const input = dom.authPhone();
+        if (input && !String(input.value || "").trim()) {
+            const saved = String(localStorage.getItem("lbLastAuthIdentifier") || "").trim();
+            if (saved) input.value = saved;
+        }
+        setTimeout(() => input?.focus?.(), 0);
+    } catch {}
 }
 
 function updateOtpAuthUI() {
@@ -1349,6 +1357,8 @@ function updateOtpAuthUI() {
     const otpLoginBtn = dom.authLoginOtpBtn();
     const otpResetBtn = dom.authResetOtpBtn();
     const authInput = dom.authPhone();
+    const hint = getEl("authHint");
+    const emailOk = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(value || "").trim().toLowerCase());
 
     if (otpRow) otpRow.classList.toggle("active", isOtp);
     if (otpInput) {
@@ -1378,12 +1388,26 @@ function updateOtpAuthUI() {
         if (state.authMode === "register") {
             authInput.placeholder = "Phone Number";
             authInput.type = "text";
+            authInput.inputMode = "tel";
         } else if (state.authOtpMode !== "none") {
-            authInput.placeholder = "Registered Email or Phone";
-            authInput.type = "text";
+            authInput.placeholder = "Registered Email (OTP comes on email)";
+            authInput.type = "email";
+            authInput.inputMode = "email";
         } else {
             authInput.placeholder = "Phone Number or Email";
             authInput.type = "text";
+            authInput.inputMode = "text";
+        }
+    }
+
+    if (hint) {
+        const show = state.authMode === "login" && state.authOtpMode !== "none";
+        hint.style.display = show ? "block" : "none";
+        if (show && authInput) {
+            const v = String(authInput.value || "").trim();
+            hint.textContent = v && !emailOk(v)
+                ? "OTP is sent on email only. Please enter your registered email."
+                : "Tip: For OTP login, enter your email (OTP comes on email).";
         }
     }
 
@@ -1407,6 +1431,18 @@ async function requestCustomerOtp() {
     const identifier = String(dom.authPhone()?.value || "").trim();
     if (!identifier) return alert("Enter registered email or phone first");
     if (!state.authUseOtp) return alert("Select Login with OTP or Forgot Password first");
+
+    const emailOk = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(value || "").trim().toLowerCase());
+    if (state.authOtpMode !== "none" && !emailOk(identifier)) {
+        const input = dom.authPhone();
+        if (input) {
+            input.focus();
+            try { input.select(); } catch {}
+        }
+        return alert("For OTP, please enter your registered email (OTP comes on email).");
+    }
+
+    try { localStorage.setItem("lbLastAuthIdentifier", identifier); } catch {}
 
     const btn = dom.authRequestOtpBtn();
     if (btn) {
@@ -1473,6 +1509,14 @@ async function submitAuth() {
     if (state.authMode === "login" && state.authOtpMode === "none" && !password) return alert("Enter password");
     if (state.authMode === "login" && state.authOtpMode !== "none" && !otp) return alert("Enter OTP");
     if (state.authMode === "login" && state.authOtpMode === "reset" && !password) return alert("Enter new password");
+    if (state.authMode === "login" && state.authOtpMode !== "none" && !emailOk(phone)) {
+        const input = dom.authPhone();
+        if (input) {
+            input.focus();
+            try { input.select(); } catch {}
+        }
+        return alert("For OTP, please enter your registered email (OTP comes on email).");
+    }
     if (state.authMode === "register" && !regName) return alert("Enter full name");
     if (state.authMode === "register" && !regEmail) return alert("Enter email");
     if (state.authMode === "register" && !emailOk(regEmail)) return alert("Enter valid email");
@@ -1557,6 +1601,7 @@ async function submitAuth() {
             state.token = token;
             localStorage.setItem("lbUser", JSON.stringify(resolvedUser));
             localStorage.setItem("lbToken", token);
+            try { localStorage.setItem("lbLastAuthIdentifier", phone); } catch {}
 
             state.cart = loadCart();
             state.authUseOtp = false;
@@ -1590,6 +1635,7 @@ async function submitAuth() {
         state.token = data.token || null;
         localStorage.setItem("lbUser", JSON.stringify(resolvedUser));
         if (state.token) localStorage.setItem("lbToken", state.token);
+        try { localStorage.setItem("lbLastAuthIdentifier", phone); } catch {}
 
         state.cart = loadCart();
         

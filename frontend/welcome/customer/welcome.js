@@ -254,7 +254,33 @@ document.addEventListener("DOMContentLoaded", () => {
     setupEventListeners();
 });
 
+function bindAuthVisibilityToggles() {
+    const bind = (btnId, inputId, labels = {}) => {
+        const btn = getEl(btnId);
+        const input = getEl(inputId);
+        if (!btn || !input) return;
+        const icon = btn.querySelector("i");
+        const showLabel = labels.show || "Show";
+        const hideLabel = labels.hide || "Hide";
+        const setState = (visible) => {
+            try { input.type = visible ? "text" : "password"; } catch {}
+            btn.setAttribute("aria-label", visible ? hideLabel : showLabel);
+            if (icon) icon.className = `fas ${visible ? "fa-eye-slash" : "fa-eye"}`;
+            btn.dataset.visible = visible ? "1" : "0";
+        };
+        setState(false);
+        btn.addEventListener("click", () => {
+            const visible = btn.dataset.visible === "1";
+            setState(!visible);
+        });
+    };
+
+    bind("toggleAuthPassword", "authPassword", { show: "Show password", hide: "Hide password" });
+    bind("toggleAuthOtp", "authOtp", { show: "Show OTP", hide: "Hide OTP" });
+}
+
 function initApp() {
+    bindAuthVisibilityToggles();
     updateAuthUI();
     updateCartUI();
     updateLocationUI();
@@ -919,6 +945,14 @@ function openAuth() {
     if (!overlay) return;
     switchTab("login");
     overlay.style.display = "flex";
+    try {
+        const input = dom.authPhone();
+        if (input && !String(input.value || "").trim()) {
+            const saved = String(localStorage.getItem("lbLastAuthIdentifier") || "").trim();
+            if (saved) input.value = saved;
+        }
+        setTimeout(() => input?.focus?.(), 0);
+    } catch {}
 }
 
 function updateOtpAuthUI() {
@@ -947,12 +981,15 @@ function updateOtpAuthUI() {
         if (state.authMode === "register") {
             authInput.placeholder = "Phone Number";
             authInput.type = "text";
+            authInput.inputMode = "tel";
         } else if (isOtp) {
-            authInput.placeholder = "Registered Email or Phone";
-            authInput.type = "text";
+            authInput.placeholder = "Registered Email (OTP comes on email)";
+            authInput.type = "email";
+            authInput.inputMode = "email";
         } else {
             authInput.placeholder = "Phone Number or Email";
             authInput.type = "text";
+            authInput.inputMode = "text";
         }
     }
 }
@@ -971,6 +1008,18 @@ async function requestCustomerOtp() {
         state.authUseOtp = true;
         updateOtpAuthUI();
     }
+
+    const emailOk = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(value || "").trim().toLowerCase());
+    if (state.authUseOtp && !emailOk(identifier)) {
+        const input = dom.authPhone();
+        if (input) {
+            input.focus();
+            try { input.select(); } catch {}
+        }
+        return alert("For OTP, please enter your registered email (OTP comes on email).");
+    }
+
+    try { localStorage.setItem("lbLastAuthIdentifier", identifier); } catch {}
 
     const btn = dom.authRequestOtpBtn();
     if (btn) {
@@ -1033,6 +1082,14 @@ async function submitAuth() {
     if (state.authMode === "login" && !state.authUseOtp && !password) return alert("Enter password");
     if (state.authMode === "login" && state.authUseOtp && !otp) return alert("Enter OTP");
     if (state.authMode === "login" && state.authUseOtp && !password) return alert("Enter new password");
+    if (state.authMode === "login" && state.authUseOtp && !emailOk(phone)) {
+        const input = dom.authPhone();
+        if (input) {
+            input.focus();
+            try { input.select(); } catch {}
+        }
+        return alert("For OTP, please enter your registered email (OTP comes on email).");
+    }
     if (state.authMode === "register" && !regName) return alert("Enter full name");
     if (state.authMode === "register" && !regEmail) return alert("Enter email");
     if (state.authMode === "register" && !emailOk(regEmail)) return alert("Enter valid email");
@@ -1147,6 +1204,7 @@ async function submitAuth() {
         state.token = data.token || null;
         localStorage.setItem("lbUser", JSON.stringify(resolvedUser));
         if (state.token) localStorage.setItem("lbToken", state.token);
+        try { localStorage.setItem("lbLastAuthIdentifier", phone); } catch {}
 
         state.cart = loadCart();
         

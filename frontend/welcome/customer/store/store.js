@@ -1102,7 +1102,8 @@ function checkout() {
     return;
   }
 
-  window.location.href = "../checkout/checkout.html";
+  // Use absolute path to avoid routing issues on some hosts (e.g. static deploys).
+  window.location.href = "/welcome/customer/checkout/checkout.html";
 }
 
 /* =====================================================
