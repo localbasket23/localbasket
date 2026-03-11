@@ -3406,9 +3406,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.body.style.overflow = "hidden";
       clearAdminTimers();
       setAdminMsg("");
-      if (adminEmailInput) adminEmailInput.value = ADMIN_EMAIL;
+      try { if (adminEmailInput) adminEmailInput.value = ""; } catch {}
       try { adminOtpInput && (adminOtpInput.value = ""); } catch {}
-      if (adminOtpInput) adminOtpInput.focus();
+      if (adminEmailInput) adminEmailInput.focus();
+      else if (adminOtpInput) adminOtpInput.focus();
     };
 
     const closeAdminPopup = () => {
@@ -3455,10 +3456,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (adminSendOtpBtn && !adminSendOtpBtn.dataset.lbBound) {
       adminSendOtpBtn.addEventListener("click", async () => {
         setAdminMsg("");
-        const email = String(adminEmailInput?.value || ADMIN_EMAIL).trim().toLowerCase();
+        const emailRaw = String(adminEmailInput?.value || "").trim();
+        const email = emailRaw.toLowerCase();
+        if (!emailRaw) {
+          setAdminMsg("Enter admin email first.");
+          try { adminEmailInput?.focus?.(); } catch {}
+          return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+          setAdminMsg("Enter a valid email address.");
+          try { adminEmailInput?.focus?.(); } catch {}
+          return;
+        }
         if (email !== ADMIN_EMAIL) {
-          setAdminMsg("Admin email is fixed and cannot be changed.");
-          if (adminEmailInput) adminEmailInput.value = ADMIN_EMAIL;
+          setAdminMsg(`Unauthorized admin email. Use: ${ADMIN_EMAIL}`);
+          try { adminEmailInput?.focus?.(); } catch {}
           return;
         }
         adminSendOtpBtn.disabled = true;
@@ -3473,7 +3485,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             throw new Error(out.data?.message || `Request failed (${out.res.status})`);
           }
           startAdminResendCooldown(30);
-          startAdminOtpExpiry(300);
+          startAdminOtpExpiry(out.data?.expires_in_seconds || 300);
           setTimeout(() => { try { adminOtpInput?.focus?.(); } catch {} }, 0);
         } catch (err) {
           setAdminMsg(err?.message || "Failed to send OTP.");
@@ -3488,11 +3500,22 @@ document.addEventListener("DOMContentLoaded", async () => {
       adminForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         setAdminMsg("");
-        const email = String(adminEmailInput?.value || ADMIN_EMAIL).trim().toLowerCase();
+        const emailRaw = String(adminEmailInput?.value || "").trim();
+        const email = emailRaw.toLowerCase();
         const otp = String(adminOtpInput?.value || "").trim();
+        if (!emailRaw) {
+          setAdminMsg("Enter admin email first.");
+          try { adminEmailInput?.focus?.(); } catch {}
+          return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+          setAdminMsg("Enter a valid email address.");
+          try { adminEmailInput?.focus?.(); } catch {}
+          return;
+        }
         if (email !== ADMIN_EMAIL) {
-          setAdminMsg("Admin email is fixed and cannot be changed.");
-          if (adminEmailInput) adminEmailInput.value = ADMIN_EMAIL;
+          setAdminMsg(`Unauthorized admin email. Use: ${ADMIN_EMAIL}`);
+          try { adminEmailInput?.focus?.(); } catch {}
           return;
         }
         if (!/^\d{6}$/.test(otp)) {

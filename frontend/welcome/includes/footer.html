@@ -91,7 +91,7 @@
     <button type="button" class="lb-admin-popup-close" id="lbAdminPopupClose" aria-label="Close" onclick="var o=document.getElementById('lbAdminPopupOverlay');if(o){o.hidden=true;}document.body.style.overflow='';">&times;</button>
     <h3 id="lbAdminPopupTitle">Admin Login</h3>
     <form id="lbAdminPopupForm">
-      <input type="email" id="lbAdminEmail" placeholder="Admin email" autocomplete="username" value="localbasket.helpdesk@gmail.com" readonly>
+      <input type="email" id="lbAdminEmail" placeholder="localbasket.helpdesk@gmail.com" autocomplete="username" inputmode="email" autocapitalize="none" spellcheck="false" required>
       <div style="position:relative;">
         <input type="password" id="lbAdminOtp" placeholder="Enter OTP" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required style="padding-right:44px;">
         <button type="button" id="lbAdminOtpToggle" aria-label="Show OTP" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); width:36px; height:36px; border:none; background:transparent; cursor:pointer; border-radius:10px;">

@@ -16,9 +16,15 @@ const generateOtp = () => String(Math.floor(100000 + Math.random() * 900000));
 
 exports.requestAdminOtp = async (req, res) => {
   try {
-    const email = String(req.body?.email || ADMIN_EMAIL).trim().toLowerCase();
+    const email = String(req.body?.email || "").trim().toLowerCase();
     if (!ADMIN_EMAIL || !isEmail(ADMIN_EMAIL)) {
       return res.status(500).json({ success: false, message: "Admin OTP email is not configured" });
+    }
+    if (!email) {
+      return res.status(400).json({ success: false, message: "email is required" });
+    }
+    if (!isEmail(email)) {
+      return res.status(400).json({ success: false, message: "valid email is required" });
     }
     if (email !== ADMIN_EMAIL) {
       return res.status(403).json({ success: false, message: "Unauthorized admin email" });
@@ -61,9 +67,12 @@ exports.requestAdminOtp = async (req, res) => {
 
 exports.verifyAdminOtp = async (req, res) => {
   try {
-    const email = String(req.body?.email || ADMIN_EMAIL).trim().toLowerCase();
+    const email = String(req.body?.email || "").trim().toLowerCase();
     const otp = String(req.body?.otp || "").trim();
 
+    if (!email) {
+      return res.status(400).json({ success: false, message: "email is required" });
+    }
     if (!isEmail(email) || email !== ADMIN_EMAIL) {
       return res.status(403).json({ success: false, message: "Unauthorized admin email" });
     }
@@ -102,4 +111,3 @@ exports.verifyAdminOtp = async (req, res) => {
     return res.status(500).json({ success: false, message: "Failed to verify admin OTP" });
   }
 };
-
