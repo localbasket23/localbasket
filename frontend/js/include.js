@@ -1,4 +1,249 @@
 (() => {
+  const ensureLaunchOverlay = () => {
+    if (window.__lbLaunchOverlayReady) return;
+    window.__lbLaunchOverlayReady = true;
+
+    const style = document.createElement("style");
+    style.id = "lb-launch-style";
+    style.textContent = `
+      :root{
+        --lb-launch-bg: radial-gradient(900px 600px at 20% -10%, #fff7ed 0%, #ffffff 55%, #f8fafc 100%);
+        --lb-launch-card: rgba(255,255,255,0.78);
+        --lb-launch-border: rgba(148,163,184,0.35);
+        --lb-launch-text: #0f172a;
+        --lb-launch-sub: rgba(15,23,42,0.7);
+        --lb-launch-ring: conic-gradient(from 180deg, #f97316, #fb923c, #22c55e, #3b82f6, #f97316);
+      }
+      html.lb-theme-dark{
+        --lb-launch-bg: radial-gradient(1100px 700px at 20% -5%, #13284a 0%, #081428 58%, #061022 100%);
+        --lb-launch-card: rgba(15,23,42,0.62);
+        --lb-launch-border: rgba(148,163,184,0.22);
+        --lb-launch-text: #e2e8f0;
+        --lb-launch-sub: rgba(226,232,240,0.75);
+        --lb-launch-ring: conic-gradient(from 180deg, #fb923c, #f97316, #22c55e, #60a5fa, #fb923c);
+      }
+
+      #lb-launch{
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: grid;
+        place-items: center;
+        padding: 18px;
+        background: var(--lb-launch-bg);
+        transition: opacity 260ms ease, transform 260ms ease;
+      }
+      #lb-launch.lb-launch-hide{
+        opacity: 0;
+        transform: scale(1.01);
+        pointer-events: none;
+      }
+      #lb-launch-card{
+        width: min(560px, calc(100vw - 36px));
+        border-radius: 22px;
+        background: var(--lb-launch-card);
+        border: 1px solid var(--lb-launch-border);
+        box-shadow: 0 30px 70px -50px rgba(2,6,23,0.55);
+        backdrop-filter: blur(14px);
+        padding: 18px;
+        display: grid;
+        gap: 14px;
+      }
+      #lb-launch-top{
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+      #lb-launch-logo{
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.7);
+        border: 1px solid rgba(148,163,184,0.28);
+        display: grid;
+        place-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+      html.lb-theme-dark #lb-launch-logo{
+        background: rgba(2,6,23,0.18);
+        border-color: rgba(148,163,184,0.22);
+      }
+      #lb-launch-logo::before{
+        content: "";
+        position: absolute;
+        inset: -10px;
+        background: var(--lb-launch-ring);
+        animation: lbLaunchSpin 1.3s linear infinite;
+        opacity: 0.9;
+      }
+      #lb-launch-logo::after{
+        content: "";
+        position: absolute;
+        inset: 2px;
+        border-radius: 12px;
+        background: var(--lb-launch-card);
+        border: 1px solid rgba(148,163,184,0.15);
+      }
+      #lb-launch-logo span{
+        position: relative;
+        z-index: 1;
+        font-weight: 1000;
+        letter-spacing: -0.5px;
+        color: #f97316;
+        font-size: 18px;
+      }
+      #lb-launch-title{
+        font-size: 18px;
+        font-weight: 1000;
+        letter-spacing: -0.2px;
+        color: var(--lb-launch-text);
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #lb-launch-sub{
+        margin-top: 2px;
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--lb-launch-sub);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      #lb-launch-bar{
+        height: 10px;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba(148,163,184,0.2);
+        border: 1px solid rgba(148,163,184,0.22);
+      }
+      #lb-launch-bar > i{
+        display: block;
+        height: 100%;
+        width: 45%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, rgba(249,115,22,0.0), rgba(249,115,22,0.9), rgba(34,197,94,0.7), rgba(96,165,250,0.75), rgba(249,115,22,0.0));
+        transform: translateX(-70%);
+        animation: lbLaunchBar 1.15s ease-in-out infinite;
+      }
+      #lb-launch-foot{
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      #lb-launch-hint{
+        font-size: 12px;
+        font-weight: 800;
+        color: var(--lb-launch-sub);
+      }
+      #lb-launch-dots{
+        font-size: 12px;
+        font-weight: 900;
+        color: rgba(249,115,22,0.95);
+        letter-spacing: 0.8px;
+      }
+
+      @keyframes lbLaunchSpin{
+        to{ transform: rotate(360deg); }
+      }
+      @keyframes lbLaunchBar{
+        0%{ transform: translateX(-80%); opacity: 0.75; }
+        55%{ opacity: 1; }
+        100%{ transform: translateX(220%); opacity: 0.75; }
+      }
+
+      @media (prefers-reduced-motion: reduce){
+        #lb-launch-logo::before, #lb-launch-bar > i{ animation: none !important; }
+        #lb-launch{ transition: none; }
+      }
+      @media (max-width: 420px){
+        #lb-launch-card{ padding: 16px; border-radius: 20px; }
+        #lb-launch-title{ font-size: 16px; }
+        #lb-launch-logo{ width: 42px; height: 42px; border-radius: 14px; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    const overlay = document.createElement("div");
+    overlay.id = "lb-launch";
+    overlay.setAttribute("role", "status");
+    overlay.setAttribute("aria-live", "polite");
+    overlay.innerHTML = `
+      <div id="lb-launch-card">
+        <div id="lb-launch-top">
+          <div id="lb-launch-logo" aria-hidden="true"><span>LB</span></div>
+          <div style="min-width:0">
+            <div id="lb-launch-title">LocalBasket</div>
+            <div id="lb-launch-sub">Getting things ready for you</div>
+          </div>
+        </div>
+        <div id="lb-launch-bar" aria-hidden="true"><i></i></div>
+        <div id="lb-launch-foot">
+          <div id="lb-launch-hint">Loading</div>
+          <div id="lb-launch-dots" aria-hidden="true">•••</div>
+        </div>
+      </div>
+    `;
+
+    // ensure theme class is applied as early as possible (reduces flash)
+    try {
+      const saved = localStorage.getItem("lbTheme");
+      if (saved === "dark") document.documentElement.classList.add("lb-theme-dark");
+      if (saved === "light") document.documentElement.classList.remove("lb-theme-dark");
+    } catch {}
+
+    (document.body || document.documentElement).appendChild(overlay);
+
+    let dots = 0;
+    const dotsEl = overlay.querySelector("#lb-launch-dots");
+    const hintEl = overlay.querySelector("#lb-launch-hint");
+    const dotsTimer = window.setInterval(() => {
+      dots = (dots + 1) % 4;
+      if (dotsEl) dotsEl.textContent = "•".repeat(Math.max(1, dots));
+      if (hintEl) hintEl.textContent = document.readyState === "complete" ? "Almost done" : "Loading";
+    }, 420);
+
+    const start = Date.now();
+    const minShowMs = 380;
+    const hide = () => {
+      if (!window.__lbLaunchOverlayReady) return;
+      const el = document.getElementById("lb-launch");
+      if (!el || el.classList.contains("lb-launch-hide")) return;
+      const elapsed = Date.now() - start;
+      const wait = Math.max(0, minShowMs - elapsed);
+      window.setTimeout(() => {
+        el.classList.add("lb-launch-hide");
+        window.setTimeout(() => {
+          try { window.clearInterval(dotsTimer); } catch {}
+          try { el.remove(); } catch {}
+        }, 320);
+      }, wait);
+    };
+
+    window.lbHideLaunch = hide;
+
+    // Hide when DOM is ready (faster than waiting for all images),
+    // also hide on full load, plus a fallback timeout for safety.
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => window.setTimeout(hide, 420), { once: true });
+    } else {
+      window.setTimeout(hide, 420);
+    }
+
+    window.addEventListener("load", hide, { once: true });
+    window.setTimeout(hide, 6500);
+
+    // If this script loads very late (already complete), hide quickly
+    if (document.readyState === "complete") window.setTimeout(hide, 0);
+  };
+
+  ensureLaunchOverlay();
+
   let dialogReady = false;
   const ensureDialog = () => {
     if (dialogReady) return;
