@@ -1808,14 +1808,18 @@ async function applyDetectedLocation(pos, { fallback = false } = {}) {
 
 function searchByPincode() {
     const heroRaw = String(dom.heroPinInput()?.value || "").trim();
+    const mobileRaw = String(dom.mobilePinInput()?.value || "").trim();
     const modalRaw = String(dom.modalPinInput()?.value || "").trim();
     const raw = isLocationModalVisible()
-        ? (modalRaw || heroRaw)
-        : (heroRaw || modalRaw);
+        ? (modalRaw || mobileRaw || heroRaw)
+        : (mobileRaw || heroRaw || modalRaw);
     if (!/^[0-9]{6}$/.test(raw)) {
         alert("Enter valid 6-digit pincode");
         return;
     }
+
+    if (dom.heroPinInput()) dom.heroPinInput().value = raw;
+    if (dom.mobilePinInput()) dom.mobilePinInput().value = raw;
 
     state.location.pincode = raw;
     state.location.address = `Pincode: ${raw}`;
