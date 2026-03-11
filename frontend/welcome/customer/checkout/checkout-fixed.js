@@ -14,11 +14,19 @@ function safeParseJson(raw, fallback) {
 }
 
 function normalizeIndianPhone(raw) {
-  const digits = String(raw || "").replace(/\D/g, "");
-  let d = digits;
-  // Accept common variants: +91XXXXXXXXXX, 91XXXXXXXXXX, 0XXXXXXXXXX
-  if (d.length === 12 && d.startsWith("91")) d = d.slice(2);
-  if (d.length === 11 && d.startsWith("0")) d = d.slice(1);
+  let d = String(raw || "").replace(/\D/g, "");
+
+  // Common prefixes:
+  // - +91XXXXXXXXXX / 91XXXXXXXXXX
+  // - 0XXXXXXXXXX
+  // - 0091XXXXXXXXXX
+  while (d.startsWith("00")) d = d.slice(2);
+  if (d.startsWith("0") && d.length > 10) d = d.replace(/^0+/, "");
+  if (d.startsWith("91") && d.length > 10) d = d.slice(2);
+
+  // If user still has country code/extra digits, keep last 10 digits (mobile).
+  if (d.length > 10) d = d.slice(-10);
+
   return d;
 }
 
@@ -117,6 +125,13 @@ const nameInput = document.getElementById("name");
 const phoneInput = document.getElementById("phone");
 if (nameInput) nameInput.value = user?.name || "";
 if (phoneInput) phoneInput.value = user?.phone || "";
+
+if (phoneInput) {
+  phoneInput.addEventListener("blur", () => {
+    const normalized = normalizeIndianPhone(phoneInput.value);
+    if (normalized) phoneInput.value = normalized;
+  });
+}
 
 ["address", "area", "pincode"].forEach((id) => {
   const field = document.getElementById(id);
@@ -351,7 +366,7 @@ async function placeOrder() {
   }
 
   if (!/^[6-9]\\d{9}$/.test(phone)) {
-    alert("Error: Invalid phone number");
+    alert("Error: Invalid phone number. Enter 10-digit Indian mobile (e.g. 9876543210).");
     return;
   }
 
