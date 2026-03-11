@@ -35,6 +35,10 @@
       --py: 35%;
       --rx: 0deg;
       --ry: 0deg;
+      --parallax-x: 0px;
+      --parallax-y: 0px;
+      --parallax-x2: 0px;
+      --parallax-y2: 0px;
     }
 
     * { box-sizing: border-box; }
@@ -92,6 +96,7 @@
       background-position: 10px 10px;
       mask-image: radial-gradient(70% 70% at 50% 25%, #000 55%, transparent 75%);
       z-index: -2;
+      translate: var(--parallax-x2) var(--parallax-y2);
     }
 
     .bg-blob {
@@ -101,6 +106,7 @@
       opacity: 0.35;
       filter: blur(34px);
       transform: translate3d(0,0,0);
+      translate: var(--parallax-x) var(--parallax-y);
       background:
         radial-gradient(closest-side, rgba(255, 138, 26, 0.18), rgba(255, 138, 26, 0) 70%),
         radial-gradient(closest-side, rgba(255, 179, 71, 0.14), rgba(255, 179, 71, 0) 70%),
@@ -377,6 +383,22 @@
       isolation: isolate;
     }
 
+    .fallback::before {
+      content: "";
+      position: absolute;
+      inset: -2px;
+      background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.35), rgba(255,255,255,0));
+      transform: translateX(-120%) skewX(-14deg);
+      transition: transform 420ms ease;
+      opacity: 0.75;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .fallback:hover::before {
+      transform: translateX(140%) skewX(-14deg);
+    }
+
     .fallback:hover { transform: scale(1.05); filter: brightness(1.05); }
     .fallback:active { transform: translateY(0); }
     .fallback:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(255, 138, 26, 0.28), 0 20px 40px -28px rgba(255, 138, 26, 0.75); }
@@ -393,9 +415,30 @@
     }
 
     .countdown {
-      margin-top: 8px;
       font-size: 12px;
       color: var(--muted);
+    }
+
+    .meta {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .pct {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(255, 138, 26, 0.10);
+      border: 1px solid rgba(255, 138, 26, 0.18);
+      color: #9a3412;
+      letter-spacing: 0.2px;
+      min-width: 44px;
+      text-align: center;
+      user-select: none;
     }
 
     .footer-line {
@@ -447,6 +490,8 @@
       .bg-blob { animation: none; }
       .launch-card { transition: none; }
       .logo-wrap { transition: none; }
+      .bg-dots { translate: 0px 0px; }
+      .bg-blob { translate: 0px 0px; }
     }
   </style>
 </head>
@@ -470,7 +515,10 @@
       </div>
       <div class="progress" aria-hidden="true"><div class="bar" id="progressBar"></div></div>
       <a class="fallback" id="enterBtn" href="./welcome/customer/index.html">Enter Marketplace</a>
-      <div class="countdown" id="countdown">Redirecting in 3s...</div>
+      <div class="meta">
+        <span class="countdown" id="countdown">Redirecting in 3s...</span>
+        <span class="pct" id="pct" aria-hidden="true">0%</span>
+      </div>
       <div class="footer-line">Serving your neighborhood with fresh groceries</div>
     </div>
     </div>
@@ -483,6 +531,7 @@
     const progressBar = document.getElementById("progressBar");
     const tipEl = document.getElementById("tip");
     const surface = document.querySelector(".card-surface");
+    const pctEl = document.getElementById("pct");
 
     // Prevent in-page "launch overlays" (e.g. from `js/include.js`) so users don't
     // experience a second launch screen after redirect.
@@ -495,6 +544,37 @@
     const prefersReduce = (() => {
       try { return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch { return false; }
     })();
+
+    // Background parallax (very subtle)
+    if (!prefersReduce) {
+      let px = 0;
+      let py = 0;
+      let tx = 0;
+      let ty = 0;
+      let raf = 0;
+
+      const tickParallax = () => {
+        raf = 0;
+        px += (tx - px) * 0.12;
+        py += (ty - py) * 0.12;
+        document.documentElement.style.setProperty("--parallax-x", `${px.toFixed(2)}px`);
+        document.documentElement.style.setProperty("--parallax-y", `${py.toFixed(2)}px`);
+        document.documentElement.style.setProperty("--parallax-x2", `${(px * 0.6).toFixed(2)}px`);
+        document.documentElement.style.setProperty("--parallax-y2", `${(py * 0.6).toFixed(2)}px`);
+      };
+
+      const onMove = (ev) => {
+        const vw = Math.max(1, window.innerWidth || 1);
+        const vh = Math.max(1, window.innerHeight || 1);
+        const nx = (ev.clientX / vw - 0.5) * 2;
+        const ny = (ev.clientY / vh - 0.5) * 2;
+        tx = Math.max(-1, Math.min(1, nx)) * 10;
+        ty = Math.max(-1, Math.min(1, ny)) * 10;
+        if (!raf) raf = requestAnimationFrame(tickParallax);
+      };
+
+      window.addEventListener("pointermove", onMove, { passive: true });
+    }
 
     if (card && !prefersReduce) {
       const setPointerGlow = (ev) => {
@@ -543,10 +623,28 @@
       });
     }
 
-    if (tipEl && !prefersReduce) {
+    if (tipEl && !prefersReduce && false) {
       const tips = [
         "Fresh picks, delivered fast",
         "Veggies • Fruits • Daily essentials",
+        "Secure checkout and easy returns",
+      ];
+      let tipIndex = 0;
+      window.setInterval(() => {
+        tipIndex = (tipIndex + 1) % tips.length;
+        tipEl.style.opacity = "0";
+        window.setTimeout(() => {
+          tipEl.textContent = tips[tipIndex];
+          tipEl.style.opacity = "1";
+        }, 160);
+      }, 1200);
+    }
+
+    // Tip rotator (ASCII-safe)
+    if (tipEl && !prefersReduce) {
+      const tips = [
+        "Fresh picks, delivered fast",
+        "Veggies - Fruits - Daily essentials",
         "Secure checkout and easy returns",
       ];
       let tipIndex = 0;
@@ -580,9 +678,15 @@
       const elapsed = performance.now() - startedAt;
       const t01 = Math.max(0, Math.min(1, elapsed / durationMs));
       if (progressBar) progressBar.style.width = `${Math.round(t01 * 100)}%`;
+      if (pctEl) pctEl.textContent = `${Math.round(t01 * 100)}%`;
       if (t01 < 1) requestAnimationFrame(animate);
     };
     requestAnimationFrame(animate);
+
+    // Keyboard: Enter triggers the primary action
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && enterBtn) enterBtn.click();
+    });
   </script>
 </body>
 </html>
