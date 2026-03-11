@@ -105,6 +105,14 @@ async function fetchJsonWithFallback(path, options = {}) {
   throw lastError;
 }
 
+async function getPaymentStatusSafe() {
+  try {
+    return await fetchJsonWithFallback("/api/payment/status", { method: "GET" });
+  } catch {
+    return null;
+  }
+}
+
 const nameInput = document.getElementById("name");
 const phoneInput = document.getElementById("phone");
 if (nameInput) nameInput.value = user?.name || "";
@@ -178,11 +186,7 @@ function renderCart() {
 renderCart();
 
 async function saveOrder(orderData) {
-  const base = String(window.API_BASE_URL || "").trim().replace(/\/+$/, "");
-  const path = "/api/orders/create";
-  const url = base ? `${base}${path}` : path;
-
-  const data = await fetchJsonWithFallback(url, {
+  const data = await fetchJsonWithFallback("/api/orders/create", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(orderData),
@@ -258,9 +262,10 @@ function startRazorpayPayment(orderData) {
     body: JSON.stringify({ amount: orderData.total_amount }),
   };
 
-  const base = String(window.API_BASE_URL || "").trim().replace(/\/+$/, "");
-  const p1 = `${base}/api/payment/create-order`;
-  const p2 = `${base}/api/payment/create`;
+  // Use relative paths so `fetchJsonWithFallback` can try multiple API bases.
+  // Avoid hard-binding to a possibly-wrong `window.API_BASE_URL` (common cause of ONLINE/UPI failures).
+  const p1 = "/api/payment/create-order";
+  const p2 = "/api/payment/create";
 
   fetchJsonWithFallback(p1, payload)
     .catch(() => fetchJsonWithFallback(p2, payload))
@@ -288,6 +293,12 @@ function startRazorpayPayment(orderData) {
         image: brandLogo,
         description: "Order Payment",
         order_id: rpOrder.id,
+        method: { upi: true },
+        modal: {
+          ondismiss: () => {
+            // user closed checkout modal
+          },
+        },
         handler: (response) => {
           orderData.payment_status = "PAID";
           orderData.payment_id = response.razorpay_payment_id;
@@ -300,9 +311,29 @@ function startRazorpayPayment(orderData) {
         theme: { color: "#0f766e" },
       };
 
-      new Razorpay(options).open();
+      const rz = new Razorpay(options);
+      rz.on("payment.failed", (resp) => {
+        const msg =
+          resp?.error?.description ||
+          resp?.error?.reason ||
+          resp?.error?.code ||
+          "Payment failed";
+        alert(`Payment failed: ${msg}`);
+      });
+      rz.open();
     })
-    .catch((err) => alert(`Payment init failed: ${err?.message || "Network error"}`));
+    .catch(async (err) => {
+      const status = await getPaymentStatusSafe();
+      if (status && status.success && !status.has_key_id) {
+        alert("Payment init failed: Razorpay is not configured on server (missing key id).");
+        return;
+      }
+      if (status && status.success && !status.has_key_secret) {
+        alert("Payment init failed: Razorpay is not configured on server (missing key secret).");
+        return;
+      }
+      alert(`Payment init failed: ${err?.message || "Network error"}`);
+    });
 }
 
 async function placeOrder() {
@@ -344,8 +375,7 @@ async function placeOrder() {
   try {
     const storeId = Number(cart[0]?.storeId || 0);
     if (storeId) {
-      const base = String(window.API_BASE_URL || "").trim().replace(/\/+$/, "");
-      const data = await fetchJsonWithFallback(`${base}/api/stores/${storeId}`);
+      const data = await fetchJsonWithFallback(`/api/stores/${storeId}`);
       const minOrder = Number(data?.store?.minimum_order || 100);
       if (itemsTotal < minOrder) {
         alert(`Error: Minimum order is Rs. ${minOrder}. Please add more items.`);
