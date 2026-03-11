@@ -714,6 +714,31 @@ document.addEventListener("DOMContentLoaded", async () => {
         from{ opacity: 0; transform: translateY(6px) scale(0.99); }
         to{ opacity: 1; transform: translateY(0px) scale(1); }
       }
+      .lb-ai-typing{
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .lb-ai-typing .dots{
+        display: inline-flex;
+        gap: 4px;
+        align-items: center;
+      }
+      .lb-ai-typing .dot{
+        width: 6px;
+        height: 6px;
+        border-radius: 99px;
+        background: rgba(100,116,139,0.75);
+        transform: translateY(0px);
+        animation: lbAiDot 900ms ease-in-out infinite;
+      }
+      .lb-ai-typing .dot:nth-child(2){ animation-delay: 120ms; }
+      .lb-ai-typing .dot:nth-child(3){ animation-delay: 240ms; }
+      @keyframes lbAiDot{
+        0%, 100%{ opacity: 0.45; transform: translateY(0px); }
+        50%{ opacity: 1; transform: translateY(-3px); }
+      }
+      html.lb-theme-dark .lb-ai-typing .dot{ background: rgba(226,232,240,0.65); }
       html.lb-theme-dark .lb-ai-msg{
         background: rgba(2,6,23,0.55);
         border-color: rgba(148,163,184,0.18);
@@ -2336,7 +2361,19 @@ document.addEventListener("DOMContentLoaded", async () => {
       // typing indicator (simple)
       const typing = document.createElement("div");
       typing.className = "lb-ai-msg";
-      typing.textContent = "Typing...";
+      typing.setAttribute("data-lb-ai-role", "bot");
+      typing.setAttribute("data-lb-ai-text", "typing");
+      typing.setAttribute("data-lb-ai-ts", String(Date.now()));
+      typing.innerHTML = `
+        <span class="lb-ai-typing" aria-label="Typing">
+          <span>Typing</span>
+          <span class="dots" aria-hidden="true">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </span>
+        </span>
+      `;
       body.appendChild(typing);
       body.scrollTop = body.scrollHeight;
 

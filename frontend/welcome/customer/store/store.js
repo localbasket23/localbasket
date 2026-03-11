@@ -307,10 +307,22 @@ function initFloatingCheckoutDrag() {
 
 function initMobileBarDrag() {
   if (mobileBarDragBound) return;
-  if (window.matchMedia("(max-width: 768px)").matches) return;
   const bar = getMobileBarEl();
   if (!bar) return;
   mobileBarDragBound = true;
+
+  // Always bind the checkout click (mobile + desktop)
+  const btn = document.getElementById("mobileBarBtn");
+  if (btn && !btn.dataset.lbBound) {
+    btn.dataset.lbBound = "1";
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      checkout();
+    });
+  }
+
+  // Dragging is only for desktop/tablet (non-mobile layout)
+  if (window.matchMedia("(max-width: 768px)").matches) return;
 
   let dragging = false;
   let moved = false;
@@ -362,15 +374,6 @@ function initMobileBarDrag() {
       e.stopPropagation();
     }
   }, true);
-
-  const btn = document.getElementById("mobileBarBtn");
-  if (btn) {
-    btn.addEventListener("click", (e) => {
-      if (moved) return;
-      e.preventDefault();
-      checkout();
-    });
-  }
 
   window.addEventListener("pointermove", onMove, { passive: false });
   window.addEventListener("pointerup", onUp, { passive: true });
