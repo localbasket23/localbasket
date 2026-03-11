@@ -17,8 +17,8 @@
   </noscript>
   <style>
     :root {
-      --bg-1: #07133a;
-      --bg-2: #071b48;
+      --bg-1: #1e3a8a;
+      --bg-2: #0b1f4d;
       --accent: #ff8a1a;
       --accent-2: #ffb347;
       --text: #e8eefc;
@@ -27,6 +27,7 @@
       --card-border: rgba(255, 255, 255, 0.16);
       --shadow: 0 22px 52px -30px rgba(0,0,0,0.72);
       --radius: 26px;
+      --track: #2d3b5c;
     }
 
     * { box-sizing: border-box; }
@@ -42,10 +43,9 @@
       display: grid;
       place-items: center;
       background:
-        radial-gradient(1100px 620px at 70% 15%, rgba(255,138,26,0.18), rgba(255,138,26,0) 60%),
-        radial-gradient(980px 580px at 18% 85%, rgba(59,130,246,0.20), rgba(59,130,246,0) 62%),
-        radial-gradient(760px 520px at 12% 15%, rgba(99,102,241,0.12), rgba(99,102,241,0) 62%),
-        linear-gradient(160deg, var(--bg-1), var(--bg-2));
+        radial-gradient(circle at top, var(--bg-1), var(--bg-2)),
+        radial-gradient(900px 560px at 75% 18%, rgba(255,138,26,0.20), rgba(255,138,26,0) 62%),
+        radial-gradient(860px 520px at 20% 85%, rgba(59,130,246,0.22), rgba(59,130,246,0) 62%);
       color: var(--text);
     }
 
@@ -59,6 +59,17 @@
         repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0, rgba(255,255,255,0.04) 1px, rgba(255,255,255,0) 1px, rgba(255,255,255,0) 6px),
         repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0, rgba(255,255,255,0.03) 1px, rgba(255,255,255,0) 1px, rgba(255,255,255,0) 7px);
       mix-blend-mode: overlay;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(700px 420px at 50% 35%, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0) 70%);
+      filter: blur(10px);
+      opacity: 0.75;
     }
 
     .launch-card {
@@ -104,9 +115,10 @@
     }
 
     .logo-wrap img {
-      width: 70px;
-      height: 70px;
+      width: 80px;
+      height: 80px;
       object-fit: contain;
+      filter: drop-shadow(0 0 14px rgba(255, 165, 0, 0.45));
     }
 
     h1 {
@@ -126,9 +138,9 @@
     .progress {
       margin: 18px auto 10px;
       width: min(360px, 92%);
-      height: 9px;
+      height: 8px;
       border-radius: 999px;
-      background: rgba(255,255,255,0.12);
+      background: var(--track);
       border: 1px solid rgba(255,255,255,0.12);
       overflow: hidden;
       position: relative;
@@ -160,20 +172,20 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border-radius: 14px;
-      min-height: 42px;
-      padding: 0 16px;
+      border-radius: 30px;
+      min-height: 46px;
+      padding: 12px 28px;
       border: 0;
-      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      background: linear-gradient(135deg, #ff8c00, #ffa726);
       color: #08112a;
       text-decoration: none;
-      font-weight: 800;
+      font-weight: 700;
       font-size: 14px;
       box-shadow: 0 20px 40px -28px rgba(255, 138, 26, 0.75);
       transition: transform 120ms ease, filter 120ms ease;
     }
 
-    .fallback:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    .fallback:hover { transform: scale(1.05); filter: brightness(1.05); }
     .fallback:active { transform: translateY(0); }
     .fallback:focus-visible { outline: none; box-shadow: 0 0 0 4px rgba(255, 138, 26, 0.28), 0 20px 40px -28px rgba(255, 138, 26, 0.75); }
 
@@ -181,6 +193,13 @@
       margin-top: 8px;
       font-size: 12px;
       color: var(--muted);
+    }
+
+    .footer-line {
+      margin-top: 14px;
+      font-size: 12px;
+      color: rgba(232, 238, 252, 0.55);
+      font-weight: 700;
     }
 
     @keyframes sheen {
@@ -214,10 +233,11 @@
         <img src="./welcome/logo2.png?v=20260303" alt="LocalBasket logo" />
       </div>
       <h1>LocalBasket</h1>
-      <p>Launching your neighborhood marketplace...</p>
+      <p>Connecting you to your local stores</p>
       <div class="progress" aria-hidden="true"><div class="bar" id="progressBar"></div></div>
-      <a class="fallback" href="./welcome/customer/index.html">Enter Now</a>
+      <a class="fallback" href="./welcome/customer/index.html">Enter Marketplace</a>
       <div class="countdown" id="countdown">Redirecting in 3s...</div>
+      <div class="footer-line">Serving your neighborhood with fresh groceries</div>
     </div>
   </main>
   <script>
