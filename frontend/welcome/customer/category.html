@@ -942,6 +942,11 @@
         box-shadow: 0 16px 24px -22px rgba(124, 58, 25, 0.2);
       }
 
+      html.lb-theme-dark .store-card {
+        border-radius: 18px;
+        padding: 0;
+      }
+
       .store-body {
         order: 2;
         padding: 10px 10px 11px;
@@ -953,6 +958,14 @@
         aspect-ratio: auto;
         height: 120px;
         background: #fff7f0;
+        padding: 0;
+      }
+
+      html.lb-theme-dark .store-img {
+        order: 1;
+        aspect-ratio: auto;
+        height: 120px;
+        background: #0c172b;
         padding: 0;
       }
 
@@ -979,13 +992,18 @@
         box-shadow: none;
       }
 
-      html:not(.lb-theme-dark) .status-pill.open {
+      .status-pill.open {
         background: #16a34a;
       }
 
       html:not(.lb-theme-dark) .status-pill.closed {
         background: #cbd5e1;
         color: #475569;
+      }
+
+      html.lb-theme-dark .status-pill.closed {
+        background: rgba(148, 163, 184, 0.28);
+        color: #dbe7fb;
       }
 
       .store-body h3 {
@@ -1006,6 +1024,17 @@
         text-overflow: ellipsis;
       }
 
+      html.lb-theme-dark .store-meta-compact {
+        display: block;
+        font-size: 10px;
+        font-weight: 700;
+        color: #a9b9d1;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
       html:not(.lb-theme-dark) .store-pin-line {
         display: block;
         margin-top: 4px;
@@ -1014,12 +1043,28 @@
         color: #94a3b8;
       }
 
+      html.lb-theme-dark .store-pin-line {
+        display: block;
+        margin-top: 4px;
+        font-size: 10px;
+        font-weight: 700;
+        color: #8ea1bd;
+      }
+
       html:not(.lb-theme-dark) .store-open-line {
         display: inline-flex;
         margin-top: 6px;
         font-size: 10px;
         font-weight: 800;
         color: #16a34a;
+      }
+
+      html.lb-theme-dark .store-open-line {
+        display: inline-flex;
+        margin-top: 6px;
+        font-size: 10px;
+        font-weight: 800;
+        color: #22c55e;
       }
 
       .store-open-line.closed {
