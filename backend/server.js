@@ -13,10 +13,12 @@ const sellerRoutes = require("./routes/sellerRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const storeRoutes = require("./routes/storeRoutes");
 const productRoutes = require("./routes/productRoutes");
-const locationRoutes = require("./routes/locationRoutes");
-const orderRoutes = require("./routes/orderRoutes");
-const paymentRoutes = require("./routes/paymentRoutes");
-const authRoutes = require("./routes/authRoutes");
+const locationRoutes = require("./routes/locationRoutes"); 
+const orderRoutes = require("./routes/orderRoutes"); 
+const paymentRoutes = require("./routes/paymentRoutes"); 
+const authRoutes = require("./routes/authRoutes"); 
+const systemRoutes = require("./routes/systemRoutes");
+const maintenanceGuard = require("./middlewares/maintenanceGuard");
 
 const app = express();
 
@@ -47,9 +49,9 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-app.get("/api/health/cloudinary", (req, res) => {
-  res.json({
-    status: "ok",
+app.get("/api/health/cloudinary", (req, res) => { 
+  res.json({ 
+    status: "ok", 
     cloudinary: {
       configured: hasCloudinary,
       cloud_name_present: !!String(process.env.CLOUDINARY_CLOUD_NAME || "").trim(),
@@ -57,18 +59,22 @@ app.get("/api/health/cloudinary", (req, res) => {
       api_secret_present: !!String(process.env.CLOUDINARY_API_SECRET || "").trim(),
       cloud_name_value: String(process.env.CLOUDINARY_CLOUD_NAME || "").trim() || null
     }
-  });
-});
+  }); 
+}); 
 
-app.use("/api/customer", customerRoutes);
-app.use("/api/seller", sellerRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api/stores", storeRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/location", locationRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/payment", paymentRoutes);
-app.use("/api/auth", authRoutes);
+// Maintenance mode guard (blocks most /api routes when enabled).
+app.use(maintenanceGuard);
+ 
+app.use("/api/customer", customerRoutes); 
+app.use("/api/seller", sellerRoutes); 
+app.use("/api/admin", adminRoutes); 
+app.use("/api/system", systemRoutes);
+app.use("/api/stores", storeRoutes); 
+app.use("/api/products", productRoutes); 
+app.use("/api/location", locationRoutes); 
+app.use("/api/orders", orderRoutes); 
+app.use("/api/payment", paymentRoutes); 
+app.use("/api/auth", authRoutes); 
 
 app.get("/api", (req, res) => {
   res.json({

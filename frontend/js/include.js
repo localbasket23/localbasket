@@ -153,7 +153,167 @@
 
 document.addEventListener("DOMContentLoaded", async () => {
   const path = window.location.pathname;
-  const LB_COMPONENTS_VERSION = "20260310b";
+  const LB_COMPONENTS_VERSION = "20260311a";
+
+  const isAdminPage = /\/welcome\/admin(\/|$)/.test(path) || path.includes("/welcome/admin");
+
+  const ensureMaintenanceOverlay = () => {
+    if (document.getElementById("lb-maintenance-overlay")) return;
+
+    const style = document.createElement("style");
+    style.id = "lb-maintenance-style";
+    style.textContent = `
+      #lb-maintenance-overlay{
+        position: fixed;
+        inset: 0;
+        z-index: 100000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: rgba(2,6,23,0.62);
+        backdrop-filter: blur(10px);
+      }
+      #lb-maintenance-card{
+        width: min(520px, calc(100vw - 36px));
+        border-radius: 18px;
+        background: #ffffff;
+        color: #0f172a;
+        border: 1px solid rgba(148,163,184,0.35);
+        box-shadow: 0 30px 60px -40px rgba(2,6,23,0.55);
+        padding: 18px;
+        display: grid;
+        gap: 12px;
+      }
+      #lb-maintenance-kicker{
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.3px;
+        text-transform: uppercase;
+        color: #f97316;
+      }
+      #lb-maintenance-title{
+        font-size: 22px;
+        font-weight: 900;
+        margin: 0;
+      }
+      #lb-maintenance-text{
+        font-size: 14px;
+        line-height: 1.5;
+        color: rgba(15,23,42,0.78);
+        margin: 0;
+      }
+      #lb-maintenance-actions{
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 6px;
+      }
+      #lb-maintenance-actions button{
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-weight: 900;
+        border: 1px solid rgba(148,163,184,0.4);
+        background: #ffffff;
+        color: #0f172a;
+        cursor: pointer;
+      }
+      #lb-maintenance-actions button.primary{
+        border-color: transparent;
+        background: linear-gradient(135deg, #f97316, #fb923c);
+        color: #1f2937;
+        box-shadow: 0 12px 22px -18px rgba(251,146,60,0.9);
+      }
+      html.lb-theme-dark #lb-maintenance-card{
+        background: #0b1220;
+        color: #e2e8f0;
+        border-color: rgba(148,163,184,0.2);
+        box-shadow: 0 40px 70px -50px rgba(0,0,0,0.75);
+      }
+      html.lb-theme-dark #lb-maintenance-text{ color: rgba(226,232,240,0.75); }
+      html.lb-theme-dark #lb-maintenance-actions button{
+        background: rgba(15,23,42,0.85);
+        color: #e2e8f0;
+        border-color: rgba(148,163,184,0.25);
+      }
+      @media (max-width: 520px){
+        #lb-maintenance-title{ font-size: 20px; }
+        #lb-maintenance-actions{ justify-content: stretch; }
+        #lb-maintenance-actions button{ flex: 1 1 auto; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    const overlay = document.createElement("div");
+    overlay.id = "lb-maintenance-overlay";
+    overlay.innerHTML = `
+      <div id="lb-maintenance-card" role="dialog" aria-modal="true" aria-label="Maintenance Mode">
+        <div id="lb-maintenance-kicker">Maintenance Mode</div>
+        <h2 id="lb-maintenance-title">We will be back soon</h2>
+        <p id="lb-maintenance-text">LocalBasket is temporarily unavailable while we do some updates. Please try again later.</p>
+        <div id="lb-maintenance-actions">
+          <button type="button" class="primary" data-lb-maint-refresh>Refresh</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    const refreshBtn = overlay.querySelector("[data-lb-maint-refresh]");
+    refreshBtn?.addEventListener("click", () => window.location.reload());
+  };
+
+  const showMaintenanceOverlay = () => {
+    ensureMaintenanceOverlay();
+    const overlay = document.getElementById("lb-maintenance-overlay");
+    if (!overlay) return;
+    overlay.style.display = "flex";
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+  };
+
+  const hideMaintenanceOverlay = () => {
+    const overlay = document.getElementById("lb-maintenance-overlay");
+    if (!overlay) return;
+    overlay.style.display = "none";
+    document.documentElement.style.overflow = "";
+    document.body.style.overflow = "";
+  };
+
+  const fetchSystemStatus = async () => {
+    const base = String(window.API_BASE_URL || "").replace(/\/+$/, "");
+    const url = `${base}/api/system/status?v=${encodeURIComponent(LB_COMPONENTS_VERSION)}&t=${Date.now()}`;
+    const res = await fetch(url, { cache: "no-store", credentials: "include" });
+
+    // If backend blocks non-whitelisted APIs in maintenance, it still allows /api/system/status.
+    // Still, support the 503 body as a fallback.
+    if (!res.ok) {
+      let payload = null;
+      try { payload = await res.json(); } catch {}
+      return payload;
+    }
+    return res.json();
+  };
+
+  const applyMaintenanceMode = async () => {
+    if (isAdminPage) return;
+    try {
+      const status = await fetchSystemStatus();
+      const mode = String(status && (status.system_mode || status.systemMode) || "").toLowerCase();
+      const isMaintenance = mode === "maintenance" || !!(status && status.maintenance);
+      if (isMaintenance) {
+        sessionStorage.setItem("lbMaintenance", "1");
+        showMaintenanceOverlay();
+      } else {
+        sessionStorage.removeItem("lbMaintenance");
+        hideMaintenanceOverlay();
+      }
+    } catch {
+      // If last known mode was maintenance, keep blocking until a successful check clears it.
+      if (sessionStorage.getItem("lbMaintenance") === "1") showMaintenanceOverlay();
+    }
+  };
+
+  await applyMaintenanceMode();
 
   if (
     path.includes("seller") ||
