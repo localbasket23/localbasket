@@ -12,152 +12,569 @@
   <meta name="theme-color" content="#16a34a">
   <title>Local Basket - Online Grocery Store in Mumbai</title>
   <meta name="description" content="Local Basket is an online grocery store offering fresh vegetables, fruits and daily essentials with fast delivery in Mumbai." />
-  <meta http-equiv="refresh" content="3;url=./welcome/customer/index.html" />
+  <noscript>
+    <meta http-equiv="refresh" content="3;url=./welcome/customer/index.html" />
+  </noscript>
   <style>
     :root {
+      --bg-0: #050b1f;
       --bg-1: #07133a;
       --bg-2: #0b1f52;
+      --card: rgba(255, 255, 255, 0.06);
+      --card-border: rgba(255, 255, 255, 0.14);
       --accent: #ff8a1a;
-      --text: #e2e8f0;
-      --muted: #94a3b8;
+      --accent-2: #22c55e;
+      --text: #e5e7eb;
+      --muted: #a1a1aa;
+      --shadow: 0 24px 60px -34px rgba(0,0,0,0.75);
+      --radius: 22px;
+      --ring: rgba(255, 255, 255, 0.18);
+      --focus: 0 0 0 4px rgba(255, 138, 26, 0.25);
     }
     * { box-sizing: border-box; }
     html, body {
       margin: 0;
       width: 100%;
       height: 100%;
-      font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
       overflow: hidden;
     }
     body {
       display: grid;
       place-items: center;
       background:
-        radial-gradient(120% 90% at 90% 10%, rgba(255,138,26,0.2), rgba(255,138,26,0) 50%),
-        radial-gradient(90% 70% at 0% 100%, rgba(59,130,246,0.18), rgba(59,130,246,0) 55%),
+        radial-gradient(120% 90% at 90% 10%, rgba(255,138,26,0.22), rgba(255,138,26,0) 55%),
+        radial-gradient(90% 70% at 0% 100%, rgba(34,197,94,0.16), rgba(34,197,94,0) 58%),
+        radial-gradient(100% 80% at 30% 0%, rgba(59,130,246,0.14), rgba(59,130,246,0) 62%),
         linear-gradient(160deg, var(--bg-1), var(--bg-2));
       color: var(--text);
     }
-    .launch-card {
-      width: min(560px, calc(100vw - 28px));
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 22px;
-      padding: 26px 22px;
-      background: rgba(255,255,255,0.06);
-      backdrop-filter: blur(12px);
-      text-align: center;
-      box-shadow: 0 24px 44px -28px rgba(0,0,0,0.6);
-      animation: cardIn 0.55s ease both;
+
+    .bg-orb {
+      position: fixed;
+      inset: -40%;
+      background:
+        radial-gradient(closest-side, rgba(255, 138, 26, 0.22), rgba(255, 138, 26, 0) 65%),
+        radial-gradient(closest-side, rgba(34, 197, 94, 0.18), rgba(34, 197, 94, 0) 65%),
+        radial-gradient(closest-side, rgba(59, 130, 246, 0.18), rgba(59, 130, 246, 0) 65%);
+      filter: blur(30px);
+      transform: translate3d(0, 0, 0);
+      animation: drift 14s ease-in-out infinite;
+      pointer-events: none;
+      opacity: 0.9;
     }
+
+    .shell {
+      width: min(860px, calc(100vw - 28px));
+      padding: 18px;
+    }
+
+    .launch-card {
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 22px;
+      background: var(--card);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+      animation: cardIn 0.55s ease both;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .launch-card::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      background: radial-gradient(70% 60% at 20% 10%, rgba(255, 138, 26, 0.16), rgba(255, 138, 26, 0) 65%);
+      pointer-events: none;
+    }
+
+    .grid {
+      position: relative;
+      display: grid;
+      grid-template-columns: 1.35fr 0.85fr;
+      gap: 18px;
+      align-items: center;
+    }
+
+    @media (max-width: 720px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
     .logo-wrap {
-      width: 92px;
-      height: 92px;
-      margin: 0 auto 14px;
-      border-radius: 24px;
+      width: 54px;
+      height: 54px;
+      border-radius: 16px;
       display: grid;
       place-items: center;
-      border: 1px solid rgba(255,255,255,0.2);
-      background: rgba(255,255,255,0.08);
-      animation: pulse 1.6s ease-in-out infinite;
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.07);
+      box-shadow: 0 12px 24px -20px rgba(0,0,0,0.7);
+      transform: translateZ(0);
     }
     .logo-wrap img {
-      width: 70px;
-      height: 70px;
+      width: 38px;
+      height: 38px;
       object-fit: contain;
     }
+
+    .brand-title {
+      display: grid;
+      gap: 2px;
+    }
+
+    .brand-title strong {
+      font-size: 16px;
+      letter-spacing: 0.2px;
+    }
+
+    .brand-title span {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
     h1 {
       margin: 0;
-      font-size: clamp(30px, 7vw, 46px);
+      font-size: clamp(28px, 5.5vw, 46px);
       letter-spacing: -1px;
-      line-height: 1;
+      line-height: 1.05;
     }
     p {
       margin: 10px 0 0;
       color: var(--muted);
       font-size: 15px;
       font-weight: 600;
+      max-width: 60ch;
     }
+
+    .actions {
+      margin-top: 16px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 14px;
+      border-radius: 14px;
+      padding: 10px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 44px;
+      transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
+      user-select: none;
+      white-space: nowrap;
+      box-shadow: 0 10px 24px -20px rgba(0,0,0,0.7);
+    }
+
+    .btn svg { width: 18px; height: 18px; flex: 0 0 auto; }
+
+    .btn.primary {
+      border-color: rgba(255, 138, 26, 0.35);
+      background: linear-gradient(90deg, rgba(255, 159, 47, 1), rgba(255, 138, 26, 1));
+      color: #0b1025;
+      box-shadow: 0 20px 40px -26px rgba(255, 138, 26, 0.65);
+    }
+
+    .btn.ghost {
+      background: rgba(255,255,255,0.03);
+    }
+
+    .btn:hover { transform: translateY(-1px); border-color: rgba(255,255,255,0.26); }
+    .btn:active { transform: translateY(0px); }
+    .btn:focus-visible { outline: none; box-shadow: var(--focus), 0 10px 24px -20px rgba(0,0,0,0.7); }
+
+    .auto {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(0,0,0,0.14);
+    }
+
+    .ring {
+      width: 48px;
+      height: 48px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .status {
+      min-width: 0;
+      flex: 1 1 auto;
+      display: grid;
+      gap: 2px;
+    }
+
+    .status strong {
+      font-size: 13px;
+      letter-spacing: 0.1px;
+    }
+
+    .status span {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .tiny-actions {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tiny-btn {
+      appearance: none;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.04);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 10px;
+      font-weight: 800;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+    }
+
+    .tiny-btn:hover { border-color: rgba(255,255,255,0.24); transform: translateY(-1px); }
+    .tiny-btn:active { transform: translateY(0); }
+    .tiny-btn:focus-visible { outline: none; box-shadow: var(--focus); }
+
     .loader {
-      margin: 18px auto 6px;
-      width: min(320px, 90%);
+      margin-top: 10px;
+      width: 100%;
       height: 7px;
       border-radius: 999px;
       background: rgba(255,255,255,0.15);
       overflow: hidden;
       position: relative;
     }
-    .loader::after {
+    .loader > i {
       content: "";
       position: absolute;
       inset: 0;
-      width: 42%;
+      width: 0%;
       border-radius: inherit;
-      background: linear-gradient(90deg, #ff9f2f, var(--accent));
-      animation: load 2.2s ease-in-out infinite;
+      background: linear-gradient(90deg, rgba(255,159,47,1), rgba(255,138,26,1));
+      transition: width 120ms linear;
     }
-    .fallback {
-      margin-top: 16px;
+
+    .side {
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
+      padding: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .side::before {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      background:
+        radial-gradient(60% 50% at 20% 10%, rgba(34,197,94,0.18), rgba(34,197,94,0) 70%),
+        radial-gradient(60% 50% at 80% 80%, rgba(255,138,26,0.16), rgba(255,138,26,0) 70%);
+      pointer-events: none;
+      opacity: 0.9;
+    }
+
+    .side-inner {
+      position: relative;
+      display: grid;
+      gap: 10px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .chip {
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(0,0,0,0.12);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 800;
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      border-radius: 12px;
-      min-height: 42px;
-      padding: 0 14px;
-      border: 0;
-      background: var(--accent);
-      color: #fff;
-      text-decoration: none;
-      font-weight: 800;
-      font-size: 14px;
+      gap: 8px;
+      white-space: nowrap;
     }
-    .countdown {
-      margin-top: 8px;
+
+    .chip b {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 900;
+      letter-spacing: 0.2px;
+    }
+
+    .quick-links {
+      margin-top: 10px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .quick-links a {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      text-decoration: none;
+      border-radius: 14px;
+      padding: 10px 10px;
+      font-weight: 800;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      transition: transform 120ms ease, border-color 120ms ease;
+    }
+
+    .quick-links a:hover { transform: translateY(-1px); border-color: rgba(255,255,255,0.22); }
+    .quick-links a:focus-visible { outline: none; box-shadow: var(--focus); }
+
+    .hint {
       font-size: 12px;
       color: var(--muted);
+      font-weight: 700;
+      margin: 0;
     }
-    @keyframes load {
-      0% { transform: translateX(-120%); }
-      100% { transform: translateX(320%); }
-    }
-    @keyframes pulse {
-      0%,100% { transform: scale(1); }
-      50% { transform: scale(1.04); }
-    }
+
     @keyframes cardIn {
       from { opacity: 0; transform: translateY(10px) scale(0.98); }
       to { opacity: 1; transform: translateY(0) scale(1); }
     }
+
+    @keyframes drift {
+      0% { transform: translate3d(-2%, -2%, 0) rotate(0deg); }
+      50% { transform: translate3d(3%, 2%, 0) rotate(7deg); }
+      100% { transform: translate3d(-2%, -2%, 0) rotate(0deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .bg-orb { animation: none; }
+      .launch-card { animation: none; }
+      .btn, .tiny-btn, .quick-links a { transition: none; }
+      .loader > i { transition: none; }
+    }
   </style>
 </head>
 <body>
-  <main class="launch-card" role="status" aria-live="polite">
-    <div class="logo-wrap">
-      <img src="./welcome/logo2.png?v=20260303" alt="LocalBasket logo" />
-    </div>
-    <h1>LocalBasket</h1>
-    <p>Launching your neighborhood marketplace...</p>
-    <div class="loader" aria-hidden="true"></div>
-    <a class="fallback" href="./welcome/customer/index.html">Enter Now</a>
-    <div class="countdown" id="countdown">Redirecting in 3s...</div>
+  <div class="bg-orb" aria-hidden="true"></div>
+
+  <main class="shell">
+    <section class="launch-card" aria-live="polite">
+      <div class="grid">
+        <div>
+          <div class="brand">
+            <div class="logo-wrap" aria-hidden="true">
+              <img src="./welcome/logo2.png?v=20260303" alt="" />
+            </div>
+            <div class="brand-title">
+              <strong>LocalBasket</strong>
+              <span>Your neighborhood marketplace</span>
+            </div>
+          </div>
+
+          <h1>Fresh finds, delivered fast.</h1>
+          <p>Pick a mode to continue. If you don't choose, we'll take you to the Customer home automatically.</p>
+
+          <div class="actions" role="group" aria-label="Continue as">
+            <a class="btn primary" data-persona="customer" href="./welcome/customer/index.html">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M7 18c-1 0-1.8-.8-1.8-1.8S6 14.4 7 14.4s1.8.8 1.8 1.8S8 18 7 18Zm10 0c-1 0-1.8-.8-1.8-1.8s.8-1.8 1.8-1.8 1.8.8 1.8 1.8S18 18 17 18Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M3.5 5.5h2l2.2 10.2c.1.5.6.9 1.1.9h8.8c.6 0 1-.3 1.1-.9l1.4-7.2H6.1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Shop as Customer
+            </a>
+
+            <a class="btn" data-persona="seller" href="./welcome/seller/seller-auth/seller-auth.html">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 8.2 12 4l8 4.2v9.6L12 22l-8-4.2V8.2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                <path d="M12 22V12.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M20 8.2 12 12.4 4 8.2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Start Selling
+            </a>
+
+            <a class="btn ghost" data-persona="admin" href="./welcome/admin/admin.html">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 2 4 5.5v6.4c0 5 3.4 9.3 8 10.6 4.6-1.3 8-5.6 8-10.6V5.5L12 2Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                <path d="M9.3 12.1 11.2 14l3.6-3.6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Admin
+            </a>
+          </div>
+
+          <div class="auto" id="autoBox">
+            <div class="ring" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 28 28">
+                <circle cx="14" cy="14" r="11" stroke="rgba(255,255,255,0.18)" stroke-width="3" fill="none" />
+                <circle id="ringProgress" cx="14" cy="14" r="11" stroke="rgba(255, 138, 26, 0.95)" stroke-width="3" fill="none" stroke-linecap="round"
+                        stroke-dasharray="69.115" stroke-dashoffset="69.115" />
+              </svg>
+            </div>
+            <div class="status">
+              <strong id="statusTitle">Auto redirect</strong>
+              <span id="countdown">Redirecting in 3s...</span>
+              <div class="loader" aria-hidden="true"><i id="bar"></i></div>
+            </div>
+            <div class="tiny-actions">
+              <button class="tiny-btn" id="pauseBtn" type="button">Pause</button>
+              <button class="tiny-btn" id="goBtn" type="button">Go now</button>
+            </div>
+          </div>
+        </div>
+
+        <aside class="side" aria-label="Quick info">
+          <div class="side-inner">
+            <p class="hint">Today's highlights</p>
+            <div class="chips" aria-label="Highlights">
+              <span class="chip"><b>Fast</b> Under 30 mins</span>
+              <span class="chip"><b>Fresh</b> Local stores</span>
+              <span class="chip"><b>Safe</b> Secure checkout</span>
+            </div>
+
+            <div class="quick-links" aria-label="Quick links">
+              <a href="./welcome/customer/category.html"><span>Browse categories</span><span aria-hidden="true">→</span></a>
+              <a href="./welcome/customer/help.html"><span>Help center</span><span aria-hidden="true">→</span></a>
+              <a href="./welcome/customer/contact.html"><span>Contact support</span><span aria-hidden="true">→</span></a>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
   </main>
   <script>
-    const target = "./welcome/customer/index.html";
-    const countdownEl = document.getElementById("countdown");
-    let remaining = 3;
-    const tick = () => {
-      if (!countdownEl) return;
-      countdownEl.textContent = `Redirecting in ${remaining}s...`;
+    const routes = {
+      customer: "./welcome/customer/index.html",
+      seller: "./welcome/seller/seller-auth/seller-auth.html",
+      admin: "./welcome/admin/admin.html",
     };
-    tick();
-    const interval = setInterval(() => {
-      remaining -= 1;
-      if (remaining <= 0) {
-        clearInterval(interval);
-        window.location.replace(target);
-        return;
+
+    const statusTitle = document.getElementById("statusTitle");
+    const countdownEl = document.getElementById("countdown");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const goBtn = document.getElementById("goBtn");
+    const bar = document.getElementById("bar");
+    const ring = document.getElementById("ringProgress");
+
+    const RING_CIRC = 69.115;
+    const clamp01 = (n) => Math.max(0, Math.min(1, n));
+
+    const navTo = (personaKey) => {
+      const target = routes[personaKey] || routes.customer;
+      try { localStorage.setItem("lbPersona", personaKey); } catch {}
+      window.location.replace(target);
+    };
+
+    // Persona buttons
+    document.querySelectorAll("[data-persona]").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        const personaKey = el.getAttribute("data-persona") || "customer";
+        try { localStorage.setItem("lbPersona", personaKey); } catch {}
+        // let the normal navigation happen for anchors; redirect timer is handled below
+      });
+    });
+
+    // Auto redirect behavior (pauses when the user interacts)
+    let durationMs = 3000;
+    let startAt = performance.now();
+    let paused = false;
+    let pauseOffset = 0;
+
+    const preferred = (() => {
+      try { return localStorage.getItem("lbPersona"); } catch { return null; }
+    })();
+
+    if (preferred && routes[preferred]) {
+      // If user already chose a persona earlier, make it feel instant.
+      durationMs = 1500;
+    }
+
+    const setProgress = (t01) => {
+      const p = clamp01(t01);
+      if (bar) bar.style.width = `${Math.round(p * 100)}%`;
+      if (ring) ring.setAttribute("stroke-dashoffset", String(RING_CIRC * (1 - p)));
+    };
+
+    const setCountdown = (msLeft) => {
+      const s = Math.max(0, Math.ceil(msLeft / 1000));
+      if (!countdownEl) return;
+      countdownEl.textContent = paused ? "Paused - choose a mode above." : `Redirecting in ${s}s...`;
+    };
+
+    const pause = () => {
+      if (paused) return;
+      paused = true;
+      pauseOffset += performance.now() - startAt;
+      if (statusTitle) statusTitle.textContent = "Auto redirect paused";
+      if (pauseBtn) pauseBtn.textContent = "Resume";
+      setCountdown(durationMs);
+    };
+
+    const resume = () => {
+      if (!paused) return;
+      paused = false;
+      startAt = performance.now();
+      if (statusTitle) statusTitle.textContent = "Auto redirect";
+      if (pauseBtn) pauseBtn.textContent = "Pause";
+    };
+
+    const togglePause = () => (paused ? resume() : pause());
+
+    if (pauseBtn) pauseBtn.addEventListener("click", togglePause);
+    if (goBtn) goBtn.addEventListener("click", () => navTo(preferred && routes[preferred] ? preferred : "customer"));
+
+    // Any meaningful interaction pauses the timer so it never "fights" the user.
+    ["pointerdown", "keydown", "focusin"].forEach((evt) => window.addEventListener(evt, pause, { passive: true }));
+
+    const frame = () => {
+      if (!paused) {
+        const elapsed = pauseOffset + (performance.now() - startAt);
+        const t01 = clamp01(elapsed / durationMs);
+        setProgress(t01);
+        setCountdown(durationMs - elapsed);
+        if (t01 >= 1) {
+          navTo(preferred && routes[preferred] ? preferred : "customer");
+          return;
+        }
       }
-      tick();
-    }, 1000);
+      requestAnimationFrame(frame);
+    };
+
+    // Prime UI
+    setProgress(0);
+    setCountdown(durationMs);
+    requestAnimationFrame(frame);
   </script>
 </body>
 </html>
