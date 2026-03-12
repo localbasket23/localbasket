@@ -22,6 +22,25 @@ const getInvoiceBrand = () => {
   return brand;
 };
 
+const money = (value) => {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "Rs. 0.00";
+  return `Rs. ${n.toFixed(2)}`;
+};
+
+const safeText = (value) => String(value == null ? "" : value).replace(/\s+/g, " ").trim();
+
+const formatInvoiceDate = (value) => {
+  if (!value) return "-";
+  try {
+    const dt = new Date(value);
+    if (Number.isNaN(dt.getTime())) return "-";
+    return dt.toLocaleString("en-IN", { year: "numeric", month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+  } catch {
+    return "-";
+  }
+};
+
 let PDFDocument;
 try {
   PDFDocument = require("pdfkit");
@@ -455,7 +474,7 @@ exports.submitOrderFeedback = (req, res) => {
    8?? ORDER INVOICE (PDF)
    GET /api/orders/:orderId/invoice
 ===================================================== */
-exports.getOrderInvoice = (req, res) => {
+exports.getOrderInvoice = async (req, res) => {
   const { orderId } = req.params;
   const id = Number(orderId);
   if (!id) {
@@ -480,151 +499,268 @@ exports.getOrderInvoice = (req, res) => {
     LIMIT 1
   `;
 
-  db.query(sql, [id], (err, rows) => {
-    if (err) {
-      console.error("? INVOICE FETCH ERROR:", err.sqlMessage || err.message);
-      return res.status(500).json({ success: false, message: "Failed to generate invoice" });
-    }
+  let rows;
+  try {
+    const [result] = await db.promise().query(sql, [id]);
+    rows = result;
+  } catch (err) {
+    console.error("INVOICE FETCH ERROR:", err?.sqlMessage || err?.message || err);
+    return res.status(500).json({ success: false, message: "Failed to generate invoice" });
+  }
 
-    if (!rows || rows.length === 0) {
-      return res.status(404).json({ success: false, message: "Order not found" });
-    }
+  if (!rows || rows.length === 0) {
+    return res.status(404).json({ success: false, message: "Order not found" });
+  }
 
-    const order = rows[0];
-    let cart = [];
-    if (Array.isArray(order.cart)) cart = order.cart;
-    else if (typeof order.cart === "string") {
-      try { cart = JSON.parse(order.cart); } catch { cart = []; }
-    }
+  const order = rows[0];
+  let cart = [];
+  if (Array.isArray(order.cart)) cart = order.cart;
+  else if (typeof order.cart === "string") {
+    try { cart = JSON.parse(order.cart); } catch { cart = []; }
+  }
 
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `attachment; filename="invoice-${id}.pdf"`);
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="invoice-${id}.pdf"`);
 
-    const doc = new PDFDocument({ size: "A4", margin: 40 });
-    const brand = getInvoiceBrand();
-    doc.pipe(res);
+  const doc = new PDFDocument({ size: "A4", margin: 40 });
+  const brand = getInvoiceBrand();
+  doc.pipe(res);
 
-    
-    // Header
-    const startY = 40;
+  const ACCENT = "#ff8a1a";
+  const ACCENT_SOFT = "#fff7ed";
+  const TEXT = "#0f172a";
+  const MUTED = "#475569";
+  const BORDER = "#e5e7eb";
+  const pageW = doc.page.width;
+  const pageH = doc.page.height;
+  const m = doc.page.margins;
+  const left = m.left;
+  const right = pageW - m.right;
+  const top = m.top;
+  const bottom = pageH - m.bottom;
+
+  const drawTopBar = () => {
+    doc.save();
+    doc.rect(0, 0, pageW, 6).fill(ACCENT);
+    doc.restore();
+  };
+
+  const drawHeader = () => {
+    drawTopBar();
+
+    const y = top;
+    const logoSize = 56;
+    const ringSize = 86;
+    const ringX = left;
+    const ringY = y + 2;
+
+    doc.save();
+    doc.fillColor(ACCENT_SOFT).circle(ringX + ringSize / 2, ringY + ringSize / 2, ringSize / 2).fill();
+    doc.lineWidth(1).strokeColor("#fde6d2").circle(ringX + ringSize / 2, ringY + ringSize / 2, ringSize / 2).stroke();
+    doc.restore();
+
     if (brand.logoPath) {
       try {
-        doc.image(brand.logoPath, 40, startY, { width: 46, height: 46 });
+        doc.image(brand.logoPath, ringX + (ringSize - logoSize) / 2, ringY + (ringSize - logoSize) / 2, { width: logoSize, height: logoSize });
       } catch {}
     }
-    doc.fontSize(18).text(brand.name || "Local Basket", 100, startY + 4);
-    if (brand.gstin) {
-      doc.fontSize(9).fillColor("#555").text(`GSTIN: ${brand.gstin}`, 100, startY + 24);
-    }
-    if (brand.support) {
-      doc.fontSize(9).fillColor("#555").text(brand.support, 100, startY + 38);
-    }
 
-    doc.fillColor("#000");
-    doc.fontSize(14).text("Invoice", 420, startY + 6, { align: "right" });
+    doc.fillColor(TEXT).fontSize(18).text(safeText(brand.name) || "Local Basket", ringX + ringSize + 14, y + 10, { width: right - (ringX + ringSize + 14) - 210 });
+    doc.fillColor(MUTED).fontSize(9);
+    const addr = safeText(brand.address);
+    if (addr) doc.text(addr, ringX + ringSize + 14, y + 34, { width: right - (ringX + ringSize + 14) - 210 });
+    const support = safeText(brand.support);
+    if (support) doc.text(support, ringX + ringSize + 14, y + 52);
+    const gstin = safeText(brand.gstin);
+    if (gstin) doc.text(`GSTIN: ${gstin}`, ringX + ringSize + 14, y + 64);
 
-    const createdAt = order.created_at ? new Date(order.created_at).toLocaleString("en-IN") : "-";
-    doc.fontSize(10).text(`Invoice #: LB-${order.id}`, 420, startY + 24, { align: "right" });
-    doc.text(`Date: ${createdAt}`, 420, startY + 38, { align: "right" });
+    const metaW = 200;
+    const metaX = right - metaW;
+    const metaY = y + 10;
+    doc.save();
+    doc.roundedRect(metaX, metaY, metaW, 78, 12).fillColor("#ffffff").fill();
+    doc.roundedRect(metaX, metaY, metaW, 78, 12).strokeColor("#f1f5f9").stroke();
+    doc.restore();
 
-    // Divider
-    doc.moveTo(40, 100).lineTo(550, 100).strokeColor("#e5e7eb").stroke();
+    doc.fillColor(TEXT).fontSize(12).text("INVOICE", metaX + 14, metaY + 10);
+    doc.fillColor(MUTED).fontSize(9);
+    doc.text(`Invoice #: LB-${order.id}`, metaX + 14, metaY + 30);
+    doc.text(`Date: ${formatInvoiceDate(order.created_at)}`, metaX + 14, metaY + 44);
+    const payLine = `Pay: ${safeText(order.payment_method || "COD")} / ${safeText(order.payment_status || "PENDING")}`;
+    doc.text(payLine, metaX + 14, metaY + 58, { width: metaW - 28 });
 
-    // Sold By + Bill To (two columns)
-    const infoY = 112;
-    doc.fontSize(11).text("Sold By", 40, infoY, { underline: true });
-    doc.fontSize(10).text(order.store_name || "Store", 40, infoY + 14);
-    if (order.store_phone) doc.text(`Phone: ${order.store_phone}`, 40, infoY + 28);
-    if (order.store_address) doc.text(`Address: ${order.store_address}`, 40, infoY + 42, { width: 240 });
+    doc.moveTo(left, y + 98).lineTo(right, y + 98).strokeColor(BORDER).stroke();
+    return y + 112;
+  };
 
-    doc.fontSize(11).text("Bill To", 320, infoY, { underline: true });
-    doc.fontSize(10).text(order.customer_name || "Customer", 320, infoY + 14);
-    if (order.customer_phone) doc.text(`Phone: ${order.customer_phone}`, 320, infoY + 28);
-    if (order.address) doc.text(`Address: ${order.address}`, 320, infoY + 42, { width: 230 });
+  const drawPartyBoxes = (y) => {
+    const gap = 14;
+    const colW = (right - left - gap) / 2;
+    const boxH = 94;
 
-    // Items table
-    const tableTop = 190;
-    doc.fontSize(11).text("Items", 40, tableTop - 18);
-    doc.moveTo(40, tableTop).lineTo(550, tableTop).strokeColor("#e5e7eb").stroke();
+    const box = (x, title, lines) => {
+      doc.save();
+      doc.roundedRect(x, y, colW, boxH, 14).fillColor("#ffffff").fill();
+      doc.roundedRect(x, y, colW, boxH, 14).strokeColor("#f1f5f9").stroke();
+      doc.restore();
 
-    doc.fontSize(10).text("Item", 40, tableTop + 8);
-    doc.text("Qty", 330, tableTop + 8);
-    doc.text("Price", 380, tableTop + 8);
-    doc.text("Total", 470, tableTop + 8);
+      doc.fillColor(MUTED).fontSize(9).text(title, x + 12, y + 10);
+      doc.fillColor(TEXT).fontSize(11).text(lines[0] || "-", x + 12, y + 26, { width: colW - 24 });
+      doc.fillColor(MUTED).fontSize(9);
+      let yy = y + 44;
+      lines.slice(1).filter(Boolean).forEach((line) => {
+        doc.text(line, x + 12, yy, { width: colW - 24 });
+        yy += 12;
+      });
+    };
 
-    doc.moveTo(40, tableTop + 24).lineTo(550, tableTop + 24).strokeColor("#e5e7eb").stroke();
+    const soldLines = [
+      safeText(order.store_name) || "Store",
+      order.store_phone ? `Phone: ${safeText(order.store_phone)}` : "",
+      order.store_address ? `Address: ${safeText(order.store_address)}` : ""
+    ];
 
-    let subtotal = 0;
-    let y = tableTop + 32;
-    cart.forEach((item) => {
-      const name = item.name || item.product_name || "Item";
-      const qty = Number(item.qty || item.quantity || 1);
-      const price = Number(item.price || 0);
-      const lineTotal = qty * price;
-      subtotal += lineTotal;
+    const billLines = [
+      safeText(order.customer_name) || "Customer",
+      order.customer_phone ? `Phone: ${safeText(order.customer_phone)}` : "",
+      order.address ? `Address: ${safeText(order.address)}` : "",
+      order.pincode ? `Pincode: ${safeText(order.pincode)}` : ""
+    ];
 
-      doc.fontSize(10).text(String(name), 40, y, { width: 260 });
-      doc.text(String(qty), 330, y);
-      doc.text(`Rs. ${price.toFixed(2)}`, 380, y);
-      doc.text(`Rs. ${lineTotal.toFixed(2)}`, 470, y);
-      y += 18;
-    });
+    box(left, "Sold By", soldLines);
+    box(left + colW + gap, "Bill To", billLines);
 
-    doc.moveTo(40, y + 6).lineTo(550, y + 6).strokeColor("#e5e7eb").stroke();
+    return y + boxH + 16;
+  };
 
-    // Totals box
-    const boxY = y + 14;
-    doc.roundedRect(360, boxY, 190, 68, 6).strokeColor("#e5e7eb").stroke();
-    doc.strokeColor("#000");
-// Totals box
-    const total = Number(order.total_amount || subtotal);
+  const drawItemsHeader = (y) => {
+    doc.save();
+    doc.roundedRect(left, y, right - left, 22, 10).fillColor(ACCENT_SOFT).fill();
+    doc.restore();
+
+    doc.fillColor(TEXT).fontSize(10);
+    doc.text("Item", left + 10, y + 6);
+    doc.text("Qty", left + 310, y + 6, { width: 40, align: "right" });
+    doc.text("Price", left + 360, y + 6, { width: 70, align: "right" });
+    doc.text("Total", right - 10 - 80, y + 6, { width: 80, align: "right" });
+
+    doc.moveTo(left, y + 26).lineTo(right, y + 26).strokeColor("#f1f5f9").stroke();
+    return y + 32;
+  };
+
+  const ensureSpaceOrAddPage = (y, needed) => {
+    const reserve = 160;
+    if (y + needed <= bottom - reserve) return y;
+    doc.addPage();
+    drawTopBar();
+    return drawItemsHeader(top + 6);
+  };
+
+  const drawTotalsAndFooter = async (y, subtotal, total) => {
     const gstRate = getInvoiceGstRate();
+    const terms = safeText(getInvoiceTerms());
+
+    // Totals box (bottom-right)
+    const boxW = 220;
+    const boxH = gstRate > 0 ? 86 : 70;
+    const boxX = right - boxW;
+    const boxY = Math.min(y + 10, bottom - boxH - 90);
+
+    doc.save();
+    doc.roundedRect(boxX, boxY, boxW, boxH, 14).fillColor("#ffffff").fill();
+    doc.roundedRect(boxX, boxY, boxW, boxH, 14).strokeColor("#f1f5f9").stroke();
+    doc.restore();
+
+    doc.fillColor(MUTED).fontSize(9).text("Summary", boxX + 14, boxY + 10);
+    doc.fillColor(TEXT).fontSize(10);
+
+    let yy = boxY + 28;
     if (gstRate > 0) {
       const base = total / (1 + gstRate);
       const gst = total - base;
-      doc.fontSize(11).text(`Subtotal (Excl. GST): Rs. ${base.toFixed(2)}`, { align: "right" });
-      doc.text(`GST (${(gstRate * 100).toFixed(0)}%): Rs. ${gst.toFixed(2)}`, { align: "right" });
-      doc.text(`Total: Rs. ${total.toFixed(2)}`, { align: "right" });
+      doc.text("Subtotal (excl. GST)", boxX + 14, yy, { width: boxW - 28 });
+      doc.text(money(base), boxX + 14, yy, { width: boxW - 28, align: "right" });
+      yy += 14;
+      doc.text(`GST (${(gstRate * 100).toFixed(0)}%)`, boxX + 14, yy, { width: boxW - 28 });
+      doc.text(money(gst), boxX + 14, yy, { width: boxW - 28, align: "right" });
+      yy += 14;
     } else {
-      doc.fontSize(11).text(`Subtotal: Rs. ${subtotal.toFixed(2)}`, { align: "right" });
-      doc.text(`Total: Rs. ${total.toFixed(2)}`, { align: "right" });
+      doc.text("Subtotal", boxX + 14, yy, { width: boxW - 28 });
+      doc.text(money(subtotal), boxX + 14, yy, { width: boxW - 28, align: "right" });
+      yy += 14;
     }
-    doc.text(`Payment: ${order.payment_method || "COD"} ? ${order.payment_status || "PENDING"}`, { align: "right" });
 
-    // QR + Terms
-    const terms = getInvoiceTerms();
-    const qrText = getInvoiceQrText(order, total);
+    doc.fontSize(11).text("Total", boxX + 14, yy, { width: boxW - 28 });
+    doc.text(money(total), boxX + 14, yy, { width: boxW - 28, align: "right" });
+
+    // Optional QR (bottom-left)
+    const qrText = safeText(getInvoiceQrText(order, total));
+    let qrUrl = "";
     if (QRCode && qrText) {
       try {
-        QRCode.toDataURL(qrText, { margin: 1, width: 120 }, (errQr, url) => {
-          if (!errQr && url) {
-            try {
-              doc.addPage();
-              doc.fontSize(12).text("Scan for Order Info", { align: "left" });
-              doc.image(url, 40, 80, { width: 120, height: 120 });
-              doc.fontSize(9).fillColor("#666").text(terms, 40, 220, { width: 520 });
-              doc.end();
-            } catch {
-              doc.end();
-            }
-            return;
-          }
-          doc.moveDown(1);
-          doc.fontSize(9).fillColor("#666").text(terms, { align: "left" });
-          doc.end();
-        });
-        return;
+        qrUrl = await QRCode.toDataURL(qrText, { margin: 1, width: 140 });
+      } catch {
+        qrUrl = "";
+      }
+    }
+
+    const footerTop = Math.min(boxY + boxH + 16, bottom - 80);
+    if (qrUrl) {
+      try {
+        doc.image(qrUrl, left, footerTop - 6, { width: 88, height: 88 });
+        doc.fillColor(MUTED).fontSize(8).text("Scan for order info", left + 96, footerTop + 10);
       } catch {}
     }
 
-    doc.moveDown(1);
-    doc.fontSize(9).fillColor("#666").text(terms, { align: "left" });
-    doc.moveDown(0.8);
-    doc.text("Thank you for shopping with Local Basket!", { align: "center" });
-    if (brand.support) {
-      doc.moveDown(0.3);
-      doc.text(`Support: ${brand.support}`, { align: "center" });
+    // Terms + thank you
+    const termsX = left + (qrUrl ? 96 : 0);
+    const termsW = (right - termsX) - (qrUrl ? 0 : 0);
+    doc.fillColor(MUTED).fontSize(8).text(terms || "Thank you for shopping with Local Basket!", termsX, footerTop + 26, { width: termsW });
+    doc.fillColor(MUTED).fontSize(8).text(`Support: ${safeText(brand.support) || "support@localbasket.com"}`, termsX, footerTop + 54, { width: termsW });
+  };
+
+  let y = drawHeader();
+  y = drawPartyBoxes(y);
+
+  doc.fillColor(TEXT).fontSize(11).text("Items", left, y - 2);
+  y = drawItemsHeader(y + 8);
+
+  const nameW = 290;
+  const qtyX = left + 310;
+  const priceX = left + 360;
+  const totalX = right - 10 - 80;
+
+  let subtotal = 0;
+  const items = Array.isArray(cart) ? cart : [];
+  items.forEach((item, index) => {
+    const qty = Number(item?.qty || item?.quantity || 1);
+    const price = Number(item?.price || 0);
+    const lineTotal = (Number.isFinite(qty) ? qty : 1) * (Number.isFinite(price) ? price : 0);
+    subtotal += lineTotal;
+
+    const unit = safeText(item?.unit || "");
+    const baseName = safeText(item?.name || item?.product_name || "Item");
+    const name = unit ? `${baseName} (${unit})` : baseName;
+
+    const rowHeight = Math.max(18, doc.heightOfString(name, { width: nameW, align: "left" }) + 6);
+    y = ensureSpaceOrAddPage(y, rowHeight + 6);
+
+    if (index % 2 === 0) {
+      doc.save();
+      doc.rect(left, y - 2, right - left, rowHeight + 4).fillColor("#fafafa").fill();
+      doc.restore();
     }
-    doc.end();
+
+    doc.fillColor(TEXT).fontSize(10).text(name, left + 10, y, { width: nameW });
+    doc.fillColor(TEXT).fontSize(10).text(String(Number.isFinite(qty) ? qty : 1), qtyX, y, { width: 40, align: "right" });
+    doc.fillColor(MUTED).fontSize(10).text(money(price).replace("Rs. ", "Rs. "), priceX, y, { width: 70, align: "right" });
+    doc.fillColor(TEXT).fontSize(10).text(money(lineTotal).replace("Rs. ", "Rs. "), totalX, y, { width: 80, align: "right" });
+
+    y += rowHeight + 6;
+    doc.moveTo(left, y - 2).lineTo(right, y - 2).strokeColor("#f1f5f9").stroke();
   });
+
+  const total = Number(order.total_amount || subtotal);
+  await drawTotalsAndFooter(y, subtotal, Number.isFinite(total) ? total : subtotal);
+  doc.end();
 };
