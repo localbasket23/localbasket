@@ -3654,3 +3654,85 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadFooter();
 
 });
+
+// Basic visit tracking (for admin dashboard analytics).
+// Excludes admin routes to avoid inflating counts.
+(function () {
+  try {
+    const path = String(window.location && window.location.pathname || "");
+    if (path.startsWith("/welcome/admin")) return;
+
+    const apiBase = String(window.API_BASE_URL || window.LB_API_BASE || "").replace(/\/+$/, "");
+    if (!apiBase) return;
+
+    const sidKey = "lb_sid";
+    const startKey = "lb_sid_start";
+
+    let sid = "";
+    try { sid = String(sessionStorage.getItem(sidKey) || ""); } catch {}
+    if (!sid) {
+      const rand = (() => {
+        try {
+          if (window.crypto && crypto.getRandomValues) {
+            const b = new Uint8Array(16);
+            crypto.getRandomValues(b);
+            return Array.from(b).map(x => x.toString(16).padStart(2, "0")).join("");
+          }
+        } catch {}
+        return String(Math.random()).slice(2) + String(Date.now());
+      })();
+      sid = ("s" + rand).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
+      try { sessionStorage.setItem(sidKey, sid); } catch {}
+    }
+
+    let start = 0;
+    try { start = Number(sessionStorage.getItem(startKey) || 0); } catch { start = 0; }
+    if (!start || !Number.isFinite(start)) {
+      start = Date.now();
+      try { sessionStorage.setItem(startKey, String(start)); } catch {}
+    }
+
+    const url = apiBase + "/api/system/analytics/visit";
+
+    const send = (event) => {
+      const payload = {
+        sid,
+        event: String(event || "ping"),
+        path: String(window.location && window.location.pathname || ""),
+        referrer: String(document.referrer || ""),
+        elapsed_ms: Math.max(0, Date.now() - start)
+      };
+
+      try {
+        if (navigator.sendBeacon) {
+          const blob = new Blob([JSON.stringify(payload)], { type: "application/json" });
+          navigator.sendBeacon(url, blob);
+          return;
+        }
+      } catch {}
+
+      try {
+        fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+          keepalive: true
+        }).catch(() => {});
+      } catch {}
+    };
+
+    send("load");
+    const timer = setInterval(() => send("ping"), 15000);
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") send("hide");
+      else send("show");
+    });
+    window.addEventListener("pagehide", () => {
+      try { clearInterval(timer); } catch {}
+      send("pagehide");
+    });
+  } catch {
+    // non-blocking
+  }
+})();

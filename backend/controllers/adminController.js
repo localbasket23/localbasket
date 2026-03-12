@@ -405,6 +405,13 @@ exports.getDashboardStats = async (req, res) => {
       "SELECT IFNULL(SUM(total_amount),0) AS total FROM orders WHERE status='DELIVERED'"
     );
 
+    const [visitsToday] = await query(
+      "SELECT COUNT(*) AS total FROM site_visits WHERE is_admin=0 AND DATE(first_seen_at)=CURDATE()"
+    );
+    const [avgTime7d] = await query(
+      "SELECT IFNULL(AVG(max_elapsed_ms),0) AS avg_ms FROM site_visits WHERE is_admin=0 AND first_seen_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) AND max_elapsed_ms > 0"
+    );
+
     const recentSellers = await query(
       "SELECT id, store_name, created_at FROM sellers ORDER BY created_at DESC LIMIT 4"
     );
@@ -452,7 +459,9 @@ exports.getDashboardStats = async (req, res) => {
         totalSellers: sellers.total,
         pendingVerifications: pending.total,
         totalOrders: orders.total,
-        totalRevenue: revenue.total
+        totalRevenue: revenue.total,
+        visitsToday: visitsToday.total,
+        avgSessionMs7d: Number(avgTime7d.avg_ms || 0)
       },
       recentActivities
     });

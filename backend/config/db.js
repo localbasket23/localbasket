@@ -206,6 +206,25 @@ async function initCoreTables() {
     )
     `,
     `
+    CREATE TABLE IF NOT EXISTS site_visits (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      session_id VARCHAR(64) NOT NULL UNIQUE,
+      is_admin TINYINT(1) NOT NULL DEFAULT 0,
+      first_seen_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_seen_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      max_elapsed_ms INT NOT NULL DEFAULT 0,
+      pageviews INT NOT NULL DEFAULT 1,
+      last_path VARCHAR(255) NULL,
+      referrer VARCHAR(255) NULL,
+      user_agent VARCHAR(255) NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      KEY idx_visit_first_seen (first_seen_at),
+      KEY idx_visit_last_seen (last_seen_at),
+      KEY idx_visit_admin (is_admin)
+    )
+    `,
+    `
     CREATE TABLE IF NOT EXISTS settings (
       id INT PRIMARY KEY,
       global_commission_enabled TINYINT(1) NOT NULL DEFAULT 1,

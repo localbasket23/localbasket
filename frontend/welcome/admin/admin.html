@@ -313,6 +313,18 @@
       <h3>Total Revenue</h3>
       <div class="value" id="totalRevenue">Rs. 0</div>
     </div>
+
+    <div class="card">
+      <i class="fas fa-globe"></i>
+      <h3>Website Visits (Today)</h3>
+      <div class="value" id="visitsToday">0</div>
+    </div>
+
+    <div class="card">
+      <i class="fas fa-stopwatch"></i>
+      <h3>Avg Time (7 Days)</h3>
+      <div class="value" id="avgTime7d">0m 0s</div>
+    </div>
   </div>
 
   <div class="content-grid">
@@ -328,6 +340,8 @@
         <div class="mini-item">Pending Verifications: <b id="qiPendingVerifications">0</b></div>
         <div class="mini-item">Total Orders: <b id="qiTotalOrders">0</b></div>
         <div class="mini-item">Total Revenue: <b id="qiTotalRevenue">Rs. 0</b></div>
+        <div class="mini-item">Visits Today: <b id="qiVisitsToday">0</b></div>
+        <div class="mini-item">Avg Time (7d): <b id="qiAvgTime7d">0m 0s</b></div>
         <div class="mini-item">Last Updated: <b id="qiLastUpdated">--</b></div>
       </div>
       <div class="reports-wrap" style="margin-top:14px; text-align:left;">
@@ -376,9 +390,14 @@ async function loadDashboard() {
       animateValue("totalSellers", 0, data.stats.totalSellers || 0, 1000);
       animateValue("pendingVerifications", 0, data.stats.pendingVerifications || 0, 1000);
       animateValue("totalOrders", 0, data.stats.totalOrders || 0, 1000);
+      animateValue("visitsToday", 0, data.stats.visitsToday || 0, 1000);
 
       const revenue = data.stats.totalRevenue || 0;
       document.getElementById("totalRevenue").innerText = "Rs. " + Number(revenue).toLocaleString("en-IN");
+
+      const avgMs = Number(data.stats.avgSessionMs7d || 0);
+      const avgEl = document.getElementById("avgTime7d");
+      if (avgEl) avgEl.innerText = formatDuration(avgMs);
 
       renderActivities(data.recentActivities);
       updateQuickInsights(data.stats);
@@ -445,7 +464,10 @@ function setFallbackData() {
   animateValue("totalSellers", 0, 0, 600);
   animateValue("pendingVerifications", 0, 0, 600);
   animateValue("totalOrders", 0, 0, 600);
+  animateValue("visitsToday", 0, 0, 600);
   document.getElementById("totalRevenue").innerText = "Rs. 0";
+  const avgEl = document.getElementById("avgTime7d");
+  if (avgEl) avgEl.innerText = "0m 0s";
 
   renderActivities([]);
 
@@ -453,7 +475,9 @@ function setFallbackData() {
     totalSellers: 0,
     pendingVerifications: 0,
     totalOrders: 0,
-    totalRevenue: 0
+    totalRevenue: 0,
+    visitsToday: 0,
+    avgSessionMs7d: 0
   });
 }
 
@@ -478,6 +502,8 @@ function updateQuickInsights(stats = {}) {
   const pendingVerifications = safe(stats.pendingVerifications);
   const totalOrders = safe(stats.totalOrders);
   const totalRevenue = safe(stats.totalRevenue);
+  const visitsToday = safe(stats.visitsToday);
+  const avgSessionMs7d = safe(stats.avgSessionMs7d);
 
   const set = (id, val) => {
     const el = document.getElementById(id);
@@ -488,7 +514,18 @@ function updateQuickInsights(stats = {}) {
   set("qiPendingVerifications", Number(pendingVerifications).toLocaleString());
   set("qiTotalOrders", Number(totalOrders).toLocaleString());
   set("qiTotalRevenue", "Rs. " + Number(totalRevenue).toLocaleString("en-IN"));
+  set("qiVisitsToday", Number(visitsToday).toLocaleString());
+  set("qiAvgTime7d", formatDuration(Number(avgSessionMs7d || 0)));
   set("qiLastUpdated", new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }));
+}
+
+function formatDuration(ms) {
+  const n = Number(ms);
+  if (!Number.isFinite(n) || n <= 0) return "0m 0s";
+  const totalSec = Math.floor(n / 1000);
+  const min = Math.floor(totalSec / 60);
+  const sec = totalSec % 60;
+  return `${min}m ${sec}s`;
 }
 
 window.onload = () => {

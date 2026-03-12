@@ -58,3 +58,47 @@ exports.submitSupportRequest = async (req, res) => {
     return res.status(500).json({ success: false, message: "Failed to submit support request" });
   }
 };
+
+// POST /api/system/analytics/visit
+exports.trackSiteVisit = async (req, res) => {
+  const sessionIdRaw = String(req.body?.sid || req.body?.session_id || "").trim();
+  const session_id = sessionIdRaw.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
+  if (!session_id || session_id.length < 8) {
+    return res.status(400).json({ success: false, message: "sid is required" });
+  }
+
+  const event = String(req.body?.event || "ping").trim().toLowerCase();
+  const path = String(req.body?.path || req.body?.pathname || "").trim().slice(0, 255);
+  const referrer = String(req.body?.referrer || req.get("referer") || "").trim().slice(0, 255);
+  const user_agent = String(req.get("user-agent") || "").trim().slice(0, 255);
+
+  const elapsedRaw = Number(req.body?.elapsed_ms ?? req.body?.elapsed ?? 0);
+  const elapsed_ms = Number.isFinite(elapsedRaw) ? Math.max(0, Math.min(7 * 24 * 60 * 60 * 1000, Math.floor(elapsedRaw))) : 0;
+
+  const inferredAdmin = path.startsWith("/welcome/admin");
+  const is_admin = inferredAdmin ? 1 : 0;
+  const pageviewInc = event === "load" || event === "pageview" ? 1 : 0;
+
+  try {
+    await query(
+      `
+      INSERT INTO site_visits (session_id, is_admin, first_seen_at, last_seen_at, max_elapsed_ms, pageviews, last_path, referrer, user_agent)
+      VALUES (?, ?, NOW(), NOW(), ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        is_admin = VALUES(is_admin),
+        last_seen_at = NOW(),
+        max_elapsed_ms = GREATEST(max_elapsed_ms, VALUES(max_elapsed_ms)),
+        pageviews = pageviews + ?,
+        last_path = VALUES(last_path),
+        referrer = VALUES(referrer),
+        user_agent = VALUES(user_agent)
+      `,
+      [session_id, is_admin, elapsed_ms, Math.max(1, pageviewInc), path || null, referrer || null, user_agent || null, pageviewInc]
+    );
+
+    return res.json({ success: true });
+  } catch (err) {
+    console.error("VISIT TRACK ERROR:", err?.sqlMessage || err?.message || err);
+    return res.status(500).json({ success: false });
+  }
+};
