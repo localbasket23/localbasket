@@ -717,6 +717,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         color: #0f172a;
         box-shadow: 0 12px 24px -20px rgba(2,6,23,0.18);
         white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
         line-height: 1.35;
         font-size: 13px;
         font-weight: 650;
@@ -927,16 +929,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       /* Mobile/tablet: near full-screen with rounded corners */
        @media (max-width: 768px){
-        /* Dock button to the edge, user can drag it up/down */
-        #lb-ai-btn{
+         /* Dock button to the edge, user can drag it up/down */
+         #lb-ai-btn{
           right: 0;
+          right: env(safe-area-inset-right, 0px);
           bottom: auto;
           top: 55%;
           transform: none;
           border-radius: 16px 0 0 16px;
           padding: 10px 10px;
           box-shadow: 0 18px 42px -28px rgba(255,140,0,0.75);
-        }
+         }
         #lb-ai-btn:hover{ filter: brightness(1.02); }
         #lb-ai-btn:active{ transform: scale(0.99); }
         .lb-ai-btn-label{ display: none; }
@@ -2284,7 +2287,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           // Ensure no transform offsets in dock mode; we control `top` directly.
           btn.style.transform = "none";
           btn.style.left = "auto";
-          btn.style.right = "0px";
+          btn.style.right = "";
           btn.style.bottom = "auto";
           btn.style.top = `${clamp(y, 10, vh - rect.height - 10)}px`;
         } else {
