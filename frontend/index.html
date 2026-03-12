@@ -214,6 +214,7 @@
       background: linear-gradient(135deg, #ff8c00, #ffb347);
       box-shadow: 0 0 0 4px rgba(255, 138, 26, 0.16);
       display: inline-block;
+      animation: pulseDot 1.1s ease-in-out infinite;
     }
 
     @media (max-width: 520px) {
@@ -280,6 +281,7 @@
       color: #0f172a;
       font-weight: 800;
       background: linear-gradient(180deg, #0f172a, #334155);
+      background-size: 100% 180%;
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -304,6 +306,70 @@
       color: rgba(71, 85, 105, 0.92);
       font-weight: 700;
       min-height: 18px;
+    }
+
+    .steps {
+      margin: 14px auto 0;
+      width: min(420px, 92%);
+      display: grid;
+      gap: 8px;
+      text-align: left;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      color: #0f172a;
+      font-weight: 800;
+      font-size: 13px;
+      box-shadow: 0 14px 30px -24px rgba(15, 23, 42, 0.25);
+      opacity: 0.92;
+      transform: translateY(0);
+      transition: opacity 200ms ease, transform 200ms ease, filter 200ms ease;
+    }
+
+    .step::before {
+      content: "";
+      width: 18px;
+      height: 18px;
+      border-radius: 8px;
+      background: rgba(148, 163, 184, 0.35);
+      border: 1px solid rgba(148, 163, 184, 0.55);
+      box-shadow: 0 10px 18px -14px rgba(15, 23, 42, 0.35);
+    }
+
+    .step.is-active {
+      opacity: 1;
+      transform: translateY(-1px);
+      filter: saturate(1.05);
+    }
+
+    .step.is-done {
+      opacity: 1;
+    }
+
+    .step.is-done::before {
+      background: rgba(255, 138, 26, 0.16);
+      border-color: rgba(255, 138, 26, 0.42);
+      position: relative;
+    }
+
+    .step.is-done::after {
+      content: "";
+      position: absolute;
+      width: 7px;
+      height: 11px;
+      border-right: 2px solid #b45309;
+      border-bottom: 2px solid #b45309;
+      transform: translateX(4px) rotate(45deg);
+      opacity: 0.95;
+      pointer-events: none;
     }
 
     .pills {
@@ -381,6 +447,26 @@
       position: relative;
       overflow: hidden;
       isolation: isolate;
+    }
+
+    .fallback span {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .fallback span::after {
+      content: "->";
+      font-weight: 900;
+      opacity: 0.95;
+      transform: translateX(0);
+      transition: transform 160ms ease;
+    }
+
+    .fallback:hover span::after {
+      transform: translateX(3px);
     }
 
     .fallback::before {
@@ -479,6 +565,11 @@
       100% { transform: translate3d(-2%, -2%, 0) rotate(0deg); }
     }
 
+    @keyframes pulseDot {
+      0%, 100% { box-shadow: 0 0 0 4px rgba(255, 138, 26, 0.16); transform: scale(1); }
+      50% { box-shadow: 0 0 0 7px rgba(255, 138, 26, 0.10); transform: scale(1.08); }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .launch-card { animation: none; }
       .card-surface { transition: none; }
@@ -487,6 +578,7 @@
       .progress::after { animation: none; }
       .progress > .bar { transition: none; }
       .fallback { transition: none; }
+      .badge i { animation: none; }
       .bg-blob { animation: none; }
       .launch-card { transition: none; }
       .logo-wrap { transition: none; }
@@ -513,8 +605,13 @@
         <div class="pill">Fresh items</div>
         <div class="pill">Trusted local stores</div>
       </div>
+      <div class="steps" aria-hidden="true" id="steps">
+        <div class="step is-active" data-step="0">Warming up the experience</div>
+        <div class="step" data-step="1">Connecting to local stores</div>
+        <div class="step" data-step="2">Almost ready</div>
+      </div>
       <div class="progress" aria-hidden="true"><div class="bar" id="progressBar"></div></div>
-      <a class="fallback" id="enterBtn" href="./welcome/customer/index.html">Enter Marketplace</a>
+      <a class="fallback" id="enterBtn" href="./welcome/customer/index.html"><span>Enter Marketplace</span></a>
       <div class="meta">
         <span class="countdown" id="countdown">Redirecting in 3s...</span>
         <span class="pct" id="pct" aria-hidden="true">0%</span>
@@ -532,6 +629,8 @@
     const tipEl = document.getElementById("tip");
     const surface = document.querySelector(".card-surface");
     const pctEl = document.getElementById("pct");
+    const stepsEl = document.getElementById("steps");
+    const stepItems = stepsEl ? Array.from(stepsEl.querySelectorAll(".step")) : [];
 
     // Prevent in-page "launch overlays" (e.g. from `js/include.js`) so users don't
     // experience a second launch screen after redirect.
@@ -646,6 +745,7 @@
         "Fresh picks, delivered fast",
         "Veggies - Fruits - Daily essentials",
         "Secure checkout and easy returns",
+        "Made for a smooth mobile experience",
       ];
       let tipIndex = 0;
       window.setInterval(() => {
@@ -655,7 +755,7 @@
           tipEl.textContent = tips[tipIndex];
           tipEl.style.opacity = "1";
         }, 160);
-      }, 1200);
+      }, 1600);
     }
 
     const tick = () => {
@@ -679,6 +779,16 @@
       const t01 = Math.max(0, Math.min(1, elapsed / durationMs));
       if (progressBar) progressBar.style.width = `${Math.round(t01 * 100)}%`;
       if (pctEl) pctEl.textContent = `${Math.round(t01 * 100)}%`;
+
+      if (stepItems.length) {
+        const thresholds = [0.18, 0.55, 0.86];
+        stepItems.forEach((el, idx) => {
+          const done = t01 >= thresholds[idx];
+          const active = !done && (idx === 0 || t01 >= thresholds[idx - 1]);
+          el.classList.toggle("is-done", done);
+          el.classList.toggle("is-active", active);
+        });
+      }
       if (t01 < 1) requestAnimationFrame(animate);
     };
     requestAnimationFrame(animate);
