@@ -62,6 +62,43 @@
     .badge.blocked{ background:rgba(239,68,68,.14); border-color:rgba(239,68,68,.35); }
     .actions{ display:flex; gap:8px; flex-wrap:wrap; }
 
+    /* Mobile "one frame" list UI */
+    .cust-mobile{ display:none; }
+    .cust-card{
+      background:var(--white);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:14px;
+      margin-bottom:12px;
+    }
+    .cust-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .cust-left{ min-width:0; }
+    .cust-left b{ display:block; font-size:16px; }
+    .cust-left .muted{ word-break:break-word; }
+    .cust-meta{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .cust-chip{
+      display:inline-flex; align-items:center; gap:7px;
+      padding:7px 10px; border-radius:999px;
+      border:1px solid var(--border);
+      background:var(--surface-2);
+      font-size:12px; font-weight:900;
+      max-width:100%;
+    }
+    .cust-chip i{ color:var(--muted); }
+    .cust-block{
+      margin-top:10px;
+      background:rgba(239,68,68,.08);
+      border:1px solid rgba(239,68,68,.22);
+      border-radius:12px;
+      padding:10px 12px;
+      color:var(--text);
+      font-size:13px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    .cust-actions{ margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; }
+
     /* Customer details modal (mobile: bottom sheet) */
     #custModal .modal-content{ max-width:560px; }
     #custModal .modal-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
@@ -104,6 +141,10 @@
       .sidebar{ transform:translateX(-110%); transition:0.3s; }
       .sidebar.open{ transform:translateX(0); }
       .topbar{ position:sticky; top:10px; z-index:1000; }
+    }
+    @media (max-width: 900px){
+      .table-wrap{ display:none; }
+      .cust-mobile{ display:block; }
     }
   </style>
 </head>
@@ -149,6 +190,8 @@
         </tbody>
       </table>
     </div>
+
+    <div class="cust-mobile" id="custMobile"></div>
 
     <div class="modal" id="custModal" aria-hidden="true" onclick="closeCustModal()">
       <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="custModalTitle" onclick="event.stopPropagation()">
@@ -292,10 +335,13 @@
     function render(list){
       const tbody = document.getElementById("custBody");
       const countPill = document.getElementById("countPill");
+      const mobile = document.getElementById("custMobile");
       tbody.innerHTML = "";
+      if (mobile) mobile.innerHTML = "";
       if (!list.length){
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No customers found.</td></tr>`;
         if (countPill) countPill.innerHTML = `<i class="fas fa-user"></i> 0`;
+        if (mobile) mobile.innerHTML = `<div style="text-align:center;padding:24px;color:var(--muted);">No customers found.</div>`;
         return;
       }
 
@@ -329,6 +375,64 @@
       }).join("");
 
       if (countPill) countPill.innerHTML = `<i class="fas fa-user"></i> ${list.length}`;
+
+      if (mobile){
+        mobile.innerHTML = list.map(c => {
+          const id = Number(c.id);
+          const name = escapeHtml(c.name || "Customer");
+          const email = escapeHtml(c.email || "-");
+          const phone = escapeHtml(c.phone || "");
+          const orders = Number(c.orders_count || 0);
+          const spent = `Rs. ${Number(c.total_spent || 0).toFixed(2)}`;
+          const created = escapeHtml(c.created_at || "-");
+          const isBlocked = Boolean(c.is_blocked);
+          const blockedAt = escapeHtml(c.blocked_at || "-");
+          const blockReason = escapeHtml(c.block_reason || "-");
+
+          const actionBtns = isBlocked
+            ? `
+                <button class="btn btn-ghost btn-small" type="button" onclick="window.unblockCust(${id})"><i class="fas fa-unlock"></i> Unblock</button>
+                <button class="btn btn-danger btn-small" type="button" onclick="window.deleteCust(${id})"><i class="fas fa-trash"></i> Delete</button>
+              `
+            : `
+                <button class="btn btn-small" type="button" onclick="window.blockCust(${id})"><i class="fas fa-ban"></i> Block</button>
+                <button class="btn btn-danger btn-small" type="button" onclick="window.deleteCust(${id})"><i class="fas fa-trash"></i> Delete</button>
+              `;
+
+          return `
+            <div class="cust-card">
+              <div class="cust-top">
+                <div class="cust-left">
+                  <div style="font-weight:900; color:var(--text-light); font-size:12px;">ID #${id}</div>
+                  <b>${name}</b>
+                  <div class="muted">${email}</div>
+                  ${phone ? `<div class="muted">${phone}</div>` : ``}
+                </div>
+                <div>${badge(isBlocked)}</div>
+              </div>
+
+              <div class="cust-meta">
+                <span class="cust-chip"><i class="fas fa-bag-shopping"></i> Orders: ${orders}</span>
+                <span class="cust-chip"><i class="fas fa-indian-rupee-sign"></i> Spent: ${escapeHtml(spent)}</span>
+                <span class="cust-chip"><i class="fas fa-calendar"></i> Created: ${created}</span>
+              </div>
+
+              ${isBlocked ? `
+                <div class="cust-block">
+                  <div style="font-weight:900; margin-bottom:6px;"><i class="fas fa-ban"></i> Blocked</div>
+                  <div><b>At:</b> ${blockedAt}</div>
+                  <div><b>Reason:</b> ${blockReason}</div>
+                </div>
+              ` : ``}
+
+              <div class="cust-actions">
+                <button class="btn btn-ghost btn-small" type="button" onclick="window.showCust(${id})"><i class="fas fa-circle-info"></i> Details</button>
+                ${actionBtns}
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
     }
 
     async function load(){
@@ -343,6 +447,8 @@
         applyFilter();
       } catch (e){
         document.getElementById("custBody").innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">Failed to load customers.</td></tr>`;
+        const mobile = document.getElementById("custMobile");
+        if (mobile) mobile.innerHTML = `<div style="text-align:center;padding:24px;color:var(--muted);">Failed to load customers.</div>`;
       } finally{
         if (btn) btn.disabled = false;
       }
