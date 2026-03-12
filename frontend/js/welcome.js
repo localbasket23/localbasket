@@ -785,14 +785,10 @@ const applyHeroSettings = (settings = {}) => {
     if (heroSubtitleEl && subtitle) heroSubtitleEl.textContent = subtitle;
 
     if (heroSection) {
-        image = resolveHeroImageUrl(image);
-        if (image) {
-            heroSection.classList.add("has-hero-image");
-            heroSection.style.setProperty("--hero-image", `url('${image}')`);
-        } else {
-            heroSection.classList.remove("has-hero-image");
-            heroSection.style.setProperty("--hero-image", "none");
-        }
+        // IMPORTANT: Do not apply hero images as section background.
+        // Images should appear only inside the slider visual.
+        heroSection.classList.remove("has-hero-image");
+        heroSection.style.setProperty("--hero-image", "none");
     }
 
     const heroVisual = dom.heroVisual();

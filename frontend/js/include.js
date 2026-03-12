@@ -483,6 +483,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       #lb-ai-panel, #lb-ai-btn{
         font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
       }
+      #lb-ai-panel, #lb-ai-panel *{
+        box-sizing: border-box;
+        max-width: 100%;
+      }
       #lb-ai-backdrop{
         position: fixed;
         inset: 0;
@@ -698,7 +702,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       #lb-ai-body{
         padding: 12px;
-        overflow: auto;
+        overflow-y: auto;
+        overflow-x: hidden;
         display: grid;
         gap: 10px;
         background: radial-gradient(120% 90% at 20% 0%, rgba(255,140,0,0.08) 0%, rgba(255,255,255,0.0) 55%);
@@ -827,6 +832,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
       }
       .lb-ai-chips::-webkit-scrollbar{ height: 8px; }
       .lb-ai-chips::-webkit-scrollbar-thumb{

@@ -128,7 +128,7 @@ router.post("/settings/hero-image", upload.single("hero_image"), saveHeroImage);
 // POST /api/admin/settings/hero-image/remove
 router.post("/settings/hero-image/remove", removeHeroImage);
 // POST /api/admin/settings/hero-images
-router.post("/settings/hero-images", upload.array("hero_images", 8), saveHeroImages);
+router.post("/settings/hero-images", upload.array("hero_images", 200), saveHeroImages);
 // POST /api/admin/settings/hero-images/meta
 router.post("/settings/hero-images/meta", saveHeroImagesMeta);
 // POST /api/admin/settings/hero-images/remove
