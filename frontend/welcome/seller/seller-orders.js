@@ -31,7 +31,8 @@ const els = {
     statusFilter: document.getElementById("statusFilter"),
     paymentFilter: document.getElementById("paymentFilter"),
     sortFilter: document.getElementById("sortFilter"),
-    clearFilters: document.getElementById("clearFilters")
+    clearFilters: document.getElementById("clearFilters"),
+    refreshBtn: document.getElementById("refreshOrdersBtn")
 };
 
 let allOrders = [];
@@ -364,6 +365,20 @@ document.addEventListener("DOMContentLoaded", () => {
     // Auto Refresh every 20 seconds
     setInterval(fetchOrders, 20000);
 
+    // Manual refresh button
+    if (els.refreshBtn) {
+        els.refreshBtn.addEventListener("click", async () => {
+            try {
+                els.refreshBtn.disabled = true;
+                els.refreshBtn.style.opacity = "0.7";
+                await fetchOrders();
+            } finally {
+                els.refreshBtn.disabled = false;
+                els.refreshBtn.style.opacity = "";
+            }
+        });
+    }
+
     // Filters
     [els.orderSearch, els.statusFilter, els.paymentFilter, els.sortFilter].forEach(el => {
         if (!el) return;
@@ -397,6 +412,9 @@ async function fetchOrders() {
         console.error("❌ Fetch error:", err);
     }
 }
+
+// Make available for legacy inline handlers / debugging
+window.fetchOrders = fetchOrders;
 
 function renderOrders() {
     if (!els.activeList || !els.historyList) return;
@@ -637,7 +655,7 @@ window.processUpdate = async (orderId, newStatus, currentStatus = "") => {
             requireReason: false,
             requireOtp: true,
             otpLabel: "Delivery OTP (4-digit)",
-            otpPlaceholder: "1234",
+            otpPlaceholder: "Enter OTP",
             requireCheck: needsCodConfirm,
             checkLabel: "COD cash collected (customer paid)",
             confirmText: "Verify & Deliver"
