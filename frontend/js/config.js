@@ -1,6 +1,18 @@
 (() => {
-  const stored = (typeof localStorage !== "undefined" && localStorage.getItem("lbApiBase")) || "";
-  const byWindow = window.API_BASE_URL || window.LB_API_BASE || stored;
+  const stored = (() => {
+    try { return (typeof localStorage !== "undefined" && localStorage.getItem("lbApiBase")) || ""; } catch { return ""; }
+  })();
+
+  const queryOverride = (() => {
+    try {
+      const sp = new URLSearchParams(String(window.location && window.location.search || ""));
+      return String(sp.get("apiBase") || sp.get("api") || "").trim();
+    } catch {
+      return "";
+    }
+  })();
+
+  const byWindow = window.API_BASE_URL || window.LB_API_BASE || queryOverride || stored;
   const host = String(window.location && window.location.hostname || "").trim();
   const isLocal =
     window.location && (window.location.protocol === "file:" || host === "localhost" || host === "127.0.0.1");
@@ -15,4 +27,9 @@
     .replace(/\/+$/, "");
 
   window.API_BASE_URL = fallback;
+  window.LB_API_BASE = fallback;
+
+  if (queryOverride) {
+    try { localStorage.setItem("lbApiBase", fallback); } catch {}
+  }
 })();

@@ -1,47 +1,42 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <script src="/js/config.js"></script>
-<base href="/" />
+  <base href="/" />
   <meta charset="UTF-8">
   <title>LocalBasket Mobile</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="mobile.css">
+  <link rel="stylesheet" href="/welcome/mobile.css">
 </head>
 <body>
-
   <div id="header"></div>
 
-  <!-- MOBILE UI HERE -->
   <div class="mobile-app">
-
     <header class="m-header">
       <div class="m-location">
-        📍 <span id="locText">Select Location</span>
+        <span class="m-ico" aria-hidden="true">📍</span>
+        <span id="locText">Select Location</span>
       </div>
-      <div class="m-user" id="accountBtn">
-        <div class="m-avatar">
-          <span id="userInitials">U</span>
-        </div>
-      </div>
+      <button type="button" class="m-user" id="accountBtn" aria-label="Account">
+        <span class="m-avatar"><span id="userInitials">U</span></span>
+      </button>
     </header>
 
     <div class="m-search">
-      <input type="number" id="pinInput" placeholder="Enter pincode">
-      <button class="m-btn" onclick="searchByPincode()">Find</button>
+      <input type="number" id="pinInput" placeholder="Enter pincode" inputmode="numeric">
+      <button class="m-btn" type="button" onclick="searchByPincode()">Find</button>
     </div>
 
-    <div class="m-store-grid" id="storeGrid"></div>
+    <div class="m-store-grid" id="storeGrid" aria-live="polite"></div>
 
-    <nav class="m-bottom-nav">
-      <button>🏠<span>Home</span></button>
-      <button>🔍<span>Search</span></button>
-      <button>🛒<span id="cartCount">0</span></button>
-      <button>👤<span>Account</span></button>
+    <nav class="m-bottom-nav" aria-label="Bottom navigation">
+      <button type="button"><span class="m-ico" aria-hidden="true">🏠</span><span>Home</span></button>
+      <button type="button"><span class="m-ico" aria-hidden="true">🔎</span><span>Search</span></button>
+      <button type="button"><span class="m-ico" aria-hidden="true">🛒</span><span id="cartCount">0</span></button>
+      <button type="button"><span class="m-ico" aria-hidden="true">👤</span><span>Account</span></button>
     </nav>
-
   </div>
 
   <script src="/js/welcome.js"></script>
@@ -52,19 +47,4 @@
   <script src="/js/theme.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
