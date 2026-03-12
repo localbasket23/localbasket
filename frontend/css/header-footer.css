@@ -666,6 +666,13 @@ html.lb-theme-dark .theme-toggle:hover .theme-toggle-track {
   z-index: 5001;
 }
 .user-menu p { font-size: 12px; font-weight: 800; color: var(--slate); padding: 10px 12px; text-transform: uppercase; border-bottom: 1px solid #f1f5f9; margin-bottom: 5px; }
+.user-id-line{
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-muted, #64748b);
+  padding: 0 12px 10px;
+  margin-top: -2px;
+}
 .user-menu button { padding: 10px 12px; text-align: left; font-size: 13px; font-weight: 700; color: var(--dark); border-radius: 8px; background: transparent; border: none; cursor: pointer; display: flex; gap: 8px; align-items: center; }
 .user-menu button:hover { background: var(--light); color: var(--primary); }
 html.lb-theme-dark .user-menu {
@@ -676,6 +683,9 @@ html.lb-theme-dark .user-menu {
 html.lb-theme-dark .user-menu p {
   color: #9eb0ca !important;
   border-bottom-color: rgba(148, 163, 184, 0.24) !important;
+}
+html.lb-theme-dark .user-id-line{
+  color: rgba(226, 232, 240, 0.78) !important;
 }
 html.lb-theme-dark .user-menu button {
   color: #dbe7fb !important;

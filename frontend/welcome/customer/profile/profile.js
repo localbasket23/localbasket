@@ -37,6 +37,7 @@ function loadUserData() {
   const userInitial = document.getElementById("userInitial");
   const summaryName = document.getElementById("summaryName");
   const summaryEmail = document.getElementById("summaryEmail");
+  const summaryId = document.getElementById("summaryId");
 
   if (userInitial) {
     userInitial.textContent = currentUser.name
@@ -46,6 +47,7 @@ function loadUserData() {
 
   if (summaryName) summaryName.textContent = currentUser.name || "User";
   if (summaryEmail) summaryEmail.textContent = maskEmail(currentUser.email || "");
+  if (summaryId) summaryId.textContent = currentUser.id ? `ID: #${currentUser.id}` : "ID: #---";
 
   const nameInput = document.getElementById("profName");
   const emailInput = document.getElementById("profEmail");

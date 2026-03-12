@@ -483,6 +483,7 @@
       </div>
       <div class="profile-quick">
         <span class="quick-pill"><i class="fas fa-store"></i> Shop Profile</span>
+        <span class="quick-pill subtle" id="sellerIdPill"><i class="fas fa-hashtag"></i> ID: #---</span>
         <span class="quick-pill subtle">Verified Seller</span>
       </div>
     </div>
@@ -626,6 +627,8 @@ document.addEventListener("DOMContentLoaded", () => {
   
   document.getElementById("displayStoreName").innerText = seller.store_name || "My Store";
   document.getElementById("displayOwner").innerText = seller.owner_name || "Owner";
+  const sellerIdPill = document.getElementById("sellerIdPill");
+  if (sellerIdPill) sellerIdPill.innerHTML = `<i class="fas fa-hashtag"></i> ID: #${seller.id || "---"}`;
 
   previewPic.src = seller.store_photo 
     ? resolveUploadUrl(seller.store_photo)

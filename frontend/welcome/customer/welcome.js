@@ -189,6 +189,7 @@ const dom = {
     userAccount: () => getEl("userAccount"),
     userInitials: () => getEl("userInitials"),
     userFullName: () => getEl("userFullName"),
+    userIdLine: () => getEl("userIdLine"),
     userMenu: () => getEl("userMenu"),
     accountBtn: () => getEl("accountBtn"),
     authOverlay: () => getEl("authOverlay"),
@@ -860,6 +861,11 @@ function updateAuthUI() {
 
         if (dom.userInitials()) dom.userInitials().innerText = initials;
         if (dom.userFullName()) dom.userFullName().innerText = `Hi, ${names[0]}`;
+    }
+
+    const userId = state.user?.id;
+    if (dom.userIdLine()) {
+        dom.userIdLine().textContent = userId ? `ID: #${userId}` : "ID: #---";
     }
     updateMobileHomeShell();
 }
