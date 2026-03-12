@@ -22,6 +22,27 @@ exports.getSystemStatus = async (req, res) => {
   }
 };
 
+async function ensureSupportRequestsTable() {
+  await query(`
+    CREATE TABLE IF NOT EXISTS support_requests (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      customer_id INT NULL,
+      name VARCHAR(160) NULL,
+      email VARCHAR(190) NULL,
+      phone VARCHAR(20) NULL,
+      issue_type VARCHAR(60) NULL,
+      message TEXT NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+      admin_note TEXT NULL,
+      resolved_at DATETIME NULL,
+      resolved_by VARCHAR(80) NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      KEY idx_support_status (status),
+      KEY idx_support_created (created_at)
+    )
+  `);
+}
+
 // POST /api/system/support/request
 exports.submitSupportRequest = async (req, res) => {
   const name = String(req.body?.name || "").trim();
@@ -38,14 +59,30 @@ exports.submitSupportRequest = async (req, res) => {
       message: "name, email, type and message are required"
     });
   }
+  if (!Number.isFinite(customer_id) || customer_id <= 0) {
+    return res.status(401).json({ success: false, message: "Login required" });
+  }
 
   try {
+    await ensureSupportRequestsTable();
+
+    const customerRows = await query("SELECT id, name, email, phone FROM customers WHERE id=? LIMIT 1", [customer_id]);
+    const customer = customerRows && customerRows[0] ? customerRows[0] : null;
+    if (!customer) return res.status(401).json({ success: false, message: "Login required" });
+
     const result = await query(
       `
       INSERT INTO support_requests (customer_id, name, email, phone, issue_type, message, status)
       VALUES (?, ?, ?, ?, ?, ?, 'OPEN')
       `,
-      [Number.isFinite(customer_id) ? customer_id : null, name, email || null, phone || null, issue_type, message]
+      [
+        customer_id,
+        name || customer.name || null,
+        email || customer.email || null,
+        phone || customer.phone || null,
+        issue_type,
+        message
+      ]
     );
 
     return res.json({

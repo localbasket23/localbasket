@@ -35,6 +35,13 @@
 
       let user = null;
       try { user = JSON.parse(localStorage.getItem("lbUser") || "null"); } catch {}
+      const customerId = user?.id || user?.customer_id || null;
+      if (!customerId) {
+        window.alert("Please login first to submit a support request.");
+        try { sessionStorage.setItem("lbOpenAuthAfterRedirect", "1"); } catch {}
+        window.location.href = "/welcome/customer/index.html";
+        return;
+      }
 
       const payload = {
         name,
@@ -42,7 +49,7 @@
         type,
         message,
         phone: user?.phone || user?.mobile || "",
-        customer_id: user?.id || user?.customer_id || null
+        customer_id: customerId
       };
 
       let ticketId = "SUP-" + Date.now();
@@ -61,18 +68,8 @@
           throw new Error(data?.message || "Request failed");
         }
       } catch (err) {
-        const request = {
-          id: ticketId,
-          name,
-          email,
-          type,
-          message,
-          created_at: new Date().toISOString(),
-          offline: true
-        };
-        const existing = JSON.parse(localStorage.getItem("lbSupportRequests") || "[]");
-        existing.unshift(request);
-        localStorage.setItem("lbSupportRequests", JSON.stringify(existing.slice(0, 25)));
+        window.alert("Support request failed. Please try again.");
+        return;
       }
 
       form.reset();
