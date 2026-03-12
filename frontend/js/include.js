@@ -917,7 +917,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       html.lb-theme-dark #lb-ai-help{ color: rgba(226,232,240,0.65); }
 
       /* Mobile/tablet: near full-screen with rounded corners */
-      @media (max-width: 768px){
+       @media (max-width: 768px){
         /* Dock button to the edge, user can drag it up/down */
         #lb-ai-btn{
           right: 0;
@@ -945,28 +945,30 @@ document.addEventListener("DOMContentLoaded", async () => {
         #lb-ai-panel.lb-ai-open{ transform: translateY(0px); }
         #lb-ai-head{ padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
         #lb-ai-foot{ padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
-        #lb-ai-body{ padding: 12px 10px; gap: 10px; }
-        .lb-ai-msg{ max-width: 92%; }
-        .lb-ai-chips{ flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
-        .lb-ai-chip{ white-space: nowrap; }
-      }
+         #lb-ai-body{ padding: 12px 10px; gap: 10px; }
+         .lb-ai-msg{ max-width: 92%; }
+         .lb-ai-chips{ flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+         .lb-ai-chip{ white-space: nowrap; }
+       }
 
-      /* Scrollbars: keep subtle */
-      #lb-ai-body::-webkit-scrollbar{
-        width: 10px;
-      }
-      #lb-ai-body::-webkit-scrollbar-thumb{
-        background: rgba(100,116,139,0.28);
-        border-radius: 999px;
-        border: 3px solid transparent;
-        background-clip: content-box;
-      }
-      html.lb-theme-dark #lb-ai-body::-webkit-scrollbar-thumb{
-        background: rgba(226,232,240,0.22);
-        border: 3px solid transparent;
-        background-clip: content-box;
-      }
-    `;
+       /* Scrollbars: keep subtle (desktop only) */
+       @media (min-width: 769px){
+         #lb-ai-body::-webkit-scrollbar{
+           width: 10px;
+         }
+         #lb-ai-body::-webkit-scrollbar-thumb{
+           background: rgba(100,116,139,0.28);
+           border-radius: 999px;
+           border: 3px solid transparent;
+           background-clip: content-box;
+         }
+         html.lb-theme-dark #lb-ai-body::-webkit-scrollbar-thumb{
+           background: rgba(226,232,240,0.22);
+           border: 3px solid transparent;
+           background-clip: content-box;
+         }
+       }
+     `;
     document.head.appendChild(style);
 
     const backdrop = document.createElement("div");
@@ -2417,6 +2419,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Drag: desktop free-move, mobile docked vertical move. Click/tap opens panel.
     applyBtnPosition();
+    // First paint on some mobile browsers can report a "wrong" visual viewport until after load.
+    // Sync a few times so the chat shell sizes correctly without requiring reload.
+    syncVisualViewportVars();
+    try { requestAnimationFrame(() => syncVisualViewportVars()); } catch {}
+    try { setTimeout(syncVisualViewportVars, 60); } catch {}
+    try { window.addEventListener("load", () => { try { syncVisualViewportVars(); } catch {} }, { once: true, passive: true }); } catch {}
     window.addEventListener("resize", applyBtnPosition, { passive: true });
 
     let dragStartX = 0;
