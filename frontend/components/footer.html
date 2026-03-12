@@ -38,10 +38,10 @@
       <section class="footer-col footer-support">
         <h4>Support</h4>
         <nav class="footer-links" aria-label="Support">
-          <a href="/welcome/customer/help.html">Help Center</a>
-          <a href="/welcome/customer/contact.html">Contact Us</a>
-          <a href="/welcome/customer/faq.html">FAQs</a>
-          <a href="/welcome/customer/privacy.html">Privacy</a>
+          <a href="/welcome/customer/help.html" data-lb-support="help">Help Center</a>
+          <a href="/welcome/customer/contact.html" data-lb-support="contact">Contact Us</a>
+          <a href="/welcome/customer/faq.html" data-lb-support="faq">FAQs</a>
+          <a href="/welcome/customer/privacy.html" data-lb-support="privacy">Privacy</a>
         </nav>
       </section>
 
@@ -85,6 +85,63 @@
     </div>
   </div>
 </footer>
+
+<div class="lb-admin-popup-overlay" id="lbSupportPopupOverlay" hidden onclick="if(event.target===this){this.hidden=true;document.body.style.overflow='';}">
+  <div class="lb-admin-popup lb-support-popup" role="dialog" aria-modal="true" aria-labelledby="lbSupportPopupTitle">
+    <button type="button" class="lb-admin-popup-close" id="lbSupportPopupClose" aria-label="Close" onclick="var o=document.getElementById('lbSupportPopupOverlay');if(o){o.hidden=true;}document.body.style.overflow='';">&times;</button>
+    <h3 id="lbSupportPopupTitle">Support</h3>
+    <div class="lb-support-popup-body">
+      <div class="lb-support-popup-intro">
+        Get help with orders, payments, delivery issues, and account support.
+      </div>
+
+      <div class="lb-support-grid">
+        <section class="lb-support-card" id="lbSupportHelp">
+          <h4>Help Center</h4>
+          <ul>
+            <li>How to place an order & track delivery</li>
+            <li>Out of stock / wrong item / damaged item</li>
+            <li>Cancel order, refund timeline, and replacement</li>
+            <li>Store support and product availability</li>
+          </ul>
+        </section>
+
+        <section class="lb-support-card" id="lbSupportContact">
+          <h4>Contact Us</h4>
+          <p>Email: <a href="mailto:localbasket.helpdesk@gmail.com">localbasket.helpdesk@gmail.com</a></p>
+          <p>WhatsApp: <a href="https://wa.me/918000000000" target="_blank" rel="noopener">+91 80000 00000</a></p>
+          <p>Hours: 9:00 AM – 9:00 PM (IST)</p>
+        </section>
+
+        <section class="lb-support-card" id="lbSupportFaq">
+          <h4>FAQs</h4>
+          <details>
+            <summary>How do I track my order?</summary>
+            <div class="lb-support-answer">Go to My Orders → open your order → check the status and delivery updates.</div>
+          </details>
+          <details>
+            <summary>What if seller delays delivery?</summary>
+            <div class="lb-support-answer">You can contact the seller from the order page or reach support using the email above.</div>
+          </details>
+          <details>
+            <summary>Do you support COD?</summary>
+            <div class="lb-support-answer">Yes, COD is available on supported stores and your payment status will show as pending until cash is collected.</div>
+          </details>
+        </section>
+
+        <section class="lb-support-card" id="lbSupportPrivacy">
+          <h4>Privacy</h4>
+          <ul>
+            <li>We collect basic details needed to deliver your order (name, phone, address).</li>
+            <li>We don’t sell your personal data to third parties.</li>
+            <li>Order and payment information is used only for fulfillment and support.</li>
+            <li>You can request account/data removal by emailing support.</li>
+          </ul>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="lb-admin-popup-overlay" id="lbAdminPopupOverlay" hidden onclick="if(event.target===this){this.hidden=true;document.body.style.overflow='';}">
   <div class="lb-admin-popup" role="dialog" aria-modal="true" aria-labelledby="lbAdminPopupTitle">
