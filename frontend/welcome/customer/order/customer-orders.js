@@ -1100,6 +1100,12 @@ function renderOrderCard(order) {
   const cart = safeParseCart(order.cart);
 
   const isDelivered = displayStatus === "DELIVERED";
+  const deliveryOtp = String(order?.delivery_otp || "").replace(/\D/g, "");
+  const showDeliveryOtp =
+    deliveryOtp.length === 4 &&
+    !isDelivered &&
+    displayStatus !== "CANCELLED" &&
+    displayStatus !== "REJECTED";
   const feedback = getOrderFeedback(order) || getFeedback(orderId);
   const isPrepaid =
     order.payment_method !== "COD" ||
@@ -1174,6 +1180,14 @@ function renderOrderCard(order) {
             <div class="order-summary-amount">Rs. ${order.total_amount}</div>
           </div>
           <div class="order-summary-sub">${escapeHtml(summarySubtitle)}</div>
+          ${
+            showDeliveryOtp
+              ? `<div class="order-otp-row">
+                   <span class="order-otp-label">Delivery OTP</span>
+                   <span class="order-otp-code">${escapeHtml(deliveryOtp)}</span>
+                 </div>`
+              : ""
+          }
         </div>
         <span class="order-summary-chevron" aria-hidden="true">&gt;</span>
       </button>
