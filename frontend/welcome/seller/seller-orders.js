@@ -68,6 +68,41 @@ function extractArea(address, fallback = "") {
     return raw;
 }
 
+function formatOrderDateTime(ts) {
+    const d = new Date(ts);
+    if (!d || Number.isNaN(d.getTime())) return "N/A";
+    return d.toLocaleString("en-IN", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+    });
+}
+
+function toElapsedMinutes(ts) {
+    const t = new Date(ts).getTime();
+    if (!Number.isFinite(t)) return 0;
+    return Math.max(0, Math.floor((Date.now() - t) / 60000));
+}
+
+function humanizeMinutes(mins) {
+    const m = Math.max(0, Number(mins || 0));
+    const h = Math.floor(m / 60);
+    const rem = m % 60;
+    if (h <= 0) return `${rem}m`;
+    return `${h}h ${String(rem).padStart(2, "0")}m`;
+}
+
+function getStageTargetMinutes(status) {
+    const s = normalizeSellerStatus(status);
+    // Simple SLA targets (adjust if needed)
+    if (s === "ACCEPTED" || s === "PACKED") return { label: "Prep", mins: 30 };
+    if (s === "OUT_FOR_DELIVERY") return { label: "Dispatch", mins: 45 };
+    if (s === "COLLECT_CASH") return { label: "Complete", mins: 60 };
+    return { label: "Prep", mins: 30 };
+}
+
 function showNewOrderNotice(count) {
     if (!els.newOrderNotice || !count) return;
 
@@ -475,9 +510,25 @@ function createActiveRow(order) {
     const canCollectCash = paymentMethod === "COD" && paymentStatus !== "PAID" && paymentStatus !== "SUCCESS" && status === "OUT_FOR_DELIVERY";
     const collectCashDisabled = !(canCollectCash || status === "COLLECT_CASH");
 
+    const orderedAt = order.created_at || order.createdAt || order.order_time || order.orderTime || null;
+    const elapsedMins = toElapsedMinutes(orderedAt);
+    const stage = getStageTargetMinutes(status);
+    const delayMins = Math.max(0, elapsedMins - Number(stage.mins || 0));
+    const isDelayed = delayMins > 0 && !["DELIVERED", "CANCELLED", "REJECTED"].includes(status);
+
     return `
     <tr>
-        <td data-label="Order ID"><b>#${order.id}</b></td>
+        <td data-label="Order ID">
+            <b>#${order.id}</b>
+            <div class="order-time-meta">
+                <div class="order-time-line">Ordered: ${formatOrderDateTime(orderedAt)}</div>
+                <div class="order-time-badges">
+                    <span class="time-badge">Elapsed: ${humanizeMinutes(elapsedMins)}</span>
+                    <span class="time-badge soft">${stage.label}: ${stage.mins}m</span>
+                    ${isDelayed ? `<span class="time-badge danger">Delay +${humanizeMinutes(delayMins)}</span>` : ""}
+                </div>
+            </div>
+        </td>
         <td data-label="Customer">
             ${order.customer_name}<br>
             ${

@@ -345,6 +345,41 @@ body.dark .status-select {
   text-overflow: ellipsis;
 }
 
+.order-time-meta {
+  margin-top: 6px;
+}
+.order-time-line {
+  font-size: 12px;
+  color: var(--text-light);
+}
+.order-time-badges {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.time-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text);
+}
+.time-badge.soft {
+  background: rgba(255, 138, 26, 0.14);
+  border-color: rgba(255, 138, 26, 0.32);
+  color: #ffb770;
+}
+.time-badge.danger {
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fecaca;
+}
+
 .view-all-btn {
   border: none;
   cursor: pointer;
