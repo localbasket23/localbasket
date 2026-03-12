@@ -212,7 +212,17 @@ function applyFilters(orders) {
     return out;
 }
 
-function showActionModal({ title, message, requireReason = false, requireCheck = false, checkLabel = "I confirm", confirmText = "Confirm" }) {
+function showActionModal({
+    title,
+    message,
+    requireReason = false,
+    requireCheck = false,
+    checkLabel = "I confirm",
+    requireOtp = false,
+    otpLabel = "Delivery OTP",
+    otpPlaceholder = "Enter 4-digit OTP",
+    confirmText = "Confirm"
+}) {
     return new Promise(resolve => {
         if (!els.actionModal || !els.actionModalOk || !els.actionModalCancel) {
             const ask = window.lbConfirm
@@ -220,15 +230,15 @@ function showActionModal({ title, message, requireReason = false, requireCheck =
                 : Promise.resolve(window.confirm(message || title || "Confirm?"));
             ask.then((ok) => {
                 if (!ok) {
-                    resolve({ confirmed: false, reason: "" });
+                    resolve({ confirmed: false, reason: "", checked: false, otp: "" });
                     return;
                 }
                 if (!requireReason) {
-                    resolve({ confirmed: true, reason: "" });
+                    resolve({ confirmed: true, reason: "", checked: false, otp: "" });
                     return;
                 }
                 const fallbackReason = String(window.prompt("Enter reason:") || "").trim();
-                resolve({ confirmed: Boolean(fallbackReason), reason: fallbackReason });
+                resolve({ confirmed: Boolean(fallbackReason), reason: fallbackReason, checked: false, otp: "" });
             });
             return;
         }
@@ -237,6 +247,10 @@ function showActionModal({ title, message, requireReason = false, requireCheck =
         const titleEl = els.actionModalTitle;
         const msgEl = els.actionModalMessage;
         const reasonEl = els.actionModalReason;
+        const otpWrap = document.getElementById("actionModalOtpWrap");
+        const otpLabelEl = document.querySelector("#actionModalOtpWrap .action-otp-label");
+        const otpInput = document.getElementById("actionModalOtp");
+        const otpErrorEl = document.getElementById("actionModalOtpError");
         const checkWrap = document.getElementById("actionModalCheckWrap");
         const checkEl = document.getElementById("actionModalCheck");
         const checkLabelEl = document.getElementById("actionModalCheckLabel");
@@ -253,8 +267,15 @@ function showActionModal({ title, message, requireReason = false, requireCheck =
             reasonEl.value = "";
             reasonEl.style.display = requireReason ? "block" : "none";
         }
+        if (otpInput) {
+            otpInput.value = "";
+            otpInput.setAttribute("placeholder", otpPlaceholder || "Enter 4-digit OTP");
+        }
+        if (otpLabelEl) otpLabelEl.textContent = otpLabel || "Delivery OTP";
+        if (otpWrap) otpWrap.style.display = requireOtp ? "block" : "none";
         if (errorEl) errorEl.classList.remove("show");
         if (checkErrorEl) checkErrorEl.classList.remove("show");
+        if (otpErrorEl) otpErrorEl.classList.remove("show");
         if (checkLabelEl) checkLabelEl.textContent = checkLabel || "I confirm";
         if (checkEl) checkEl.checked = false;
         if (checkWrap) checkWrap.style.display = requireCheck ? "flex" : "none";
@@ -277,7 +298,7 @@ function showActionModal({ title, message, requireReason = false, requireCheck =
         };
 
         const onKeydown = (e) => {
-            if (e.key === "Escape") close({ confirmed: false, reason: "" });
+            if (e.key === "Escape") close({ confirmed: false, reason: "", checked: false, otp: "" });
         };
 
         if (okBtn) {
@@ -293,17 +314,23 @@ function showActionModal({ title, message, requireReason = false, requireCheck =
                     checkEl?.focus();
                     return;
                 }
-                close({ confirmed: true, reason });
+                const otp = String(otpInput?.value || "").replace(/\\D/g, "");
+                if (requireOtp && otp.length !== 4) {
+                    if (otpErrorEl) otpErrorEl.classList.add("show");
+                    otpInput?.focus();
+                    return;
+                }
+                close({ confirmed: true, reason, checked: Boolean(checkEl?.checked), otp });
             };
         }
 
         if (cancelBtn) {
-            cancelBtn.onclick = () => close({ confirmed: false, reason: "" });
+            cancelBtn.onclick = () => close({ confirmed: false, reason: "", checked: false, otp: "" });
         }
 
         modal.addEventListener("click", onBackdrop);
         document.addEventListener("keydown", onKeydown);
-        setTimeout(() => (requireReason ? reasonEl?.focus() : okBtn?.focus()), 0);
+        setTimeout(() => (requireOtp ? otpInput?.focus() : (requireReason ? reasonEl?.focus() : okBtn?.focus())), 0);
     });
 }
 
@@ -600,12 +627,20 @@ window.processUpdate = async (orderId, newStatus, currentStatus = "") => {
         const currentOrder = allOrders.find(o => Number(o.id) === Number(orderId)) || null;
         const paymentMethod = String(currentOrder?.payment_method || "").trim().toUpperCase();
         const paymentStatus = String(currentOrder?.payment_status || "").trim().toUpperCase();
+        const needsCodConfirm = paymentMethod === "COD" && paymentStatus !== "PAID" && paymentStatus !== "SUCCESS";
 
         const result = await showActionModal({
-            title: "Mark Delivered",
-            message: "Confirm delivery? Delivery OTP required.",
+            title: "Verify OTP & Deliver",
+            message: needsCodConfirm
+                ? "Enter Delivery OTP and confirm COD cash collection to mark delivered."
+                : "Enter Delivery OTP to mark delivered.",
             requireReason: false,
-            confirmText: "Yes, Deliver"
+            requireOtp: true,
+            otpLabel: "Delivery OTP (4-digit)",
+            otpPlaceholder: "1234",
+            requireCheck: needsCodConfirm,
+            checkLabel: "COD cash collected (customer paid)",
+            confirmText: "Verify & Deliver"
         });
 
         if (!result.confirmed) {
@@ -613,20 +648,16 @@ window.processUpdate = async (orderId, newStatus, currentStatus = "") => {
             return;
         }
 
-        const otpInput = String(window.prompt("Enter 4-digit Delivery OTP (customer will provide):") || "").trim();
-        deliveryOtp = otpInput.replace(/\D/g, "");
+        deliveryOtp = String(result.otp || "").replace(/\\D/g, "");
         if (deliveryOtp.length !== 4) {
-            alert("Invalid OTP. Please enter exactly 4 digits.");
             fetchOrders();
             return;
         }
 
         if (paymentMethod === "COD") {
-            if (paymentStatus === "PAID" || paymentStatus === "SUCCESS") {
-                codPaid = true;
-            } else {
-                codPaid = window.confirm("COD Payment: Click OK if customer has paid cash. Click Cancel if not paid yet.");
-            }
+            codPaid = paymentStatus === "PAID" || paymentStatus === "SUCCESS"
+                ? true
+                : Boolean(result.checked);
         }
     }
 
@@ -691,6 +722,7 @@ window.processUpdate = async (orderId, newStatus, currentStatus = "") => {
             fetchOrders();
         } else {
             alert("Update failed: " + data.message);
+            fetchOrders();
         }
     } catch (err) {
         console.error(err);
