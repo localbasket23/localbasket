@@ -955,12 +955,41 @@ document.addEventListener("DOMContentLoaded", async () => {
           transform: translateY(12px);
         }
         #lb-ai-panel.lb-ai-open{ transform: translateY(0px); }
-        #lb-ai-head{ padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
-        #lb-ai-foot{ padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+         #lb-ai-head{ padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
+         #lb-ai-foot{ padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
          #lb-ai-body{ padding: 12px 10px; gap: 10px; }
-         .lb-ai-msg{ max-width: 92%; }
-         .lb-ai-chips{ flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
-         .lb-ai-chip{ white-space: nowrap; }
+         .lb-ai-msg{ max-width: 100%; }
+
+         /* Make quick actions readable (no cut-off) */
+         .lb-ai-actions{
+           display: grid;
+           grid-template-columns: repeat(2, minmax(0, 1fr));
+           gap: 10px;
+         }
+         .lb-ai-action{
+           width: 100%;
+           border-radius: 14px;
+           padding: 10px 12px;
+           text-align: center;
+           white-space: normal;
+           line-height: 1.2;
+         }
+
+         /* Show suggestion chips in-frame (no horizontal scrolling) */
+         .lb-ai-chips{
+           display: grid;
+           grid-template-columns: repeat(2, minmax(0, 1fr));
+           gap: 10px;
+           overflow: visible;
+         }
+         .lb-ai-chip{
+           width: 100%;
+           border-radius: 14px;
+           padding: 10px 12px;
+           white-space: normal;
+           text-align: center;
+           line-height: 1.2;
+         }
        }
 
        /* Scrollbars: keep subtle (desktop only) */
@@ -979,6 +1008,12 @@ document.addEventListener("DOMContentLoaded", async () => {
            border: 3px solid transparent;
            background-clip: content-box;
          }
+       }
+
+       /* Small phones: single column actions/chips */
+       @media (max-width: 420px){
+         .lb-ai-actions{ grid-template-columns: 1fr; }
+         .lb-ai-chips{ grid-template-columns: 1fr; }
        }
      `;
     document.head.appendChild(style);
