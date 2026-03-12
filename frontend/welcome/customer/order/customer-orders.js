@@ -1155,6 +1155,8 @@ function renderOrderCard(order) {
     order.payment_status === "PAID";
   const paymentStatus = String(order?.payment_status || "").toUpperCase();
   const paymentMethod = String(order?.payment_method || "").toUpperCase();
+  const paymentId = String(order?.payment_id || "").trim();
+  const showPaymentId = Boolean(paymentId) && paymentMethod !== "COD";
   let paymentClass = "pending";
   if (paymentStatus === "PAID" || paymentStatus === "SUCCESS") {
     paymentClass = "paid";
@@ -1267,6 +1269,11 @@ function renderOrderCard(order) {
           <div class="payment">
             <span class="payment badge ${paymentClass}">${order.payment_method} - ${order.payment_status || "PENDING"}</span>
           </div>
+          ${
+            showPaymentId
+              ? `<div class="payment payment-id">Payment ID: <span class="payment-id-value">${escapeHtml(paymentId)}</span></div>`
+              : ""
+          }
           ${
             actionReason
               ? `<div class="payment payment-alert">${actionActor ? `By: ${actionActor}  ` : ""}Reason: ${actionReason}</div>`

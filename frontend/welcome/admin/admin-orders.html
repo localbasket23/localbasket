@@ -254,7 +254,8 @@
     }
     .detail-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--border); }
     .detail-row span:first-child { color: var(--text-light); font-size: 13px; }
-    .detail-row span:last-child { font-weight: 600; text-align: right; }
+    .detail-row span:last-child { font-weight: 600; text-align: right; overflow-wrap: anywhere; word-break: break-word; }
+    .lb-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
 
     #mobileSlider {
       position: fixed; bottom: 0; left: 0; right: 0; background: var(--white);
@@ -546,6 +547,7 @@ async function openDetail(id) {
   const o = data.order || {};
   const method = resolvePaymentMethod(o);
   const paymentStatus = String(o.payment_status || "").toUpperCase();
+  const paymentId = String(o.payment_id || "").trim();
   let payClass = "pay-pending";
   if (paymentStatus === "PAID" || paymentStatus === "SUCCESS") {
     payClass = "pay-paid";
@@ -561,6 +563,7 @@ async function openDetail(id) {
     <div class="detail-row"><span>Order ID</span><span>#${orderId}</span></div>
     <div class="detail-row"><span>Customer</span><span>${o.customer_name || "N/A"}</span></div>
     <div class="detail-row"><span>Payment</span><span class="pay-badge ${payClass}">${method} - ${paymentStatus || "PENDING"}</span></div>
+    ${paymentId && method !== "COD" ? `<div class="detail-row"><span>Payment ID</span><span class="lb-mono">${paymentId}</span></div>` : ""}
     <div class="detail-row"><span>Phone</span><span>${customerPhone}</span></div>
     <div class="detail-row"><span>Address</span><span>${customerAddress}</span></div>
     <div style="margin:15px 0; border-top: 1px solid var(--border);"></div>
