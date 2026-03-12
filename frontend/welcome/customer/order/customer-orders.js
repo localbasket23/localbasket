@@ -974,9 +974,47 @@ function statusTimeline(order, currentStatus) {
     .join("");
 }
 
+async function downloadInvoice(orderId) {
+  const id = normalizeOrderIdKey(orderId);
+  const safeId = encodeURIComponent(String(id));
+  const url = `${API_URL}/orders/${safeId}/invoice`;
+
+  try {
+    const res = await fetch(url, { method: "GET" });
+    if (!res.ok) {
+      let msg = `Unable to download invoice (HTTP ${res.status})`;
+      try {
+        const data = await res.json();
+        if (data?.message) msg = data.message;
+      } catch {}
+      alert(msg);
+      return;
+    }
+
+    const blob = await res.blob();
+    if (!blob || blob.size === 0) {
+      window.open(url, "_blank");
+      return;
+    }
+
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = `invoice-${id}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+  } catch (err) {
+    console.error("Invoice download error:", err);
+    window.open(url, "_blank");
+  }
+}
+window.downloadInvoice = downloadInvoice;
+
 /* =====================================================
    FETCH ORDERS
-===================================================== */
+ ===================================================== */
 async function loadOrders(wrapper, userId) {
   try {
     wrapper.innerHTML =
@@ -1252,12 +1290,11 @@ function renderOrderCard(order) {
           }
 
           ${
-            isDelivered || isPrepaid
-              ? `<a class="btn invoice"
-                   href="${API_URL}/orders/${safeOrderIdForUrl}/invoice"
-                   target="_blank">
+             isDelivered || isPrepaid
+              ? `<button class="btn invoice" type="button"
+                   onclick='downloadInvoice(${safeOrderIdLiteral})'>
                    Invoice
-                 </a>`
+                 </button>`
               : ""
           }
 
