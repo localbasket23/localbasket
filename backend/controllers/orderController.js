@@ -332,7 +332,7 @@ exports.updateOrderStatus = (req, res) => {
     collect_cash
   } = req.body || {};
 
-  const ALLOWED = ["PLACED", "CONFIRMED", "PACKED", "OUT_FOR_DELIVERY", "DELIVERED", "REJECTED", "CANCELLED"];
+  const ALLOWED = ["PLACED", "CONFIRMED", "PACKED", "OUT_FOR_DELIVERY", "COLLECT_CASH", "DELIVERED", "REJECTED", "CANCELLED"];
   if (!order_id || !ALLOWED.includes(status)) {
     return res.status(400).json({ success: false });
   }
@@ -405,7 +405,7 @@ exports.updateOrderStatus = (req, res) => {
 
   if (["1", "true", "yes", "y", "on"].includes(String(collect_cash ?? "").trim().toLowerCase())) {
     return db.query(
-      "SELECT payment_method, payment_status FROM orders WHERE id = ? LIMIT 1",
+      "SELECT status, payment_method, payment_status FROM orders WHERE id = ? LIMIT 1",
       [order_id],
       (err0, rows0) => {
         if (err0) {
@@ -415,18 +415,22 @@ exports.updateOrderStatus = (req, res) => {
         const current = rows0 && rows0[0];
         if (!current) return res.status(404).json({ success: false, message: "Order not found" });
 
+        const currentStatus = String(current.status || "").trim().toUpperCase();
         const method = String(current.payment_method || "COD").trim().toUpperCase();
         const payStatus = String(current.payment_status || "PENDING").trim().toUpperCase();
         if (method !== "COD") {
           return res.status(400).json({ success: false, message: "Collect cash is only allowed for COD orders" });
         }
+        if (currentStatus && currentStatus !== "OUT_FOR_DELIVERY" && currentStatus !== "COLLECT_CASH") {
+          return res.status(400).json({ success: false, message: "Collect cash is allowed after Out for Delivery" });
+        }
         if (payStatus === "PAID" || payStatus === "SUCCESS") {
-          return res.json({ success: true, payment_status: payStatus });
+          return res.json({ success: true, payment_status: payStatus, status: currentStatus || "OUT_FOR_DELIVERY" });
         }
 
         return db.query(
-          "UPDATE orders SET payment_status = 'PAID' WHERE id = ?",
-          [order_id],
+          "UPDATE orders SET status = 'COLLECT_CASH', payment_status = 'PAID', status_updated_by = COALESCE(?, status_updated_by) WHERE id = ?",
+          [status_updated_by || "SELLER", order_id],
           (err1, result) => {
             if (err1) {
               console.error("COLLECT CASH UPDATE ERROR:", err1.sqlMessage || err1.message || err1);
@@ -435,7 +439,7 @@ exports.updateOrderStatus = (req, res) => {
             if (!result || result.affectedRows === 0) {
               return res.status(404).json({ success: false, message: "Order not found" });
             }
-            return res.json({ success: true, payment_status: "PAID" });
+            return res.json({ success: true, payment_status: "PAID", status: "COLLECT_CASH" });
           }
         );
       }

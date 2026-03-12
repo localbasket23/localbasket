@@ -247,6 +247,35 @@ body.dark .status-select {
   box-shadow: 0 0 0 3px rgba(255, 138, 26, 0.14);
 }
 
+.action-otp {
+  margin-top: 14px;
+}
+.action-otp-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-light);
+  letter-spacing: 0.2px;
+}
+.action-otp-input {
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  letter-spacing: 6px;
+  font-weight: 900;
+  text-align: center;
+}
+.action-otp-input:focus {
+  outline: none;
+  border-color: var(--lav);
+  box-shadow: 0 0 0 3px rgba(255, 138, 26, 0.14);
+}
+
 .action-check {
   margin-top: 14px;
   padding: 12px 12px;

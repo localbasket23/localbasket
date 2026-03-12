@@ -20,7 +20,7 @@ let FEEDBACK_SAVING = false;
    CONFIG
 ===================================================== */
 const API_URL = `${window.API_BASE_URL}/api`;
-const STATUS_FLOW = ["PLACED", "CONFIRMED", "PACKED", "OUT_FOR_DELIVERY", "DELIVERED"];
+const STATUS_FLOW = ["PLACED", "CONFIRMED", "PACKED", "OUT_FOR_DELIVERY", "COLLECT_CASH", "DELIVERED"];
 
 /* =====================================================
    DOM READY + AUTH CHECK
@@ -863,6 +863,8 @@ function getStatusLabel(order) {
   const actorIsSeller = isSellerRejectActor(actor);
   const actorIsAdmin = String(actor || "").toUpperCase() === "ADMIN";
 
+  if (status === "COLLECT_CASH") return "CASH COLLECTED";
+
   if (status === "REJECTED") {
     if (actorIsAdmin) return "REJECTED BY ADMIN";
     if (actorIsSeller) return "REJECTED BY SELLER";
@@ -886,6 +888,7 @@ function getFlowLabel(step) {
     CONFIRMED: "Confirm",
     PACKED: "Packed",
     OUT_FOR_DELIVERY: "Out",
+    COLLECT_CASH: "Cash",
     DELIVERED: "Done"
   };
   return flowLabels[step] || step;

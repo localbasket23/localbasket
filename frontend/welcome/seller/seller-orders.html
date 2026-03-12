@@ -87,6 +87,7 @@
       <option value="ACCEPTED">Accepted</option>
       <option value="PACKED">Packed</option>
       <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+      <option value="COLLECT_CASH">Collect Cash</option>
       <option value="DELIVERED">Delivered</option>
       <option value="CANCELLED">Cancelled</option>
       <option value="REJECTED">Rejected</option>
@@ -179,6 +180,11 @@
     <div class="modal-content">
         <h3 id="actionModalTitle">Confirm Action</h3>
         <p id="actionModalMessage" style="margin:8px 0 0; color:var(--text-light);"></p>
+        <div id="actionModalOtpWrap" class="action-otp" style="display:none;">
+            <label for="actionModalOtp" class="action-otp-label">Delivery OTP</label>
+            <input id="actionModalOtp" class="action-otp-input" inputmode="numeric" autocomplete="one-time-code" maxlength="4" placeholder="Enter 4-digit OTP" />
+            <small id="actionModalOtpError" class="action-error">Please enter a valid 4-digit OTP</small>
+        </div>
         <textarea id="actionModalReason" placeholder="Enter reason..." style="display:none;"></textarea>
         <label id="actionModalCheckWrap" class="action-check" style="display:none;">
             <input id="actionModalCheck" type="checkbox" />

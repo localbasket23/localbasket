@@ -390,7 +390,7 @@ router.put("/orders/:orderId/status", (req, res) => {
 
   if (isTruthy(collect_cash)) {
     return db.query(
-      "SELECT payment_method, payment_status FROM orders WHERE id = ? LIMIT 1",
+      "SELECT status, payment_method, payment_status FROM orders WHERE id = ? LIMIT 1",
       [orderId],
       (err0, rows0) => {
         if (err0) {
@@ -400,18 +400,23 @@ router.put("/orders/:orderId/status", (req, res) => {
         const current = rows0 && rows0[0];
         if (!current) return res.status(404).json({ success: false, message: "Order not found" });
 
+        const currentStatus = String(current.status || "").trim().toUpperCase();
         const paymentMethod = String(current.payment_method || "COD").trim().toUpperCase();
         const paymentStatus = String(current.payment_status || "PENDING").trim().toUpperCase();
         if (paymentMethod !== "COD") {
           return res.status(400).json({ success: false, message: "Collect cash is only allowed for COD orders" });
         }
+        if (currentStatus && currentStatus !== "OUT_FOR_DELIVERY" && currentStatus !== "COLLECT_CASH") {
+          return res.status(400).json({ success: false, message: "Collect cash is allowed after Out for Delivery" });
+        }
         if (paymentStatus === "PAID" || paymentStatus === "SUCCESS") {
-          return res.json({ success: true, message: "COD payment already marked as PAID", payment_status: paymentStatus });
+          const alreadyStatus = currentStatus === "COLLECT_CASH" ? "COLLECT_CASH" : currentStatus || "OUT_FOR_DELIVERY";
+          return res.json({ success: true, message: "COD payment already marked as PAID", payment_status: paymentStatus, status: alreadyStatus });
         }
 
         return db.query(
-          "UPDATE orders SET payment_status = 'PAID' WHERE id = ?",
-          [orderId],
+          "UPDATE orders SET status = 'COLLECT_CASH', payment_status = 'PAID', status_updated_by = COALESCE(?, status_updated_by) WHERE id = ?",
+          [status_updated_by || "SELLER", orderId],
           (err1, result) => {
             if (err1) {
               console.error("âŒ COLLECT CASH UPDATE ERROR:", err1.sqlMessage || err1.message || err1);
@@ -420,7 +425,7 @@ router.put("/orders/:orderId/status", (req, res) => {
             if (!result || result.affectedRows === 0) {
               return res.status(404).json({ success: false, message: "Order not found" });
             }
-            return res.json({ success: true, message: "COD payment marked as PAID", payment_status: "PAID" });
+            return res.json({ success: true, message: "COD payment marked as PAID", payment_status: "PAID", status: "COLLECT_CASH" });
           }
         );
       }

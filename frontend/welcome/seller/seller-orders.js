@@ -42,11 +42,12 @@ function normalizeSellerStatus(status) {
     const s = String(status || "").toUpperCase().trim().replace(/\s+/g, "_");
     if (s === "CONFIRMED") return "ACCEPTED";
     if (s === "OUT-FOR-DELIVERY") return "OUT_FOR_DELIVERY";
+    if (s === "COLLECT_CASH" || s === "COLLECT-CASH") return "COLLECT_CASH";
     return s;
 }
 
 function getSellerStatusRank(status) {
-    const order = ["ACCEPTED", "PACKED", "OUT_FOR_DELIVERY", "DELIVERED"];
+    const order = ["ACCEPTED", "PACKED", "OUT_FOR_DELIVERY", "COLLECT_CASH", "DELIVERED"];
     return order.indexOf(normalizeSellerStatus(status));
 }
 
@@ -375,7 +376,7 @@ function renderOrders() {
 
     // --- LOGIC: Dashboard se Accept hone ke baad status 'ACCEPTED' ho jata hai ---
     // Isliye hum yahan se 'PLACED' ya 'PENDING' ko hata rahe hain.
-    const activeStatuses = ["PLACED", "PENDING", "ACCEPTED", "CONFIRMED", "PACKED", "OUT_FOR_DELIVERY"];
+    const activeStatuses = ["PLACED", "PENDING", "ACCEPTED", "CONFIRMED", "PACKED", "OUT_FOR_DELIVERY", "COLLECT_CASH"];
     const historyStatuses = ["DELIVERED", "CANCELLED", "REJECTED"];
 
     // Filter Logic
@@ -427,6 +428,7 @@ function createActiveRow(order) {
     const paymentMethod = String(order.payment_method || "").trim().toUpperCase();
     const paymentStatus = String(order.payment_status || "").trim().toUpperCase();
     const canCollectCash = paymentMethod === "COD" && paymentStatus !== "PAID" && paymentStatus !== "SUCCESS" && status === "OUT_FOR_DELIVERY";
+    const collectCashDisabled = !(canCollectCash || status === "COLLECT_CASH");
 
     return `
     <tr>
@@ -455,7 +457,7 @@ function createActiveRow(order) {
                      <option value="ACCEPTED" ${(status==='ACCEPTED')?'selected':''} ${(currentRank > getSellerStatusRank('ACCEPTED'))?'disabled':''}>Accepted</option>
                      <option value="PACKED" ${(status==='PACKED')?'selected':''} ${(currentRank > getSellerStatusRank('PACKED'))?'disabled':''}>Packed</option>
                      <option value="OUT_FOR_DELIVERY" ${(status==='OUT_FOR_DELIVERY')?'selected':''} ${(currentRank > getSellerStatusRank('OUT_FOR_DELIVERY'))?'disabled':''}>Out for Delivery</option>
-                     <option value="COLLECT_CASH" ${canCollectCash ? "" : "disabled"}>Collect Cash</option>
+                     <option value="COLLECT_CASH" ${(status==='COLLECT_CASH')?'selected':''} ${collectCashDisabled ? "disabled" : ""}>Collect Cash</option>
                      <option value="DELIVERED" ${(status==='DELIVERED')?'selected':''}>Mark Delivered</option>
                  </select>`}
         </td>
@@ -539,18 +541,21 @@ window.processUpdate = async (orderId, newStatus, currentStatus = "") => {
         const paymentStatus = String(currentOrder?.payment_status || "").trim().toUpperCase();
 
         const selectEl = document.getElementById(`status-select-${orderId}`);
-        if (selectEl) selectEl.value = effectiveCurrent;
+        if (selectEl) selectEl.value = "COLLECT_CASH";
 
         if (paymentMethod !== "COD") {
             alert("Collect Cash option only works for COD orders.");
+            if (selectEl) selectEl.value = effectiveCurrent;
             return;
         }
         if (paymentStatus === "PAID" || paymentStatus === "SUCCESS") {
             alert("Payment already marked as PAID.");
+            if (selectEl) selectEl.value = effectiveCurrent;
             return;
         }
         if (normalizeFlowStatus(effectiveCurrent) !== "OUT_FOR_DELIVERY") {
             alert("Collect Cash is available after Out for Delivery.");
+            if (selectEl) selectEl.value = effectiveCurrent;
             return;
         }
 
@@ -573,7 +578,7 @@ window.processUpdate = async (orderId, newStatus, currentStatus = "") => {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    status: effectiveCurrent,
+                    status: "COLLECT_CASH",
                     status_updated_by: "SELLER",
                     collect_cash: true,
                     cod_paid: true
