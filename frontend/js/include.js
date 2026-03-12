@@ -3318,7 +3318,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     const adminOtpToggle = document.getElementById("lbAdminOtpToggle");
     const adminError = document.getElementById("lbAdminPopupError");
 
-    const ADMIN_EMAIL = "localbasket.helpdesk@gmail.com";
     let adminResendTimer = null;
     let adminResendRemaining = 0;
     let adminOtpExpiryTimer = null;
@@ -3497,11 +3496,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           try { adminEmailInput?.focus?.(); } catch {}
           return;
         }
-        if (email !== ADMIN_EMAIL) {
-          setAdminMsg(`Unauthorized admin email. Use: ${ADMIN_EMAIL}`);
-          try { adminEmailInput?.focus?.(); } catch {}
-          return;
-        }
         adminSendOtpBtn.disabled = true;
         adminSendOtpBtn.textContent = "Sending...";
         try {
@@ -3539,11 +3533,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
           setAdminMsg("Enter a valid email address.");
-          try { adminEmailInput?.focus?.(); } catch {}
-          return;
-        }
-        if (email !== ADMIN_EMAIL) {
-          setAdminMsg(`Unauthorized admin email. Use: ${ADMIN_EMAIL}`);
           try { adminEmailInput?.focus?.(); } catch {}
           return;
         }
