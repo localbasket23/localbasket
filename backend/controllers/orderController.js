@@ -12,7 +12,7 @@ const getInvoiceBrand = () => {
   const brand = {
     name: process.env.INVOICE_BRAND_NAME || "Local Basket",
     gstin: process.env.INVOICE_GSTIN || "",
-    support: process.env.INVOICE_SUPPORT || "support@localbasket.com",
+    support: process.env.INVOICE_SUPPORT || "localbasket.helpdesk@gmail.com",
     address: process.env.INVOICE_ADDRESS || "",
     logoPath: process.env.INVOICE_LOGO_PATH || path.join(__dirname, "..", "public", "logo2.png")
   };
@@ -727,7 +727,7 @@ exports.getOrderInvoice = async (req, res) => {
     const termsX = left + (qrUrl ? 96 : 0);
     const termsW = (right - termsX) - (qrUrl ? 0 : 0);
     doc.fillColor(MUTED).fontSize(8).text(terms || "Thank you for shopping with Local Basket!", termsX, footerTop + 26, { width: termsW });
-    doc.fillColor(MUTED).fontSize(8).text(`Support: ${safeText(brand.support) || "support@localbasket.com"}`, termsX, footerTop + 54, { width: termsW });
+    doc.fillColor(MUTED).fontSize(8).text(`Support: ${safeText(brand.support) || "localbasket.helpdesk@gmail.com"}`, termsX, footerTop + 54, { width: termsW });
   };
 
   let y = drawHeader();
