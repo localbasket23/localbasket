@@ -84,10 +84,78 @@
       box-shadow:none;
     }
     .btn-small{ padding:8px 10px; border-radius:10px; font-size:12px; }
+
+    /* Mobile "one frame" list UI */
+    .req-mobile{ display:none; }
+    .req-section-title{
+      margin: 14px 2px 10px;
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: .3px;
+      color: var(--text-light);
+      text-transform: uppercase;
+    }
+    .req-card{
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .req-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+    .req-who{ min-width:0; }
+    .req-who b{ display:block; font-size:15px; }
+    .req-who .muted{ font-size:12px; color:var(--text-light); word-break:break-word; }
+    .req-meta{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .req-chip{
+      display:inline-flex; align-items:center; gap:7px;
+      padding:7px 10px; border-radius:999px;
+      border:1px solid var(--border);
+      background: var(--surface-2);
+      font-size:12px; font-weight:800;
+      max-width:100%;
+    }
+    .req-chip i{ color:var(--muted); }
+    details.req-msg{
+      margin-top:10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    details.req-msg summary{
+      cursor:pointer;
+      font-weight:900;
+      color: var(--lav);
+      list-style:none;
+    }
+    details.req-msg summary::-webkit-details-marker{ display:none; }
+    .req-msg-text{
+      margin-top:8px;
+      white-space:pre-wrap;
+      word-break:break-word;
+      font-size:13px;
+      color:var(--text);
+    }
+    .req-note{
+      margin-top:10px;
+      background: rgba(34,197,94,.10);
+      border: 1px solid rgba(34,197,94,.22);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 13px;
+      color: var(--text);
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    .req-actions{ margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; }
     @media (max-width: 900px){
       .sidebar{ position:relative; width:100%; height:auto; }
       main{ margin-left:0; padding:18px; }
       .hero{ grid-template-columns:1fr; }
+      .table-wrap{ display:none; }
+      .req-mobile{ display:block; }
     }
   </style>
 </head>
@@ -117,7 +185,7 @@
         <select id="statusSelect" class="pill" title="Filter status">
           <option value="OPEN">Open</option>
           <option value="RESOLVED">Resolved</option>
-          <option value="ALL">All</option>
+          <option value="ALL" selected>All</option>
         </select>
         <button class="btn" id="refreshBtn" type="button"><i class="fas fa-rotate"></i> Refresh</button>
       </div>
@@ -140,6 +208,8 @@
         </tbody>
       </table>
     </div>
+
+    <div class="req-mobile" id="reqMobile"></div>
   </main>
 
   <script>
@@ -198,10 +268,14 @@
     function render(list){
       const tbody = document.getElementById("reqBody");
       const countPill = document.getElementById("countPill");
+      const mobile = document.getElementById("reqMobile");
+      const selectedStatus = String(document.getElementById("statusSelect")?.value || "ALL").trim().toUpperCase();
       tbody.innerHTML = "";
+      if (mobile) mobile.innerHTML = "";
       if (!list.length){
         tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No requests found.</td></tr>`;
         if (countPill) countPill.innerHTML = `<i class="fas fa-inbox"></i> 0`;
+        if (mobile) mobile.innerHTML = `<div style="text-align:center;padding:24px;color:var(--muted);">No requests found.</div>`;
         return;
       }
       tbody.innerHTML = list.map(r => {
@@ -226,11 +300,89 @@
           </tr>
         `;
       }).join("");
-      if (countPill) countPill.innerHTML = `<i class="fas fa-inbox"></i> ${list.length}`;
+
+      if (countPill){
+        if (selectedStatus === "ALL"){
+          const openCount = list.filter(r => String(r.status || "").toUpperCase() !== "RESOLVED").length;
+          const resCount = list.length - openCount;
+          countPill.innerHTML = `<i class="fas fa-inbox"></i> ${openCount} Open | ${resCount} Resolved`;
+        } else {
+          countPill.innerHTML = `<i class="fas fa-inbox"></i> ${list.length}`;
+        }
+      }
+
+      if (mobile){
+        const openItems = selectedStatus === "ALL"
+          ? list.filter(r => String(r.status || "").toUpperCase() !== "RESOLVED")
+          : (selectedStatus === "RESOLVED" ? [] : list);
+        const resolvedItems = selectedStatus === "ALL"
+          ? list.filter(r => String(r.status || "").toUpperCase() === "RESOLVED")
+          : (selectedStatus === "RESOLVED" ? list : []);
+
+        function card(r){
+          const name = escapeHtml(r.name || "Customer");
+          const email = escapeHtml(r.email || "-");
+          const phone = escapeHtml(r.phone || "");
+          const time = new Date(r.created_at || Date.now()).toLocaleString("en-IN");
+          const issue = escapeHtml(r.issue_type || "-");
+          const st = String(r.status || "").toUpperCase() === "RESOLVED" ? "RESOLVED" : "OPEN";
+          const rawMsg = String(r.message || "").trim();
+          const previewRaw = rawMsg.slice(0, 110);
+          const preview = escapeHtml(previewRaw + (rawMsg.length > 110 ? "..." : ""));
+          const fullMsg = escapeHtml(rawMsg);
+          const note = r.admin_note ? escapeHtml(String(r.admin_note)) : "";
+          const actionBtn = st === "RESOLVED"
+            ? `<button class="btn btn-ghost btn-small" type="button" disabled><i class="fas fa-check"></i> Done</button>`
+            : `<button class="btn btn-small" type="button" onclick="window.resolveReq(${Number(r.id)})"><i class="fas fa-check"></i> Resolve</button>`;
+
+          return `
+            <div class="req-card">
+              <div class="req-top">
+                <div class="req-who">
+                  <b>${name}</b>
+                  <div class="muted">${email}</div>
+                  ${phone ? `<div class="muted">${phone}</div>` : ``}
+                </div>
+                <div>${badge(st)}</div>
+              </div>
+              <div class="req-meta">
+                <span class="req-chip"><i class="fas fa-clock"></i> ${escapeHtml(time)}</span>
+                <span class="req-chip"><i class="fas fa-tag"></i> ${issue}</span>
+              </div>
+              <details class="req-msg">
+                <summary><i class="fas fa-message"></i> Message: ${preview || "-"}</summary>
+                <div class="req-msg-text">${fullMsg || "-"}</div>
+              </details>
+              ${note ? `<div class="req-note"><b>Admin Note:</b> ${note}</div>` : ``}
+              <div class="req-actions">${actionBtn}</div>
+            </div>
+          `;
+        }
+
+        function section(title, items){
+          const safeTitle = escapeHtml(title);
+          if (!items.length) return `
+            <div class="req-section-title">${safeTitle}</div>
+            <div style="text-align:center;padding:18px;color:var(--muted);background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);">No ${safeTitle.toLowerCase()}.</div>
+          `;
+          return `
+            <div class="req-section-title">${safeTitle}</div>
+            ${items.map(card).join("")}
+          `;
+        }
+
+        if (selectedStatus === "ALL"){
+          mobile.innerHTML = section("Open Requests", openItems) + section("Resolved Requests", resolvedItems);
+        } else if (selectedStatus === "RESOLVED"){
+          mobile.innerHTML = section("Resolved Requests", resolvedItems);
+        } else {
+          mobile.innerHTML = section("Open Requests", openItems);
+        }
+      }
     }
 
     async function load(){
-      const status = String(document.getElementById("statusSelect").value || "OPEN").trim().toUpperCase();
+      const status = String(document.getElementById("statusSelect").value || "ALL").trim().toUpperCase();
       const btn = document.getElementById("refreshBtn");
       if (btn) btn.disabled = true;
       try{
