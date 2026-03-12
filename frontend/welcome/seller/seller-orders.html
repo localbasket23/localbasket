@@ -180,6 +180,11 @@
         <h3 id="actionModalTitle">Confirm Action</h3>
         <p id="actionModalMessage" style="margin:8px 0 0; color:var(--text-light);"></p>
         <textarea id="actionModalReason" placeholder="Enter reason..." style="display:none;"></textarea>
+        <label id="actionModalCheckWrap" class="action-check" style="display:none;">
+            <input id="actionModalCheck" type="checkbox" />
+            <span id="actionModalCheckLabel">I confirm</span>
+        </label>
+        <small id="actionModalCheckError" class="action-error">Please confirm to continue</small>
         <small id="actionModalError" class="action-error">Reason is required</small>
         <div class="action-actions">
             <button id="actionModalCancel" type="button" class="action-btn action-btn-cancel">Cancel</button>

@@ -211,7 +211,7 @@ function applyFilters(orders) {
     return out;
 }
 
-function showActionModal({ title, message, requireReason = false, confirmText = "Confirm" }) {
+function showActionModal({ title, message, requireReason = false, requireCheck = false, checkLabel = "I confirm", confirmText = "Confirm" }) {
     return new Promise(resolve => {
         if (!els.actionModal || !els.actionModalOk || !els.actionModalCancel) {
             const ask = window.lbConfirm
@@ -236,6 +236,10 @@ function showActionModal({ title, message, requireReason = false, confirmText = 
         const titleEl = els.actionModalTitle;
         const msgEl = els.actionModalMessage;
         const reasonEl = els.actionModalReason;
+        const checkWrap = document.getElementById("actionModalCheckWrap");
+        const checkEl = document.getElementById("actionModalCheck");
+        const checkLabelEl = document.getElementById("actionModalCheckLabel");
+        const checkErrorEl = document.getElementById("actionModalCheckError");
         const errorEl = els.actionModalError;
         const okBtn = els.actionModalOk;
         const cancelBtn = els.actionModalCancel;
@@ -249,6 +253,10 @@ function showActionModal({ title, message, requireReason = false, confirmText = 
             reasonEl.style.display = requireReason ? "block" : "none";
         }
         if (errorEl) errorEl.classList.remove("show");
+        if (checkErrorEl) checkErrorEl.classList.remove("show");
+        if (checkLabelEl) checkLabelEl.textContent = checkLabel || "I confirm";
+        if (checkEl) checkEl.checked = false;
+        if (checkWrap) checkWrap.style.display = requireCheck ? "flex" : "none";
 
         modal.style.display = "flex";
         modal.setAttribute("aria-hidden", "false");
@@ -277,6 +285,11 @@ function showActionModal({ title, message, requireReason = false, confirmText = 
                 if (requireReason && !reason) {
                     if (errorEl) errorEl.classList.add("show");
                     reasonEl?.focus();
+                    return;
+                }
+                if (requireCheck && !checkEl?.checked) {
+                    if (checkErrorEl) checkErrorEl.classList.add("show");
+                    checkEl?.focus();
                     return;
                 }
                 close({ confirmed: true, reason });
@@ -411,6 +424,9 @@ function createActiveRow(order) {
     const isAccepted = getSellerStatusRank(status) >= 0;
     const areaName = extractArea(order.address, order.pincode || "N/A");
     const paymentClass = getPaymentClass(order);
+    const paymentMethod = String(order.payment_method || "").trim().toUpperCase();
+    const paymentStatus = String(order.payment_status || "").trim().toUpperCase();
+    const canCollectCash = paymentMethod === "COD" && paymentStatus !== "PAID" && paymentStatus !== "SUCCESS" && status === "OUT_FOR_DELIVERY";
 
     return `
     <tr>
@@ -435,12 +451,13 @@ function createActiveRow(order) {
         <td data-label="Current Status">
             ${isIncoming
                 ? `<span class="badge new-order-badge">New Order</span>`
-                : `<select id="status-select-${order.id}" class="status-select" onchange="processUpdate(${order.id}, this.value, '${status}')">
-                    <option value="ACCEPTED" ${(status==='ACCEPTED')?'selected':''} ${(currentRank > getSellerStatusRank('ACCEPTED'))?'disabled':''}>Accepted</option>
-                    <option value="PACKED" ${(status==='PACKED')?'selected':''} ${(currentRank > getSellerStatusRank('PACKED'))?'disabled':''}>Packed</option>
-                    <option value="OUT_FOR_DELIVERY" ${(status==='OUT_FOR_DELIVERY')?'selected':''} ${(currentRank > getSellerStatusRank('OUT_FOR_DELIVERY'))?'disabled':''}>Out for Delivery</option>
-                    <option value="DELIVERED" ${(status==='DELIVERED')?'selected':''}>Mark Delivered</option>
-                </select>`}
+                 : `<select id="status-select-${order.id}" class="status-select" onchange="processUpdate(${order.id}, this.value, '${status}')">
+                     <option value="ACCEPTED" ${(status==='ACCEPTED')?'selected':''} ${(currentRank > getSellerStatusRank('ACCEPTED'))?'disabled':''}>Accepted</option>
+                     <option value="PACKED" ${(status==='PACKED')?'selected':''} ${(currentRank > getSellerStatusRank('PACKED'))?'disabled':''}>Packed</option>
+                     <option value="OUT_FOR_DELIVERY" ${(status==='OUT_FOR_DELIVERY')?'selected':''} ${(currentRank > getSellerStatusRank('OUT_FOR_DELIVERY'))?'disabled':''}>Out for Delivery</option>
+                     <option value="COLLECT_CASH" ${canCollectCash ? "" : "disabled"}>Collect Cash</option>
+                     <option value="DELIVERED" ${(status==='DELIVERED')?'selected':''}>Mark Delivered</option>
+                 </select>`}
         </td>
         <td data-label="Action">
             <div class="action-wrap">
@@ -516,9 +533,68 @@ window.processUpdate = async (orderId, newStatus, currentStatus = "") => {
     let deliveryOtp = "";
     let codPaid = null;
 
+    if (status === "COLLECT_CASH") {
+        const currentOrder = allOrders.find(o => Number(o.id) === Number(orderId)) || null;
+        const paymentMethod = String(currentOrder?.payment_method || "").trim().toUpperCase();
+        const paymentStatus = String(currentOrder?.payment_status || "").trim().toUpperCase();
+
+        const selectEl = document.getElementById(`status-select-${orderId}`);
+        if (selectEl) selectEl.value = effectiveCurrent;
+
+        if (paymentMethod !== "COD") {
+            alert("Collect Cash option only works for COD orders.");
+            return;
+        }
+        if (paymentStatus === "PAID" || paymentStatus === "SUCCESS") {
+            alert("Payment already marked as PAID.");
+            return;
+        }
+        if (normalizeFlowStatus(effectiveCurrent) !== "OUT_FOR_DELIVERY") {
+            alert("Collect Cash is available after Out for Delivery.");
+            return;
+        }
+
+        const result = await showActionModal({
+            title: "Collect Cash (COD)",
+            message: "Tick the checkbox to confirm you've collected cash from the customer.",
+            requireReason: false,
+            requireCheck: true,
+            checkLabel: "I have collected COD cash from the customer",
+            confirmText: "Confirm Cash Collected"
+        });
+
+        if (!result.confirmed) {
+            fetchOrders();
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/seller/orders/${orderId}/status`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    status: effectiveCurrent,
+                    status_updated_by: "SELLER",
+                    collect_cash: true,
+                    cod_paid: true
+                })
+            });
+            const data = await res.json();
+            if (!data.success) {
+                alert("Update failed: " + (data.message || "Unable to confirm cash"));
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            fetchOrders();
+        }
+        return;
+    }
+
     if (status === "DELIVERED") {
         const currentOrder = allOrders.find(o => Number(o.id) === Number(orderId)) || null;
         const paymentMethod = String(currentOrder?.payment_method || "").trim().toUpperCase();
+        const paymentStatus = String(currentOrder?.payment_status || "").trim().toUpperCase();
 
         const result = await showActionModal({
             title: "Mark Delivered",
@@ -541,7 +617,11 @@ window.processUpdate = async (orderId, newStatus, currentStatus = "") => {
         }
 
         if (paymentMethod === "COD") {
-            codPaid = window.confirm("COD Payment: Click OK if customer has paid cash. Click Cancel if not paid yet.");
+            if (paymentStatus === "PAID" || paymentStatus === "SUCCESS") {
+                codPaid = true;
+            } else {
+                codPaid = window.confirm("COD Payment: Click OK if customer has paid cash. Click Cancel if not paid yet.");
+            }
         }
     }
 

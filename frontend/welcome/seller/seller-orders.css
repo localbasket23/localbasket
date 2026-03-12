@@ -247,6 +247,30 @@ body.dark .status-select {
   box-shadow: 0 0 0 3px rgba(255, 138, 26, 0.14);
 }
 
+.action-check {
+  margin-top: 14px;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--bg);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.action-check input {
+  margin-top: 2px;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--lav);
+}
+.action-check span {
+  color: var(--text);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
 .action-error {
   display: none;
   margin-top: 8px;

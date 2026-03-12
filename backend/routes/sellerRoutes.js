@@ -331,7 +331,8 @@ router.put("/orders/:orderId/status", (req, res) => {
     rejection_reason,
     cancellation_reason,
     delivery_otp,
-    cod_paid
+    cod_paid,
+    collect_cash
   } = req.body;
 
   if (!orderId || !status) {
@@ -385,6 +386,47 @@ router.put("/orders/:orderId/status", (req, res) => {
     cancellation_reason ||
     (normalizedStatus === "CANCELLED" ? (inferredCancelReason || inferredCustomerReason || inferredStatusReason || null) : null);
 
+  const isTruthy = (v) => ["1", "true", "yes", "y", "on"].includes(String(v ?? "").trim().toLowerCase());
+
+  if (isTruthy(collect_cash)) {
+    return db.query(
+      "SELECT payment_method, payment_status FROM orders WHERE id = ? LIMIT 1",
+      [orderId],
+      (err0, rows0) => {
+        if (err0) {
+          console.error("âŒ COLLECT CASH FETCH ERROR:", err0.sqlMessage || err0.message || err0);
+          return res.status(500).json({ success: false, message: "Status update failed" });
+        }
+        const current = rows0 && rows0[0];
+        if (!current) return res.status(404).json({ success: false, message: "Order not found" });
+
+        const paymentMethod = String(current.payment_method || "COD").trim().toUpperCase();
+        const paymentStatus = String(current.payment_status || "PENDING").trim().toUpperCase();
+        if (paymentMethod !== "COD") {
+          return res.status(400).json({ success: false, message: "Collect cash is only allowed for COD orders" });
+        }
+        if (paymentStatus === "PAID" || paymentStatus === "SUCCESS") {
+          return res.json({ success: true, message: "COD payment already marked as PAID", payment_status: paymentStatus });
+        }
+
+        return db.query(
+          "UPDATE orders SET payment_status = 'PAID' WHERE id = ?",
+          [orderId],
+          (err1, result) => {
+            if (err1) {
+              console.error("âŒ COLLECT CASH UPDATE ERROR:", err1.sqlMessage || err1.message || err1);
+              return res.status(500).json({ success: false, message: "Status update failed" });
+            }
+            if (!result || result.affectedRows === 0) {
+              return res.status(404).json({ success: false, message: "Order not found" });
+            }
+            return res.json({ success: true, message: "COD payment marked as PAID", payment_status: "PAID" });
+          }
+        );
+      }
+    );
+  }
+
   if (normalizedStatus === "DELIVERED") {
     const providedOtp = String(delivery_otp == null ? "" : delivery_otp).replace(/\D/g, "");
     if (providedOtp.length !== 4) {
@@ -408,7 +450,7 @@ router.put("/orders/:orderId/status", (req, res) => {
         }
 
         const paymentMethod = String(current.payment_method || "COD").trim().toUpperCase();
-        const wantsPaid = ["1", "true", "yes", "y", "on"].includes(String(cod_paid || "").trim().toLowerCase());
+        const wantsPaid = isTruthy(cod_paid);
         const nextPaymentStatus =
           paymentMethod === "COD"
             ? (wantsPaid ? "PAID" : (String(current.payment_status || "PENDING").trim().toUpperCase() || "PENDING"))
