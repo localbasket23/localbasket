@@ -554,9 +554,13 @@ main,
     gap: 10px;
   }
 
-  .lb-header {
-    flex-direction: column;
-    align-items: flex-start;
+  .topbar.lb-header,
+  .top-nav.lb-header,
+  .top-header.lb-header {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
   }
   .lb-header-left {
     width: 100%;
@@ -569,6 +573,28 @@ main,
 
   .lb-header-title {
     font-size: 16px;
+  }
+
+  .filters {
+    gap: 10px !important;
+  }
+  .filters .search,
+  .filters .search-box {
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+  }
+  .filters select.pill,
+  .filters button.btn {
+    flex: 1 1 140px !important;
+  }
+
+  .table-wrap {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table-wrap table {
+    min-width: 720px;
   }
 
   #toast-container,
