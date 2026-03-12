@@ -980,7 +980,7 @@ async function downloadInvoice(orderId) {
   const url = `${API_URL}/orders/${safeId}/invoice`;
 
   try {
-    const res = await fetch(url, { method: "GET" });
+    const res = await fetch(url, { method: "GET", cache: "no-store" });
     if (!res.ok) {
       let msg = `Unable to download invoice (HTTP ${res.status})`;
       try {
@@ -997,10 +997,12 @@ async function downloadInvoice(orderId) {
       return;
     }
 
+    const uniqueSuffix = Date.now();
     const blobUrl = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = blobUrl;
-    a.download = `invoice-${id}.pdf`;
+    a.download = `invoice-${id}-${uniqueSuffix}.pdf`;
+    a.style.display = "none";
     document.body.appendChild(a);
     a.click();
     a.remove();

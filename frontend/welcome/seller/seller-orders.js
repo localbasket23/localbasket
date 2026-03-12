@@ -606,7 +606,7 @@ window.processUpdate = async (orderId, newStatus, currentStatus = "") => {
 
         const result = await showActionModal({
             title: "Collect Cash (COD)",
-            message: "Tick the checkbox to confirm you've collected cash from the customer.",
+            message: `Collect amount: Rs. ${Number(currentOrder?.total_amount || 0)}\n\nTick the checkbox to confirm you've collected cash from the customer.`,
             requireReason: false,
             requireCheck: true,
             checkLabel: "I have collected COD cash from the customer",
