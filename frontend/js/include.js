@@ -545,7 +545,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         overflow: hidden;
         max-width: 0;
         opacity: 0;
-        transform: translateX(-6px);
+        transform: translateX(6px);
         transition: max-width 240ms ease, opacity 200ms ease, transform 240ms ease;
         display: inline-block;
       }
@@ -989,6 +989,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     btn.setAttribute("aria-haspopup", "dialog");
     btn.setAttribute("aria-controls", "lb-ai-panel");
     btn.innerHTML = `
+      <span class="lb-ai-btn-label">Ask LocalBasket AI</span>
       <span id="lb-ai-badge" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none">
           <path d="M7 7.5c0-2.5 2-4.5 5-4.5s5 2 5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -996,7 +997,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           <path d="M9.5 13h.01M12 13h.01M14.5 13h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
         </svg>
       </span>
-      <span class="lb-ai-btn-label">Ask LocalBasket AI</span>
     `;
 
     const panel = document.createElement("section");
