@@ -561,7 +561,18 @@ exports.getOrderInvoice = async (req, res) => {
 
     if (brand.logoPath) {
       try {
-        doc.image(brand.logoPath, ringX + (ringSize - logoSize) / 2, ringY + (ringSize - logoSize) / 2, { width: logoSize, height: logoSize });
+        const cx = ringX + ringSize / 2;
+        const cy = ringY + ringSize / 2;
+        const clipR = Math.round(logoSize * 0.48);
+        doc.save();
+        doc.circle(cx, cy, clipR).clip();
+        doc.image(
+          brand.logoPath,
+          cx - clipR * 1.15,
+          cy - clipR * 1.15,
+          { width: clipR * 2.3, height: clipR * 2.3 }
+        );
+        doc.restore();
       } catch {}
     }
 
