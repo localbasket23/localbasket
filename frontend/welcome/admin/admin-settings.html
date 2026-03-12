@@ -232,6 +232,26 @@ input:focus{border-color:var(--lav)}
   border:1px solid rgba(249,115,22,.22);
   color:#9a3412;
 }
+.hero-text-preview{
+  margin-top:12px;
+  border-radius:14px;
+  padding:14px;
+  border:1px solid var(--border);
+  background: linear-gradient(135deg, rgba(15,23,42,0.92), rgba(15,23,42,0.92));
+  box-shadow: 0 18px 26px -24px rgba(2, 6, 23, 0.45);
+  color:#f8fafc;
+}
+.hero-text-title{
+  font-size:18px;
+  font-weight:900;
+  line-height:1.15;
+  margin-bottom:8px;
+}
+.hero-text-title span{ color:#f97316; }
+.hero-text-sub{
+  font-size:13px;
+  color:#cbd5e1;
+}
 .hero-upload-btn:hover{background:var(--lav-light)}
 .file-name{
   font-size:12px;
@@ -471,6 +491,23 @@ li{padding:6px 0;font-size:14px}
     </div>
 
     <div class="settings-card">
+      <h2><i class="fas fa-heading"></i> Desktop Hero Text</h2>
+      <label>Title Text (use {{highlight}} for highlight)</label>
+      <input type="text" id="heroTitleInput" placeholder="Freshness from your {{highlight}}, to your doorstep.">
+      <label>Highlight Word/Phrase</label>
+      <input type="text" id="heroHighlightInput" placeholder="Local Shops">
+      <label>Subtitle</label>
+      <input type="text" id="heroSubtitleInput" placeholder="Discover trusted neighborhood stores and connect directly with local sellers in minutes.">
+
+      <div class="hero-text-preview" id="heroTextPreview">
+        <div class="hero-text-title" id="heroTextPreviewTitle"></div>
+        <div class="hero-text-sub" id="heroTextPreviewSubtitle"></div>
+      </div>
+
+      <button class="save-btn" onclick="saveHeroTextSettings()">Save Hero Text</button>
+    </div>
+
+    <div class="settings-card">
       <h2><i class="fas fa-mobile-alt"></i> Mobile Promo Text</h2>
       <label>Kicker (Top small text)</label>
       <input type="text" id="mobilePromoKickerInput" placeholder="LOCAL FRESH PICKS">
@@ -541,6 +578,11 @@ const heroDesktopUrlInput=document.getElementById("heroDesktopUrlInput");
 const heroDesktopLinkInput=document.getElementById("heroDesktopLinkInput");
 const heroMobileUrlInput=document.getElementById("heroMobileUrlInput");
 const heroMobileLinkInput=document.getElementById("heroMobileLinkInput");
+const heroTitleInput=document.getElementById("heroTitleInput");
+const heroHighlightInput=document.getElementById("heroHighlightInput");
+const heroSubtitleInput=document.getElementById("heroSubtitleInput");
+const heroTextPreviewTitle=document.getElementById("heroTextPreviewTitle");
+const heroTextPreviewSubtitle=document.getElementById("heroTextPreviewSubtitle");
 const mobilePromoKickerInput=document.getElementById("mobilePromoKickerInput");
 const mobilePromoTitleInput=document.getElementById("mobilePromoTitleInput");
 const mobilePromoHighlightInput=document.getElementById("mobilePromoHighlightInput");
@@ -585,6 +627,11 @@ function updatePreview(){
 
 let heroImagesDesktop = [];
 let heroImagesMobile = [];
+const DEFAULT_HERO = {
+  title: "Freshness from your {{highlight}}, to your doorstep.",
+  highlight: "Local Shops",
+  subtitle: "Discover trusted neighborhood stores and connect directly with local sellers in minutes."
+};
 const DEFAULT_MOBILE_PROMO = {
   kicker: "LOCAL FRESH PICKS",
   title: "Offer Up to",
@@ -678,6 +725,58 @@ function applyCommissionConfig(config){
 slider.addEventListener("input", updatePreview);
 commissionToggle.addEventListener("change", updatePreview);
 applyCommissionConfig(getSavedCommissionConfig());
+
+function buildHeroTitleHtml(titleRaw, highlightRaw){
+  const title = String(titleRaw || "").trim() || DEFAULT_HERO.title;
+  const highlight = String(highlightRaw || "").trim() || DEFAULT_HERO.highlight;
+  const normalized = title.replace(/\\n/g, "\n");
+  const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const toLines = (s) => esc(s).split("\n").join("<br>");
+
+  if (highlight && normalized.includes("{{highlight}}")) {
+    const parts = normalized.split("{{highlight}}");
+    return `${toLines(parts[0])}<span>${esc(highlight)}</span>${toLines(parts.slice(1).join("{{highlight}}"))}`;
+  }
+
+  if (highlight && normalized.toLowerCase().includes(highlight.toLowerCase())) {
+    const idx = normalized.toLowerCase().indexOf(highlight.toLowerCase());
+    const before = normalized.slice(0, idx);
+    const after = normalized.slice(idx + highlight.length);
+    return `${toLines(before)}<span>${esc(normalized.slice(idx, idx + highlight.length))}</span>${toLines(after)}`;
+  }
+
+  return `${toLines(normalized)}${highlight ? ` <span>${esc(highlight)}</span>` : ""}`;
+}
+
+function updateHeroTextPreview(){
+  if (heroTextPreviewTitle) heroTextPreviewTitle.innerHTML = buildHeroTitleHtml(heroTitleInput?.value, heroHighlightInput?.value);
+  if (heroTextPreviewSubtitle) heroTextPreviewSubtitle.textContent = String(heroSubtitleInput?.value || "").trim() || DEFAULT_HERO.subtitle;
+}
+
+heroTitleInput?.addEventListener("input", updateHeroTextPreview);
+heroHighlightInput?.addEventListener("input", updateHeroTextPreview);
+heroSubtitleInput?.addEventListener("input", updateHeroTextPreview);
+
+function saveHeroTextSettings(){
+  const payload = {
+    hero_title: String(heroTitleInput?.value || "").trim(),
+    hero_highlight: String(heroHighlightInput?.value || "").trim(),
+    hero_subtitle: String(heroSubtitleInput?.value || "").trim(),
+    hero_image: ""
+  };
+  fetch(`${API_BASE}/settings/hero`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  }).then(async (res) => {
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.success) throw new Error(data?.message || `Save failed (${res.status})`);
+    updateHeroTextPreview();
+    alert("Hero text saved");
+  }).catch((err) => {
+    alert(err?.message || "Failed to save hero text");
+  });
+}
 
 function updateMobilePromoPreview(){
   const kicker = String(mobilePromoKickerInput?.value || "").trim() || DEFAULT_MOBILE_PROMO.kicker;
@@ -980,6 +1079,10 @@ async function loadSettings() {
       if (!desktopLoaded) renderHeroImagesList([], "desktop");
       if (!mobileLoaded) renderHeroImagesList([], "mobile");
 
+      if (heroTitleInput) heroTitleInput.value = data.global.hero_title || DEFAULT_HERO.title;
+      if (heroHighlightInput) heroHighlightInput.value = data.global.hero_highlight || DEFAULT_HERO.highlight;
+      if (heroSubtitleInput) heroSubtitleInput.value = data.global.hero_subtitle || DEFAULT_HERO.subtitle;
+
       if (mobilePromoKickerInput) mobilePromoKickerInput.value = data.global.mobile_promo_kicker || DEFAULT_MOBILE_PROMO.kicker;
       if (mobilePromoTitleInput) mobilePromoTitleInput.value = data.global.mobile_promo_title || DEFAULT_MOBILE_PROMO.title;
       if (mobilePromoHighlightInput) mobilePromoHighlightInput.value = data.global.mobile_promo_highlight || DEFAULT_MOBILE_PROMO.highlight;
@@ -989,6 +1092,7 @@ async function loadSettings() {
     // fallback to local storage
   } finally {
     updateHeroStats();
+    updateHeroTextPreview();
     updateMobilePromoPreview();
   }
 }
