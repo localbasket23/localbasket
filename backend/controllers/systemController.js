@@ -92,6 +92,16 @@ exports.submitSupportRequest = async (req, res) => {
     });
   } catch (err) {
     console.error("SUPPORT REQUEST ERROR:", err?.sqlMessage || err?.message || err);
+    const code = String(err?.code || "").trim();
+    if (!String(process.env.DATABASE_URL || "").trim()) {
+      return res.status(500).json({ success: false, message: "Server database is not configured (DATABASE_URL missing)" });
+    }
+    if (code === "ER_NO_SUCH_TABLE") {
+      return res.status(500).json({ success: false, message: "Server schema not ready (support_requests table missing). Restart server and try again." });
+    }
+    if (code === "ER_DBACCESS_DENIED_ERROR" || code === "ER_TABLEACCESS_DENIED_ERROR" || code === "ER_ACCESS_DENIED_ERROR") {
+      return res.status(500).json({ success: false, message: "Database permission error. Contact admin." });
+    }
     return res.status(500).json({ success: false, message: "Failed to submit support request" });
   }
 };

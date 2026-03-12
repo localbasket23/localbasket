@@ -65,10 +65,17 @@
         if (res.ok && data && data.success) {
           ticketId = String(data.ticket || data.id || ticketId);
         } else {
-          throw new Error(data?.message || "Request failed");
+          throw new Error(data?.message || ("Request failed (HTTP " + res.status + ")"));
         }
       } catch (err) {
-        window.alert("Support request failed. Please try again.");
+        const msg = String(err?.message || "Support request failed. Please try again.");
+        if (note) {
+          note.textContent = msg;
+          note.style.background = "#fff1f2";
+          note.style.borderColor = "#fecdd3";
+          note.style.color = "#9f1239";
+        }
+        window.alert(msg);
         return;
       }
 
