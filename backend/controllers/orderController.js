@@ -28,6 +28,12 @@ const money = (value) => {
   return `Rs. ${n.toFixed(2)}`;
 };
 
+const round2 = (value) => {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return 0;
+  return Math.round(n * 100) / 100;
+};
+
 const safeText = (value) => String(value == null ? "" : value).replace(/\s+/g, " ").trim();
 
 const formatInvoiceDate = (value) => {
@@ -194,6 +200,42 @@ const getInvoiceGstRate = () => {
   const raw = String(process.env.INVOICE_GST_RATE || "0");
   const n = Number(raw);
   return Number.isFinite(n) ? n : 0;
+};
+
+const getInvoiceDeliveryConfig = () => {
+  const minRaw = String(process.env.INVOICE_FREE_DELIVERY_MIN || process.env.FREE_DELIVERY_MIN || "100").trim();
+  const feeRaw = String(process.env.INVOICE_DELIVERY_FEE || process.env.DELIVERY_FEE || "40").trim();
+
+  const min = Number(minRaw);
+  const fee = Number(feeRaw);
+
+  return {
+    freeMin: Number.isFinite(min) && min >= 0 ? min : 100,
+    deliveryFee: Number.isFinite(fee) && fee >= 0 ? fee : 40
+  };
+};
+
+const calcInvoiceBreakdown = (order, itemsSubtotal) => {
+  const gstRate = getInvoiceGstRate();
+  const { freeMin, deliveryFee } = getInvoiceDeliveryConfig();
+
+  const chargedTotalRaw = Number(order?.total_amount);
+  const chargedTotal = Number.isFinite(chargedTotalRaw) ? round2(chargedTotalRaw) : null;
+
+  const subtotal = round2(itemsSubtotal);
+  const delivery = round2(subtotal < freeMin ? deliveryFee : 0);
+
+  let gst = gstRate > 0 ? round2(subtotal * gstRate) : 0;
+  let computedTotal = round2(subtotal + delivery + gst);
+  const total = chargedTotal == null ? computedTotal : chargedTotal;
+
+  if (!(gstRate > 0)) {
+    gst = round2(Math.max(0, total - subtotal - delivery));
+    computedTotal = round2(subtotal + delivery + gst);
+  }
+
+  const adjustment = round2(total - computedTotal);
+  return { subtotal, delivery, gst, gstRate, total, adjustment };
 };
 
 const getInvoiceQrText = (order, total) => {
@@ -792,22 +834,52 @@ exports.getOrderInvoice = async (req, res) => {
   const drawPartyBoxes = (y) => {
     const gap = 14;
     const colW = (right - left - gap) / 2;
-    const boxH = 94;
+    const innerW = colW - 24;
 
-    const box = (x, title, lines) => {
+    const measureBoxHeight = (title, lines) => {
+      const clean = (lines || []).filter(Boolean);
+      const name = clean[0] || "-";
+      const rest = clean.slice(1);
+
+      const topPad = 10;
+      const bottomPad = 12;
+      const titleH = 12;
+      const gapAfterTitle = 6;
+
+      doc.fontSize(11);
+      const nameH = doc.heightOfString(name, { width: innerW });
+
+      doc.fontSize(9);
+      let restH = 0;
+      for (const line of rest) {
+        restH += doc.heightOfString(String(line), { width: innerW }) + 3;
+      }
+
+      const contentH = topPad + titleH + gapAfterTitle + nameH + 6 + restH;
+      return Math.max(94, Math.ceil(contentH + bottomPad));
+    };
+
+    const box = (x, boxH, title, lines) => {
       doc.save();
       doc.roundedRect(x, y, colW, boxH, 14).fillColor("#ffffff").fill();
       doc.roundedRect(x, y, colW, boxH, 14).strokeColor("#f1f5f9").stroke();
       doc.restore();
 
-      doc.fillColor(MUTED).fontSize(9).text(title, x + 12, y + 10);
-      doc.fillColor(TEXT).fontSize(11).text(lines[0] || "-", x + 12, y + 26, { width: colW - 24 });
+      const clean = (lines || []).filter(Boolean);
+      const name = clean[0] || "-";
+      const rest = clean.slice(1);
+
+      doc.fillColor(MUTED).fontSize(9).text(title, x + 12, y + 10, { width: innerW });
+      doc.fillColor(TEXT).fontSize(11).text(name, x + 12, y + 26, { width: innerW });
+
+      let yy = y + 26 + doc.heightOfString(name, { width: innerW }) + 6;
       doc.fillColor(MUTED).fontSize(9);
-      let yy = y + 44;
-      lines.slice(1).filter(Boolean).forEach((line) => {
-        doc.text(line, x + 12, yy, { width: colW - 24 });
-        yy += 12;
-      });
+      for (const line of rest) {
+        const text = String(line || "");
+        const h = doc.heightOfString(text, { width: innerW });
+        doc.text(text, x + 12, yy, { width: innerW });
+        yy += h + 3;
+      }
     };
 
     const soldLines = [
@@ -818,13 +890,18 @@ exports.getOrderInvoice = async (req, res) => {
 
     const billLines = [
       safeText(order.customer_name) || "Customer",
-      order.customer_phone ? `Phone: ${safeText(order.customer_phone)}` : "",
+      (order.customer_phone || order.phone) ? `Phone: ${safeText(order.customer_phone || order.phone)}` : "",
       order.address ? `Address: ${safeText(order.address)}` : "",
       order.pincode ? `Pincode: ${safeText(order.pincode)}` : ""
     ];
 
-    box(left, "Sold By", soldLines);
-    box(left + colW + gap, "Bill To", billLines);
+    const boxH = Math.max(
+      measureBoxHeight("Sold By", soldLines),
+      measureBoxHeight("Bill To", billLines)
+    );
+
+    box(left, boxH, "Sold By", soldLines);
+    box(left + colW + gap, boxH, "Bill To", billLines);
 
     return y + boxH + 16;
   };
@@ -852,13 +929,22 @@ exports.getOrderInvoice = async (req, res) => {
     return drawItemsHeader(top + 6);
   };
 
-  const drawTotalsAndFooter = async (y, subtotal, total) => {
-    const gstRate = getInvoiceGstRate();
+  const drawTotalsAndFooter = async (y, breakdown) => {
+    const { subtotal, delivery, gst, gstRate, total, adjustment } = breakdown || {};
     const terms = safeText(getInvoiceTerms());
 
     // Totals box (bottom-right)
     const boxW = 220;
-    const boxH = gstRate > 0 ? 86 : 70;
+    const rows = [
+      { label: "Items Subtotal", value: money(subtotal) },
+      { label: delivery > 0 ? "Delivery" : "Delivery (FREE)", value: delivery > 0 ? money(delivery) : "FREE" },
+      { label: gstRate > 0 ? `GST (${(Number(gstRate) * 100).toFixed(0)}%)` : "GST", value: money(gst) }
+    ];
+    if (Number(adjustment) !== 0) rows.push({ label: "Adjustments", value: money(adjustment) });
+    rows.push({ label: "Total", value: money(total), strong: true });
+
+    const rowsH = rows.reduce((sum, r) => sum + (r.strong ? 16 : 14), 0);
+    const boxH = 28 + rowsH + 18;
     const boxX = right - boxW;
     const boxY = Math.min(y + 10, bottom - boxH - 90);
 
@@ -868,26 +954,14 @@ exports.getOrderInvoice = async (req, res) => {
     doc.restore();
 
     doc.fillColor(MUTED).fontSize(9).text("Summary", boxX + 14, boxY + 10);
-    doc.fillColor(TEXT).fontSize(10);
 
     let yy = boxY + 28;
-    if (gstRate > 0) {
-      const base = total / (1 + gstRate);
-      const gst = total - base;
-      doc.text("Subtotal (excl. GST)", boxX + 14, yy, { width: boxW - 28 });
-      doc.text(money(base), boxX + 14, yy, { width: boxW - 28, align: "right" });
-      yy += 14;
-      doc.text(`GST (${(gstRate * 100).toFixed(0)}%)`, boxX + 14, yy, { width: boxW - 28 });
-      doc.text(money(gst), boxX + 14, yy, { width: boxW - 28, align: "right" });
-      yy += 14;
-    } else {
-      doc.text("Subtotal", boxX + 14, yy, { width: boxW - 28 });
-      doc.text(money(subtotal), boxX + 14, yy, { width: boxW - 28, align: "right" });
-      yy += 14;
+    for (const row of rows) {
+      doc.fillColor(TEXT).fontSize(row.strong ? 11 : 10);
+      doc.text(row.label, boxX + 14, yy, { width: boxW - 28 });
+      doc.text(String(row.value), boxX + 14, yy, { width: boxW - 28, align: "right" });
+      yy += row.strong ? 16 : 14;
     }
-
-    doc.fontSize(11).text("Total", boxX + 14, yy, { width: boxW - 28 });
-    doc.text(money(total), boxX + 14, yy, { width: boxW - 28, align: "right" });
 
     // Optional QR (bottom-left)
     const qrText = safeText(getInvoiceQrText(order, total));
@@ -956,7 +1030,7 @@ exports.getOrderInvoice = async (req, res) => {
     doc.moveTo(left, y - 2).lineTo(right, y - 2).strokeColor("#f1f5f9").stroke();
   });
 
-  const total = Number(order.total_amount || subtotal);
-  await drawTotalsAndFooter(y, subtotal, Number.isFinite(total) ? total : subtotal);
+  const breakdown = calcInvoiceBreakdown(order, subtotal);
+  await drawTotalsAndFooter(y, breakdown);
   doc.end();
 };
