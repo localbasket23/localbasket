@@ -221,6 +221,15 @@ async function saveOrder(orderData) {
     return;
   }
 
+  try {
+    const lastOrder = {
+      order_id: data.order_id ?? data.orderId ?? null,
+      delivery_otp: data.delivery_otp ?? null,
+      ts: Date.now()
+    };
+    sessionStorage.setItem("lb_last_order", JSON.stringify(lastOrder));
+  } catch {}
+
   localStorage.removeItem(CART_KEY);
   window.location.href = "/welcome/customer/checkout/thankyou.html";
 }

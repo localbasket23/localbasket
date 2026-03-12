@@ -268,6 +268,21 @@
         <span class="ty-pill">Estimated Delivery Soon</span>
       </div>
 
+      <div id="deliveryOtpWrap" style="display:none; margin:18px auto 0; max-width:420px;">
+        <div style="background:#f8fffe; border:1px dashed #c7ebe4; border-radius:18px; padding:14px 14px 12px; text-align:left;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div>
+              <div style="font-size:12px; font-weight:800; letter-spacing:.4px; color:#0f766e; text-transform:uppercase;">Delivery OTP</div>
+              <div id="deliveryOtpValue" style="font-size:26px; font-weight:900; letter-spacing:6px; color:#0f172a; margin-top:4px;">----</div>
+            </div>
+            <button id="deliveryOtpCopy" class="ty-btn ghost" type="button" style="padding:10px 14px; border-radius:12px;">Copy OTP</button>
+          </div>
+          <div style="margin-top:10px; font-size:12px; color:var(--ty-muted); line-height:1.5;">
+            Share this OTP only when the seller marks your order as delivered.
+          </div>
+        </div>
+      </div>
+
       <div class="ty-actions">
         <a class="ty-btn primary" href="./welcome/customer/index.html">Continue Shopping</a>
         <a class="ty-btn ghost" href="./welcome/customer/order/customer-orders.html">View My Orders</a>
@@ -282,6 +297,40 @@
   <script src="/js/auth.js"></script>
   <script src="/js/cart.js"></script>
   <script src="/js/theme.js"></script>
+  <script>
+    (function () {
+      var raw = null;
+      try { raw = sessionStorage.getItem("lb_last_order"); } catch (e) {}
+      if (!raw) return;
+
+      var last = null;
+      try { last = JSON.parse(raw); } catch (e) { last = null; }
+      var otp = last && last.delivery_otp ? String(last.delivery_otp).replace(/\\D/g, "") : "";
+      if (otp.length !== 4) return;
+
+      var wrap = document.getElementById("deliveryOtpWrap");
+      var value = document.getElementById("deliveryOtpValue");
+      var copyBtn = document.getElementById("deliveryOtpCopy");
+      if (!wrap || !value) return;
+
+      wrap.style.display = "block";
+      value.textContent = otp;
+
+      if (copyBtn) {
+        copyBtn.addEventListener("click", function () {
+          try {
+            navigator.clipboard.writeText(otp);
+            copyBtn.textContent = "Copied";
+            setTimeout(function(){ copyBtn.textContent = "Copy OTP"; }, 1200);
+          } catch (e) {
+            window.prompt("Copy OTP:", otp);
+          }
+        });
+      }
+
+      try { sessionStorage.removeItem("lb_last_order"); } catch (e) {}
+    })();
+  </script>
 </body>
 </html>
 

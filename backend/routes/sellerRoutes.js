@@ -329,7 +329,9 @@ router.put("/orders/:orderId/status", (req, res) => {
     status_reason,
     reject_reason,
     rejection_reason,
-    cancellation_reason
+    cancellation_reason,
+    delivery_otp,
+    cod_paid
   } = req.body;
 
   if (!orderId || !status) {
@@ -382,6 +384,96 @@ router.put("/orders/:orderId/status", (req, res) => {
   const inferredCancellationReason =
     cancellation_reason ||
     (normalizedStatus === "CANCELLED" ? (inferredCancelReason || inferredCustomerReason || inferredStatusReason || null) : null);
+
+  if (normalizedStatus === "DELIVERED") {
+    const providedOtp = String(delivery_otp == null ? "" : delivery_otp).replace(/\D/g, "");
+    if (providedOtp.length !== 4) {
+      return res.status(400).json({ success: false, message: "delivery_otp (4 digit) is required to mark DELIVERED" });
+    }
+
+    return db.query(
+      "SELECT delivery_otp, payment_method, payment_status FROM orders WHERE id = ? LIMIT 1",
+      [orderId],
+      (err0, rows0) => {
+        if (err0) {
+          console.error("❌ DELIVERY OTP FETCH ERROR:", err0.sqlMessage || err0.message || err0);
+          return res.status(500).json({ success: false, message: "Status update failed" });
+        }
+        const current = rows0 && rows0[0];
+        if (!current) return res.status(404).json({ success: false, message: "Order not found" });
+
+        const expectedOtp = String(current.delivery_otp == null ? "" : current.delivery_otp).replace(/\D/g, "");
+        if (!expectedOtp || expectedOtp.length !== 4 || expectedOtp !== providedOtp) {
+          return res.status(400).json({ success: false, message: "Invalid delivery OTP" });
+        }
+
+        const paymentMethod = String(current.payment_method || "COD").trim().toUpperCase();
+        const wantsPaid = ["1", "true", "yes", "y", "on"].includes(String(cod_paid || "").trim().toLowerCase());
+        const nextPaymentStatus =
+          paymentMethod === "COD"
+            ? (wantsPaid ? "PAID" : (String(current.payment_status || "PENDING").trim().toUpperCase() || "PENDING"))
+            : (String(current.payment_status || "PENDING").trim().toUpperCase() || "PENDING");
+
+        const deliveredSql = `
+          UPDATE orders
+          SET
+            status = ?,
+            status_updated_by = COALESCE(?, status_updated_by),
+            cancelled_by = COALESCE(?, cancelled_by),
+            cancelled_by_role = COALESCE(?, cancelled_by_role),
+            cancel_actor = COALESCE(?, cancel_actor),
+            rejected_by = COALESCE(?, rejected_by),
+            rejected_by_role = COALESCE(?, rejected_by_role),
+            reason = COALESCE(?, reason),
+            cancel_reason = COALESCE(?, cancel_reason),
+            customer_reason = COALESCE(?, customer_reason),
+            seller_reason = COALESCE(?, seller_reason),
+            status_reason = COALESCE(?, status_reason),
+            reject_reason = COALESCE(?, reject_reason),
+            rejection_reason = COALESCE(?, rejection_reason),
+            cancellation_reason = COALESCE(?, cancellation_reason),
+            payment_status = ?,
+            delivered_at = NOW(),
+            delivery_otp_verified_at = NOW(),
+            delivery_otp = NULL
+          WHERE id = ?
+        `;
+
+        return db.query(
+          deliveredSql,
+          [
+            normalizedStatus,
+            status_updated_by || null,
+            cancelled_by || null,
+            cancelled_by_role || null,
+            cancel_actor || null,
+            rejected_by || null,
+            rejected_by_role || null,
+            reason || inferredStatusReason || null,
+            inferredCancelReason,
+            inferredCustomerReason,
+            inferredSellerReason,
+            inferredStatusReason,
+            inferredRejectReason,
+            inferredRejectionReason,
+            inferredCancellationReason,
+            nextPaymentStatus,
+            orderId
+          ],
+          (err1, result) => {
+            if (err1) {
+              console.error("❌ DELIVERED STATUS UPDATE ERROR:", err1.sqlMessage || err1.message || err1);
+              return res.status(500).json({ success: false, message: "Status update failed" });
+            }
+            if (!result || result.affectedRows === 0) {
+              return res.status(404).json({ success: false, message: "Order not found" });
+            }
+            return res.json({ success: true, message: "Order marked as DELIVERED", payment_status: nextPaymentStatus });
+          }
+        );
+      }
+    );
+  }
 
   db.query(
     sql,

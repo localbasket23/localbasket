@@ -513,11 +513,16 @@ window.processUpdate = async (orderId, newStatus, currentStatus = "") => {
     const previousStatus = normalizeFlowStatus(effectiveCurrent);
 
     let reason = "";
+    let deliveryOtp = "";
+    let codPaid = null;
 
     if (status === "DELIVERED") {
+        const currentOrder = allOrders.find(o => Number(o.id) === Number(orderId)) || null;
+        const paymentMethod = String(currentOrder?.payment_method || "").trim().toUpperCase();
+
         const result = await showActionModal({
             title: "Mark Delivered",
-            message: "Confirm delivery? This will move the order to History.",
+            message: "Confirm delivery? Delivery OTP required.",
             requireReason: false,
             confirmText: "Yes, Deliver"
         });
@@ -525,6 +530,18 @@ window.processUpdate = async (orderId, newStatus, currentStatus = "") => {
         if (!result.confirmed) {
             fetchOrders();
             return;
+        }
+
+        const otpInput = String(window.prompt("Enter 4-digit Delivery OTP (customer will provide):") || "").trim();
+        deliveryOtp = otpInput.replace(/\D/g, "");
+        if (deliveryOtp.length !== 4) {
+            alert("Invalid OTP. Please enter exactly 4 digits.");
+            fetchOrders();
+            return;
+        }
+
+        if (paymentMethod === "COD") {
+            codPaid = window.confirm("COD Payment: Click OK if customer has paid cash. Click Cancel if not paid yet.");
         }
     }
 
@@ -551,6 +568,10 @@ window.processUpdate = async (orderId, newStatus, currentStatus = "") => {
             body: JSON.stringify({
                 status,
                 status_updated_by: "SELLER",
+                ...(status === "DELIVERED" ? {
+                    delivery_otp: deliveryOtp,
+                    ...(typeof codPaid === "boolean" ? { cod_paid: codPaid } : {})
+                } : {}),
                 ...(status === "REJECTED" ? {
                     reason,
                     status_reason: reason,

@@ -162,6 +162,9 @@ async function initCoreTables() {
       payment_method VARCHAR(30) DEFAULT 'COD',
       payment_status VARCHAR(30) DEFAULT 'PENDING',
       payment_id VARCHAR(80) NULL,
+      delivery_otp VARCHAR(4) NULL,
+      delivery_otp_verified_at DATETIME NULL,
+      delivered_at DATETIME NULL,
       status VARCHAR(30) DEFAULT 'PLACED',
       cancelled_by VARCHAR(80) NULL,
       cancelled_by_role VARCHAR(30) NULL,
@@ -286,6 +289,9 @@ async function initDb() {
 
     await initCoreTables();
     await ensureColumn("orders", "payment_id", "ALTER TABLE orders ADD COLUMN payment_id VARCHAR(80) NULL");
+    await ensureColumn("orders", "delivery_otp", "ALTER TABLE orders ADD COLUMN delivery_otp VARCHAR(4) NULL");
+    await ensureColumn("orders", "delivery_otp_verified_at", "ALTER TABLE orders ADD COLUMN delivery_otp_verified_at DATETIME NULL");
+    await ensureColumn("orders", "delivered_at", "ALTER TABLE orders ADD COLUMN delivered_at DATETIME NULL");
     await ensureColumn("products", "mrp", "ALTER TABLE products ADD COLUMN mrp DECIMAL(10,2) DEFAULT NULL");
     await ensureColumn("products", "description", "ALTER TABLE products ADD COLUMN description TEXT NULL");
     await ensureColumn("sellers", "minimum_order", "ALTER TABLE sellers ADD COLUMN minimum_order DECIMAL(10,2) NOT NULL DEFAULT 100.00");

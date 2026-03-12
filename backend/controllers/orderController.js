@@ -41,6 +41,54 @@ const formatInvoiceDate = (value) => {
   }
 };
 
+const generateDeliveryOtp = () => String(Math.floor(1000 + Math.random() * 9000));
+const normalizeOtp4 = (value) => {
+  const digits = String(value == null ? "" : value).replace(/\D/g, "");
+  if (digits.length !== 4) return "";
+  return digits;
+};
+const isTruthy = (value) => ["1", "true", "yes", "y", "on"].includes(String(value || "").trim().toLowerCase());
+
+let deliveryOtpSchemaReady = false;
+let deliveryOtpSchemaEnsuring = null;
+const ensureDeliveryOtpSchema = async () => {
+  if (deliveryOtpSchemaReady) return;
+  if (deliveryOtpSchemaEnsuring) return deliveryOtpSchemaEnsuring;
+
+  deliveryOtpSchemaEnsuring = (async () => {
+    const [rows] = await db.promise().query(
+      `
+      SELECT COLUMN_NAME
+      FROM information_schema.columns
+      WHERE table_schema = DATABASE()
+        AND table_name = 'orders'
+        AND COLUMN_NAME IN ('delivery_otp', 'delivery_otp_verified_at', 'delivered_at')
+      `
+    );
+    const present = new Set((rows || []).map(r => String(r.COLUMN_NAME || "").trim()));
+
+    const stmts = [];
+    if (!present.has("delivery_otp")) stmts.push("ALTER TABLE orders ADD COLUMN delivery_otp VARCHAR(4) NULL");
+    if (!present.has("delivery_otp_verified_at")) stmts.push("ALTER TABLE orders ADD COLUMN delivery_otp_verified_at DATETIME NULL");
+    if (!present.has("delivered_at")) stmts.push("ALTER TABLE orders ADD COLUMN delivered_at DATETIME NULL");
+
+    for (const sql of stmts) {
+      try {
+        await db.promise().query(sql);
+      } catch (err) {
+        if (err && err.code === "ER_DUP_FIELDNAME") continue;
+        throw err;
+      }
+    }
+
+    deliveryOtpSchemaReady = true;
+  })().finally(() => {
+    deliveryOtpSchemaEnsuring = null;
+  });
+
+  return deliveryOtpSchemaEnsuring;
+};
+
 let PDFDocument;
 try {
   PDFDocument = require("pdfkit");
@@ -73,6 +121,7 @@ exports.createOrder = (req, res) => {
     });
   }
 
+  const doInsert = () => {
   const sql = `
     INSERT INTO orders (
       seller_id,
@@ -86,11 +135,13 @@ exports.createOrder = (req, res) => {
       payment_method,
       payment_status,
       payment_id,
+      delivery_otp,
       status
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
+  const deliveryOtp = generateDeliveryOtp();
   const values = [
     seller_id,
     customer_id,
@@ -103,6 +154,7 @@ exports.createOrder = (req, res) => {
     payment_method || "COD",
     payment_status || "PENDING",
     payment_id || null,
+    deliveryOtp,
     "PLACED"
   ];
 
@@ -117,9 +169,21 @@ exports.createOrder = (req, res) => {
 
     res.json({
       success: true,
-      order_id: result.insertId
+      order_id: result.insertId,
+      delivery_otp: deliveryOtp
     });
   });
+  };
+
+  return ensureDeliveryOtpSchema()
+    .then(doInsert)
+    .catch((err) => {
+      console.error("DELIVERY OTP SCHEMA CHECK FAILED:", err?.sqlMessage || err?.message || err);
+      return res.status(500).json({
+        success: false,
+        message: "Server schema not ready for delivery OTP. Please restart server and try again."
+      });
+    });
 };
 
 const getInvoiceTerms = () => {
@@ -220,10 +284,14 @@ exports.getSellerOrders = (req, res) => {
       });
     }
 
-    const orders = (rows || []).map(o => ({
-      ...o,
-      cart: typeof o.cart === "string" ? JSON.parse(o.cart) : o.cart
-    }));
+    const orders = (rows || []).map(o => {
+      const out = ({
+        ...o,
+        cart: typeof o.cart === "string" ? JSON.parse(o.cart) : o.cart
+      });
+      delete out.delivery_otp;
+      return out;
+    });
 
     res.json({
       success: true,
@@ -258,8 +326,10 @@ exports.updateOrderStatus = (req, res) => {
     rejection_reason,
     reject_reason,
     cancellation_reason,
-    reason
-  } = req.body;
+    reason,
+    delivery_otp,
+    cod_paid
+  } = req.body || {};
 
   const ALLOWED = ["PLACED", "CONFIRMED", "PACKED", "OUT_FOR_DELIVERY", "DELIVERED", "REJECTED", "CANCELLED"];
   if (!order_id || !ALLOWED.includes(status)) {
@@ -331,6 +401,77 @@ exports.updateOrderStatus = (req, res) => {
     inferredCancellationReason,
     order_id
   ];
+
+  if (normalizedStatus === "DELIVERED") {
+    const providedOtp = normalizeOtp4(delivery_otp);
+    if (!providedOtp) {
+      return res.status(400).json({ success: false, message: "delivery_otp (4 digit) is required to mark DELIVERED" });
+    }
+
+    return db.query(
+      "SELECT delivery_otp, payment_method, payment_status FROM orders WHERE id = ? LIMIT 1",
+      [order_id],
+      (err0, rows0) => {
+        if (err0) {
+          console.error("DELIVERY OTP FETCH ERROR:", err0.sqlMessage || err0.message || err0);
+          return res.status(500).json({ success: false });
+        }
+        const current = rows0 && rows0[0];
+        if (!current) return res.status(404).json({ success: false, message: "Order not found" });
+
+        const expectedOtp = normalizeOtp4(current.delivery_otp);
+        if (!expectedOtp || expectedOtp !== providedOtp) {
+          return res.status(400).json({ success: false, message: "Invalid delivery OTP" });
+        }
+
+        const paymentMethod = safeText(current.payment_method || "COD").toUpperCase();
+        const nextPaymentStatus =
+          paymentMethod === "COD"
+            ? (isTruthy(cod_paid) ? "PAID" : (safeText(current.payment_status || "PENDING").toUpperCase() || "PENDING"))
+            : (safeText(current.payment_status || "PENDING").toUpperCase() || "PENDING");
+
+        const deliveredSql = `
+          UPDATE orders
+          SET
+            status = ?,
+            cancelled_by = COALESCE(?, cancelled_by),
+            cancelled_by_role = COALESCE(?, cancelled_by_role),
+            cancel_actor = COALESCE(?, cancel_actor),
+            rejected_by = COALESCE(?, rejected_by),
+            rejected_by_role = COALESCE(?, rejected_by_role),
+            status_updated_by = COALESCE(?, status_updated_by),
+            reason = COALESCE(?, reason),
+            cancel_reason = COALESCE(?, cancel_reason),
+            customer_reason = COALESCE(?, customer_reason),
+            seller_reason = COALESCE(?, seller_reason),
+            status_reason = COALESCE(?, status_reason),
+            rejection_reason = COALESCE(?, rejection_reason),
+            reject_reason = COALESCE(?, reject_reason),
+            cancellation_reason = COALESCE(?, cancellation_reason),
+            payment_status = ?,
+            delivered_at = NOW(),
+            delivery_otp_verified_at = NOW(),
+            delivery_otp = NULL
+          WHERE id = ?
+        `;
+
+        const deliveredParams = params
+          .slice(0, params.length - 1)
+          .concat([nextPaymentStatus, order_id]);
+
+        return db.query(deliveredSql, deliveredParams, (err1, result) => {
+          if (err1) {
+            console.error("DELIVERED STATUS UPDATE ERROR:", err1.sqlMessage || err1.message || err1);
+            return res.status(500).json({ success: false });
+          }
+          if (!result || result.affectedRows === 0) {
+            return res.status(404).json({ success: false, message: "Order not found" });
+          }
+          return res.json({ success: true, payment_status: nextPaymentStatus });
+        });
+      }
+    );
+  }
 
   db.query(sql, params, err => {
     if (err) {
