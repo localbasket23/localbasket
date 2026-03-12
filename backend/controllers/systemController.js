@@ -22,3 +22,39 @@ exports.getSystemStatus = async (req, res) => {
   }
 };
 
+// POST /api/system/support/request
+exports.submitSupportRequest = async (req, res) => {
+  const name = String(req.body?.name || "").trim();
+  const email = String(req.body?.email || "").trim().toLowerCase();
+  const phone = String(req.body?.phone || "").trim();
+  const issue_type = String(req.body?.type || req.body?.issue_type || "").trim();
+  const message = String(req.body?.message || "").trim();
+  const customer_id = req.body?.customer_id ? Number(req.body.customer_id) : null;
+
+  const emailOk = !email || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+  if (!name || !emailOk || !issue_type || message.length < 5) {
+    return res.status(400).json({
+      success: false,
+      message: "name, email, type and message are required"
+    });
+  }
+
+  try {
+    const result = await query(
+      `
+      INSERT INTO support_requests (customer_id, name, email, phone, issue_type, message, status)
+      VALUES (?, ?, ?, ?, ?, ?, 'OPEN')
+      `,
+      [Number.isFinite(customer_id) ? customer_id : null, name, email || null, phone || null, issue_type, message]
+    );
+
+    return res.json({
+      success: true,
+      id: result?.insertId || null,
+      ticket: `SUP-${result?.insertId || Date.now()}`
+    });
+  } catch (err) {
+    console.error("SUPPORT REQUEST ERROR:", err?.sqlMessage || err?.message || err);
+    return res.status(500).json({ success: false, message: "Failed to submit support request" });
+  }
+};

@@ -110,55 +110,218 @@ async function ensurePayoutTable() {
   `);
 }
 
-async function ensureSellerAuditTable() {
-  await query(`
-    CREATE TABLE IF NOT EXISTS seller_audit_logs (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      seller_id INT NOT NULL,
-      action VARCHAR(30) NOT NULL,
-      reason TEXT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-}
+async function ensureCustomerAdminColumns() {
+  const columns = [
+    { name: "is_blocked", sql: "ALTER TABLE customers ADD COLUMN is_blocked TINYINT(1) NOT NULL DEFAULT 0" },
+    { name: "blocked_at", sql: "ALTER TABLE customers ADD COLUMN blocked_at DATETIME NULL" },
+    { name: "block_reason", sql: "ALTER TABLE customers ADD COLUMN block_reason TEXT NULL" }
+  ];
 
-async function logSellerAction(seller_id, action, reason = null) {
-  try {
-    await ensureSellerAuditTable();
-    await query(
-      "INSERT INTO seller_audit_logs (seller_id, action, reason) VALUES (?,?,?)",
-      [seller_id, action, reason]
-    );
-  } catch {
-    // non-blocking
+  for (const col of columns) {
+    const rows = await query("SHOW COLUMNS FROM customers LIKE ?", [col.name]);
+    if (!rows || rows.length === 0) {
+      await query(col.sql);
+    }
   }
 }
 
 /* =====================================================
-   SELLER AUDIT LOGS
-   GET /api/admin/seller-audit
+   SUPPORT REQUESTS
 ===================================================== */
-exports.getSellerAuditLogs = async (req, res) => {
-  try {
-    await ensureSellerAuditTable();
-    const logs = await query(`
-      SELECT
-        l.id,
-        l.seller_id,
-        l.action,
-        l.reason,
-        l.created_at,
-        s.store_name
-      FROM seller_audit_logs l
-      LEFT JOIN sellers s ON s.id = l.seller_id
-      ORDER BY l.created_at DESC
-      LIMIT 200
-    `);
+exports.getSupportRequests = async (req, res) => {
+  const rawStatus = String(req.query?.status || "OPEN").trim().toUpperCase();
+  const limitRaw = Number(req.query?.limit || 200);
+  const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(500, Math.floor(limitRaw))) : 200;
 
-    res.json({ success: true, logs: logs || [] });
+  const allowed = new Set(["OPEN", "RESOLVED", "ALL"]);
+  const status = allowed.has(rawStatus) ? rawStatus : "OPEN";
+
+  try {
+    const where = status === "ALL" ? "" : "WHERE r.status = ?";
+    const params = status === "ALL" ? [limit] : [status, limit];
+
+    const rows = await query(
+      `
+      SELECT
+        r.id,
+        r.customer_id,
+        r.name,
+        r.email,
+        r.phone,
+        r.issue_type,
+        r.message,
+        r.status,
+        r.admin_note,
+        r.resolved_at,
+        r.resolved_by,
+        r.created_at
+      FROM support_requests r
+      ${where}
+      ORDER BY r.created_at DESC
+      LIMIT ?
+      `,
+      params
+    );
+
+    res.json({ success: true, requests: rows || [] });
   } catch (err) {
-    console.error("AUDIT LOG ERROR:", err);
-    res.status(500).json({ success: false, message: "Failed to load audit logs" });
+    console.error("SUPPORT LIST ERROR:", err?.sqlMessage || err?.message || err);
+    res.status(500).json({ success: false, message: "Failed to load support requests" });
+  }
+};
+
+// PUT /api/admin/support/requests/:id/resolve
+exports.resolveSupportRequest = async (req, res) => {
+  const id = Number(req.params?.id);
+  if (!id) return res.status(400).json({ success: false, message: "Invalid request id" });
+
+  const admin_note = String(req.body?.admin_note || "").trim();
+  const resolved_by = String(req.body?.resolved_by || "ADMIN").trim().slice(0, 80) || "ADMIN";
+
+  try {
+    const result = await query(
+      `
+      UPDATE support_requests
+      SET
+        status = 'RESOLVED',
+        admin_note = ?,
+        resolved_at = NOW(),
+        resolved_by = ?
+      WHERE id = ?
+      `,
+      [admin_note || null, resolved_by, id]
+    );
+
+    if (!result || result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: "Request not found" });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("SUPPORT RESOLVE ERROR:", err?.sqlMessage || err?.message || err);
+    res.status(500).json({ success: false, message: "Failed to resolve support request" });
+  }
+};
+
+/* =====================================================
+   CUSTOMERS
+===================================================== */
+exports.getCustomers = async (req, res) => {
+  const q = String(req.query?.search || "").trim();
+  const rawStatus = String(req.query?.status || "ALL").trim().toUpperCase();
+  const limitRaw = Number(req.query?.limit || 200);
+  const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(500, Math.floor(limitRaw))) : 200;
+
+  const allowedStatus = new Set(["ALL", "ACTIVE", "BLOCKED"]);
+  const status = allowedStatus.has(rawStatus) ? rawStatus : "ALL";
+
+  try {
+    await ensureCustomerAdminColumns();
+
+    const where = [];
+    const params = [];
+
+    if (status === "ACTIVE") where.push("COALESCE(c.is_blocked, 0) = 0");
+    if (status === "BLOCKED") where.push("COALESCE(c.is_blocked, 0) = 1");
+
+    if (q) {
+      const like = `%${q}%`;
+      const digits = q.replace(/\D/g, "");
+      const parts = [
+        "c.name LIKE ?",
+        "c.email LIKE ?",
+        "c.phone LIKE ?"
+      ];
+      params.push(like, like, like);
+      if (digits) {
+        parts.push("CAST(c.id AS CHAR) LIKE ?");
+        params.push(`%${digits}%`);
+      }
+      where.push(`(${parts.join(" OR ")})`);
+    }
+
+    const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
+    params.push(limit);
+
+    const rows = await query(
+      `
+      SELECT
+        c.id,
+        c.name,
+        c.email,
+        c.phone,
+        COALESCE(c.is_blocked, 0) AS is_blocked,
+        c.blocked_at,
+        c.block_reason,
+        c.created_at,
+        COUNT(o.id) AS orders_count,
+        COALESCE(ROUND(SUM(o.total_amount), 2), 0) AS total_spent
+      FROM customers c
+      LEFT JOIN orders o ON o.customer_id = c.id
+      ${whereSql}
+      GROUP BY c.id
+      ORDER BY c.created_at DESC
+      LIMIT ?
+      `,
+      params
+    );
+
+    res.json({ success: true, customers: rows || [] });
+  } catch (err) {
+    console.error("CUSTOMERS LIST ERROR:", err?.sqlMessage || err?.message || err);
+    res.status(500).json({ success: false, message: "Failed to load customers" });
+  }
+};
+
+exports.blockCustomer = async (req, res) => {
+  const id = Number(req.params?.id);
+  if (!id) return res.status(400).json({ success: false, message: "Invalid customer id" });
+
+  const reason = String(req.body?.reason || "").trim();
+
+  try {
+    await ensureCustomerAdminColumns();
+    const result = await query(
+      "UPDATE customers SET is_blocked=1, blocked_at=NOW(), block_reason=? WHERE id=?",
+      [reason || null, id]
+    );
+    if (!result || result.affectedRows === 0) return res.status(404).json({ success: false, message: "Customer not found" });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("CUSTOMER BLOCK ERROR:", err?.sqlMessage || err?.message || err);
+    res.status(500).json({ success: false, message: "Failed to block customer" });
+  }
+};
+
+exports.unblockCustomer = async (req, res) => {
+  const id = Number(req.params?.id);
+  if (!id) return res.status(400).json({ success: false, message: "Invalid customer id" });
+
+  try {
+    await ensureCustomerAdminColumns();
+    const result = await query(
+      "UPDATE customers SET is_blocked=0, blocked_at=NULL, block_reason=NULL WHERE id=?",
+      [id]
+    );
+    if (!result || result.affectedRows === 0) return res.status(404).json({ success: false, message: "Customer not found" });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("CUSTOMER UNBLOCK ERROR:", err?.sqlMessage || err?.message || err);
+    res.status(500).json({ success: false, message: "Failed to unblock customer" });
+  }
+};
+
+exports.deleteCustomer = async (req, res) => {
+  const id = Number(req.params?.id);
+  if (!id) return res.status(400).json({ success: false, message: "Invalid customer id" });
+
+  try {
+    const result = await query("DELETE FROM customers WHERE id = ?", [id]);
+    if (!result || result.affectedRows === 0) return res.status(404).json({ success: false, message: "Customer not found" });
+    res.json({ success: true });
+  } catch (err) {
+    console.error("CUSTOMER DELETE ERROR:", err?.sqlMessage || err?.message || err);
+    res.status(500).json({ success: false, message: "Failed to delete customer" });
   }
 };
 
@@ -652,12 +815,6 @@ exports.saveGlobalCommission = async (req, res) => {
       "UPDATE settings SET global_commission_enabled=?, global_commission_percent=? WHERE id=1",
       [enabled ? 1 : 0, percent]
     );
-
-    await logSellerAction(seller_id, "APPROVE", null);
-    await logSellerAction(seller_id, "REJECT", reason);
-    if (upperStatus === "APPROVED" || upperStatus === "REJECTED") {
-      await logSellerAction(seller_id, upperStatus, reason || null);
-    }
     res.json({ success: true });
   } catch (err) {
     console.error("GLOBAL COMM ERROR:", err);

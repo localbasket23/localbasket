@@ -49,10 +49,10 @@
   const menu = [
     { file: "admin.html", icon: "fa-chart-pie", label: "Dashboard" },
     { file: "admin-sellers.html", icon: "fa-user-check", label: "Seller Verification" },
-    { file: "admin-products.html", icon: "fa-box-open", label: "Products" },
+    { file: "admin-customers.html", icon: "fa-users", label: "Customers" },
     { file: "admin-orders.html", icon: "fa-shopping-cart", label: "Orders" },
     { file: "admin-payments.html", icon: "fa-wallet", label: "Payments" },
-    { file: "admin-audit.html", icon: "fa-clipboard-list", label: "Audit Logs" },
+    { file: "admin-support.html", icon: "fa-headset", label: "Support Requests" },
     { file: "admin-reports.html", icon: "fa-chart-line", label: "Reports" },
     { file: "admin-categories.html", icon: "fa-tags", label: "Categories" },
     { file: "admin-settings.html", icon: "fa-cog", label: "Settings" }

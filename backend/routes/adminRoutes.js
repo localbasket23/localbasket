@@ -35,7 +35,12 @@ const {
   clearHeroImages,
   removeHeroImage,
   getAllSettings,
-  getSellerAuditLogs,
+  getSupportRequests,
+  resolveSupportRequest,
+  getCustomers,
+  blockCustomer,
+  unblockCustomer,
+  deleteCustomer,
   // ✅ CATEGORY
   getCategories,
   addCategory,
@@ -58,8 +63,19 @@ router.get("/full-report", getFullReport);
 // GET /api/admin/full-report/pdf
 router.get("/full-report/pdf", downloadFullReportPdf);
 
-// GET /api/admin/seller-audit
-router.get("/seller-audit", getSellerAuditLogs);
+// GET /api/admin/support/requests?status=OPEN|RESOLVED|ALL&limit=200
+router.get("/support/requests", getSupportRequests);
+// PUT /api/admin/support/requests/:id/resolve
+router.put("/support/requests/:id/resolve", resolveSupportRequest);
+
+// GET /api/admin/customers?search=&status=ALL|ACTIVE|BLOCKED&limit=200
+router.get("/customers", getCustomers);
+// PUT /api/admin/customers/:id/block
+router.put("/customers/:id/block", blockCustomer);
+// PUT /api/admin/customers/:id/unblock
+router.put("/customers/:id/unblock", unblockCustomer);
+// DELETE /api/admin/customers/:id
+router.delete("/customers/:id", deleteCustomer);
 
 // GET /api/admin/payments
 router.get("/payments", getPayments);

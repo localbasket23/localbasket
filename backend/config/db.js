@@ -188,6 +188,24 @@ async function initCoreTables() {
     )
     `,
     `
+    CREATE TABLE IF NOT EXISTS support_requests (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      customer_id INT NULL,
+      name VARCHAR(160) NULL,
+      email VARCHAR(190) NULL,
+      phone VARCHAR(20) NULL,
+      issue_type VARCHAR(60) NULL,
+      message TEXT NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+      admin_note TEXT NULL,
+      resolved_at DATETIME NULL,
+      resolved_by VARCHAR(80) NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      KEY idx_support_status (status),
+      KEY idx_support_created (created_at)
+    )
+    `,
+    `
     CREATE TABLE IF NOT EXISTS settings (
       id INT PRIMARY KEY,
       global_commission_enabled TINYINT(1) NOT NULL DEFAULT 1,
@@ -295,6 +313,9 @@ async function initDb() {
     await ensureColumn("products", "mrp", "ALTER TABLE products ADD COLUMN mrp DECIMAL(10,2) DEFAULT NULL");
     await ensureColumn("products", "description", "ALTER TABLE products ADD COLUMN description TEXT NULL");
     await ensureColumn("sellers", "minimum_order", "ALTER TABLE sellers ADD COLUMN minimum_order DECIMAL(10,2) NOT NULL DEFAULT 100.00");
+    await ensureColumn("customers", "is_blocked", "ALTER TABLE customers ADD COLUMN is_blocked TINYINT(1) NOT NULL DEFAULT 0");
+    await ensureColumn("customers", "blocked_at", "ALTER TABLE customers ADD COLUMN blocked_at DATETIME NULL");
+    await ensureColumn("customers", "block_reason", "ALTER TABLE customers ADD COLUMN block_reason TEXT NULL");
 
     const extraStatements = [
       `

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="/js/config.js"></script>
+  <base href="/" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Customers</title>
+
+  <link rel="icon" type="image/png" href="./welcome/logo2.png?v=20260303">
+  <link rel="icon" type="image/png" sizes="32x32" href="./welcome/logo2.png?v=20260303">
+  <link rel="apple-touch-icon" sizes="180x180" href="./welcome/logo2.png?v=20260303">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root{
+      --lav:#ff8a1a; --lav-light:#ffb347; --bg:#f8f9fd; --white:#fff;
+      --text:#2d3436; --text-light:#636e72; --radius:16px;
+      --shadow:0 10px 30px rgba(0,0,0,.05); --border:#edf0f7;
+      --surface:#ffffff; --surface-2:#fafbff; --table-head:#f4f6fb;
+      --row-hover:#fafaff; --muted:#9aa2b1;
+    }
+    *{ box-sizing:border-box; margin:0; padding:0; font-family:Poppins, sans-serif; }
+    body{ background:var(--bg); color:var(--text); overflow-x:hidden; }
+    body.dark{
+      --bg:#111827; --white:#1f2937; --text:#f3f4f6; --text-light:#9ca3af;
+      --border:#334155; --shadow:0 10px 30px rgba(0,0,0,.35); --surface:#111827;
+      --surface-2:#0b1220; --table-head:#0b1220; --row-hover:#111b2d; --muted:#94a3b8;
+    }
+    #sidebarOverlay{ position:fixed; inset:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); z-index:1001; display:none; opacity:0; transition:0.3s; }
+    #sidebarOverlay.show{ display:block; opacity:1; }
+    .sidebar{ width:280px; height:100vh; position:fixed; left:0; top:0; background:linear-gradient(160deg,var(--lav),var(--lav-light)); color:#fff; padding:30px 20px; z-index:1002; }
+    main{ margin-left:280px; padding:40px; }
+    .topbar{ background:var(--white); padding:18px 25px; border-radius:var(--radius); display:flex; justify-content:space-between; align-items:center; box-shadow:var(--shadow); margin-bottom:18px; }
+    .title{ display:flex; align-items:center; gap:10px; font-size:18px; font-weight:800; }
+    .pill{ border:1px solid var(--border); background:var(--surface-2); color:var(--text); border-radius:999px; padding:10px 12px; font-size:13px; font-weight:700; display:flex; align-items:center; gap:8px; }
+    .filters{
+      background:var(--white); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:14px; margin-bottom:16px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+    }
+    .search{ flex:1; min-width:240px; display:flex; align-items:center; gap:10px; background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:10px 14px; }
+    .search i{ color:var(--muted); }
+    .search input{ flex:1; border:none; outline:none; background:transparent; font-size:14px; color:var(--text); }
+    select.pill{ cursor:pointer; }
+    .btn{ border:none; cursor:pointer; border-radius:12px; padding:10px 14px; font-weight:800; background:var(--lav); color:#fff; box-shadow:0 10px 22px -12px rgba(255,138,26,.7); }
+    .btn:disabled{ opacity:.65; cursor:not-allowed; }
+    .btn-ghost{ background:transparent; color:var(--text); border:1px solid var(--border); box-shadow:none; }
+    .btn-danger{ background:#ef4444; box-shadow:0 10px 22px -12px rgba(239,68,68,.55); }
+    .btn-small{ padding:8px 10px; border-radius:10px; font-size:12px; font-weight:900; }
+    .table-wrap{ background:var(--white); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+    table{ width:100%; border-collapse:collapse; }
+    thead{ background:var(--table-head); }
+    th, td{ padding:14px 14px; text-align:left; border-bottom:1px solid var(--border); font-size:14px; vertical-align:top; }
+    th{ font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-light); }
+    tbody tr:hover{ background:var(--row-hover); }
+    .muted{ color:var(--text-light); font-size:12px; }
+    .badge{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:900; border:1px solid var(--border); background:var(--surface-2); }
+    .badge.active{ background:rgba(34,197,94,.16); border-color:rgba(34,197,94,.35); }
+    .badge.blocked{ background:rgba(239,68,68,.14); border-color:rgba(239,68,68,.35); }
+    .actions{ display:flex; gap:8px; flex-wrap:wrap; }
+    @media (max-width: 980px){
+      main{ margin-left:0; padding:18px; }
+      .sidebar{ transform:translateX(-110%); transition:0.3s; }
+      .sidebar.open{ transform:translateX(0); }
+      .topbar{ position:sticky; top:10px; z-index:1000; }
+    }
+  </style>
+</head>
+<body>
+  <div id="sidebarOverlay"></div>
+  <div class="sidebar"></div>
+
+  <main>
+    <div class="topbar">
+      <div class="title"><i class="fas fa-users"></i> Customers</div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <span class="pill" id="countPill"><i class="fas fa-user"></i> 0</span>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="search">
+        <i class="fas fa-search"></i>
+        <input id="searchInput" placeholder="Search name, email, phone, id..." />
+      </div>
+      <select id="statusSelect" class="pill" title="Filter status">
+        <option value="ALL">All</option>
+        <option value="ACTIVE">Active</option>
+        <option value="BLOCKED">Blocked</option>
+      </select>
+      <button class="btn" id="refreshBtn" type="button"><i class="fas fa-rotate"></i> Refresh</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:80px;">ID</th>
+            <th style="width:260px;">Customer</th>
+            <th style="width:140px;">Orders</th>
+            <th style="width:160px;">Total Spent</th>
+            <th style="width:140px;">Status</th>
+            <th style="width:220px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="custBody">
+          <tr><td colspan="6" style="text-align:center;padding:40px">Loading customers...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    const API = `${window.API_BASE_URL}/api/admin`;
+    const state = { all: [], filtered: [] };
+
+    function escapeHtml(s){
+      return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+    async function confirmAsync(msg){
+      if (typeof window.lbConfirm === "function") return window.lbConfirm(msg);
+      return Promise.resolve(window.confirm(msg));
+    }
+
+    function badge(isBlocked){
+      return isBlocked
+        ? `<span class="badge blocked"><i class="fas fa-ban"></i> BLOCKED</span>`
+        : `<span class="badge active"><i class="fas fa-circle-check"></i> ACTIVE</span>`;
+    }
+
+    function applyFilter(){
+      const q = (document.getElementById("searchInput").value || "").toLowerCase().trim();
+      if (!q) state.filtered = [...state.all];
+      else {
+        state.filtered = state.all.filter(c => (
+          String(c.id || "").toLowerCase().includes(q) ||
+          String(c.name || "").toLowerCase().includes(q) ||
+          String(c.email || "").toLowerCase().includes(q) ||
+          String(c.phone || "").toLowerCase().includes(q)
+        ));
+      }
+      render(state.filtered);
+    }
+
+    async function blockCustomer(id){
+      const reason = window.prompt("Block reason (optional):", "");
+      if (reason === null) return;
+      const res = await fetch(`${API}/customers/${encodeURIComponent(String(id))}/block`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: reason || "" })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) return window.alert(data.message || "Failed to block customer");
+      await load();
+    }
+
+    async function unblockCustomer(id){
+      const ok = await confirmAsync("Unblock this customer?");
+      if (!ok) return;
+      const res = await fetch(`${API}/customers/${encodeURIComponent(String(id))}/unblock`, { method: "PUT" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) return window.alert(data.message || "Failed to unblock customer");
+      await load();
+    }
+
+    async function deleteCustomer(id){
+      const ok = await confirmAsync("Delete this customer? This cannot be undone.");
+      if (!ok) return;
+      const res = await fetch(`${API}/customers/${encodeURIComponent(String(id))}`, { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) return window.alert(data.message || "Failed to delete customer");
+      await load();
+    }
+
+    async function showDetails(c){
+      const lines = [
+        `ID: ${c.id}`,
+        `Name: ${c.name || "-"}`,
+        `Email: ${c.email || "-"}`,
+        `Phone: ${c.phone || "-"}`,
+        `Orders: ${c.orders_count || 0}`,
+        `Total Spent: Rs. ${Number(c.total_spent || 0).toFixed(2)}`,
+        `Status: ${c.is_blocked ? "BLOCKED" : "ACTIVE"}`,
+        c.is_blocked ? `Blocked At: ${c.blocked_at || "-"}` : "",
+        c.is_blocked ? `Reason: ${c.block_reason || "-"}` : "",
+        `Created: ${c.created_at || "-"}`
+      ].filter(Boolean);
+      window.alert(lines.join("\n"));
+    }
+
+    function render(list){
+      const tbody = document.getElementById("custBody");
+      const countPill = document.getElementById("countPill");
+      tbody.innerHTML = "";
+      if (!list.length){
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No customers found.</td></tr>`;
+        if (countPill) countPill.innerHTML = `<i class="fas fa-user"></i> 0`;
+        return;
+      }
+
+      tbody.innerHTML = list.map(c => {
+        const who = `
+          <div style="font-weight:800;">${escapeHtml(c.name || "Customer")}</div>
+          <div class="muted">${escapeHtml(c.email || "-")}</div>
+          <div class="muted">${escapeHtml(c.phone || "")}</div>
+        `;
+
+        const actions = c.is_blocked
+          ? `
+              <button class="btn btn-ghost btn-small" type="button" onclick="window.unblockCust(${Number(c.id)})"><i class="fas fa-unlock"></i> Unblock</button>
+              <button class="btn btn-danger btn-small" type="button" onclick="window.deleteCust(${Number(c.id)})"><i class="fas fa-trash"></i> Delete</button>
+            `
+          : `
+              <button class="btn btn-small" type="button" onclick="window.blockCust(${Number(c.id)})"><i class="fas fa-ban"></i> Block</button>
+              <button class="btn btn-danger btn-small" type="button" onclick="window.deleteCust(${Number(c.id)})"><i class="fas fa-trash"></i> Delete</button>
+            `;
+
+        return `
+          <tr>
+            <td><b>#${c.id}</b></td>
+            <td>${who}<div style="margin-top:8px"><button class="btn btn-ghost btn-small" type="button" onclick="window.showCust(${Number(c.id)})"><i class="fas fa-circle-info"></i> Details</button></div></td>
+            <td><b>${Number(c.orders_count || 0)}</b></td>
+            <td><b>Rs. ${Number(c.total_spent || 0).toFixed(2)}</b></td>
+            <td>${badge(Boolean(c.is_blocked))}</td>
+            <td><div class="actions">${actions}</div></td>
+          </tr>
+        `;
+      }).join("");
+
+      if (countPill) countPill.innerHTML = `<i class="fas fa-user"></i> ${list.length}`;
+    }
+
+    async function load(){
+      const status = String(document.getElementById("statusSelect").value || "ALL").trim().toUpperCase();
+      const btn = document.getElementById("refreshBtn");
+      if (btn) btn.disabled = true;
+      try{
+        const res = await fetch(`${API}/customers?status=${encodeURIComponent(status)}&limit=200`, { cache: "no-store" });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.success === false) throw new Error(data.message || "Failed");
+        state.all = data.customers || [];
+        applyFilter();
+      } catch (e){
+        document.getElementById("custBody").innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">Failed to load customers.</td></tr>`;
+      } finally{
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    window.blockCust = blockCustomer;
+    window.unblockCust = unblockCustomer;
+    window.deleteCust = deleteCustomer;
+    window.showCust = (id) => {
+      const c = state.all.find(x => Number(x.id) === Number(id));
+      if (c) showDetails(c);
+    };
+
+    document.getElementById("searchInput").addEventListener("input", applyFilter);
+    document.getElementById("statusSelect").addEventListener("change", load);
+    document.getElementById("refreshBtn").addEventListener("click", load);
+    load();
+  </script>
+
+  <script src="/welcome/admin/admin-layout.js"></script>
+  <div id="footer"></div>
+  <script src="/js/include.js?v=20260311a"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/theme.js"></script>
+</body>
+</html>
+

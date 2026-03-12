@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="/js/config.js"></script>
+  <base href="/" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Support Requests</title>
+
+  <link rel="icon" type="image/png" href="./welcome/logo2.png?v=20260303">
+  <link rel="icon" type="image/png" sizes="32x32" href="./welcome/logo2.png?v=20260303">
+  <link rel="apple-touch-icon" sizes="180x180" href="./welcome/logo2.png?v=20260303">
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root{
+      --lav:#ff8a1a; --lav-light:#ffb347; --bg:#f8f9fd; --white:#fff;
+      --text:#2d3436; --text-light:#636e72; --radius:16px;
+      --shadow:0 10px 30px rgba(0,0,0,.05); --border:#edf0f7;
+      --surface:#ffffff; --surface-2:#fafbff; --table-head:#f4f6fb;
+      --row-hover:#fafaff; --muted:#9aa2b1;
+    }
+    *{ box-sizing:border-box; margin:0; padding:0; font-family:Poppins, sans-serif; }
+    body{ background:var(--bg); color:var(--text); }
+    body.dark{
+      --bg:#0f172a; --white:#111827; --text:#f1f5f9; --text-light:#94a3b8;
+      --border:#1f2937; --shadow:0 10px 30px rgba(0,0,0,.4); --surface:#111827;
+      --surface-2:#0b1220; --table-head:#0b1220; --row-hover:#111b2d; --muted:#94a3b8;
+    }
+    .sidebar{ width:280px; height:100vh; position:fixed; left:0; top:0; background:linear-gradient(160deg,var(--lav),var(--lav-light)); color:#fff; padding:30px 20px; z-index:1002; }
+    main{ margin-left:280px; padding:40px; }
+    .topbar{ background:var(--white); padding:18px 25px; border-radius:var(--radius); display:flex; justify-content:space-between; align-items:center; box-shadow:var(--shadow); margin-bottom:25px; }
+    .hero{ display:grid; grid-template-columns:1.2fr 1fr; gap:16px; margin-bottom:18px; }
+    .hero-card{ background:linear-gradient(140deg,var(--lav),var(--lav-light)); color:#fff; border-radius:var(--radius); padding:20px; box-shadow:var(--shadow); }
+    .hero-card h2{ font-size:22px; margin-bottom:6px; }
+    .hero-card p{ font-size:13px; opacity:.9; }
+    .filters{
+      background:var(--white); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:14px; margin-bottom:16px; display:flex;
+      gap:12px; align-items:center; flex-wrap:wrap;
+    }
+    .search-box{
+      flex:1; min-width:220px; display:flex; align-items:center; gap:10px;
+      background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:10px 14px;
+    }
+    .search-box i{ color:var(--muted); }
+    .search-box input{ flex:1; border:none; outline:none; background:transparent; font-size:14px; color:var(--text); }
+    .pill{
+      border:1px solid var(--border); background:var(--surface-2); color:var(--text);
+      border-radius:999px; padding:10px 12px; font-size:13px; font-weight:600;
+      display:flex; align-items:center; gap:8px;
+    }
+    select.pill{ cursor:pointer; }
+    .btn{
+      border:none; cursor:pointer; border-radius:12px; padding:10px 14px; font-weight:700;
+      background:var(--lav); color:#fff; box-shadow:0 10px 22px -12px rgba(255,138,26,.7);
+    }
+    .btn:disabled{ opacity:.65; cursor:not-allowed; }
+    .table-wrap{ background:var(--white); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+    table{ width:100%; border-collapse:collapse; }
+    thead{ background:var(--table-head); }
+    th, td{ padding:14px 14px; text-align:left; border-bottom:1px solid var(--border); font-size:14px; vertical-align:top; }
+    th{ font-size:12px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-light); }
+    tbody tr:hover{ background:var(--row-hover); }
+    .badge{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:6px 10px; border-radius:999px; font-size:12px; font-weight:800;
+      border:1px solid var(--border); background:var(--surface-2);
+    }
+    .badge.open{ background:rgba(251,146,60,.16); border-color:rgba(251,146,60,.35); color:var(--text); }
+    .badge.res{ background:rgba(34,197,94,.16); border-color:rgba(34,197,94,.35); color:var(--text); }
+    .msg{
+      max-width:560px;
+      color:var(--text);
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+    .actions{ display:flex; gap:8px; flex-wrap:wrap; }
+    .btn-ghost{
+      background:transparent; color:var(--text); border:1px solid var(--border);
+      box-shadow:none;
+    }
+    .btn-small{ padding:8px 10px; border-radius:10px; font-size:12px; }
+    @media (max-width: 900px){
+      .sidebar{ position:relative; width:100%; height:auto; }
+      main{ margin-left:0; padding:18px; }
+      .hero{ grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar"></div>
+
+  <main>
+    <div class="topbar">
+      <div class="lb-header-left">
+        <h2 style="font-size:18px; font-weight:800;">Support Requests</h2>
+      </div>
+      <div class="lb-header-right" style="display:flex; gap:10px; align-items:center;">
+        <span class="pill" id="countPill"><i class="fas fa-inbox"></i> 0</span>
+      </div>
+    </div>
+
+    <section class="hero">
+      <div class="hero-card">
+        <h2><i class="fas fa-headset"></i> Customer Queries</h2>
+        <p>View customer support requests and mark them as resolved with an admin note.</p>
+      </div>
+      <div class="filters">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input id="searchInput" placeholder="Search name, email, phone, message..." />
+        </div>
+        <select id="statusSelect" class="pill" title="Filter status">
+          <option value="OPEN">Open</option>
+          <option value="RESOLVED">Resolved</option>
+          <option value="ALL">All</option>
+        </select>
+        <button class="btn" id="refreshBtn" type="button"><i class="fas fa-rotate"></i> Refresh</button>
+      </div>
+    </section>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:160px;">Time</th>
+            <th style="width:220px;">Customer</th>
+            <th style="width:120px;">Type</th>
+            <th>Message</th>
+            <th style="width:140px;">Status</th>
+            <th style="width:150px;">Action</th>
+          </tr>
+        </thead>
+        <tbody id="reqBody">
+          <tr><td colspan="6" style="text-align:center;padding:40px">Loading requests...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    const API = `${window.API_BASE_URL}/api/admin`;
+    const state = { all: [], filtered: [] };
+
+    function escapeHtml(s){
+      return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function badge(status){
+      const v = String(status || "").toUpperCase();
+      if (v === "RESOLVED") return `<span class="badge res"><i class="fas fa-circle-check"></i> RESOLVED</span>`;
+      return `<span class="badge open"><i class="fas fa-circle-exclamation"></i> OPEN</span>`;
+    }
+
+    function applyFilter(){
+      const q = (document.getElementById("searchInput").value || "").toLowerCase().trim();
+      if (!q) state.filtered = [...state.all];
+      else {
+        state.filtered = state.all.filter(r => {
+          return (
+            String(r.name || "").toLowerCase().includes(q) ||
+            String(r.email || "").toLowerCase().includes(q) ||
+            String(r.phone || "").toLowerCase().includes(q) ||
+            String(r.issue_type || "").toLowerCase().includes(q) ||
+            String(r.message || "").toLowerCase().includes(q) ||
+            String(r.status || "").toLowerCase().includes(q)
+          );
+        });
+      }
+      render(state.filtered);
+    }
+
+    async function resolve(id){
+      const note = window.prompt("Resolve note (optional):", "");
+      if (note === null) return;
+      const res = await fetch(`${API}/support/requests/${encodeURIComponent(String(id))}/resolve`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ admin_note: note, resolved_by: "ADMIN" })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.success === false) {
+        window.alert(data.message || "Failed to resolve request");
+        return;
+      }
+      await load();
+    }
+
+    function render(list){
+      const tbody = document.getElementById("reqBody");
+      const countPill = document.getElementById("countPill");
+      tbody.innerHTML = "";
+      if (!list.length){
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">No requests found.</td></tr>`;
+        if (countPill) countPill.innerHTML = `<i class="fas fa-inbox"></i> 0`;
+        return;
+      }
+      tbody.innerHTML = list.map(r => {
+        const who = `
+          <div style="font-weight:700;">${escapeHtml(r.name || "Customer")}</div>
+          <div style="font-size:12px;color:var(--text-light)">${escapeHtml(r.email || "-")}</div>
+          <div style="font-size:12px;color:var(--text-light)">${escapeHtml(r.phone || "")}</div>
+        `;
+        const msg = `<div class="msg">${escapeHtml(r.message || "")}</div>` +
+          (r.admin_note ? `<div style="margin-top:8px;font-size:12px;color:var(--text-light)"><b>Note:</b> ${escapeHtml(r.admin_note)}</div>` : "");
+        const actionBtn = String(r.status || "").toUpperCase() === "RESOLVED"
+          ? `<button class="btn btn-ghost btn-small" type="button" disabled><i class="fas fa-check"></i> Done</button>`
+          : `<button class="btn btn-small" type="button" onclick="window.resolveReq(${Number(r.id)})"><i class="fas fa-check"></i> Resolve</button>`;
+        return `
+          <tr>
+            <td>${new Date(r.created_at || Date.now()).toLocaleString("en-IN")}</td>
+            <td>${who}</td>
+            <td>${escapeHtml(r.issue_type || "-")}</td>
+            <td>${msg}</td>
+            <td>${badge(r.status)}</td>
+            <td><div class="actions">${actionBtn}</div></td>
+          </tr>
+        `;
+      }).join("");
+      if (countPill) countPill.innerHTML = `<i class="fas fa-inbox"></i> ${list.length}`;
+    }
+
+    async function load(){
+      const status = String(document.getElementById("statusSelect").value || "OPEN").trim().toUpperCase();
+      const btn = document.getElementById("refreshBtn");
+      if (btn) btn.disabled = true;
+      try{
+        const res = await fetch(`${API}/support/requests?status=${encodeURIComponent(status)}&limit=200`, { cache: "no-store" });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.success === false) throw new Error(data.message || "Failed");
+        state.all = data.requests || [];
+        applyFilter();
+      } catch (e){
+        document.getElementById("reqBody").innerHTML = `<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--muted)">Failed to load requests.</td></tr>`;
+      } finally{
+        if (btn) btn.disabled = false;
+      }
+    }
+
+    window.resolveReq = resolve;
+
+    document.getElementById("searchInput").addEventListener("input", applyFilter);
+    document.getElementById("statusSelect").addEventListener("change", load);
+    document.getElementById("refreshBtn").addEventListener("click", load);
+    load();
+  </script>
+
+  <script src="/welcome/admin/admin-layout.js"></script>
+  <div id="footer"></div>
+  <script src="/js/include.js?v=20260311a"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/theme.js"></script>
+</body>
+</html>

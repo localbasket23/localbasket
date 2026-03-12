@@ -10,10 +10,17 @@
     });
   }
 
+  function joinUrl(base, path) {
+    const b = String(base || "").replace(/\/+$/, "");
+    const p = String(path || "").replace(/^\/+/, "");
+    if (!b) return "/" + p;
+    return b + "/" + p;
+  }
+
   const form = document.getElementById("supportForm");
   const note = document.getElementById("supportNote");
   if (form) {
-    form.addEventListener("submit", function (e) {
+    form.addEventListener("submit", async function (e) {
       e.preventDefault();
       const name = String(document.getElementById("supportName")?.value || "").trim();
       const email = String(document.getElementById("supportEmail")?.value || "").trim().toLowerCase();
@@ -26,22 +33,51 @@
         return;
       }
 
-      const request = {
-        id: "SUP-" + Date.now(),
+      let user = null;
+      try { user = JSON.parse(localStorage.getItem("lbUser") || "null"); } catch {}
+
+      const payload = {
         name,
         email,
         type,
         message,
-        created_at: new Date().toISOString()
+        phone: user?.phone || user?.mobile || "",
+        customer_id: user?.id || user?.customer_id || null
       };
 
-      const existing = JSON.parse(localStorage.getItem("lbSupportRequests") || "[]");
-      existing.unshift(request);
-      localStorage.setItem("lbSupportRequests", JSON.stringify(existing.slice(0, 25)));
+      let ticketId = "SUP-" + Date.now();
+      try {
+        const apiBase = window.API_BASE_URL || window.LB_API_BASE || "";
+        const url = joinUrl(apiBase, "/api/system/support/request");
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data && data.success) {
+          ticketId = String(data.ticket || data.id || ticketId);
+        } else {
+          throw new Error(data?.message || "Request failed");
+        }
+      } catch (err) {
+        const request = {
+          id: ticketId,
+          name,
+          email,
+          type,
+          message,
+          created_at: new Date().toISOString(),
+          offline: true
+        };
+        const existing = JSON.parse(localStorage.getItem("lbSupportRequests") || "[]");
+        existing.unshift(request);
+        localStorage.setItem("lbSupportRequests", JSON.stringify(existing.slice(0, 25)));
+      }
 
       form.reset();
       if (note) {
-        note.textContent = "Request submitted. Ticket ID: " + request.id;
+        note.textContent = "Request submitted. Ticket ID: " + ticketId;
         note.style.background = "#ecfdf5";
         note.style.borderColor = "#86efac";
         note.style.color = "#166534";
