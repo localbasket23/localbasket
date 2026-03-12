@@ -61,6 +61,44 @@
     .badge.active{ background:rgba(34,197,94,.16); border-color:rgba(34,197,94,.35); }
     .badge.blocked{ background:rgba(239,68,68,.14); border-color:rgba(239,68,68,.35); }
     .actions{ display:flex; gap:8px; flex-wrap:wrap; }
+
+    /* Customer details modal (mobile: bottom sheet) */
+    #custModal .modal-content{ max-width:560px; }
+    #custModal .modal-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+    #custModal .modal-title{ font-weight:900; color:var(--lav); display:flex; align-items:center; gap:10px; }
+    #custModal .close-x{
+      border:none; cursor:pointer; border-radius:12px; width:42px; height:42px;
+      display:inline-flex; align-items:center; justify-content:center;
+      background:var(--surface-2); border:1px solid var(--border); color:var(--text);
+    }
+    #custModal .detail-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    #custModal .detail-item{
+      background:var(--surface-2); border:1px solid var(--border); border-radius:12px; padding:10px 12px;
+      min-width:0;
+    }
+    #custModal .detail-item small{
+      display:block; color:var(--muted); font-weight:800; font-size:11px;
+      text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px;
+    }
+    #custModal .detail-item div{ font-weight:800; word-break:break-word; }
+    #custModal .detail-item.full{ grid-column:1 / -1; }
+
+    @media (max-width: 600px){
+      #custModal .modal-content{
+        position:fixed;
+        left:0; right:0; bottom:0;
+        width:100%;
+        max-width:none;
+        border-radius:18px 18px 0 0;
+        padding:16px;
+        max-height:82vh;
+        overflow:auto;
+        transform:translateY(100%);
+        transition:transform .25s ease;
+      }
+      #custModal.show .modal-content{ transform:translateY(0); }
+      #custModal .detail-grid{ grid-template-columns:1fr; }
+    }
     @media (max-width: 980px){
       main{ margin-left:0; padding:18px; }
       .sidebar{ transform:translateX(-110%); transition:0.3s; }
@@ -110,6 +148,18 @@
           <tr><td colspan="6" style="text-align:center;padding:40px">Loading customers...</td></tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="modal" id="custModal" aria-hidden="true" onclick="closeCustModal()">
+      <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="custModalTitle" onclick="event.stopPropagation()">
+        <div class="modal-head">
+          <div class="modal-title" id="custModalTitle"><i class="fas fa-user"></i> Customer Details</div>
+          <button class="close-x" type="button" onclick="closeCustModal()" aria-label="Close">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <div id="custModalBody"></div>
+      </div>
     </div>
   </main>
 
@@ -182,20 +232,62 @@
     }
 
     async function showDetails(c){
-      const lines = [
-        `ID: ${c.id}`,
-        `Name: ${c.name || "-"}`,
-        `Email: ${c.email || "-"}`,
-        `Phone: ${c.phone || "-"}`,
-        `Orders: ${c.orders_count || 0}`,
-        `Total Spent: Rs. ${Number(c.total_spent || 0).toFixed(2)}`,
-        `Status: ${c.is_blocked ? "BLOCKED" : "ACTIVE"}`,
-        c.is_blocked ? `Blocked At: ${c.blocked_at || "-"}` : "",
-        c.is_blocked ? `Reason: ${c.block_reason || "-"}` : "",
-        `Created: ${c.created_at || "-"}`
-      ].filter(Boolean);
-      window.alert(lines.join("\n"));
+      const modal = document.getElementById("custModal");
+      const body = document.getElementById("custModalBody");
+      if (!modal || !body){
+        const lines = [
+          `ID: ${c.id}`,
+          `Name: ${c.name || "-"}`,
+          `Email: ${c.email || "-"}`,
+          `Phone: ${c.phone || "-"}`,
+          `Orders: ${c.orders_count || 0}`,
+          `Total Spent: Rs. ${Number(c.total_spent || 0).toFixed(2)}`,
+          `Status: ${c.is_blocked ? "BLOCKED" : "ACTIVE"}`,
+          c.is_blocked ? `Blocked At: ${c.blocked_at || "-"}` : "",
+          c.is_blocked ? `Reason: ${c.block_reason || "-"}` : "",
+          `Created: ${c.created_at || "-"}`
+        ].filter(Boolean);
+        window.alert(lines.join("\n"));
+        return;
+      }
+
+      function item(label, value, full){
+        const safeLabel = escapeHtml(label);
+        const safeValue = escapeHtml(value == null || value === "" ? "-" : String(value));
+        return `<div class="detail-item ${full ? "full" : ""}"><small>${safeLabel}</small><div>${safeValue}</div></div>`;
+      }
+
+      const statusText = c.is_blocked ? "BLOCKED" : "ACTIVE";
+      const totalSpent = `Rs. ${Number(c.total_spent || 0).toFixed(2)}`;
+
+      body.innerHTML = `
+        <div class="detail-grid">
+          ${item("ID", `#${c.id}`)}
+          ${item("Status", statusText)}
+          ${item("Name", c.name || "Customer", true)}
+          ${item("Email", c.email || "-", true)}
+          ${item("Phone", c.phone || "-", true)}
+          ${item("Orders", Number(c.orders_count || 0))}
+          ${item("Total Spent", totalSpent)}
+          ${c.is_blocked ? item("Blocked At", c.blocked_at || "-") : ""}
+          ${c.is_blocked ? item("Block Reason", c.block_reason || "-", true) : ""}
+          ${item("Created", c.created_at || "-", true)}
+        </div>
+      `;
+
+      modal.classList.add("show");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
     }
+
+    function closeCustModal(){
+      const modal = document.getElementById("custModal");
+      if (!modal) return;
+      modal.classList.remove("show");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "auto";
+    }
+    window.closeCustModal = closeCustModal;
 
     function render(list){
       const tbody = document.getElementById("custBody");
@@ -267,6 +359,9 @@
     document.getElementById("searchInput").addEventListener("input", applyFilter);
     document.getElementById("statusSelect").addEventListener("change", load);
     document.getElementById("refreshBtn").addEventListener("click", load);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeCustModal();
+    });
     load();
   </script>
 
