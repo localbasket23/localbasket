@@ -259,6 +259,15 @@ function lockAllExcept(keys) {
   lockNote.textContent = allow.size ? "Only rejected or required fields are editable." : "";
 }
 
+const digitsOnly = (v) => String(v || "").replace(/\D/g, "");
+const normalizeMobile10 = (v) => {
+  const d = digitsOnly(v);
+  if (!d) return "";
+  if (d.length === 10) return d;
+  if (d.length > 10) return d.slice(-10);
+  return d;
+};
+
 function validate() {
   const accountRegex = /^[0-9]{9,18}$/;
   const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
@@ -269,11 +278,11 @@ function validate() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return "Enter valid email address";
   }
   if (!fields.phone.disabled) {
-    const phone = String(fields.phone.value || "").trim();
+    const phone = normalizeMobile10(fields.phone.value);
     if (!/^[0-9]{10}$/.test(phone)) return "Enter valid 10-digit phone";
   }
   if (!fields.altPhone.disabled) {
-    const alt = String(fields.altPhone.value || "").trim();
+    const alt = normalizeMobile10(fields.altPhone.value);
     if (alt && !/^[0-9]{10}$/.test(alt)) return "Enter valid 10-digit alternate phone";
   }
   if (!fields.storeName.disabled && !fields.storeName.value.trim()) return "Store name required";
@@ -319,8 +328,9 @@ form.addEventListener("submit", async (e) => {
   fd.append("store_name", fields.storeName.value.trim());
   fd.append("owner_name", fields.ownerName.value.trim());
   fd.append("email", fields.email.value.trim().toLowerCase());
-  fd.append("phone", fields.phone.value.trim());
-  if (fields.altPhone.value.trim()) fd.append("alt_phone", fields.altPhone.value.trim());
+  fd.append("phone", normalizeMobile10(fields.phone.value));
+  const alt = normalizeMobile10(fields.altPhone.value);
+  if (alt) fd.append("alt_phone", alt);
   fd.append("category_id", fields.category.value);
   fd.append("address", fields.address.value.trim());
   fd.append("pincode", fields.pincode.value.trim());

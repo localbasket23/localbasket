@@ -499,9 +499,10 @@ document.addEventListener("DOMContentLoaded", () => {
     fd.append("email", inputs.email.value.trim().toLowerCase());
     fd.append("category_id", inputs.category.value);
     fd.append("address", inputs.address.value.trim());
-    fd.append("phone", inputs.phone.value.trim());
+    fd.append("phone", normalizeMobile10(inputs.phone.value));
     fd.append("pincode", inputs.pincode.value.trim());
-    if (inputs.altPhone?.value?.trim()) fd.append("alt_phone", inputs.altPhone.value.trim());
+    const alt = normalizeMobile10(inputs.altPhone?.value);
+    if (alt) fd.append("alt_phone", alt);
     fd.append("password", inputs.password.value);
     if (inputs.bankHolder?.value?.trim()) fd.append("bank_holder", inputs.bankHolder.value.trim());
     if (inputs.bankAccount?.value?.trim()) fd.append("bank_account", inputs.bankAccount.value.trim());
@@ -537,7 +538,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function loginSeller() {
-    const phone = String(inputs.loginPhone?.value || "").trim();
+    const rawIdentifier = String(inputs.loginPhone?.value || "").trim();
+    const phone = rawIdentifier.includes("@") ? rawIdentifier : normalizeMobile10(rawIdentifier);
     const password = String(inputs.loginPassword?.value || "");
 
     const attempts = [
@@ -743,8 +745,10 @@ document.addEventListener("DOMContentLoaded", () => {
     fd.append("store_name", storeName.value.trim());
     fd.append("owner_name", inputs.ownerName.value.trim());
     if (inputs.email?.value?.trim()) fd.append("email", inputs.email.value.trim().toLowerCase());
-    if (inputs.phone?.value?.trim()) fd.append("phone", inputs.phone.value.trim());
-    if (inputs.altPhone?.value?.trim()) fd.append("alt_phone", inputs.altPhone.value.trim());
+    const phone = normalizeMobile10(inputs.phone?.value);
+    if (phone) fd.append("phone", phone);
+    const alt = normalizeMobile10(inputs.altPhone?.value);
+    if (alt) fd.append("alt_phone", alt);
     fd.append("category_id", inputs.category.value);
     fd.append("address", inputs.address.value.trim());
     fd.append("pincode", inputs.pincode.value.trim());
@@ -896,6 +900,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const sanitize = (v) => String(v || "").trim();
+  const digitsOnly = (v) => String(v || "").replace(/\D/g, "");
+  // Accept common formats like "91234 56789", "+91 9123456789", "09123456789"
+  // by reducing to last 10 digits for validation/submission.
+  const normalizeMobile10 = (v) => {
+    const d = digitsOnly(v);
+    if (!d) return "";
+    if (d.length === 10) return d;
+    if (d.length > 10) return d.slice(-10);
+    return d; // <10 digits, let validator catch it
+  };
   const hasTwoWords = (v) => sanitize(v).split(/\s+/).filter(Boolean).length >= 2;
   const isFullAddress = (v) => {
     const text = sanitize(v);
@@ -920,10 +934,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return "Enter valid email address";
       }
       if (editable(inputs.phone)) {
-        if (!/^[0-9]{10}$/.test(sanitize(inputs.phone.value))) return "Enter valid 10-digit mobile number";
+        const phone = normalizeMobile10(inputs.phone.value);
+        if (!/^[0-9]{10}$/.test(phone)) return "Enter valid 10-digit mobile number";
       }
       if (editable(inputs.altPhone)) {
-        const alt = sanitize(inputs.altPhone.value);
+        const alt = normalizeMobile10(inputs.altPhone.value);
         if (alt && !/^[0-9]{10}$/.test(alt)) return "Enter valid 10-digit alternate mobile number";
       }
       if (editable(inputs.password) && sanitize(inputs.password.value).length < 4) return "Password must be at least 4 characters";
@@ -971,7 +986,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function validateForm() {
     if (!isRegister) {
-      const identifier = sanitize(inputs.loginPhone?.value);
+      const raw = sanitize(inputs.loginPhone?.value);
+      const identifier = raw.includes("@") ? raw : normalizeMobile10(raw);
       const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(identifier || "").trim().toLowerCase());
       const isPhone = /^[0-9]{10}$/.test(String(identifier || "").trim());
       if (!isEmail && !isPhone) return "Enter registered phone or email";
