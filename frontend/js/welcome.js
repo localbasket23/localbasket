@@ -926,6 +926,10 @@ async function loadHeroSettings() {
             try {
                 localStorage.setItem("lbHeroSettings", JSON.stringify(data.global));
             } catch {}
+            if (Array.isArray(state.stores) && state.stores.length) {
+                renderTopRatedStores();
+                refreshTopProducts().catch(() => renderTopProducts([]));
+            }
         }
     } catch {
         try {
@@ -2420,6 +2424,16 @@ function getTopPickKey(item) {
     return String(raw).replace(/[^\w-]/g, "_");
 }
 
+function getDiscoveryLimit(key, fallback = 2, min = 1, max = 30) {
+    const raw = heroSettingsCache ? heroSettingsCache[key] : undefined;
+    const num = Number(raw);
+    if (!Number.isFinite(num)) return fallback;
+    const rounded = Math.floor(num);
+    if (rounded < min) return min;
+    if (rounded > max) return max;
+    return rounded;
+}
+
 function isTopPickSaved(key) {
     const needle = String(key || "");
     return Array.isArray(state.topPicks) && state.topPicks.includes(needle);
@@ -2456,6 +2470,7 @@ function renderTopRatedStores(customList = null) {
     const grid = dom.topRatedGrid();
     if (!section || !grid) return;
 
+    const limit = getDiscoveryLimit("top_sellers_limit", 2);
     const list = Array.isArray(customList) ? customList : [...(state.stores || [])]
         .sort((a, b) => {
             const dr = getStoreRatingValue(b) - getStoreRatingValue(a);
@@ -2464,7 +2479,7 @@ function renderTopRatedStores(customList = null) {
             if (dc) return dc;
             return Number(b.is_online || 0) - Number(a.is_online || 0);
         })
-        .slice(0, 6);
+        .slice(0, limit);
 
     state.topRatedStores = list;
     if (!list.length) {
@@ -2572,6 +2587,7 @@ async function refreshTopProducts() {
         return;
     }
 
+    const limit = getDiscoveryLimit("top_products_limit", 2);
     const candidateStores = stores
         .sort((a, b) => {
             const r = getStoreRatingValue(b) - getStoreRatingValue(a);
@@ -2604,7 +2620,7 @@ async function refreshTopProducts() {
     const ranked = flattened
         .filter((p) => Number(p.stock || 0) > 0)
         .sort((a, b) => Number(b.score || 0) - Number(a.score || 0))
-        .slice(0, 10);
+        .slice(0, limit);
 
     state.topProducts = ranked;
     renderTopProducts(ranked);

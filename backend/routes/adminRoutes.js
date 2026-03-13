@@ -26,6 +26,7 @@ const {
   saveGlobalCommission,
   savePayoutSettings,
   saveSystemSettings,
+  saveDiscoverySettings,
   saveHeroSettings,
   saveMobilePromoSettings,
   saveHeroImage,
@@ -135,6 +136,8 @@ router.post("/settings/commission", saveGlobalCommission);
 router.post("/settings/payout", savePayoutSettings);
 // POST /api/admin/settings/system
 router.post("/settings/system", saveSystemSettings);
+// POST /api/admin/settings/discovery
+router.post("/settings/discovery", saveDiscoverySettings);
 // POST /api/admin/settings/hero
 router.post("/settings/hero", saveHeroSettings);
 // POST /api/admin/settings/mobile-promo

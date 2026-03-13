@@ -1233,9 +1233,17 @@
         }
         .top-rated-grid {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 10px;
+            grid-auto-flow: column;
+            grid-auto-columns: minmax(260px, 320px);
+            gap: 12px;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            padding-bottom: 4px;
+            /* Match top-products: show from right-to-left without affecting card text. */
+            direction: rtl;
         }
+        .top-rated-grid::-webkit-scrollbar { height: 8px; }
+        .top-rated-grid::-webkit-scrollbar-thumb { background: #dbe5f7; border-radius: 999px; }
         .top-rated-item {
             border: 1px solid #dbe5f7;
             background: linear-gradient(165deg, #ffffff, #f8fbff);
@@ -1246,6 +1254,8 @@
             gap: 6px;
             cursor: pointer;
             transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            scroll-snap-align: start;
+            direction: ltr;
         }
         .top-rated-item:hover {
             border-color: #93c5fd;
@@ -2250,7 +2260,8 @@
         html.lb-theme-dark .map-canvas {
             filter: brightness(0.94) saturate(1.05);
         }
-        html.lb-theme-dark .top-products-row::-webkit-scrollbar-thumb {
+        html.lb-theme-dark .top-products-row::-webkit-scrollbar-thumb,
+        html.lb-theme-dark .top-rated-grid::-webkit-scrollbar-thumb {
             background: rgba(148, 163, 184, 0.45);
         }
         html.lb-theme-dark .tp-card,
@@ -2794,7 +2805,7 @@
   .top-products-row {
     gap: 10px;
   }
-  .top-rated-grid { grid-template-columns: 1fr; }
+  .top-rated-grid { grid-auto-columns: minmax(260px, 86vw); }
   .top-products-row { grid-auto-columns: minmax(220px, 82vw); }
   .tp-img { height: 98px; }
   .recent-grid { grid-auto-columns: 166px; }
@@ -3600,6 +3611,7 @@
 
   .top-rated-grid {
     gap: 8px !important;
+    grid-auto-columns: minmax(240px, 82vw) !important;
   }
 
   .top-rated-item {

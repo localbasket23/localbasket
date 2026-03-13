@@ -330,6 +330,8 @@ async function ensureSettingsColumns() {
     { name: "payout_cycle", sql: "ALTER TABLE settings ADD COLUMN payout_cycle VARCHAR(20) DEFAULT 'Weekly'" },
     { name: "min_payout", sql: "ALTER TABLE settings ADD COLUMN min_payout DECIMAL(10,2) DEFAULT 0" },
     { name: "system_mode", sql: "ALTER TABLE settings ADD COLUMN system_mode VARCHAR(20) DEFAULT 'active'" },
+    { name: "top_products_limit", sql: "ALTER TABLE settings ADD COLUMN top_products_limit INT DEFAULT 2" },
+    { name: "top_sellers_limit", sql: "ALTER TABLE settings ADD COLUMN top_sellers_limit INT DEFAULT 2" },
     { name: "hero_title", sql: "ALTER TABLE settings ADD COLUMN hero_title VARCHAR(200) DEFAULT 'Freshness from your {{highlight}}, to your doorstep.'" },
     { name: "hero_highlight", sql: "ALTER TABLE settings ADD COLUMN hero_highlight VARCHAR(120) DEFAULT 'Local Market'" },
     { name: "hero_subtitle", sql: "ALTER TABLE settings ADD COLUMN hero_subtitle VARCHAR(260) DEFAULT 'Discover trusted neighborhood stores and connect directly with local sellers in minutes.'" },
@@ -364,6 +366,8 @@ async function ensureSettingsRow() {
       `
       UPDATE settings
       SET
+        top_products_limit = COALESCE(NULLIF(top_products_limit, 0), 2),
+        top_sellers_limit = COALESCE(NULLIF(top_sellers_limit, 0), 2),
         mobile_promo_kicker = COALESCE(NULLIF(TRIM(mobile_promo_kicker), ''), 'Local fresh picks'),
         mobile_promo_title = COALESCE(NULLIF(TRIM(mobile_promo_title), ''), 'Offer Up to'),
         mobile_promo_highlight = COALESCE(NULLIF(TRIM(mobile_promo_highlight), ''), '30% off'),
@@ -1254,6 +1258,39 @@ exports.saveSystemSettings = async (req, res) => {
   } catch (err) {
     console.error("SYSTEM SETTINGS ERROR:", err);
     res.status(500).json({ success: false, message: "Failed to save system settings" });
+  }
+};
+
+/* =====================================================
+   SAVE HOME DISCOVERY LIMITS
+   POST /api/admin/settings/discovery
+===================================================== */
+exports.saveDiscoverySettings = async (req, res) => {
+  try {
+    await ensureSettingsColumns();
+    await ensureSettingsRow();
+    const { top_products_limit, top_sellers_limit } = req.body || {};
+
+    const clampInt = (value, fallback, min = 1, max = 30) => {
+      const num = Number(value);
+      if (!Number.isFinite(num)) return fallback;
+      const rounded = Math.floor(num);
+      if (rounded < min) return min;
+      if (rounded > max) return max;
+      return rounded;
+    };
+
+    const products = clampInt(top_products_limit, 2);
+    const sellers = clampInt(top_sellers_limit, 2);
+
+    await query(
+      "UPDATE settings SET top_products_limit=?, top_sellers_limit=? WHERE id=1",
+      [products, sellers]
+    );
+    res.json({ success: true, top_products_limit: products, top_sellers_limit: sellers });
+  } catch (err) {
+    console.error("DISCOVERY SETTINGS ERROR:", err);
+    res.status(500).json({ success: false, message: "Failed to save discovery settings" });
   }
 };
 

@@ -455,6 +455,16 @@ li{padding:6px 0;font-size:14px}
     </div>
 
     <div class="settings-card">
+      <h2><i class="fas fa-list-ol"></i> Home Discovery</h2>
+      <label>Top Products Count</label>
+      <input type="number" id="topProductsLimitInput" min="1" max="30" value="2">
+      <label>Top Sellers Count</label>
+      <input type="number" id="topSellersLimitInput" min="1" max="30" value="2">
+      <div class="helper-note">Controls how many cards appear in “Top Selling Products” and “Top Rated Stores” on the customer home page.</div>
+      <button class="save-btn" onclick="saveDiscoverySettings()">Save Discovery</button>
+    </div>
+
+    <div class="settings-card">
       <h2><i class="fas fa-images"></i> Home Slider</h2>
 
       <div class="helper-note">Desktop slider images</div>
@@ -568,6 +578,8 @@ const commissionToggle=document.getElementById("commissionToggle");
 const payoutCycle=document.getElementById("payoutCycle");
 const minPayout=document.getElementById("minPayout");
 const sysStatus=document.getElementById("sysStatus");
+const topProductsLimitInput=document.getElementById("topProductsLimitInput");
+const topSellersLimitInput=document.getElementById("topSellersLimitInput");
 const heroImagesFile=document.getElementById("heroImagesFile");
 const heroImagesFileName=document.getElementById("heroImagesFileName");
 const heroImageList=document.getElementById("heroImageList");
@@ -864,6 +876,34 @@ function saveSystemSettings(){
   });
 }
 
+function saveDiscoverySettings(){
+  const clampCount = (value, fallback = 2) => {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return fallback;
+    const rounded = Math.floor(num);
+    if (rounded < 1) return 1;
+    if (rounded > 30) return 30;
+    return rounded;
+  };
+  const top_products_limit = clampCount(topProductsLimitInput?.value, 2);
+  const top_sellers_limit = clampCount(topSellersLimitInput?.value, 2);
+
+  if (topProductsLimitInput) topProductsLimitInput.value = String(top_products_limit);
+  if (topSellersLimitInput) topSellersLimitInput.value = String(top_sellers_limit);
+
+  fetch(`${API_BASE}/settings/discovery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ top_products_limit, top_sellers_limit })
+  }).then(async (res) => {
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.success) throw new Error(data?.message || `Save failed (${res.status})`);
+    alert("Home discovery settings saved");
+  }).catch((err) => {
+    alert(err?.message || "Failed to save home discovery settings");
+  });
+}
+
 function openHeroFilesPicker(){
   if (heroImagesFile) heroImagesFile.click();
 }
@@ -1058,6 +1098,8 @@ async function loadSettings() {
       if (payoutCycle && data.global.payout_cycle) payoutCycle.value = data.global.payout_cycle;
       if (minPayout && data.global.min_payout != null) minPayout.value = data.global.min_payout;
       if (sysStatus && data.global.system_mode) sysStatus.value = data.global.system_mode;
+      if (topProductsLimitInput) topProductsLimitInput.value = String(Number(data.global.top_products_limit || 2));
+      if (topSellersLimitInput) topSellersLimitInput.value = String(Number(data.global.top_sellers_limit || 2));
       if (data.global.hero_images_json) {
         try {
           const list = JSON.parse(data.global.hero_images_json);
