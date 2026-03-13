@@ -2312,34 +2312,36 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const applyBtnPosition = () => {
       try {
-        const vw = Math.max(1, window.innerWidth || 1);
         const vh = Math.max(1, window.innerHeight || 1);
         const rect = btn.getBoundingClientRect();
 
-        if (isMobileDock()) {
-          const saved = Number(localStorage.getItem("lbAiBtnY") || "NaN");
-          const y = Number.isFinite(saved) ? saved : Math.round(vh * 0.55 - rect.height / 2);
-          // Ensure no transform offsets in dock mode; we control `top` directly.
-          btn.style.transform = "none";
-          btn.style.left = "auto";
-          btn.style.right = "";
-          btn.style.bottom = "auto";
-          btn.style.top = `${clamp(y, 10, vh - rect.height - 10)}px`;
-        } else {
-          const raw = localStorage.getItem("lbAiBtnPos");
-          const pos = raw ? safeParse(raw, null) : null;
-          if (pos && Number.isFinite(pos.x) && Number.isFinite(pos.y)) {
-            btn.style.left = `${clamp(pos.x, 10, vw - rect.width - 10)}px`;
-            btn.style.top = `${clamp(pos.y, 10, vh - rect.height - 10)}px`;
-            btn.style.right = "auto";
-            btn.style.bottom = "auto";
-          } else {
-            btn.style.left = "auto";
-            btn.style.top = "auto";
-            btn.style.right = "";
-            btn.style.bottom = "";
+        // Migrate old desktop free-move storage (x/y) to right-docked mode.
+        try {
+          if (!btn.__lbAiBtnPosMigrated) {
+            btn.__lbAiBtnPosMigrated = true;
+            localStorage.removeItem("lbAiBtnPos");
           }
+        } catch {}
+
+        // Desktop: always bottom-right (use CSS). This also clears any inline left/top.
+        if (!isMobileDock()) {
+          btn.style.transform = "";
+          btn.style.left = "auto";
+          btn.style.top = "auto";
+          btn.style.right = "calc(0px + env(safe-area-inset-right, 0px))";
+          btn.style.bottom = "calc(25px + env(safe-area-inset-bottom, 0px))";
+          return;
         }
+
+        const saved = Number(localStorage.getItem("lbAiBtnY") || "NaN");
+        const y = Number.isFinite(saved) ? saved : Math.round(vh * 0.55 - rect.height / 2);
+
+        // Keep button on the right edge; we only control `top` via drag.
+        btn.style.transform = "none";
+        btn.style.left = "auto";
+        btn.style.right = "";
+        btn.style.bottom = "auto";
+        btn.style.top = `${clamp(y, 10, vh - rect.height - 10)}px`;
       } catch {}
     };
 
@@ -2464,7 +2466,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       try { body.scrollTop = body.scrollHeight; } catch {}
     });
 
-    // Drag: desktop free-move, mobile docked vertical move. Click/tap opens panel.
+    // Drag: docked vertical move (keeps button on the right edge). Click/tap opens panel.
     applyBtnPosition();
     // First paint on some mobile browsers can report a "wrong" visual viewport until after load.
     // Sync a few times so the chat shell sizes correctly without requiring reload.
@@ -2488,19 +2490,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       const dy = e.clientY - dragStartY;
       if (!moved && (Math.abs(dx) > 6 || Math.abs(dy) > 6)) moved = true;
 
-      const vw = Math.max(1, window.innerWidth || 1);
+      if (!isMobileDock()) return;
       const vh = Math.max(1, window.innerHeight || 1);
       const rect = btn.getBoundingClientRect();
-
-      if (isMobileDock()) {
-        const y = clamp(startTop + dy, 10, vh - rect.height - 10);
-        btn.style.top = `${y}px`;
-      } else {
-        const x = clamp(startLeft + dx, 10, vw - rect.width - 10);
-        const y = clamp(startTop + dy, 10, vh - rect.height - 10);
-        btn.style.left = `${x}px`;
-        btn.style.top = `${y}px`;
-      }
+      const y = clamp(startTop + dy, 10, vh - rect.height - 10);
+      btn.style.top = `${y}px`;
     };
 
     const endDrag = () => {
@@ -2508,14 +2502,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       dragging = false;
       try { btn.releasePointerCapture?.(btn.__lbPointerId); } catch {}
 
-      // Persist position
+      // Persist position (Y only; keep right-docked)
       try {
         const rect = btn.getBoundingClientRect();
-        if (isMobileDock()) {
-          localStorage.setItem("lbAiBtnY", String(Math.round(rect.top)));
-        } else {
-          localStorage.setItem("lbAiBtnPos", JSON.stringify({ x: Math.round(rect.left), y: Math.round(rect.top) }));
-        }
+        if (isMobileDock()) localStorage.setItem("lbAiBtnY", String(Math.round(rect.top)));
       } catch {}
 
       window.removeEventListener("pointermove", onPointerMove);
@@ -2525,6 +2515,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     btn.addEventListener("pointerdown", (e) => {
       if (panel.classList.contains("lb-ai-open")) return;
+      if (!isMobileDock()) return;
       try { if (e.cancelable) e.preventDefault(); } catch {}
       moved = false;
       dragging = true;
