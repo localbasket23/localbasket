@@ -1870,6 +1870,45 @@ document.addEventListener("DOMContentLoaded", async () => {
       const t = raw.toLowerCase();
       if (!t) return [{ text: "Please type a question." }];
 
+      const callGemini = async () => {
+        try {
+          const { storage, key } = getChatStore();
+          const history = safeParse(storage.getItem(key) || "[]", []);
+          const recent = Array.isArray(history) ? history.slice(-10) : [];
+          const messages = recent
+            .map((m) => ({
+              role: String(m?.role || "").toLowerCase() === "user" ? "user" : "model",
+              text: String(m?.text || "").trim()
+            }))
+            .filter((m) => m.text)
+            .slice(-10);
+
+          const pin = getSavedPincode();
+          const system = [
+            "You are LocalBasket AI.",
+            "Answer concisely in Hinglish.",
+            "If user asks about stores/products/orders, guide them with the app flows.",
+            pin ? `User pincode (if relevant): ${pin}.` : ""
+          ].filter(Boolean).join(" ");
+
+          const data = await fetchJson("/api/ai/gemini", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messages,
+              query: raw,
+              system,
+              model: (window.LB_GEMINI_MODEL || "").trim() || undefined
+            })
+          });
+          const text = String(data?.text || "").trim();
+          if (!text) return null;
+          return [{ text }];
+        } catch {
+          return null;
+        }
+      };
+
       // Awaiting pincode flow
       if (aiState.awaiting === "pincode") {
         const pin = parsePincode(raw);
@@ -2198,6 +2237,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           ]
         }];
       }
+
+      const gemini = await callGemini();
+      if (gemini) return gemini;
 
       return [{
         text: "I can help with:\n- Nearby stores\n- Grocery suggestions\n- Recipe ingredients\n- Deals\n- Orders\n\nTry: \"stores near me\", \"my pincode is 401105\", \"ingredients for chai\", \"track my order\".",

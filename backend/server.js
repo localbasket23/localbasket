@@ -17,6 +17,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes"); 
 const authRoutes = require("./routes/authRoutes"); 
 const systemRoutes = require("./routes/systemRoutes");
+const aiRoutes = require("./routes/aiRoutes");
 const maintenanceGuard = require("./middlewares/maintenanceGuard");
 
 const app = express();
@@ -77,6 +78,7 @@ app.use("/api/customer", customerRoutes);
 app.use("/api/seller", sellerRoutes); 
 app.use("/api/admin", adminRoutes); 
 app.use("/api/system", systemRoutes);
+app.use("/api/ai", aiRoutes);
 app.use("/api/stores", storeRoutes); 
 app.use("/api/products", productRoutes); 
 app.use("/api/location", locationRoutes); 
