@@ -1,23 +1,23 @@
 const Groq = require("groq-sdk");
 
+/* =========================================
+   ENV HELPER
+========================================= */
 const readEnv = (key) => String(process.env[key] || "").trim();
 
 /* =========================================
    INIT GROQ
 ========================================= */
-
 const GROQ_API_KEY = readEnv("GROQ_API_KEY");
 
 const groq = new Groq({
   apiKey: GROQ_API_KEY
 });
 
-
 /* =========================================
    AI CHAT
    POST /api/ai/gemini
 ========================================= */
-
 exports.geminiChat = async (req, res) => {
   try {
 
@@ -82,12 +82,10 @@ exports.geminiChat = async (req, res) => {
   }
 };
 
-
 /* =========================================
    AI HEALTH
    GET /api/ai/health
 ========================================= */
-
 exports.aiHealth = async (req, res) => {
 
   const apiKey = readEnv("GROQ_API_KEY");
@@ -103,18 +101,15 @@ exports.aiHealth = async (req, res) => {
 
 };
 
-
 /* =========================================
    METHOD INFO
    GET /api/ai/gemini
 ========================================= */
-
 exports.geminiInfo = async (req, res) => {
 
   res.status(405).json({
     success: false,
-    message:
-      'Use POST /api/ai/gemini with JSON body {"query":"hello"}'
+    message: 'Use POST /api/ai/gemini with JSON body {"query":"hello"}'
   });
 
 };
