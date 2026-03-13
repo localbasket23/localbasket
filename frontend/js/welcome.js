@@ -2561,7 +2561,6 @@ function startTopProductsAutoScroll() {
 
     const tick = () => {
         if (document.hidden) return;
-        if (row.matches(":hover")) return;
         if (Date.now() - (row.__lbTopProductsLastUserScrollAt || 0) < 1600) return;
 
         const max = row.scrollWidth - row.clientWidth;
