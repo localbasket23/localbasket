@@ -1131,6 +1131,14 @@
             scrollbar-width: none;
             -ms-overflow-style: none;
         }
+        /* Ensure "Recently Viewed Stores" always behaves like a tight horizontal rail
+           even though it also carries the .store-grid class. */
+        .store-grid.recent-grid {
+            grid-template-columns: none;
+            justify-content: start;
+            justify-items: start;
+            align-content: start;
+        }
         .recent-grid::-webkit-scrollbar {
             display: none;
         }
