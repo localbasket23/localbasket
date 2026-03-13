@@ -135,3 +135,14 @@ exports.aiHealth = async (req, res) => {
     }
   });
 };
+
+/* =====================================================
+   GEMINI INFO (METHOD HINT)
+   GET /api/ai/gemini
+===================================================== */
+exports.geminiInfo = async (req, res) => {
+  res.status(405).json({
+    success: false,
+    message: "Use POST /api/ai/gemini with JSON body: {\"query\":\"hello\"}"
+  });
+};
