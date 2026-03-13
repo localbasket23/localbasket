@@ -2516,7 +2516,83 @@ function renderTopProductsLoading() {
     if (!section || !row) return;
     section.style.display = "";
     row.innerHTML = `<div class="empty-state" style="grid-column:1/-1;">Finding top products near you...</div>`;
+    stopTopProductsAutoScroll();
     updateDiscoveryZoneVisibility();
+}
+
+function stopTopProductsAutoScroll() {
+    const row = dom.topProductsRow();
+    if (!row) return;
+    try {
+        if (row.__lbTopProductsAutoTimer) {
+            clearInterval(row.__lbTopProductsAutoTimer);
+            row.__lbTopProductsAutoTimer = null;
+        }
+        if (row.__lbTopProductsAutoStartTimer) {
+            clearTimeout(row.__lbTopProductsAutoStartTimer);
+            row.__lbTopProductsAutoStartTimer = null;
+        }
+    } catch {}
+}
+
+function startTopProductsAutoScroll() {
+    const row = dom.topProductsRow();
+    if (!row) return;
+
+    stopTopProductsAutoScroll();
+
+    const reduceMotion = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    if (reduceMotion) return;
+
+    const cards = row.querySelectorAll(".tp-card");
+    if (!cards || cards.length < 2) return;
+
+    row.__lbTopProductsLastUserScrollAt = 0;
+
+    const getStep = () => {
+        const first = row.querySelector(".tp-card");
+        if (!first) return 240;
+        const rect = first.getBoundingClientRect();
+        const style = getComputedStyle(row);
+        const gapRaw = style.columnGap || style.gap || "12px";
+        const gap = Number.parseFloat(String(gapRaw)) || 12;
+        return Math.max(160, Math.round(rect.width + gap));
+    };
+
+    const tick = () => {
+        if (document.hidden) return;
+        if (row.matches(":hover")) return;
+        if (Date.now() - (row.__lbTopProductsLastUserScrollAt || 0) < 1600) return;
+
+        const max = row.scrollWidth - row.clientWidth;
+        if (max <= 0) return;
+
+        const step = getStep();
+        const next = row.scrollLeft + step;
+
+        if (next >= max - 8) {
+            row.scrollTo({ left: 0, behavior: "smooth" });
+        } else {
+            row.scrollTo({ left: next, behavior: "smooth" });
+        }
+    };
+
+    if (!row.__lbTopProductsAutoBound) {
+        row.__lbTopProductsAutoBound = true;
+        row.addEventListener("scroll", () => {
+            row.__lbTopProductsLastUserScrollAt = Date.now();
+        }, { passive: true });
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) return;
+            // Small nudge to resume after returning to the tab.
+            try { row.__lbTopProductsLastUserScrollAt = Date.now(); } catch {}
+        });
+    }
+
+    row.__lbTopProductsAutoStartTimer = setTimeout(() => {
+        tick();
+        row.__lbTopProductsAutoTimer = setInterval(tick, 2600);
+    }, 1200);
 }
 
 function renderTopProducts(list = null) {
@@ -2527,6 +2603,7 @@ function renderTopProducts(list = null) {
     if (!items.length) {
         section.style.display = "none";
         row.innerHTML = "";
+        stopTopProductsAutoScroll();
         updateDiscoveryZoneVisibility();
         return;
     }
@@ -2552,6 +2629,7 @@ function renderTopProducts(list = null) {
       </div>
     `;
     }).join("");
+    startTopProductsAutoScroll();
     updateDiscoveryZoneVisibility();
 }
 
