@@ -120,3 +120,18 @@ exports.geminiChat = async (req, res) => {
   }
 };
 
+/* =====================================================
+   AI HEALTH
+   GET /api/ai/health
+===================================================== */
+exports.aiHealth = async (req, res) => {
+  const apiKey = readEnv("GEMINI_API_KEY");
+  const model = readEnv("GEMINI_MODEL") || "gemini-2.0-flash";
+  res.json({
+    success: true,
+    gemini: {
+      configured: !!apiKey,
+      model
+    }
+  });
+};

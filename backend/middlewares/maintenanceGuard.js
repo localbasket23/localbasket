@@ -43,6 +43,7 @@ module.exports = async function maintenanceGuard(req, res, next) {
   // Whitelist critical endpoints
   if (
     url.startsWith("/api/health") ||
+    url.startsWith("/api/ai/health") ||
     url.startsWith("/api/system") ||
     url.startsWith("/api/admin")
   ) {
@@ -62,4 +63,3 @@ module.exports = async function maintenanceGuard(req, res, next) {
     message: "Maintenance mode"
   });
 };
-
