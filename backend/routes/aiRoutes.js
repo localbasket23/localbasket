@@ -1,15 +1,32 @@
 const express = require("express");
 const router = express.Router();
 
-const { geminiChat, aiHealth, geminiInfo } = require("../controllers/aiController");
+const {
+  geminiChat,
+  aiHealth,
+  geminiInfo
+} = require("../controllers/aiController");
 
-// GET /api/ai/health
+
+/* =========================================
+   AI HEALTH CHECK
+   GET /api/ai/health
+========================================= */
 router.get("/health", aiHealth);
 
-// GET /api/ai/gemini (method hint)
+
+/* =========================================
+   METHOD INFO
+   GET /api/ai/gemini
+========================================= */
 router.get("/gemini", geminiInfo);
 
-// POST /api/ai/gemini
+
+/* =========================================
+   AI CHAT (Groq backend)
+   POST /api/ai/gemini
+========================================= */
 router.post("/gemini", geminiChat);
+
 
 module.exports = router;
