@@ -509,10 +509,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       #lb-ai-btn{
         position: fixed;
         bottom: calc(25px + env(safe-area-inset-bottom, 0px));
-        right: calc(25px + env(safe-area-inset-right, 0px));
+        right: env(safe-area-inset-right, 0px);
         z-index: 120001;
         border: 0;
-        border-radius: 50px;
+        border-radius: 16px 0 0 16px;
         background: linear-gradient(135deg, #ff8c00, #ffa726);
         color: #ffffff;
         padding: 12px 14px;
@@ -572,7 +572,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         --lb-ai-surface: rgba(255,255,255,0.86);
         position: fixed;
         bottom: calc(86px + env(safe-area-inset-bottom, 0px));
-        right: calc(25px + env(safe-area-inset-right, 0px));
+        right: env(safe-area-inset-right, 0px);
         width: 350px;
         height: 500px;
         z-index: 120000;
@@ -588,7 +588,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
-        transform: translateY(10px) scale(0.985);
+        transform: translateX(22px);
         transition: opacity 180ms ease, transform 220ms cubic-bezier(0.16, 1, 0.3, 1), visibility 180ms ease;
       }
       #lb-ai-panel > *{ min-height: 0; }
@@ -602,7 +602,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         opacity: 1;
         visibility: visible;
         pointer-events: auto;
-        transform: translateY(0px) scale(1);
+        transform: translateX(0px);
       }
       html.lb-theme-dark #lb-ai-panel{
         background: rgba(15,23,42,0.92);
@@ -952,9 +952,9 @@ document.addEventListener("DOMContentLoaded", async () => {
           height: calc(var(--lb-ai-vv-height, 100dvh) - 20px - env(safe-area-inset-top, 0px));
           border-radius: 22px;
           max-height: none;
-          transform: translateY(12px);
+          transform: translateX(18px);
         }
-        #lb-ai-panel.lb-ai-open{ transform: translateY(0px); }
+        #lb-ai-panel.lb-ai-open{ transform: translateX(0px); }
          #lb-ai-head{ padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
          #lb-ai-foot{ padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
          #lb-ai-body{ padding: 12px 10px; gap: 10px; }
