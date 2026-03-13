@@ -53,7 +53,12 @@ exports.geminiChat = async (req, res) => {
   const maxOutputTokens = clampInt(body.maxOutputTokens, 512, 64, 2048);
 
   const messages = normalizeMessages(body.messages || []);
-  const lastUser = String(body.query || body.prompt || "").trim();
+  const lastUser = String(
+    body.query ||
+    body.prompt ||
+    (req.query && (req.query.query || req.query.q)) ||
+    ""
+  ).trim();
   if (!messages.length && !lastUser) {
     return res.status(400).json({ success: false, message: "Missing messages/query" });
   }
@@ -143,6 +148,6 @@ exports.aiHealth = async (req, res) => {
 exports.geminiInfo = async (req, res) => {
   res.status(405).json({
     success: false,
-    message: "Use POST /api/ai/gemini with JSON body: {\"query\":\"hello\"}"
+    message: "Use POST /api/ai/gemini with JSON body {\"query\":\"hello\"} (or POST /api/ai/gemini?query=hello)"
   });
 };
