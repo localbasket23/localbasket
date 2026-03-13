@@ -2,16 +2,31 @@ const Groq = require("groq-sdk");
 
 const readEnv = (key) => String(process.env[key] || "").trim();
 
+/* =========================================
+   INIT GROQ
+========================================= */
+
+const GROQ_API_KEY = readEnv("GROQ_API_KEY");
+
 const groq = new Groq({
-  apiKey: readEnv("GROQ_API_KEY")
+  apiKey: GROQ_API_KEY
 });
+
 
 /* =========================================
    AI CHAT
    POST /api/ai/gemini
 ========================================= */
+
 exports.geminiChat = async (req, res) => {
   try {
+
+    if (!GROQ_API_KEY) {
+      return res.status(500).json({
+        success: false,
+        message: "GROQ_API_KEY not configured on server"
+      });
+    }
 
     const body = req.body || {};
 
@@ -34,29 +49,34 @@ exports.geminiChat = async (req, res) => {
       messages: [
         {
           role: "system",
-          content: "You are LocalBasket AI. Suggest grocery items and answer in Hinglish."
+          content:
+            "You are LocalBasket AI. Help users with grocery suggestions and store queries. Reply briefly in Hinglish."
         },
         {
           role: "user",
-          content: query
+          content: query.slice(0, 4000)
         }
       ],
       temperature: 0.7,
       max_tokens: 512
     });
 
-    const text = completion?.choices?.[0]?.message?.content || "No response";
+    const text =
+      completion?.choices?.[0]?.message?.content?.trim() ||
+      "Sorry, response generate nahi ho paya.";
 
-    res.json({
+    return res.json({
       success: true,
       text
     });
 
   } catch (err) {
 
-    res.status(500).json({
+    console.error("AI ERROR:", err);
+
+    return res.status(500).json({
       success: false,
-      message: err.message
+      message: err?.message || "AI request failed"
     });
 
   }
@@ -64,8 +84,10 @@ exports.geminiChat = async (req, res) => {
 
 
 /* =========================================
-   HEALTH
+   AI HEALTH
+   GET /api/ai/health
 ========================================= */
+
 exports.aiHealth = async (req, res) => {
 
   const apiKey = readEnv("GROQ_API_KEY");
@@ -74,7 +96,8 @@ exports.aiHealth = async (req, res) => {
     success: true,
     ai: {
       provider: "Groq",
-      configured: !!apiKey
+      configured: !!apiKey,
+      model: "llama3-8b-8192"
     }
   });
 
@@ -82,13 +105,16 @@ exports.aiHealth = async (req, res) => {
 
 
 /* =========================================
-   INFO
+   METHOD INFO
+   GET /api/ai/gemini
 ========================================= */
+
 exports.geminiInfo = async (req, res) => {
 
   res.status(405).json({
     success: false,
-    message: "Use POST /api/ai/gemini with JSON body {\"query\":\"hello\"}"
+    message:
+      'Use POST /api/ai/gemini with JSON body {"query":"hello"}'
   });
 
 };
