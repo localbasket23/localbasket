@@ -58,6 +58,23 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
+// Quick sanity endpoint to confirm which deployment/code is live on Vercel.
+// (Useful when domains/projects are miswired or redeploy didn't pick latest commit.)
+app.get("/api/version", (req, res) => {
+  res.json({
+    success: true,
+    node_env: process.env.NODE_ENV || null,
+    vercel: !!process.env.VERCEL,
+    vercel_env: process.env.VERCEL_ENV || null,
+    vercel_url: process.env.VERCEL_URL || null,
+    vercel_region: process.env.VERCEL_REGION || null,
+    git: {
+      commit_sha: process.env.VERCEL_GIT_COMMIT_SHA || null,
+      commit_ref: process.env.VERCEL_GIT_COMMIT_REF || null
+    }
+  });
+});
+
 app.get("/api/health/cloudinary", (req, res) => { 
   res.json({ 
     status: "ok", 
