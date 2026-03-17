@@ -14,6 +14,22 @@ const groq = new Groq({
   apiKey: GROQ_API_KEY
 });
 
+const ALLOWED_MODELS = new Set([
+  // Recommended replacements for deprecated llama3-8b/70b-8192.
+  "llama-3.1-8b-instant",
+  "llama-3.3-70b-versatile",
+  // Optional newer models (keep allowlist explicit to avoid accidental invalid IDs).
+  "meta-llama/llama-4-scout-17b-16e-instruct",
+  "meta-llama/llama-4-maverick-17b-128e-instruct"
+]);
+
+const normalizeRole = (role) => {
+  const r = String(role || "").trim().toLowerCase();
+  if (r === "system") return "system";
+  if (r === "assistant" || r === "model" || r === "bot") return "assistant";
+  return "user";
+};
+
 /* =========================================
    AI CHAT
    POST /api/ai/gemini
@@ -30,6 +46,11 @@ exports.geminiChat = async (req, res) => {
 
     const body = req.body || {};
 
+    const requestedModel = String(body.model || "").trim();
+    const envModel = readEnv("GROQ_MODEL");
+    const modelCandidate = requestedModel || envModel || "llama-3.1-8b-instant";
+    const model = ALLOWED_MODELS.has(modelCandidate) ? modelCandidate : "llama-3.1-8b-instant";
+
     const query = String(
       body.query ||
       body.prompt ||
@@ -44,14 +65,26 @@ exports.geminiChat = async (req, res) => {
       });
     }
 
+    const systemText = String(body.system || "").trim() ||
+      "You are LocalBasket AI. Help users with grocery suggestions and store queries. Reply briefly in Hinglish.";
+
+    const history = Array.isArray(body.messages) ? body.messages : [];
+    const historyMsgs = history
+      .slice(-10)
+      .map((m) => ({
+        role: normalizeRole(m && m.role),
+        content: String(m && (m.content || m.text) || "").trim()
+      }))
+      .filter((m) => m.content);
+
     const completion = await groq.chat.completions.create({
-      model: "llama3-8b-8192",
+      model,
       messages: [
         {
           role: "system",
-          content:
-            "You are LocalBasket AI. Help users with grocery suggestions and store queries. Reply briefly in Hinglish."
+          content: systemText.slice(0, 2000)
         },
+        ...historyMsgs,
         {
           role: "user",
           content: query.slice(0, 4000)
@@ -95,7 +128,7 @@ exports.aiHealth = async (req, res) => {
     ai: {
       provider: "Groq",
       configured: !!apiKey,
-      model: "llama3-8b-8192"
+      model: readEnv("GROQ_MODEL") || "llama-3.1-8b-instant"
     }
   });
 
