@@ -3,6 +3,8 @@ const util = require("util");
 
 const query = util.promisify(db.query).bind(db);
 
+const hasDatabaseConfigured = () => !!String(process.env.DATABASE_URL || "").trim();
+
 const normalizeMode = (value) => {
   const raw = String(value || "").trim().toLowerCase();
   if (raw === "maintenance") return "maintenance";
@@ -43,12 +45,16 @@ module.exports = async function maintenanceGuard(req, res, next) {
   // Whitelist critical endpoints
   if (
     url.startsWith("/api/health") ||
-    url.startsWith("/api/ai/health") ||
+    url.startsWith("/api/ai/") ||
     url.startsWith("/api/system") ||
     url.startsWith("/api/admin")
   ) {
     return next();
   }
+
+  // If DB isn't configured, we can't read the system maintenance flag.
+  // Fail-open to avoid blocking unrelated endpoints (like AI) on serverless deploys.
+  if (!hasDatabaseConfigured()) return next();
 
   const ttlMs = Number(process.env.MAINTENANCE_CACHE_MS || 15000);
   const mode = await getCachedSystemMode(ttlMs);
