@@ -65,6 +65,20 @@ exports.geminiChat = async (req, res) => {
       });
     }
 
+    // Hard guarantee for "who made you" type questions.
+    const qLower = query.toLowerCase();
+    const isCreatorQuestion =
+      /\bwho\s+(made|created|built|developed)\s+you\b/.test(qLower) ||
+      /\bwho\s+is\s+your\s+(creator|developer|maker)\b/.test(qLower) ||
+      /\b(kisne|kaun|kon)\s+(banaya|banayi|create|banaya\s+hai)\b/.test(qLower) ||
+      /\b(creator|developer)\s+(kaun|kon|kisne)\b/.test(qLower);
+    if (isCreatorQuestion) {
+      return res.json({
+        success: true,
+        text: "Mujhe Mr Shubham Vishwakarma ne banaya hai."
+      });
+    }
+
     const systemText = String(body.system || "").trim() ||
       "You are LocalBasket AI. Help users with grocery suggestions and store queries. Reply briefly in Hinglish.";
 
