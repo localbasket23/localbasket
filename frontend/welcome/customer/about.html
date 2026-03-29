@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="/js/config.js"></script>
+  <base href="/" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About Us | LocalBasket</title>
+  <meta
+    name="description"
+    content="Learn about LocalBasket, a local grocery ordering platform that connects customers with nearby verified stores, fast delivery, seller tools, and reliable support."
+  />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="/css/header-footer.css" />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Plus Jakarta Sans", sans-serif; }
+    body { background: #f6f8fc; color: #0f172a; }
+    a { color: inherit; }
+
+    .about-shell {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 26px 18px 44px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .about-hero {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top left, rgba(255, 138, 26, 0.22), transparent 34%),
+        radial-gradient(circle at top right, rgba(59, 130, 246, 0.16), transparent 32%),
+        linear-gradient(145deg, #fff7ed 0%, #ffffff 55%, #eff6ff 100%);
+      border: 1px solid #ffd9b3;
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 26px 44px -34px rgba(15, 23, 42, 0.38);
+    }
+
+    .about-hero::after {
+      content: "";
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      right: -70px;
+      top: -70px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(251, 146, 60, 0.2), rgba(251, 146, 60, 0));
+      pointer-events: none;
+    }
+
+    .hero-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255, 138, 26, 0.12);
+      color: #c2410c;
+      border: 1px solid rgba(251, 146, 60, 0.22);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .about-hero h1 {
+      font-size: clamp(30px, 4vw, 44px);
+      line-height: 1.08;
+      letter-spacing: -1px;
+      max-width: 700px;
+      margin-bottom: 12px;
+    }
+
+    .about-hero p {
+      color: #475569;
+      font-size: 15px;
+      line-height: 1.7;
+      max-width: 760px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .hero-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 16px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 800;
+      transition: 0.2s ease;
+      border: 1px solid #dbeafe;
+      background: #ffffff;
+      color: #0f172a;
+    }
+
+    .hero-btn:hover { transform: translateY(-1px); }
+    .hero-btn.primary {
+      background: linear-gradient(135deg, #ff8a1a, #fb923c);
+      border-color: #fb923c;
+      color: #ffffff;
+      box-shadow: 0 18px 26px -20px rgba(249, 115, 22, 0.75);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .metric-card,
+    .about-card,
+    .feature-card,
+    .timeline-card,
+    .cta-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      box-shadow: 0 18px 32px -28px rgba(15, 23, 42, 0.28);
+    }
+
+    .metric-card {
+      padding: 16px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #64748b;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: 800;
+      color: #ff8a1a;
+    }
+
+    .metric-note {
+      color: #475569;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .about-grid,
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .about-card,
+    .feature-card,
+    .cta-card {
+      padding: 18px;
+    }
+
+    .section-label {
+      display: inline-block;
+      margin-bottom: 10px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.45px;
+      color: #2563eb;
+    }
+
+    .about-card h2,
+    .feature-card h3,
+    .timeline-card h2,
+    .cta-card h2 {
+      font-size: 22px;
+      margin-bottom: 10px;
+      letter-spacing: -0.4px;
+    }
+
+    .about-card p,
+    .feature-card p,
+    .timeline-copy,
+    .cta-card p {
+      color: #475569;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .points-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .point-item {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 12px;
+      border-radius: 14px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .point-icon {
+      width: 30px;
+      height: 30px;
+      flex: 0 0 30px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: rgba(255, 138, 26, 0.12);
+      color: #c2410c;
+      font-weight: 800;
+    }
+
+    .feature-card h3 { font-size: 18px; }
+
+    .timeline-card {
+      padding: 20px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .timeline-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .timeline-step {
+      padding: 14px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #fffaf5 0%, #ffffff 100%);
+      border: 1px solid #fde7cf;
+    }
+
+    .timeline-step span {
+      display: inline-flex;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      align-items: center;
+      justify-content: center;
+      background: #ff8a1a;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .timeline-step h3 {
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+
+    .timeline-step p {
+      color: #475569;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .cta-card {
+      background: linear-gradient(145deg, #0f172a 0%, #172554 100%);
+      border-color: rgba(148, 163, 184, 0.2);
+      color: #f8fafc;
+    }
+
+    .cta-card .section-label { color: #93c5fd; }
+    .cta-card h2,
+    .cta-card p { color: inherit; }
+    .cta-card p { opacity: 0.82; max-width: 720px; }
+
+    .cta-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .cta-actions a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 14px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 800;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      color: #f8fafc;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .cta-actions a.primary {
+      background: linear-gradient(135deg, #ff8a1a, #fb923c);
+      border-color: transparent;
+    }
+
+    html.lb-theme-dark body { background: #0b1220; color: #e2e8f0; }
+
+    html.lb-theme-dark .about-hero {
+      background:
+        radial-gradient(circle at top left, rgba(251, 146, 60, 0.18), transparent 34%),
+        radial-gradient(circle at top right, rgba(59, 130, 246, 0.16), transparent 32%),
+        linear-gradient(145deg, rgba(15, 23, 42, 0.96) 0%, rgba(17, 24, 39, 0.94) 55%, rgba(15, 23, 42, 0.98) 100%);
+      border-color: rgba(148, 163, 184, 0.18);
+      box-shadow: 0 28px 44px -34px rgba(0, 0, 0, 0.6);
+    }
+
+    html.lb-theme-dark .about-hero p,
+    html.lb-theme-dark .metric-note,
+    html.lb-theme-dark .about-card p,
+    html.lb-theme-dark .feature-card p,
+    html.lb-theme-dark .timeline-copy,
+    html.lb-theme-dark .timeline-step p {
+      color: rgba(226, 232, 240, 0.74);
+    }
+
+    html.lb-theme-dark .metric-card,
+    html.lb-theme-dark .about-card,
+    html.lb-theme-dark .feature-card,
+    html.lb-theme-dark .timeline-card {
+      background: rgba(17, 24, 39, 0.92);
+      border-color: rgba(148, 163, 184, 0.16);
+      box-shadow: 0 20px 32px -28px rgba(0, 0, 0, 0.58);
+    }
+
+    html.lb-theme-dark .point-item,
+    html.lb-theme-dark .timeline-step {
+      background: rgba(2, 6, 23, 0.28);
+      border-color: rgba(148, 163, 184, 0.16);
+      color: #cbd5e1;
+    }
+
+    html.lb-theme-dark .hero-btn {
+      background: rgba(15, 23, 42, 0.5);
+      border-color: rgba(148, 163, 184, 0.18);
+      color: #e2e8f0;
+    }
+
+    html.lb-theme-dark .hero-btn.primary {
+      background: linear-gradient(135deg, #ff8a1a, #fb923c);
+      color: #ffffff;
+      border-color: transparent;
+    }
+
+    @media (max-width: 980px) {
+      .metrics-grid,
+      .timeline-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .about-grid,
+      .feature-grid,
+      .metrics-grid,
+      .timeline-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .about-hero,
+      .metric-card,
+      .about-card,
+      .feature-card,
+      .timeline-card,
+      .cta-card {
+        border-radius: 18px;
+      }
+
+      .about-hero {
+        padding: 22px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="header"></div>
+  <div id="siteHeader"></div>
+
+  <main class="about-shell">
+    <section class="about-hero">
+      <div class="hero-kicker">About LocalBasket</div>
+      <h1>Your nearby grocery network, brought online with speed, trust, and local convenience.</h1>
+      <p>
+        LocalBasket is built to connect customers with nearby grocery stores and daily-essentials sellers in one simple platform.
+        Our goal is to make local shopping easier for customers while helping neighborhood stores grow with digital tools,
+        order management, and faster delivery support.
+      </p>
+      <div class="hero-actions">
+        <a class="hero-btn primary" href="/welcome/customer/index.html">Start Shopping</a>
+        <a class="hero-btn" href="/welcome/seller/seller-auth/seller-auth.html">Become a Seller</a>
+        <a class="hero-btn" href="/welcome/customer/support/support.html">Visit Support</a>
+      </div>
+    </section>
+
+    <section class="metrics-grid" aria-label="LocalBasket highlights">
+      <article class="metric-card">
+        <div class="metric-label">Customer Experience</div>
+        <div class="metric-value">Nearby Discovery</div>
+        <p class="metric-note">Find stores by pincode, area, category, and local availability.</p>
+      </article>
+      <article class="metric-card">
+        <div class="metric-label">Trusted Sellers</div>
+        <div class="metric-value">Verified Stores</div>
+        <p class="metric-note">Local sellers can be onboarded, approved, and managed through one system.</p>
+      </article>
+      <article class="metric-card">
+        <div class="metric-label">Order Flow</div>
+        <div class="metric-value">Live Tracking</div>
+        <p class="metric-note">Customers can place orders, track status, and access order history in one place.</p>
+      </article>
+      <article class="metric-card">
+        <div class="metric-label">Reliability</div>
+        <div class="metric-value">Support + OTP</div>
+        <p class="metric-note">Support tools, payment flow, and delivery OTP help keep orders more secure.</p>
+      </article>
+    </section>
+
+    <section class="about-grid">
+      <article class="about-card">
+        <div class="section-label">Our Mission</div>
+        <h2>Make local shopping digital without losing the neighborhood feel.</h2>
+        <p>
+          Many customers want the speed of online ordering, but still prefer trusted stores near their home.
+          LocalBasket bridges that gap by giving buyers a smooth online experience while keeping the seller relationship local,
+          accessible, and community-driven.
+        </p>
+        <div class="points-list">
+          <div class="point-item">
+            <div class="point-icon">1</div>
+            <div>Easy product browsing, store discovery, and category-based shopping for customers.</div>
+          </div>
+          <div class="point-item">
+            <div class="point-icon">2</div>
+            <div>One seller panel for onboarding, product listing, order handling, and store management.</div>
+          </div>
+          <div class="point-item">
+            <div class="point-icon">3</div>
+            <div>Admin controls for seller approval, settings, reports, and platform oversight.</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="about-card">
+        <div class="section-label">What Makes Us Useful</div>
+        <h2>Important features that matter for both customers and sellers.</h2>
+        <div class="points-list">
+          <div class="point-item">
+            <div class="point-icon">A</div>
+            <div><strong>Location-based shopping:</strong> customers can search using pincode or area to find stores nearby.</div>
+          </div>
+          <div class="point-item">
+            <div class="point-icon">B</div>
+            <div><strong>Flexible checkout:</strong> supports online payments and COD based ordering flow.</div>
+          </div>
+          <div class="point-item">
+            <div class="point-icon">C</div>
+            <div><strong>Order confidence:</strong> order status updates, invoice access, and delivery OTP verification add trust.</div>
+          </div>
+          <div class="point-item">
+            <div class="point-icon">D</div>
+            <div><strong>Fast support:</strong> help center, FAQs, contact options, and request forms are available inside the platform.</div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="feature-grid">
+      <article class="feature-card">
+        <div class="section-label">For Customers</div>
+        <h3>Simple grocery ordering from nearby stores</h3>
+        <p>
+          Customers can explore trusted stores, add items to basket, complete checkout, and track their orders.
+          The platform is designed to make daily grocery shopping fast, local, and convenient on both desktop and mobile.
+        </p>
+      </article>
+
+      <article class="feature-card">
+        <div class="section-label">For Sellers</div>
+        <h3>Digital growth tools for local businesses</h3>
+        <p>
+          LocalBasket helps sellers manage products, receive orders, update order status, and reach more nearby customers
+          through one centralized panel built for day-to-day store operations.
+        </p>
+      </article>
+
+      <article class="feature-card">
+        <div class="section-label">For Operations</div>
+        <h3>Admin visibility and quality control</h3>
+        <p>
+          The admin side supports seller verification, reporting, settings management, and platform-level monitoring,
+          helping maintain trust and smoother operations across the ecosystem.
+        </p>
+      </article>
+
+      <article class="feature-card">
+        <div class="section-label">For Trust</div>
+        <h3>Built around transparency and practical reliability</h3>
+        <p>
+          Verified store workflows, order records, payment tracking, and support channels all work together
+          to create a more dependable local-commerce experience.
+        </p>
+      </article>
+    </section>
+
+    <section class="timeline-card">
+      <div class="section-label">How It Works</div>
+      <h2>LocalBasket journey in three simple steps</h2>
+      <p class="timeline-copy">
+        The platform is designed so customers, sellers, and admins each have a clear role in making local orders smoother and more reliable.
+      </p>
+      <div class="timeline-grid">
+        <article class="timeline-step">
+          <span>01</span>
+          <h3>Discover</h3>
+          <p>Customers search by location, browse nearby categories, and choose the best local store for their needs.</p>
+        </article>
+        <article class="timeline-step">
+          <span>02</span>
+          <h3>Order</h3>
+          <p>Items go to cart, checkout is completed, and order updates start flowing through the customer and seller panels.</p>
+        </article>
+        <article class="timeline-step">
+          <span>03</span>
+          <h3>Deliver</h3>
+          <p>Store-side order actions, support tools, and delivery OTP verification help complete the order with more confidence.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="cta-card">
+      <div class="section-label">Grow With LocalBasket</div>
+      <h2>Built for local communities, nearby stores, and everyday grocery convenience.</h2>
+      <p>
+        Whether you want to shop faster, sell smarter, or manage local commerce more efficiently, LocalBasket is designed
+        to bring all key parts of the grocery ordering experience into one connected platform.
+      </p>
+      <div class="cta-actions">
+        <a class="primary" href="/welcome/customer/category.html">Explore Categories</a>
+        <a href="/welcome/customer/support/support.html#faqList">Read FAQs</a>
+        <a href="/welcome/customer/support/support.html#supportForm">Contact Support</a>
+      </div>
+    </section>
+  </main>
+
+  <div id="siteFooter"></div>
+
+  <div id="footer"></div>
+  <script src="/js/include.js?v=20260313a"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/cart.js"></script>
+  <script src="/js/theme.js"></script>
+</body>
+</html>
