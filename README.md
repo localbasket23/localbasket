@@ -1,13 +1,21 @@
-# LocalBasket (Frontend + Backend)
+# LocalBasket 🛒
 
-## Structure
-- `frontend/`: static HTML/CSS/JS UI (customer/seller/admin pages)
-- `backend/`: Express API + MySQL + integrations (Razorpay, Email OTP, uploads)
-- `api/index.js`: Vercel entry that exports the Express app
-- `docs/college-documentation.md`: college-ready documentation + important code list
+## 📌 About
+LocalBasket ek e-commerce web app hai jahan users nearby stores se products order kar sakte hain.
 
-## Quick start
-1. `npm install`
-2. Copy `backend/.env.example` -> `backend/.env` and fill values
-3. `npm start`
+## 🚀 Features
+- Add to cart
+- Order system
+- Store management
+- Single-store cart logic
 
+## 🛠 Tech Stack
+- HTML, CSS, JavaScript
+- Node.js, Express
+- MySQL
+
+## 🌐 Live Demo
+https://localbasket.co.in
+
+## 👨‍💻 Author
+Shubham Vishwakarma
