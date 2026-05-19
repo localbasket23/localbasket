@@ -9,6 +9,7 @@
     const clean = `/${String(target || "").replace(/^\/+/, "")}`;
     return `${LB_ROOT_BASE}${clean}`;
   };
+  window.LB_WITH_ROOT_BASE = withRootBase;
   const welcomePath = (suffix) => withRootBase(`/welcome/${String(suffix || "").replace(/^\/+/, "")}`);
 
   const ensureLaunchOverlay = () => {
@@ -2816,7 +2817,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (document.querySelector('link[data-lb-shared-style="header-footer"]')) return;
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = withRootBase("/css/header-footer.css");
+    const resolveRoot = window.LB_WITH_ROOT_BASE || ((target) => {
+      const rootBase = String(window.LB_BASE_PATH || "").trim().replace(/\/+$/, "");
+      const clean = `/${String(target || "").replace(/^\/+/, "")}`;
+      return `${rootBase}${clean}`;
+    });
+    link.href = resolveRoot("/css/header-footer.css");
     link.setAttribute("data-lb-shared-style", "header-footer");
     document.head.appendChild(link);
   }

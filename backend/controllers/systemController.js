@@ -146,6 +146,7 @@ exports.trackSiteVisit = async (req, res) => {
     return res.json({ success: true });
   } catch (err) {
     console.error("VISIT TRACK ERROR:", err?.sqlMessage || err?.message || err);
-    return res.status(500).json({ success: false });
+    // Analytics should never break the storefront UX.
+    return res.json({ success: false, skipped: true });
   }
 };

@@ -61,6 +61,10 @@ router.post("/auth/otp/request", requestAdminOtp);
 // POST /api/admin/auth/otp/verify
 router.post("/auth/otp/verify", verifyAdminOtp);
 
+// Public read-only config used by customer/seller-facing pages.
+router.get("/settings", getAllSettings);
+router.get("/categories", getCategories);
+
 router.use(requireAdminAuth);
 
 /* ================= DASHBOARD ================= */
@@ -164,13 +168,7 @@ router.post("/settings/hero-images/remove", removeHeroImageItem);
 // POST /api/admin/settings/hero-images/clear
 router.post("/settings/hero-images/clear", clearHeroImages);
 
-// GET /api/admin/settings
-router.get("/settings", getAllSettings);
-
 /* ================= CATEGORIES ================= */
-
-// GET /api/admin/categories
-router.get("/categories", getCategories);
 
 // POST /api/admin/categories
 router.post("/categories", addCategory);
