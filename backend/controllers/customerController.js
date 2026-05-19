@@ -4,6 +4,7 @@ const util = require("util");
 const https = require("https");
 const nodemailer = require("nodemailer");
 const { buildAuthSession, readBearerToken, verifyAuthToken, ROLE_CUSTOMER } = require("../utils/authTokens");
+const { sendWelcomeEmail } = require("../utils/customerNotificationEmails");
 
 const query = util.promisify(db.query).bind(db);
 const OTP_EXPIRY_MS = 5 * 60 * 1000;
@@ -274,6 +275,15 @@ exports.register = async (req, res) => {
     };
 
     const session = signToken(user);
+
+    try {
+      const mail = await sendWelcomeEmail({ name, email, phone });
+      if (!mail?.success) {
+        console.error("WELCOME EMAIL FAILED:", mail);
+      }
+    } catch (mailErr) {
+      console.error("WELCOME EMAIL ERROR:", mailErr?.message || mailErr);
+    }
 
     res.status(201).json({
       success: true,

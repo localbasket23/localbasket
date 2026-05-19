@@ -1,6 +1,7 @@
 const nodemailer = require("nodemailer");
 
 const isTruthyEnv = (value) => ["1", "true", "yes", "y", "on"].includes(String(value || "").trim().toLowerCase());
+const isEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(value || "").trim().toLowerCase());
 
 const buildTransport = () => {
   const host = String(process.env.EMAIL_HOST || "").trim();
@@ -69,6 +70,46 @@ const normalizeSmtpError = (err) => {
   };
 };
 
+exports.sendEmailMessage = async ({ to, subject, text, html } = {}) => {
+  const email = String(to || "").trim().toLowerCase();
+  const subj = String(subject || "LocalBasket Notification").trim();
+  const textBody = String(text || "").trim();
+  const htmlBody = String(html || "").trim();
+
+  if (!isEmail(email)) {
+    return { success: false, message: "Invalid email recipient" };
+  }
+  if (!textBody && !htmlBody) {
+    return { success: false, message: "Email body is required" };
+  }
+
+  const t = buildTransport();
+  if (!t.ok) return t.error;
+
+  try {
+    if (isTruthyEnv(process.env.EMAIL_VERIFY_TRANSPORT)) {
+      try {
+        await t.transporter.verify();
+      } catch (err) {
+        console.warn("EMAIL SMTP VERIFY FAILED:", err?.message || err);
+      }
+    }
+
+    await t.transporter.sendMail({
+      from: t.meta.from,
+      to: email,
+      ...(t.meta.replyTo ? { replyTo: t.meta.replyTo } : {}),
+      subject: subj,
+      ...(textBody ? { text: textBody } : {}),
+      ...(htmlBody ? { html: htmlBody } : {})
+    });
+
+    return { success: true };
+  } catch (err) {
+    return normalizeSmtpError(err);
+  }
+};
+
 exports.sendOtpEmail = async ({ to, otp, subject, text } = {}) => {
   const email = String(to || "").trim().toLowerCase();
   const otpValue = String(otp || "").trim();
@@ -82,30 +123,9 @@ exports.sendOtpEmail = async ({ to, otp, subject, text } = {}) => {
     return { success: false, message: "Invalid OTP for email" };
   }
 
-  const t = buildTransport();
-  if (!t.ok) return t.error;
-
-  try {
-    if (isTruthyEnv(process.env.EMAIL_VERIFY_TRANSPORT)) {
-      try {
-        await t.transporter.verify();
-      } catch (err) {
-        // verify() can fail even when sendMail works; don't hard-fail.
-        console.warn("EMAIL SMTP VERIFY FAILED:", err?.message || err);
-      }
-    }
-
-    await t.transporter.sendMail({
-      from: t.meta.from,
-      to: email,
-      ...(t.meta.replyTo ? { replyTo: t.meta.replyTo } : {}),
-      subject: subj,
-      text: body
-    });
-
-    return { success: true };
-  } catch (err) {
-    return normalizeSmtpError(err);
-  }
+  return exports.sendEmailMessage({
+    to: email,
+    subject: subj,
+    text: body
+  });
 };
-

@@ -1,6 +1,10 @@
 const db = require("../db/connection");
 const fs = require("fs");
 const path = require("path");
+const {
+  sendOrderPlacedEmail,
+  sendOrderDeliveredEmail
+} = require("../utils/customerNotificationEmails");
 let QRCode;
 try {
   QRCode = require("qrcode");
@@ -54,6 +58,95 @@ const normalizeOtp4 = (value) => {
   return digits;
 };
 const isTruthy = (value) => ["1", "true", "yes", "y", "on"].includes(String(value || "").trim().toLowerCase());
+const notifyOrderPlaced = async ({
+  orderId,
+  customerId,
+  customerName,
+  address,
+  pincode,
+  cart,
+  totalAmount,
+  paymentMethod,
+  paymentStatus,
+  fallbackPhone,
+  sellerId
+}) => {
+  try {
+    const [rows] = await db.promise().query(
+      `
+      SELECT c.name AS customer_name, c.email AS customer_email, c.phone AS customer_phone, s.store_name
+      FROM customers c
+      LEFT JOIN sellers s ON s.id = ?
+      WHERE c.id = ?
+      LIMIT 1
+      `,
+      [sellerId, customerId]
+    );
+    const row = rows && rows[0];
+    if (!row || !row.customer_email) return;
+
+    const mail = await sendOrderPlacedEmail({
+      customerName: row.customer_name || customerName,
+      customerEmail: row.customer_email,
+      orderId,
+      storeName: row.store_name || "",
+      totalAmount,
+      paymentMethod,
+      paymentStatus,
+      address,
+      pincode,
+      cart,
+      phone: row.customer_phone || fallbackPhone
+    });
+
+    if (!mail?.success) {
+      console.error("ORDER PLACED EMAIL FAILED:", mail);
+    }
+  } catch (err) {
+    console.error("ORDER PLACED EMAIL ERROR:", err?.sqlMessage || err?.message || err);
+  }
+};
+
+const notifyOrderDelivered = async ({ orderId, paymentStatusOverride }) => {
+  try {
+    const [rows] = await db.promise().query(
+      `
+      SELECT
+        o.id,
+        o.total_amount,
+        o.payment_method,
+        o.payment_status,
+        c.name AS customer_name,
+        c.email AS customer_email,
+        s.store_name
+      FROM orders o
+      LEFT JOIN customers c ON c.id = o.customer_id
+      LEFT JOIN sellers s ON s.id = o.seller_id
+      WHERE o.id = ?
+      LIMIT 1
+      `,
+      [orderId]
+    );
+    const row = rows && rows[0];
+    if (!row || !row.customer_email) return;
+
+    const mail = await sendOrderDeliveredEmail({
+      customerName: row.customer_name,
+      customerEmail: row.customer_email,
+      orderId: row.id,
+      storeName: row.store_name,
+      totalAmount: row.total_amount,
+      paymentMethod: row.payment_method,
+      paymentStatus: paymentStatusOverride || row.payment_status
+    });
+
+    if (!mail?.success) {
+      console.error("ORDER DELIVERED EMAIL FAILED:", mail);
+    }
+  } catch (err) {
+    console.error("ORDER DELIVERED EMAIL ERROR:", err?.sqlMessage || err?.message || err);
+  }
+};
 
 let deliveryOtpSchemaReady = false;
 let deliveryOtpSchemaEnsuring = null;
@@ -177,6 +270,20 @@ exports.createOrder = (req, res) => {
       success: true,
       order_id: result.insertId,
       delivery_otp: deliveryOtp
+    });
+
+    void notifyOrderPlaced({
+      orderId: result.insertId,
+      customerId: customer_id,
+      customerName,
+      address,
+      pincode,
+      cart,
+      totalAmount: total_amount,
+      paymentMethod: payment_method || "COD",
+      paymentStatus: payment_status || "PENDING",
+      fallbackPhone: phone,
+      sellerId: seller_id
     });
   });
   };
@@ -553,6 +660,7 @@ exports.updateOrderStatus = (req, res) => {
           if (!result || result.affectedRows === 0) {
             return res.status(404).json({ success: false, message: "Order not found" });
           }
+          void notifyOrderDelivered({ orderId: order_id, paymentStatusOverride: nextPaymentStatus });
           return res.json({ success: true, payment_status: nextPaymentStatus });
         });
       }
