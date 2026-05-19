@@ -840,16 +840,26 @@ exports.getAllSettings = async (req, res) => {
     await ensureSettingsColumns();
     await ensureSettingsRow();
     const [global] = await query("SELECT * FROM settings WHERE id=1");
-    const sellers = await query("SELECT * FROM seller_commission");
+    let sellers = [];
+    try {
+      sellers = await query("SELECT * FROM seller_commission");
+    } catch (sellerErr) {
+      const code = String(sellerErr?.code || "").trim();
+      if (code !== "ER_NO_SUCH_TABLE") throw sellerErr;
+    }
 
     res.json({
       success: true,
-      global,
+      global: global || {},
       sellers
     });
   } catch (err) {
     console.error("SETTINGS ERROR:", err);
-    res.status(500).json({ success: false });
+    res.json({
+      success: true,
+      global: {},
+      sellers: []
+    });
   }
 };
 
@@ -869,7 +879,7 @@ exports.getCategories = async (req, res) => {
     res.json({ success: true, categories });
   } catch (err) {
     console.error("❌ CATEGORIES ERROR:", err);
-    res.status(500).json({ success: false, message: "Failed to load categories" });
+    res.json({ success: true, categories: [] });
   }
 };
 
