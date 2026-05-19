@@ -1606,9 +1606,9 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
   .mobile-loc-btn .pill { font-size: 10px; padding: 3px 8px; }
 
   .lb-footer-pro {
-    margin-top: 42px;
-    padding: 32px 14px calc(118px + env(safe-area-inset-bottom));
-    border-radius: 28px 28px 0 0;
+    margin-top: 28px;
+    padding: 22px 12px calc(102px + env(safe-area-inset-bottom));
+    border-radius: 22px 22px 0 0;
     background:
       radial-gradient(120% 70% at 50% 0%, rgba(255, 138, 26, 0.22), rgba(255, 138, 26, 0) 60%),
       #0f172a;
@@ -1616,14 +1616,14 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
   .footer-glass {
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 20px;
-    padding: 14px;
+    border-radius: 16px;
+    padding: 10px;
     overflow: hidden;
   }
   .footer-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 10px;
+    gap: 8px;
     text-align: left;
     margin-bottom: 16px;
     width: 100%;
@@ -1634,16 +1634,16 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
   .footer-news {
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 16px;
-    padding: 14px;
+    border-radius: 14px;
+    padding: 10px;
   }
   .footer-brand-row { justify-content: flex-start; }
-  .footer-brand h2 { font-size: 20px; }
+  .footer-brand h2 { font-size: 17px; }
   .footer-brand p {
     margin: 0;
     max-width: none;
-    font-size: 12px;
-    line-height: 1.5;
+    font-size: 11px;
+    line-height: 1.4;
   }
   .footer-grid > .footer-col:first-of-type .footer-links {
     display: grid;
@@ -1653,23 +1653,23 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
   .footer-badges { justify-content: flex-start; }
   .footer-social { justify-content: flex-start; }
   .footer-social a {
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
-    background: rgba(255,255,255,0.12);
-    font-size: 13px;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.1);
+    font-size: 11px;
   }
   .footer-col h4, .footer-news h4 {
-    font-size: 15px;
-    margin-bottom: 12px;
+    font-size: 13px;
+    margin-bottom: 8px;
   }
   .footer-col a {
     margin-bottom: 0;
-    padding: 9px 10px;
-    border-radius: 10px;
+    padding: 7px 8px;
+    border-radius: 9px;
     border: 1px solid rgba(255,255,255,0.08);
     background: rgba(255,255,255,0.03);
-    font-size: 13px;
+    font-size: 12px;
     text-align: center;
     transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.12s ease;
   }
@@ -1712,9 +1712,9 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
     border-color: rgba(255, 138, 26, 0.45);
   }
   .footer-bottom-pro {
-    margin-top: 8px;
-    padding-top: 14px;
-    padding-bottom: 8px;
+    margin-top: 4px;
+    padding-top: 10px;
+    padding-bottom: 4px;
   }
   .footer-bottom-row {
     justify-content: center;
@@ -1748,15 +1748,15 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
     display: grid;
   }
   .lb-footer-pro .footer-glass {
-    padding: 14px 14px 18px;
-    border-radius: 22px;
+    padding: 10px 10px 12px;
+    border-radius: 16px;
   }
   .lb-footer-pro .footer-bottom-pro {
     margin-top: 0;
     padding-top: 0;
     border-top: none;
     display: grid;
-    gap: 12px;
+    gap: 8px;
   }
   .lb-footer-pro .footer-bottom-row {
     justify-content: center;
@@ -1778,9 +1778,9 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
     gap: 0;
   }
   .lb-footer-pro .footer-bottom-actions a {
-    min-height: 54px;
-    border-radius: 18px;
-    font-size: 15px;
+    min-height: 44px;
+    border-radius: 14px;
+    font-size: 13px;
     font-weight: 800;
     background: linear-gradient(135deg, #ff8a1a, #fb923c);
     color: #fff;
@@ -1795,6 +1795,11 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
   }
   .footer-support,
   .footer-news {
+    display: none;
+  }
+  .footer-badges,
+  .footer-help-line,
+  .footer-help-actions {
     display: none;
   }
 }
@@ -1820,17 +1825,18 @@ html.lb-theme-dark .lb-nav-theme .lb-nav-text {
     overflow: hidden;
     white-space: nowrap;
   }
-  .lb-footer-pro { padding: 28px 10px calc(112px + env(safe-area-inset-bottom)); border-radius: 24px 24px 0 0; }
-  .footer-glass { border-radius: 16px; padding: 10px; }
+  .lb-footer-pro { padding: 18px 8px calc(98px + env(safe-area-inset-bottom)); border-radius: 18px 18px 0 0; }
+  .footer-glass { border-radius: 14px; padding: 8px; }
   .footer-brand,
   .footer-col,
-  .footer-news { padding: 12px; border-radius: 14px; }
-  .footer-brand h2 { font-size: 18px; }
-  .footer-social a { width: 34px; height: 34px; border-radius: 10px; }
-  .footer-col a { padding: 8px 9px; font-size: 12px; }
+  .footer-news { padding: 8px; border-radius: 12px; }
+  .footer-brand h2 { font-size: 16px; }
+  .footer-social a { width: 30px; height: 30px; border-radius: 9px; }
+  .footer-col a { padding: 7px 8px; font-size: 11px; }
   .footer-grid > .footer-col:first-of-type .footer-links { grid-template-columns: 1fr; }
   .footer-help-actions a { min-height: 38px; font-size: 11px; }
   .footer-bottom-actions { grid-template-columns: 1fr; }
+  .lb-footer-pro .footer-bottom-copy { font-size: 11px; }
 }
 
 /* Footer style override (matched to requested design) */
